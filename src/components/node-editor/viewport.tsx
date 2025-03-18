@@ -8,26 +8,41 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator
 } from "@/components/ui/breadcrumb.tsx";
-import {ReactFlow, Background, Controls, applyNodeChanges, applyEdgeChanges, addEdge, MiniMap} from "@xyflow/react";
+import {
+    ReactFlow, Background, Controls, applyNodeChanges, applyEdgeChanges, addEdge, MiniMap
+} from "@xyflow/react";
 import {useCallback, useState} from "react";
+import {TextUpdaterNode} from "@/components/node-editor/custom-node.tsx";
 
 const initialNodes = [
     {
-        id: '1',
-        data: {label: 'Hello'},
+        id: 'node-1',
+        type: 'textUpdater',
         position: {x: 0, y: 0},
-        type: 'input',
+        data: {title: 'FastP'},
     },
     {
-        id: '2',
-        data: {label: 'World'},
-        position: {x: 100, y: 100},
+        id: 'node-2',
+        type: 'output',
+        targetPosition: 'left',
+        position: {x: 0, y: 200},
+        data: {label: 'node 2'},
+    },
+    {
+        id: 'node-3',
+        type: 'output',
+        targetPosition: 'left',
+        position: {x: 200, y: 200},
+        data: {label: 'node 3'},
     },
 ];
 
 const initialEdges = [
-    {id: '1-2', source: '1', target: '2', label: 'to the', type: 'step'},
+    {id: 'edge-1', source: 'node-1', sourceHandle: 'a', target: 'node-2'},
+    {id: 'edge-2', source: 'node-1', sourceHandle: 'b', target: 'node-3'},
 ];
+
+const nodeTypes = {textUpdater: TextUpdaterNode};
 
 export function FlowWorkspace() {
     const [nodes, setNodes] = useState(initialNodes);
@@ -35,21 +50,21 @@ export function FlowWorkspace() {
 
     const onNodesChange = useCallback(
         (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
-        [],
+        [setNodes],
     );
     const onEdgesChange = useCallback(
         (changes) => setEdges((eds) => applyEdgeChanges(changes, eds)),
-        [],
+        [setEdges],
     );
     const onConnect = useCallback(
-        (params) => setEdges((eds) => addEdge(params, eds)),
-        [],
+        (connection) => setEdges((eds) => addEdge(connection, eds)),
+        [setEdges],
     );
 
     return (
         <SidebarInset>
             <header
-                className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+                className="flex h-12 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 border-b-2">
                 <div className="flex items-center gap-2 px-4">
                     <SidebarTrigger className="-ml-1"/>
                     <Separator orientation="vertical" className="mr-2 h-4"/>
@@ -71,15 +86,16 @@ export function FlowWorkspace() {
             <div className="h-full w-full">
                 <ReactFlow
                     nodes={nodes}
-                    onNodesChange={onNodesChange}
                     edges={edges}
+                    onNodesChange={onNodesChange}
                     onEdgesChange={onEdgesChange}
                     onConnect={onConnect}
+                    nodeTypes={nodeTypes}
                     fitView
                 >
                     <Background/>
                     <Controls/>
-                    <MiniMap nodeStrokeWidth={3} zoomable pannable />
+                    <MiniMap nodeStrokeWidth={3} zoomable pannable/>
                 </ReactFlow>
             </div>
         </SidebarInset>
