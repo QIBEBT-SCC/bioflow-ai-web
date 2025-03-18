@@ -8,8 +8,44 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator
 } from "@/components/ui/breadcrumb.tsx";
+import {ReactFlow, Background, Controls, applyNodeChanges, applyEdgeChanges, addEdge, MiniMap} from "@xyflow/react";
+import {useCallback, useState} from "react";
+
+const initialNodes = [
+    {
+        id: '1',
+        data: {label: 'Hello'},
+        position: {x: 0, y: 0},
+        type: 'input',
+    },
+    {
+        id: '2',
+        data: {label: 'World'},
+        position: {x: 100, y: 100},
+    },
+];
+
+const initialEdges = [
+    {id: '1-2', source: '1', target: '2', label: 'to the', type: 'step'},
+];
 
 export function FlowWorkspace() {
+    const [nodes, setNodes] = useState(initialNodes);
+    const [edges, setEdges] = useState(initialEdges);
+
+    const onNodesChange = useCallback(
+        (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
+        [],
+    );
+    const onEdgesChange = useCallback(
+        (changes) => setEdges((eds) => applyEdgeChanges(changes, eds)),
+        [],
+    );
+    const onConnect = useCallback(
+        (params) => setEdges((eds) => addEdge(params, eds)),
+        [],
+    );
+
     return (
         <SidebarInset>
             <header
@@ -32,13 +68,19 @@ export function FlowWorkspace() {
                     </Breadcrumb>
                 </div>
             </header>
-            <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-                <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-                    <div className="aspect-video rounded-xl bg-muted/50"/>
-                    <div className="aspect-video rounded-xl bg-muted/50"/>
-                    <div className="aspect-video rounded-xl bg-muted/50"/>
-                </div>
-                <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:min-h-min"/>
+            <div className="h-full w-full">
+                <ReactFlow
+                    nodes={nodes}
+                    onNodesChange={onNodesChange}
+                    edges={edges}
+                    onEdgesChange={onEdgesChange}
+                    onConnect={onConnect}
+                    fitView
+                >
+                    <Background/>
+                    <Controls/>
+                    <MiniMap nodeStrokeWidth={3} zoomable pannable />
+                </ReactFlow>
             </div>
         </SidebarInset>
     );
