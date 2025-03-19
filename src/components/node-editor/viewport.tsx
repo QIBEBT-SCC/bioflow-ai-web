@@ -12,7 +12,7 @@ import {
     ReactFlow, Background, Controls, applyNodeChanges, applyEdgeChanges, addEdge, MiniMap
 } from "@xyflow/react";
 import {useCallback, useState} from "react";
-import {TextUpdaterNode} from "@/components/node-editor/tool-node.tsx";
+import {ToolNode2in3out} from "@/components/node-editor/tool-node.tsx";
 
 const initialNodes = [
     {
@@ -20,30 +20,25 @@ const initialNodes = [
         type: 'textUpdater',
         dragHandle: '.nodeDragable',
         position: {x: 0, y: 0},
-        data: {title: 'FastP'},
-    },
-    {
-        id: 'node-2',
-        type: 'output',
-        targetPosition: 'left',
-        position: {x: 0, y: 200},
-        data: {label: 'node 2'},
-    },
-    {
-        id: 'node-3',
-        type: 'output',
-        targetPosition: 'left',
-        position: {x: 200, y: 200},
-        data: {label: 'node 3'},
+        data: {
+            title: 'FastP',
+            description: 'A tool designed to provide ultrafast all-in-one preprocessing and quality control for FastQ data.',
+            in1Description: 'raw r1 file',
+            in2Description: 'raw r2 file',
+            out1Description: 'clean r1 file',
+            out2Description: 'clean r2 file',
+            out3Description: 'json report',
+            defaultArgs: '-w 8'
+        },
     },
 ];
 
 const initialEdges = [
-    {id: 'edge-1', source: 'node-1', sourceHandle: 'a', target: 'node-2'},
-    {id: 'edge-2', source: 'node-1', sourceHandle: 'b', target: 'node-3'},
+    // {id: 'edge-1', source: 'node-1', sourceHandle: 'a', target: 'node-2'},
+    // {id: 'edge-2', source: 'node-1', sourceHandle: 'b', target: 'node-3'},
 ];
 
-const nodeTypes = {textUpdater: TextUpdaterNode};
+const nodeTypes = {textUpdater: ToolNode2in3out};
 
 export function FlowWorkspace() {
     const [nodes, setNodes] = useState(initialNodes);
