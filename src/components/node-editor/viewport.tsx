@@ -12,12 +12,13 @@ import {
     ReactFlow, Background, Controls, applyNodeChanges, applyEdgeChanges, addEdge, MiniMap
 } from "@xyflow/react";
 import {useCallback, useState} from "react";
-import {TextUpdaterNode} from "@/components/node-editor/custom-node.tsx";
+import {TextUpdaterNode} from "@/components/node-editor/tool-node.tsx";
 
 const initialNodes = [
     {
         id: 'node-1',
         type: 'textUpdater',
+        dragHandle: '.nodeDragable',
         position: {x: 0, y: 0},
         data: {title: 'FastP'},
     },
