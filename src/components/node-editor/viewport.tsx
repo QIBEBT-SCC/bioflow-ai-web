@@ -9,10 +9,10 @@ import {
     BreadcrumbSeparator
 } from "@/components/ui/breadcrumb.tsx";
 import {
-    ReactFlow, Background, Controls, applyNodeChanges, applyEdgeChanges, addEdge, MiniMap
+    ReactFlow, Background, Controls, applyNodeChanges, applyEdgeChanges, addEdge, MiniMap, BackgroundVariant
 } from "@xyflow/react";
 import {useCallback, useState} from "react";
-import {ToolNode2in2out, ToolNode2in3out, ToolNode3in1out} from "@/components/node-editor/tool-node.tsx";
+import {BBNormNode, Bowtie2Node, FastPNode, SpadesNode} from "@/components/node-editor/tool-node.tsx";
 import {FileInputNode} from "@/components/node-editor/input-node.tsx";
 import {Button} from "@/components/ui/button.tsx";
 import {Play, Pause, Square, RotateCcw, Save, Upload, Share2} from "lucide-react";
@@ -23,6 +23,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select.tsx";
+import {LineFigNode} from "@/components/node-editor/draw-node.tsx";
+import {DataSelectNode} from "@/components/node-editor/data-node.tsx";
 
 const initialNodes = [
     {
@@ -48,37 +50,18 @@ const initialNodes = [
         },
     },
     {
-        id: 'node-3',
-        type: 't2in3out',
+        id: 'node3',
+        type: 'fastp',
         dragHandle: '.nodeDragable',
         position: {x: 400, y: 0},
-        data: {
-            title: 'FastP',
-            prefix: 'node-3',
-            description: 'A tool designed to provide ultrafast all-in-one preprocessing and quality control for FastQ data.',
-            in1Description: 'raw r1 file',
-            in2Description: 'raw r2 file',
-            out1Description: 'clean r1 file',
-            out2Description: 'clean r2 file',
-            out3Description: 'json report',
-            defaultArgs: '-w 8'
-        },
+        data: {prefix: 'node3'}
     },
     {
-        id: 'node-4',
-        type: 't2in2out',
+        id: 'node4',
+        type: 'bbnorm',
         dragHandle: '.nodeDragable',
         position: {x: 800, y: -40},
-        data: {
-            title: 'BBNorm',
-            prefix: 'node-4',
-            description: 'A tool designed to provide ultrafast all-in-one preprocessing and quality control for FastQ data.',
-            in1Description: 'raw r1 file',
-            in2Description: 'raw r2 file',
-            out1Description: 'normalized r1 file',
-            out2Description: 'normalized r2 file',
-            defaultArgs: 'threads=64 -Xmx16g'
-        },
+        data: {prefix: 'node4'}
     },
     {
         id: 'node-5',
@@ -93,23 +76,49 @@ const initialNodes = [
     },
     {
         id: 'node-6',
-        type: 't3in1out',
+        type: 'bowtie2',
+        dragHandle: '.nodeDragable',
+        position: {x: 800, y: 0},
+        data: {prefix: 'node-6'},
+    },
+    {
+        id: 'node7',
+        type: 'dataFilter',
+        dragHandle: '.nodeDragable',
+        position: {x: 800, y: -350},
+        data: {
+            prefix: 'node7'
+        }
+    },
+    {
+        id: 'node8',
+        type: 'lineFig',
+        dragHandle: '.nodeDragable',
+        position: {x: 800, y: -350},
+        data: {
+            prefix: 'node8'
+        }
+    },
+    {
+        id: 'node9',
+        type: 'spades',
         dragHandle: '.nodeDragable',
         position: {x: 800, y: 0},
         data: {
-            title: 'Bowtie2',
-            prefix: 'node-6',
-            description: 'A tool designed to provide ultrafast all-in-one preprocessing and quality control for FastQ data.',
-            in1Description: 'raw r1 file',
-            in2Description: 'raw r2 file',
-            in3Description: 'bowtie index',
-            out1Description: 'bam file',
-            defaultArgs: '--threads 32'
+            prefix: 'node9'
         },
     },
 ];
 
-const nodeTypes = {t2in3out: ToolNode2in3out, t2in2out: ToolNode2in2out, t3in1out: ToolNode3in1out, fileInput: FileInputNode};
+const nodeTypes = {
+    fastp: FastPNode,
+    bowtie2: Bowtie2Node,
+    bbnorm: BBNormNode,
+    spades: SpadesNode,
+    fileInput: FileInputNode,
+    lineFig: LineFigNode,
+    dataFilter: DataSelectNode
+};
 
 export function FlowWorkspace() {
     const [nodes, setNodes] = useState(initialNodes);
@@ -202,7 +211,7 @@ export function FlowWorkspace() {
                     nodeTypes={nodeTypes}
                     fitView
                 >
-                    <Background/>
+                    <Background variant={BackgroundVariant.Dots}/>
                     <Controls/>
                     <MiniMap nodeStrokeWidth={3} zoomable pannable/>
                 </ReactFlow>
