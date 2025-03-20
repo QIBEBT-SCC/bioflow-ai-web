@@ -24,89 +24,71 @@ import {
     SelectValue,
 } from "@/components/ui/select.tsx";
 import {LineFigNode} from "@/components/node-editor/draw-node.tsx";
-import {DataSelectNode} from "@/components/node-editor/data-node.tsx";
+import {JsonFilterNode} from "@/components/node-editor/data-node.tsx";
 
 const initialNodes = [
     {
-        id: 'node-1',
+        id: 'node1',
         type: 'fileInput',
         dragHandle: '.nodeDragable',
         position: {x: 0, y: 60},
-        data: {
-            prefix: 'node-1',
-            out1Description: 'file output',
-            defaultArgs: 'M3_1.fq.gz'
-        },
+        data: {defaultArgs: 'M3_1.fq.gz'},
     },
     {
-        id: 'node-2',
+        id: 'node2',
         type: 'fileInput',
         dragHandle: '.nodeDragable',
         position: {x: 0, y: -60},
-        data: {
-            prefix: 'node-2',
-            out1Description: 'file output',
-            defaultArgs: 'M3_2.fq.gz'
-        },
+        data: {defaultArgs: 'M3_2.fq.gz'},
     },
     {
         id: 'node3',
         type: 'fastp',
         dragHandle: '.nodeDragable',
         position: {x: 400, y: 0},
-        data: {prefix: 'node3'}
+        data: {}
     },
     {
         id: 'node4',
         type: 'bbnorm',
         dragHandle: '.nodeDragable',
         position: {x: 800, y: -40},
-        data: {prefix: 'node4'}
+        data: {}
     },
     {
-        id: 'node-5',
+        id: 'node5',
         type: 'fileInput',
         dragHandle: '.nodeDragable',
         position: {x: 400, y: -300},
-        data: {
-            prefix: 'node-5',
-            out1Description: 'file output',
-            defaultArgs: '/mnt/genode/ecoli'
-        },
+        data: {defaultArgs: '/mnt/genode/ecoli'},
     },
     {
-        id: 'node-6',
+        id: 'node6',
         type: 'bowtie2',
         dragHandle: '.nodeDragable',
         position: {x: 800, y: 0},
-        data: {prefix: 'node-6'},
+        data: {},
     },
     {
         id: 'node7',
         type: 'dataFilter',
         dragHandle: '.nodeDragable',
         position: {x: 800, y: -350},
-        data: {
-            prefix: 'node7'
-        }
+        data: {}
     },
     {
         id: 'node8',
         type: 'lineFig',
         dragHandle: '.nodeDragable',
         position: {x: 800, y: -350},
-        data: {
-            prefix: 'node8'
-        }
+        data: {}
     },
     {
         id: 'node9',
         type: 'spades',
         dragHandle: '.nodeDragable',
         position: {x: 800, y: 0},
-        data: {
-            prefix: 'node9'
-        },
+        data: {},
     },
 ];
 
@@ -117,7 +99,7 @@ const nodeTypes = {
     spades: SpadesNode,
     fileInput: FileInputNode,
     lineFig: LineFigNode,
-    dataFilter: DataSelectNode
+    dataFilter: JsonFilterNode
 };
 
 export function FlowWorkspace() {

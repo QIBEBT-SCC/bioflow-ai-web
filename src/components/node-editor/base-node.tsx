@@ -1,19 +1,11 @@
 "use client"
 
 import {Handle, Position, useStore} from '@xyflow/react';
-import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card.tsx";
-import {Textarea} from "@/components/ui/textarea.tsx";
-import {Label} from "@/components/ui/label.tsx";
-import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip.tsx";
-import {Info} from "lucide-react";
-import {useState, useEffect} from 'react';
+import * as React from "react";
 
 // 基础类型定义
 interface BaseNodeData {
-    title: string;
     prefix: string;
-    description: string;
-    defaultArgs: string;
 }
 
 interface HandleConfig {
@@ -27,6 +19,7 @@ interface NodeProps {
         inputs: HandleConfig[];
         outputs: HandleConfig[];
     };
+    nodeComponent: React.ReactNode
 }
 
 // 基础 Handle 组件
@@ -64,19 +57,14 @@ const NodeHandle = ({
 };
 
 // 基础节点组件
-export const BaseToolNode = ({data, handles}: NodeProps) => {
-    const [args, setArgs] = useState(data.defaultArgs);
+export const BaseToolNode = ({data, handles, nodeComponent}: NodeProps) => {
+
     const edges = useStore((state) => state.edges);
 
-    useEffect(() => {
-        setArgs(data.defaultArgs);
-    }, [data.defaultArgs]);
 
     const isHandleConnected = (handleId: string) => {
         return edges.some(edge => edge.sourceHandle === handleId || edge.targetHandle === handleId);
     };
-
-    const topPadding = 4 + (6 * Math.max(handles.inputs.length, handles.outputs.length))
 
     return (
         <div className="flex justify-center relative">
@@ -93,31 +81,7 @@ export const BaseToolNode = ({data, handles}: NodeProps) => {
                 />
             ))}
 
-            <Card className="w-[350px] py-0 gap-0 bg-gray-50 shadow-lg">
-                <CardHeader className="nodeDragable h-8 py-2 bg-fuchsia-400 rounded-t-xl flex flex-row items-center">
-                    <CardTitle>{data.title}</CardTitle>
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger><Info className="w-3 h-3 text-gray-600"/></TooltipTrigger>
-                            <TooltipContent>
-                                <p>{data.description}</p>
-                            </TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                </CardHeader>
-                <CardContent className="pb-4" style={{paddingTop: `calc(var(--spacing) * ${topPadding})`}}>
-                    <Label className="pb-2 font-medium">Args:</Label>
-                    <Textarea
-                        className="h-[80px] text-sm resize-none bg-white overflow-y-auto !focus:ring-1"
-                        placeholder="Enter arguments here..."
-                        value={args}
-                        onChange={(e) => {
-                            setArgs(e.target.value);
-                            data.defaultArgs = e.target.value;
-                        }}
-                    />
-                </CardContent>
-            </Card>
+            {nodeComponent}
 
             {/* Output handles */}
             {handles.outputs.map((output) => (

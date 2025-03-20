@@ -1,32 +1,25 @@
-import {Handle, Position, useStore} from "@xyflow/react";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card.tsx";
 import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip.tsx";
 import {Info} from "lucide-react";
 import {Label} from "@/components/ui/label.tsx";
 import {Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue} from "@/components/ui/select.tsx";
+import {BaseToolNode} from "@/components/node-editor/base-node.tsx";
 
-export function DataSelectNode({data}: {
-    data: {
-        prefix: string
+export function JsonFilterNode({id}: { id: string }) {
+    const self_data = {
+        prefix: id,
     }
-}) {
-    const edges = useStore((state) => state.edges);
+    const handles = {
+        inputs: [
+            {id: 1, description: "json data"},
+        ],
+        outputs: [
+            {id: 1, description: "dataframe"},
+        ]
+    }
 
-    const isHandleConnected = (handleId: string) => {
-        return edges.some(edge => edge.sourceHandle === handleId || edge.targetHandle === handleId);
-    };
-
-    return (
-        <div className="flex justify-center relative">
-            {/* Input handles */}
-            <p className="absolute text-xs text-neutral-400 left-5 top-12 transform -translate-y-1/2">json input</p>
-            <Handle
-                id={`${data.prefix}-in1`}
-                type="target"
-                position={Position.Left}
-                className={`w-2.5 h-2.5 !top-12 !left-2.5 rounded-full border-2 border-green-400 shadow-sm transition-all duration-200 hover:scale-110 ${isHandleConnected(`${data.prefix}-in1`) ? '!bg-green-400' : '!bg-white'}`}
-            />
-
+    const card = () => {
+        return (
             <Card className="w-[350px] py-0 gap-3 bg-gray-50 shadow-lg">
                 <CardHeader className="nodeDragable h-8 py-2 bg-amber-600 rounded-t-xl flex flex-row items-center">
                     <CardTitle className="text-white">
@@ -45,7 +38,7 @@ export function DataSelectNode({data}: {
                     <Label className="pb-2 font-medium">Key:</Label>
                     <Select>
                         <SelectTrigger className="w-[200px] bg-white">
-                            <SelectValue placeholder="Select a fruit" />
+                            <SelectValue placeholder="Select a fruit"/>
                         </SelectTrigger>
                         <SelectContent>
                             <SelectGroup>
@@ -60,15 +53,10 @@ export function DataSelectNode({data}: {
                     </Select>
                 </CardContent>
             </Card>
+        )
+    }
 
-            {/* Output handles */}
-            <p className="absolute text-xs text-neutral-400 right-5 top-12 transform -translate-y-1/2">dataframe</p>
-            <Handle
-                id={`${data.prefix}-out1`}
-                type="source"
-                position={Position.Right}
-                className={`w-2.5 h-2.5 !top-12 !right-2.5 rounded-full border-2 !border-blue-400 shadow-sm transition-all duration-200 hover:scale-110 ${isHandleConnected(`${data.prefix}-out1`) ? '!bg-blue-400' : '!bg-white'}`}
-            />
-        </div>
-    );
+    return (
+        <BaseToolNode data={self_data} handles={handles} nodeComponent={card()}/>
+    )
 }

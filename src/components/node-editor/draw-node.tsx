@@ -14,12 +14,7 @@ const content_curves = {
     "GC": [0.551994, 0.439437, 0.430969, 0.460405, 0.445607, 0.437578, 0.439341, 0.439862, 0.433702, 0.445371, 0.438905, 0.441293, 0.442982, 0.436286, 0.438269, 0.445088, 0.440954, 0.442772, 0.448318, 0.441015, 0.441247, 0.446396, 0.437689, 0.439287, 0.444808, 0.43895, 0.440876, 0.446271, 0.440643, 0.442437, 0.447071, 0.439639, 0.440528, 0.444743, 0.438173, 0.440279, 0.445173, 0.439506, 0.441759, 0.446364, 0.440465, 0.441505, 0.445898, 0.438422, 0.439575, 0.444771, 0.438603, 0.440893, 0.446151, 0.440286, 0.441547, 0.446148, 0.438934, 0.440208, 0.444621, 0.438356, 0.440082, 0.445106, 0.439352, 0.441214, 0.446274, 0.439192, 0.440619, 0.44499, 0.438379, 0.439826, 0.444558, 0.438606, 0.440703, 0.445735, 0.439537, 0.440873, 0.445484, 0.4389, 0.440003, 0.444201, 0.438052, 0.439981, 0.444824, 0.438998, 0.441012, 0.445549, 0.43905, 0.440163, 0.444096, 0.437798, 0.439193, 0.444123, 0.438434, 0.440124, 0.444699, 0.438927, 0.440288, 0.444138, 0.438146, 0.439384, 0.443908, 0.438246, 0.440018, 0.444621, 0.439153, 0.440659, 0.445071, 0.439132, 0.440129, 0.444291, 0.438267, 0.439727, 0.443991, 0.438548, 0.440251, 0.444845, 0.439073, 0.440434, 0.444508, 0.438512, 0.439868, 0.443945, 0.438188, 0.440171, 0.444317, 0.438681, 0.440068, 0.444597, 0.438956, 0.440062, 0.443879, 0.4384, 0.439672, 0.443757, 0.43836, 0.440145, 0.444113, 0.438923, 0.440363, 0.444389, 0.438444, 0.439997, 0.443715, 0.438547, 0.439514, 0.444095, 0.438831, 0.440398, 0.444317, 0.439063, 0.440121, 0.443856, 0.438688, 0.439818],
 }
 
-export function LineFigNode({data}: {
-    data: {
-        prefix:string,
-        description: string,
-    }
-}) {
+export function LineFigNode({id}: { id: string }) {
     const edges = useStore((state) => state.edges);
     const chartRef = useRef<HTMLDivElement>(null);
 
@@ -81,10 +76,10 @@ export function LineFigNode({data}: {
         <div className="flex justify-center relative">
             <p className="absolute text-xs text-neutral-400 left-5 top-12 transform -translate-y-1/2">Line figure</p>
             <Handle
-                id={`${data.prefix}-in1`}
+                id={`${id}-in1`}
                 type="target"
                 position={Position.Left}
-                className={`w-2.5 h-2.5 !top-12 !left-2.5 rounded-full border-2 border-green-400 shadow-sm transition-all duration-200 hover:scale-110 ${isHandleConnected(`${data.prefix}-in1`) ? '!bg-green-400' : '!bg-white'}`}
+                className={`w-2.5 h-2.5 !top-12 !left-2.5 rounded-full border-2 border-green-400 shadow-sm transition-all duration-200 hover:scale-110 ${isHandleConnected(`${id}-in1`) ? '!bg-green-400' : '!bg-white'}`}
             />
 
             <Card className="w-[600px] py-0 gap-3 bg-gray-50 shadow-lg">
@@ -96,7 +91,7 @@ export function LineFigNode({data}: {
                         <Tooltip>
                             <TooltipTrigger><Info className="w-3 h-3 text-gray-200"/></TooltipTrigger>
                             <TooltipContent>
-                                <p>{data.description}</p>
+                                <p>折线图</p>
                             </TooltipContent>
                         </Tooltip>
                     </TooltipProvider>
