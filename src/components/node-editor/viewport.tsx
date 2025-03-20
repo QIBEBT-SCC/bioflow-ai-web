@@ -12,7 +12,15 @@ import {
     ReactFlow, Background, Controls, applyNodeChanges, applyEdgeChanges, addEdge, MiniMap, BackgroundVariant
 } from "@xyflow/react";
 import {useCallback, useState} from "react";
-import {BBNormNode, Bowtie2Node, FastPNode, SpadesNode} from "@/components/node-editor/tool-node.tsx";
+import {
+    BBNormNode,
+    Bowtie2Node,
+    CheckM2Node,
+    FastPNode,
+    QualiMapNode,
+    SamToolsNode,
+    SpadesNode
+} from "@/components/node-editor/tool-node.tsx";
 import {FileInputNode} from "@/components/node-editor/input-node.tsx";
 import {Button} from "@/components/ui/button.tsx";
 import {Play, Pause, Square, RotateCcw, Save, Upload, Share2} from "lucide-react";
@@ -25,7 +33,8 @@ import {
 } from "@/components/ui/select.tsx";
 import {LineFigNode} from "@/components/node-editor/draw-node.tsx";
 import {JsonFilterNode} from "@/components/node-editor/data-node.tsx";
-import { useWorkflow } from '@/hooks/useWorkflow';
+import {useWorkflow} from '@/hooks/useWorkflow';
+import {ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger} from "@/components/ui/context-menu.tsx";
 
 const initialNodes = [
     {
@@ -96,8 +105,11 @@ const initialNodes = [
 const nodeTypes = {
     fastp: FastPNode,
     bowtie2: Bowtie2Node,
+    samtool: SamToolsNode,
+    qualimap: QualiMapNode,
     bbnorm: BBNormNode,
     spades: SpadesNode,
+    checkm: CheckM2Node,
     fileInput: FileInputNode,
     lineFig: LineFigNode,
     dataFilter: JsonFilterNode
@@ -108,7 +120,7 @@ export function FlowWorkspace() {
     const [edges, setEdges] = useState([]);
     const [isRunning, setIsRunning] = useState(false);
     const [edgeType, setEdgeType] = useState("default");
-    const { runWorkflow, isRunning: isSaving } = useWorkflow();
+    const {runWorkflow, isRunning: isSaving} = useWorkflow();
 
     const onNodesChange = useCallback(
         // @ts-expect-error no need
@@ -168,10 +180,10 @@ export function FlowWorkspace() {
                         </SelectContent>
                     </Select>
                     <Separator orientation="vertical" className="!h-4"/>
-                    <Button 
-                        variant="outline" 
-                        size="icon" 
-                        title="保存" 
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        title="保存"
                         onClick={handleSave}
                         disabled={isSaving}
                     >
@@ -196,20 +208,28 @@ export function FlowWorkspace() {
                 </div>
             </header>
             <div className="h-full w-full">
-                <ReactFlow
-                    nodes={nodes}
-                    edges={edges}
-                    onNodesChange={onNodesChange}
-                    onEdgesChange={onEdgesChange}
-                    onConnect={onConnect}
-                    nodeTypes={nodeTypes}
-                    fitView
-                >
-                    <Background variant={BackgroundVariant.Dots}/>
-                    <Controls/>
-                    <MiniMap nodeStrokeWidth={3} zoomable pannable/>
-                </ReactFlow>
+                <ContextMenu>
+                    <ContextMenuTrigger className="h-full w-full">
+                        <ReactFlow
+                            nodes={nodes}
+                            edges={edges}
+                            onNodesChange={onNodesChange}
+                            onEdgesChange={onEdgesChange}
+                            onConnect={onConnect}
+                            nodeTypes={nodeTypes}
+                            fitView
+                        >
+                            <Background variant={BackgroundVariant.Dots}/>
+                            <Controls/>
+                            <MiniMap nodeStrokeWidth={3} zoomable pannable/>
+                        </ReactFlow>
+                    </ContextMenuTrigger>
+                    <ContextMenuContent>
+                        <ContextMenuItem>Add</ContextMenuItem>
+                    </ContextMenuContent>
+                </ContextMenu>
             </div>
+
         </SidebarInset>
     );
 }
