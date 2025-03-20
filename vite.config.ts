@@ -11,4 +11,17 @@ export default defineConfig({
             "@": path.resolve(__dirname, "./src"),
         },
     },
+    server: {
+        host: '0.0.0.0',
+        port: 5173,
+        proxy: {
+            // 字符串简写写法：
+            // http://localhost:5173/foo
+            // -> http://localhost:4567/foo
+            '/api': {
+                target: 'http://172.18.19.113:8000',
+                changeOrigin: true
+            },
+        },
+    },
 })

@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/select.tsx";
 import {LineFigNode} from "@/components/node-editor/draw-node.tsx";
 import {JsonFilterNode} from "@/components/node-editor/data-node.tsx";
+import { useWorkflow } from '@/hooks/useWorkflow';
 
 const initialNodes = [
     {
@@ -107,7 +108,7 @@ export function FlowWorkspace() {
     const [edges, setEdges] = useState([]);
     const [isRunning, setIsRunning] = useState(false);
     const [edgeType, setEdgeType] = useState("default");
-
+    const { runWorkflow, isRunning: isSaving } = useWorkflow();
 
     const onNodesChange = useCallback(
         // @ts-expect-error no need
@@ -124,6 +125,14 @@ export function FlowWorkspace() {
         (connection) => setEdges((eds) => addEdge(connection, eds)),
         [setEdges],
     );
+
+    const handleSave = () => {
+        const workflow = {
+            nodes,
+            edges
+        };
+        runWorkflow(workflow);
+    };
 
     return (
         <SidebarInset>
@@ -159,10 +168,13 @@ export function FlowWorkspace() {
                         </SelectContent>
                     </Select>
                     <Separator orientation="vertical" className="!h-4"/>
-                    <Button variant="outline" size="icon" title="保存" onClick={() => {
-                        console.log(nodes)
-                        console.log(edges)
-                    }}>
+                    <Button 
+                        variant="outline" 
+                        size="icon" 
+                        title="保存" 
+                        onClick={handleSave}
+                        disabled={isSaving}
+                    >
                         <Save className="h-4 w-4"/>
                     </Button>
                     <Button variant="outline" size="icon" title="加载">
