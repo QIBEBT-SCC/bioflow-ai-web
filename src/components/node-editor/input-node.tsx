@@ -28,12 +28,12 @@ export function FileInputNode({data}: {
         <div className="flex justify-center relative">
             <Card className="w-[350px] py-0 gap-3 bg-gray-50 shadow-lg">
                 <CardHeader className="nodeDragable h-8 py-2 bg-emerald-600 rounded-t-xl flex flex-row items-center">
-                    <CardTitle>
+                    <CardTitle className="text-white">
                         File Input
                     </CardTitle>
                     <TooltipProvider>
                         <Tooltip>
-                            <TooltipTrigger><Info className="w-3 h-3 text-gray-600"/></TooltipTrigger>
+                            <TooltipTrigger><Info className="w-3 h-3 text-gray-300"/></TooltipTrigger>
                             <TooltipContent>
                                 <p>文件路径输出</p>
                             </TooltipContent>
