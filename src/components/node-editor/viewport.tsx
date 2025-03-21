@@ -9,7 +9,8 @@ import {
     BreadcrumbSeparator
 } from "@/components/ui/breadcrumb.tsx";
 import {
-    ReactFlow, Background, Controls, applyNodeChanges, applyEdgeChanges, addEdge, MiniMap, BackgroundVariant
+    ReactFlow, Background, Controls, applyNodeChanges, applyEdgeChanges, addEdge, MiniMap, BackgroundVariant,
+    ReactFlowProvider
 } from "@xyflow/react";
 import {useCallback, useState} from "react";
 import {
@@ -35,6 +36,7 @@ import {LineFigNode} from "@/components/node-editor/draw-node.tsx";
 import {JsonFilterNode} from "@/components/node-editor/data-node.tsx";
 import {useWorkflow} from '@/hooks/useWorkflow';
 import {ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger} from "@/components/ui/context-menu.tsx";
+import {useReactFlow} from "@xyflow/react";
 
 const initialNodes = [
     {
@@ -116,11 +118,20 @@ const nodeTypes = {
 };
 
 export function FlowWorkspace() {
+    return (
+        <ReactFlowProvider>
+            <FlowContent />
+        </ReactFlowProvider>
+    );
+}
+
+function FlowContent() {
     const [nodes, setNodes] = useState(initialNodes);
     const [edges, setEdges] = useState([]);
     const [isRunning, setIsRunning] = useState(false);
     const [edgeType, setEdgeType] = useState("default");
     const {runWorkflow, isRunning: isSaving} = useWorkflow();
+    const {screenToFlowPosition} = useReactFlow();
 
     const onNodesChange = useCallback(
         // @ts-expect-error no need
@@ -137,6 +148,23 @@ export function FlowWorkspace() {
         (connection) => setEdges((eds) => addEdge(connection, eds)),
         [setEdges],
     );
+
+    const onAddNode = useCallback((event: React.MouseEvent) => {
+        const position = screenToFlowPosition({
+            x: event.clientX,
+            y: event.clientY,
+        });
+
+        const newNode = {
+            id: `node${nodes.length + 1}`,
+            type: 'dataFilter',
+            dragHandle: '.nodeDragable',
+            position,
+            data: {}
+        };
+
+        setNodes((nds) => [...nds, newNode]);
+    }, [nodes.length, screenToFlowPosition]);
 
     const handleSave = () => {
         const workflow = {
@@ -225,7 +253,7 @@ export function FlowWorkspace() {
                         </ReactFlow>
                     </ContextMenuTrigger>
                     <ContextMenuContent>
-                        <ContextMenuItem>Add</ContextMenuItem>
+                        <ContextMenuItem onClick={onAddNode}>添加数据过滤节点</ContextMenuItem>
                     </ContextMenuContent>
                 </ContextMenu>
             </div>
