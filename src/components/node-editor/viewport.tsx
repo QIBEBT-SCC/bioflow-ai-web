@@ -17,7 +17,7 @@ import {
     BBNormNode,
     Bowtie2Node,
     CheckM2Node,
-    FastPNode,
+    FastPNode, KrakenNode,
     QualiMapNode,
     SamToolsNode,
     SpadesNode
@@ -33,79 +33,22 @@ import {
     SelectValue,
 } from "@/components/ui/select.tsx";
 import {LineFigNode} from "@/components/node-editor/draw-node.tsx";
-import {JsonFilterNode} from "@/components/node-editor/data-node.tsx";
+import {CutNode, JsonFilterNode} from "@/components/node-editor/data-node.tsx";
 import {useWorkflow} from '@/hooks/useWorkflow';
-import {ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger} from "@/components/ui/context-menu.tsx";
+import {
+    ContextMenu,
+    ContextMenuContent,
+    ContextMenuItem,
+    ContextMenuTrigger,
+    ContextMenuSub,
+    ContextMenuSubTrigger,
+    ContextMenuSubContent
+} from "@/components/ui/context-menu.tsx";
 import {useReactFlow} from "@xyflow/react";
-
-const initialNodes = [
-    {
-        id: 'node1',
-        type: 'fileInput',
-        dragHandle: '.nodeDragable',
-        position: {x: 0, y: 60},
-        data: {defaultArgs: 'M3_1.fq.gz'},
-    },
-    {
-        id: 'node2',
-        type: 'fileInput',
-        dragHandle: '.nodeDragable',
-        position: {x: 0, y: -60},
-        data: {defaultArgs: 'M3_2.fq.gz'},
-    },
-    {
-        id: 'node3',
-        type: 'fastp',
-        dragHandle: '.nodeDragable',
-        position: {x: 400, y: 0},
-        data: {}
-    },
-    {
-        id: 'node4',
-        type: 'bbnorm',
-        dragHandle: '.nodeDragable',
-        position: {x: 800, y: -40},
-        data: {}
-    },
-    {
-        id: 'node5',
-        type: 'fileInput',
-        dragHandle: '.nodeDragable',
-        position: {x: 400, y: -300},
-        data: {defaultArgs: '/mnt/genode/ecoli'},
-    },
-    {
-        id: 'node6',
-        type: 'bowtie2',
-        dragHandle: '.nodeDragable',
-        position: {x: 800, y: 0},
-        data: {},
-    },
-    {
-        id: 'node7',
-        type: 'dataFilter',
-        dragHandle: '.nodeDragable',
-        position: {x: 800, y: -350},
-        data: {}
-    },
-    {
-        id: 'node8',
-        type: 'lineFig',
-        dragHandle: '.nodeDragable',
-        position: {x: 800, y: -350},
-        data: {}
-    },
-    {
-        id: 'node9',
-        type: 'spades',
-        dragHandle: '.nodeDragable',
-        position: {x: 800, y: 0},
-        data: {},
-    },
-];
 
 const nodeTypes = {
     fastp: FastPNode,
+    kraken2: KrakenNode,
     bowtie2: Bowtie2Node,
     samtool: SamToolsNode,
     qualimap: QualiMapNode,
@@ -114,19 +57,56 @@ const nodeTypes = {
     checkm: CheckM2Node,
     fileInput: FileInputNode,
     lineFig: LineFigNode,
-    dataFilter: JsonFilterNode
+    dataFilter: JsonFilterNode,
+    dataCut: CutNode
 };
+
+// 节点类型配置
+const nodeConfig = {
+    tools: {
+        name: '工具',
+        items: [
+            {type: 'fastp', label: 'FastP'},
+            {type: 'kraken2', label: 'Kraken2'},
+            {type: 'bowtie2', label: 'Bowtie2'},
+            {type: 'samtool', label: 'SamTools'},
+            {type: 'qualimap', label: 'QualiMap'},
+            {type: 'bbnorm', label: 'BBNorm'},
+            {type: 'spades', label: 'Spades'},
+            {type: 'checkm', label: 'CheckM2'},
+        ]
+    },
+    dataProcessing: {
+        name: '数据处理',
+        items: [
+            {type: 'dataFilter', label: '数据过滤'},
+            {type: 'dataCut', label: '数据截取'},
+        ]
+    },
+    io: {
+        name: '输入输出',
+        items: [
+            {type: 'fileInput', label: '文件输入'},
+        ]
+    },
+    visualization: {
+        name: '可视化',
+        items: [
+            {type: 'lineFig', label: '折线图'},
+        ]
+    }
+} as const;
 
 export function FlowWorkspace() {
     return (
         <ReactFlowProvider>
-            <FlowContent />
+            <FlowContent/>
         </ReactFlowProvider>
     );
 }
 
 function FlowContent() {
-    const [nodes, setNodes] = useState(initialNodes);
+    const [nodes, setNodes] = useState([]);
     const [edges, setEdges] = useState([]);
     const [isRunning, setIsRunning] = useState(false);
     const [edgeType, setEdgeType] = useState("default");
@@ -149,7 +129,7 @@ function FlowContent() {
         [setEdges],
     );
 
-    const onAddNode = useCallback((event: React.MouseEvent) => {
+    const onAddNode = useCallback((event: React.MouseEvent, type: string) => {
         const position = screenToFlowPosition({
             x: event.clientX,
             y: event.clientY,
@@ -157,12 +137,13 @@ function FlowContent() {
 
         const newNode = {
             id: `node${nodes.length + 1}`,
-            type: 'dataFilter',
+            type,
             dragHandle: '.nodeDragable',
             position,
             data: {}
         };
 
+        // @ts-expect-error no need
         setNodes((nds) => [...nds, newNode]);
     }, [nodes.length, screenToFlowPosition]);
 
@@ -173,6 +154,24 @@ function FlowContent() {
         };
         runWorkflow(workflow);
     };
+
+    const renderMenuItems = useCallback(() => {
+        return Object.entries(nodeConfig).map(([key, category]) => (
+            <ContextMenuSub key={key}>
+                <ContextMenuSubTrigger>{category.name}</ContextMenuSubTrigger>
+                <ContextMenuSubContent>
+                    {category.items.map((item) => (
+                        <ContextMenuItem
+                            key={item.type}
+                            onClick={(e) => onAddNode(e, item.type)}
+                        >
+                            {item.label}
+                        </ContextMenuItem>
+                    ))}
+                </ContextMenuSubContent>
+            </ContextMenuSub>
+        ));
+    }, [onAddNode]);
 
     return (
         <SidebarInset>
@@ -253,11 +252,10 @@ function FlowContent() {
                         </ReactFlow>
                     </ContextMenuTrigger>
                     <ContextMenuContent>
-                        <ContextMenuItem onClick={onAddNode}>添加数据过滤节点</ContextMenuItem>
+                        {renderMenuItems()}
                     </ContextMenuContent>
                 </ContextMenu>
             </div>
-
         </SidebarInset>
     );
 }

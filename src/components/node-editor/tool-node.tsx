@@ -99,7 +99,7 @@ const SelectToolCard = (
                     </SelectTrigger>
                     <SelectContent>
                         <SelectGroup>
-                            {data.selectors.map((item,index)=>(
+                            {data.selectors.map((item, index) => (
                                 <SelectItem value={item} key={index}>{item}</SelectItem>
                             ))}
                         </SelectGroup>
@@ -199,7 +199,7 @@ export function SamToolsNode({id}: { id: string }) {
         prefix: id,
         description: "Bowtie 2 is an ultrafast and memory-efficient tool for aligning sequencing reads to long reference sequences.",
         defaultArgs: "",
-        selectors:["index","sort"]
+        selectors: ["index", "sort"]
     }
     const handles = {
         inputs: [
@@ -262,7 +262,6 @@ export function BBNormNode({id}: { id: string }) {
         <BaseToolNode data={self_data} handles={handles} nodeComponent={<ToolCard data={self_data} topPadding={topPadding}/>}/>
     )
 }
-
 
 
 export function SpadesNode({id}: { id: string }) {

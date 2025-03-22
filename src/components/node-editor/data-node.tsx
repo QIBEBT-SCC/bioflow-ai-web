@@ -79,7 +79,7 @@ export function CutNode({id}: { id: string }) {
             <Card className="w-[350px] py-0 gap-3 bg-gray-50 shadow-lg">
                 <CardHeader className="nodeDragable h-8 py-2 bg-amber-600 rounded-t-xl flex flex-row items-center">
                     <CardTitle className="text-white">
-                        Json Data Filter
+                        Text Cut
                     </CardTitle>
                     <TooltipProvider>
                         <Tooltip>
@@ -91,7 +91,7 @@ export function CutNode({id}: { id: string }) {
                     </TooltipProvider>
                 </CardHeader>
                 <CardContent className="pt-6 pb-4">
-                    <Label className="pb-2 font-medium">Key:</Label>
+                    <Label className="pb-2 font-medium">Head:</Label>
                     <Input className="bg-white" type="number"></Input>
                 </CardContent>
             </Card>
