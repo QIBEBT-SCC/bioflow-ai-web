@@ -10,11 +10,10 @@ import {
 } from "@/components/ui/breadcrumb.tsx";
 import {
     ReactFlow, Background, Controls, applyNodeChanges, applyEdgeChanges, addEdge, MiniMap, BackgroundVariant,
-    ReactFlowProvider
+    ReactFlowProvider, useReactFlow
 } from "@xyflow/react";
 import {useCallback, useState} from "react";
 import {
-    BBNormNode,
     Bowtie2Node,
     CheckM2Node,
     FastPNode, KrakenNode,
@@ -34,7 +33,7 @@ import {
 } from "@/components/ui/select.tsx";
 import {LineFigNode} from "@/components/node-editor/draw-node.tsx";
 import {CutNode, JsonFilterNode} from "@/components/node-editor/data-node.tsx";
-import {useWorkflow} from '@/hooks/useWorkflow';
+import {SaveWorkflow} from '@/hooks/useWorkflow.tsx';
 import {
     ContextMenu,
     ContextMenuContent,
@@ -44,7 +43,8 @@ import {
     ContextMenuSubTrigger,
     ContextMenuSubContent
 } from "@/components/ui/context-menu.tsx";
-import {useReactFlow} from "@xyflow/react";
+import {type Node, type Edge, type OnNodesChange, type OnEdgesChange, type OnConnect} from "@xyflow/react";
+import { useToolStore } from '@/stores/toolStore.tsx';
 
 const nodeTypes = {
     fastp: FastPNode,
@@ -52,7 +52,6 @@ const nodeTypes = {
     bowtie2: Bowtie2Node,
     samtool: SamToolsNode,
     qualimap: QualiMapNode,
-    bbnorm: BBNormNode,
     spades: SpadesNode,
     checkm: CheckM2Node,
     fileInput: FileInputNode,
@@ -71,7 +70,6 @@ const nodeConfig = {
             {type: 'bowtie2', label: 'Bowtie2'},
             {type: 'samtool', label: 'SamTools'},
             {type: 'qualimap', label: 'QualiMap'},
-            {type: 'bbnorm', label: 'BBNorm'},
             {type: 'spades', label: 'Spades'},
             {type: 'checkm', label: 'CheckM2'},
         ]
@@ -106,25 +104,23 @@ export function FlowWorkspace() {
 }
 
 function FlowContent() {
-    const [nodes, setNodes] = useState([]);
-    const [edges, setEdges] = useState([]);
+    const [nodes, setNodes] = useState<Node[]>([]);
+    const [edges, setEdges] = useState<Edge[]>([]);
     const [isRunning, setIsRunning] = useState(false);
     const [edgeType, setEdgeType] = useState("default");
-    const {runWorkflow, isRunning: isSaving} = useWorkflow();
+    const {saveWorkflow, isRunning: isSaving} = SaveWorkflow();
     const {screenToFlowPosition} = useReactFlow();
+    const defaultArgs = useToolStore(state => state.defaultArgs);
 
-    const onNodesChange = useCallback(
-        // @ts-expect-error no need
+    const onNodesChange: OnNodesChange = useCallback(
         (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
         [setNodes],
     );
-    const onEdgesChange = useCallback(
-        // @ts-expect-error no need
+    const onEdgesChange: OnEdgesChange = useCallback(
         (changes) => setEdges((eds) => applyEdgeChanges(changes, eds)),
         [setEdges],
     );
-    const onConnect = useCallback(
-        // @ts-expect-error no need
+    const onConnect: OnConnect = useCallback(
         (connection) => setEdges((eds) => addEdge(connection, eds)),
         [setEdges],
     );
@@ -135,24 +131,27 @@ function FlowContent() {
             y: event.clientY,
         });
 
+        const lastId = nodes.length == 0 ? -1 : parseInt(nodes[nodes.length - 1].id.replace("node", ""))
         const newNode = {
-            id: `node${nodes.length + 1}`,
+            id: `node${lastId + 1}`,
             type,
             dragHandle: '.nodeDragable',
             position,
-            data: {}
+            data: {
+                args: defaultArgs ? defaultArgs[`${type}_arg` as keyof typeof defaultArgs] : ''
+            }
         };
 
-        // @ts-expect-error no need
         setNodes((nds) => [...nds, newNode]);
-    }, [nodes.length, screenToFlowPosition]);
+    }, [nodes, screenToFlowPosition, defaultArgs]);
 
     const handleSave = () => {
         const workflow = {
             nodes,
             edges
         };
-        runWorkflow(workflow);
+        console.log(workflow)
+        saveWorkflow(workflow);
     };
 
     const renderMenuItems = useCallback(() => {

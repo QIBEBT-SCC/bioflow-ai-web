@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
-import { workflowApi } from '@/services/api';
+import { workflowApi } from '@/services/api.tsx';
 
-export function useWorkflow() {
+export function SaveWorkflow() {
     const runWorkflowMutation = useMutation({
         mutationFn: workflowApi.runWorkflow,
         onSuccess: () => {
@@ -13,7 +13,7 @@ export function useWorkflow() {
     });
 
     return {
-        runWorkflow: runWorkflowMutation.mutate,
+        saveWorkflow: runWorkflowMutation.mutate,
         isRunning: runWorkflowMutation.isPending,
         error: runWorkflowMutation.error
     };
