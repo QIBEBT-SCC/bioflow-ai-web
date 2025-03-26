@@ -29,11 +29,12 @@ const NodeHandle = ({id, type, position, description,}: HandleProps) => {
     const nodeId = useNodeId();
     const edges = useEdges();
 
-    const isConnected = () => {
-        return edges.some(edge => edge.sourceHandle === nodeId || edge.targetHandle === nodeId);
-    };
-
+    const handleId = `${nodeId}-${type === 'source' ? 'out' : 'in'}${id}`
     const topPos = (id + 1) * 6
+
+    const isConnected = () => {
+        return edges.some(edge => edge.sourceHandle === handleId || edge.targetHandle === handleId);
+    };
 
     return (
         <>
@@ -43,7 +44,7 @@ const NodeHandle = ({id, type, position, description,}: HandleProps) => {
                 {description}
             </p>
             <Handle
-                id={`${nodeId}-${type === 'source' ? 'out' : 'in'}${id}`}
+                id={handleId}
                 type={type}
                 position={position}
                 style={{top: `calc(var(--spacing) * ${topPos})`}}
