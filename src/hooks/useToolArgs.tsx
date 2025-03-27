@@ -6,10 +6,10 @@ export function useToolArgs() {
     const { defaultArgs, setDefaultArgs } = useToolStore();
 
     useEffect(() => {
-        if (!defaultArgs) {
+        if (Object.keys(defaultArgs).length === 0) {
             toolApi.getDefaultArgs().then(setDefaultArgs);
         }
-    }, []);
+    }, [defaultArgs]);
 
     return defaultArgs;
 } 

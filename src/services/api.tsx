@@ -20,13 +20,17 @@ export interface WorkflowDefinition {
 }
 
 export interface DefaultArgs {
-    fastp_arg: string;
-    // 后续可以添加其他工具的默认参数
+    [key: string]: string;
 }
 
 export const workflowApi = {
-    runWorkflow: async (workflow: WorkflowDefinition) => {
-        const {data} = await api.post('/workflow/run', workflow);
+    // TODO: 后续通过状态管理或props传入工作流名称
+    saveWorkflow: async (workflow: WorkflowDefinition) => {
+        const {data} = await api.post('/workflow/flows/default_workflow', workflow);
+        return data;
+    },
+    getWorkflows: async () => {
+        const {data} = await api.get<string[]>('/workflow/flows');
         return data;
     },
 };

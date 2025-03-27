@@ -1,9 +1,9 @@
-import { useMutation } from '@tanstack/react-query';
-import { workflowApi } from '@/services/api.tsx';
+import {useMutation, useQuery, UseQueryOptions} from '@tanstack/react-query';
+import {workflowApi} from '@/services/api.tsx';
 
-export function SaveWorkflow() {
+export function useSaveWorkflow() {
     const runWorkflowMutation = useMutation({
-        mutationFn: workflowApi.runWorkflow,
+        mutationFn: workflowApi.saveWorkflow,
         onSuccess: () => {
             console.log('工作流保存成功');
         },
@@ -17,4 +17,13 @@ export function SaveWorkflow() {
         isRunning: runWorkflowMutation.isPending,
         error: runWorkflowMutation.error
     };
+}
+
+export function useWorkflows() {
+    const options: UseQueryOptions<string[], Error> = {
+        queryKey: ['workflows'],
+        queryFn: workflowApi.getWorkflows,
+    };
+
+    return useQuery(options);
 } 

@@ -23,7 +23,7 @@ import {
 } from "@/components/node-editor/tool-node.tsx";
 import {FileInputNode} from "@/components/node-editor/input-node.tsx";
 import {Button} from "@/components/ui/button.tsx";
-import {Play, Pause, Square, RotateCcw, Save, Upload, Share2} from "lucide-react";
+import {Play, Pause, Square, RotateCcw, Save, Download, Share2} from "lucide-react";
 import {
     Select,
     SelectContent,
@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/select.tsx";
 import {LineFigNode} from "@/components/node-editor/draw-node.tsx";
 import {CutNode, JsonFilterNode} from "@/components/node-editor/data-node.tsx";
-import {SaveWorkflow} from '@/hooks/useWorkflow.tsx';
+import {useSaveWorkflow} from '@/hooks/useWorkflow.tsx';
 import {
     ContextMenu,
     ContextMenuContent,
@@ -108,7 +108,7 @@ function FlowContent() {
     const [edges, setEdges] = useState<Edge[]>([]);
     const [isRunning, setIsRunning] = useState(false);
     const [edgeType, setEdgeType] = useState("default");
-    const {saveWorkflow, isRunning: isSaving} = SaveWorkflow();
+    const {saveWorkflow, isRunning: isSaving} = useSaveWorkflow();
     const {screenToFlowPosition} = useReactFlow();
     const defaultArgs = useToolStore(state => state.defaultArgs);
 
@@ -138,7 +138,7 @@ function FlowContent() {
             dragHandle: '.nodeDragable',
             position,
             data: {
-                args: defaultArgs ? defaultArgs[`${type}_arg` as keyof typeof defaultArgs] : ''
+                args: defaultArgs[`${type}_arg` as keyof typeof defaultArgs] ?? ''
             }
         };
 
@@ -150,7 +150,6 @@ function FlowContent() {
             nodes,
             edges
         };
-        console.log(workflow)
         saveWorkflow(workflow);
     };
 
@@ -216,7 +215,7 @@ function FlowContent() {
                         <Save className="h-4 w-4"/>
                     </Button>
                     <Button variant="outline" size="icon" title="加载">
-                        <Upload className="h-4 w-4"/>
+                        <Download className="h-4 w-4"/>
                     </Button>
                     <Button variant="outline" size="icon" title="分享">
                         <Share2 className="h-4 w-4"/>
