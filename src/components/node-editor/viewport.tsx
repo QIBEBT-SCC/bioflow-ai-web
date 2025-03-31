@@ -3,7 +3,6 @@ import {Separator} from "@/components/ui/separator.tsx";
 import {
     Breadcrumb,
     BreadcrumbItem,
-    BreadcrumbLink,
     BreadcrumbList,
     BreadcrumbPage,
     BreadcrumbSeparator
@@ -23,14 +22,7 @@ import {
 } from "@/components/node-editor/tool-node.tsx";
 import {FileInputNode} from "@/components/node-editor/input-node.tsx";
 import {Button} from "@/components/ui/button.tsx";
-import {Play, Pause, Square, RotateCcw, Save, Download, Share2} from "lucide-react";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select.tsx";
+import {Play, Save, SaveAll, Download, Menu, CheckCircle2} from "lucide-react";
 import {LineFigNode} from "@/components/node-editor/draw-node.tsx";
 import {CutNode, JsonFilterNode} from "@/components/node-editor/data-node.tsx";
 import {useSaveWorkflow} from '@/hooks/useWorkflow.tsx';
@@ -44,7 +36,7 @@ import {
     ContextMenuSubContent
 } from "@/components/ui/context-menu.tsx";
 import {type Node, type Edge, type OnNodesChange, type OnEdgesChange, type OnConnect} from "@xyflow/react";
-import { useToolStore } from '@/stores/toolStore.tsx';
+import {useToolStore} from '@/stores/toolStore.tsx';
 
 const nodeTypes = {
     fastp: FastPNode,
@@ -107,7 +99,6 @@ function FlowContent() {
     const [nodes, setNodes] = useState<Node[]>([]);
     const [edges, setEdges] = useState<Edge[]>([]);
     const [isRunning, setIsRunning] = useState(false);
-    const [edgeType, setEdgeType] = useState("default");
     const {saveWorkflow, isRunning: isSaving} = useSaveWorkflow();
     const {screenToFlowPosition} = useReactFlow();
     const defaultArgs = useToolStore(state => state.defaultArgs);
@@ -174,16 +165,16 @@ function FlowContent() {
     return (
         <SidebarInset>
             <header
-                className="flex h-12 shrink-0 items-center gap-2 transition-[width,height] border-b">
-                <div className="flex items-center gap-2 px-4">
+                className="flex flex-col shrink-0 border-b">
+                <div className="flex items-center gap-2 px-4 h-12 bg-background">
                     <SidebarTrigger className="-ml-1"/>
                     <Separator orientation="vertical" className="!mr-2 !h-4"/>
                     <Breadcrumb>
                         <BreadcrumbList>
                             <BreadcrumbItem className="hidden md:block">
-                                <BreadcrumbLink href="#">
+                                <BreadcrumbPage>
                                     Building Your Application
-                                </BreadcrumbLink>
+                                </BreadcrumbPage>
                             </BreadcrumbItem>
                             <BreadcrumbSeparator className="hidden md:block"/>
                             <BreadcrumbItem>
@@ -192,44 +183,73 @@ function FlowContent() {
                         </BreadcrumbList>
                     </Breadcrumb>
                 </div>
-                <div className="flex items-center gap-2 ml-auto px-4">
-                    <Select value={edgeType} onValueChange={setEdgeType}>
-                        <SelectTrigger className="w-[120px]">
-                            <SelectValue placeholder="边连接风格"/>
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="default">默认</SelectItem>
-                            <SelectItem value="straight">直线</SelectItem>
-                            <SelectItem value="step">阶梯</SelectItem>
-                            <SelectItem value="smoothstep">平滑阶梯</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    <Separator orientation="vertical" className="!h-4"/>
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        title="保存"
-                        onClick={handleSave}
-                        disabled={isSaving}
-                    >
-                        <Save className="h-4 w-4"/>
-                    </Button>
-                    <Button variant="outline" size="icon" title="加载">
-                        <Download className="h-4 w-4"/>
-                    </Button>
-                    <Button variant="outline" size="icon" title="分享">
-                        <Share2 className="h-4 w-4"/>
-                    </Button>
-                    <Separator orientation="vertical" className="!h-4"/>
-                    <Button variant="outline" size="icon" title={isRunning ? "暂停" : "运行"} onClick={() => setIsRunning(!isRunning)}>
-                        {isRunning ? <Pause className="h-4 w-4"/> : <Play className="h-4 w-4"/>}
-                    </Button>
-                    <Button variant="outline" size="icon" title="停止">
-                        <Square className="h-4 w-4"/>
-                    </Button>
-                    <Button variant="outline" size="icon" title="重跑">
-                        <RotateCcw className="h-4 w-4"/>
-                    </Button>
+                <div className="flex items-center px-3 h-12 border-t bg-muted/30">
+                    <div className="flex items-center gap-1 mr-2">
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            title="加载配置"
+                            className="border-0 shadow-none text-muted-foreground hover:text-foreground"
+                            onClick={() => {
+                            }}
+                        >
+                            <Menu className="h-4 w-4"/>
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            title="保存"
+                            className="border-0 shadow-none text-muted-foreground hover:text-foreground"
+                            onClick={handleSave}
+                            disabled={isSaving}
+                        >
+                            <Save className="h-4 w-4"/>
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            title="另存为"
+                            className="border-0 shadow-none text-muted-foreground hover:text-foreground"
+                            onClick={handleSave}
+                            disabled={isSaving}
+                        >
+                            <SaveAll className="h-4 w-4"/>
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            title="导出配置"
+                            className="border-0 shadow-none text-muted-foreground hover:text-foreground"
+                            onClick={() => {
+                            }}
+                        >
+                            <Download className="h-4 w-4"/>
+                        </Button>
+                    </div>
+
+                    <Separator orientation="vertical" className="!h-8"/>
+
+                    <div className="flex items-center gap-1 ml-1">
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            title="运行"
+                            className="border-0 shadow-none text-muted-foreground hover:text-foreground"
+                            onClick={() => setIsRunning(!isRunning)}
+                        >
+                            <Play className="h-4 w-4"/>
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            title="检查合法性"
+                            className="border-0 shadow-none text-muted-foreground hover:text-foreground"
+                            onClick={() => {
+                            }}
+                        >
+                            <CheckCircle2 className="h-4 w-4"/>
+                        </Button>
+                    </div>
                 </div>
             </header>
             <div className="h-full w-full">

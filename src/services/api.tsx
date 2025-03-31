@@ -33,6 +33,10 @@ export const workflowApi = {
         const {data} = await api.get<string[]>('/workflow/flows');
         return data;
     },
+    getWorkflow: async (name: string) => {
+        const {data} = await api.get<WorkflowDefinition>(`/workflow/flows/${name}`);
+        return data;
+    },
 };
 
 export const toolApi = {
