@@ -112,6 +112,10 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+.react-flow__edges {
+  z-index: 100 !important;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
