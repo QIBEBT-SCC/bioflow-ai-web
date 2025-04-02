@@ -1,6 +1,6 @@
 "use client"
 
-import {Handle, Position, useEdges, useNodeId} from '@xyflow/react';
+import {Handle, NodeResizer, Position, useEdges, useNodeId} from '@xyflow/react';
 import * as React from "react";
 
 // 基础类型定义
@@ -14,7 +14,18 @@ interface NodeProps {
         inputs: HandleConfig[];
         outputs: HandleConfig[];
     };
-    nodeComponent: React.ReactNode
+    nodeComponent: React.ReactNode;
+}
+
+interface ResizeNodeProps {
+    handles: {
+        inputs: HandleConfig[];
+        outputs: HandleConfig[];
+    };
+    nodeComponent: React.ReactNode;
+    minW: number;
+    minH: number;
+    onResize: () => void;
 }
 
 interface HandleProps {
@@ -38,17 +49,18 @@ const NodeHandle = ({id, type, position, description,}: HandleProps) => {
 
     return (
         <>
-            <p className={`absolute text-xs text-neutral-400 ${position === Position.Left ? 'left-5' : 'right-5'} transform -translate-y-1/2`}
-               style={{top: `calc(var(--spacing) * ${topPos})`}}
+            <span
+                className={`absolute text-xs text-neutral-500 ${position === Position.Left ? 'left-6' : 'right-6'} transform -translate-y-1/2`}
+                style={{top: `calc(var(--spacing) * ${topPos})`}}
             >
                 {description}
-            </p>
+            </span>
             <Handle
                 id={handleId}
                 type={type}
                 position={position}
                 style={{top: `calc(var(--spacing) * ${topPos})`}}
-                className={`w-2.5 h-2.5 ${position === Position.Left ? '!left-2.5' : '!right-2.5'} rounded-full border-2 ${type === 'target' ? 'border-green-400' : 'border-blue-400'} shadow-sm transition-all duration-200 hover:scale-110 ${isConnected() ? type === 'target' ? '!bg-green-400' : '!bg-blue-400' : '!bg-white'}`}
+                className={`w-3 h-3 ${position === Position.Left ? '!left-3' : '!right-3'} rounded-full border-2 ${type === 'target' ? 'border-green-400' : 'border-blue-400'} shadow-sm transition-all duration-200 hover:scale-110 ${isConnected() ? type === 'target' ? '!bg-green-400' : '!bg-blue-400' : '!bg-white'}`}
             />
         </>
     );
@@ -84,3 +96,42 @@ export const BaseToolNode = ({handles, nodeComponent}: NodeProps) => {
         </div>
     );
 };
+
+export const BaseResizeableNode = ({handles, nodeComponent, onResize, minW, minH}: ResizeNodeProps) => {
+    return (
+        <div className={`flex h-full w-full min-w-[${minW}px] min-h-[${minH}px] relative font-sans shadow-lg rounded-xl overflow-hidden`}>
+            {/* Input handles */}
+            {handles.inputs.map((input) => (
+                <NodeHandle
+                    key={`in${input.id}`}
+                    id={input.id}
+                    type="target"
+                    position={Position.Left}
+                    description={input.description}
+                />
+            ))}
+
+            <NodeResizer
+                color="#ffffff"
+                onResizeEnd={() => {
+                    console.log('resized');
+                    onResize()
+                }}
+                minHeight={minH}
+                minWidth={minW}
+            />
+            {nodeComponent}
+
+            {/* Output handles */}
+            {handles.outputs.map((output) => (
+                <NodeHandle
+                    key={`out${output.id}`}
+                    id={output.id}
+                    type="source"
+                    position={Position.Right}
+                    description={output.description}
+                />
+            ))}
+        </div>
+    )
+}

@@ -10,7 +10,7 @@ import {
 import {FileInputNode} from "@/components/node-editor/input-node.tsx";
 import {LineFigNode} from "@/components/node-editor/draw-node.tsx";
 import {CutNode, JsonFilterNode} from "@/components/node-editor/data-node.tsx";
-import {ResizableNodeSelected} from "@/components/node-editor/note-node.tsx";
+import {NoteNode} from "@/components/node-editor/note-node.tsx";
 
 export const nodeTypes = {
     fastp: FastPNode,
@@ -24,7 +24,7 @@ export const nodeTypes = {
     lineFig: LineFigNode,
     dataFilter: JsonFilterNode,
     dataCut: CutNode,
-    note: ResizableNodeSelected
+    note: NoteNode
 };
 
 // 节点类型配置

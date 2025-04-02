@@ -206,7 +206,7 @@ function FlowContent() {
                             nodeTypes={nodeTypes}
                             fitView
                         >
-                            <Background variant={BackgroundVariant.Dots}/>
+                            <Background variant={BackgroundVariant.Dots} className="!bg-gray-100"/>
                             <Controls/>
                             <MiniMap nodeStrokeWidth={3} zoomable pannable/>
                         </ReactFlow>

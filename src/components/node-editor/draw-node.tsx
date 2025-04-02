@@ -1,9 +1,9 @@
-import {Handle, Position, useStore} from "@xyflow/react";
-import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card.tsx";
+import {Card, CardContent, CardFooter, CardHeader, CardTitle} from "@/components/ui/card.tsx";
 import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip.tsx";
 import {Info} from "lucide-react";
 import {useEffect, useRef} from "react";
 import * as echarts from "echarts";
+import {BaseResizeableNode} from "@/components/node-editor/base-node.tsx";
 
 const content_curves = {
     "A": [0.259102, 0.284825, 0.288125, 0.264283, 0.287144, 0.297873, 0.294622, 0.274901, 0.264482, 0.270357, 0.279397, 0.277693, 0.280823, 0.282645, 0.27963, 0.276962, 0.278225, 0.274892, 0.273952, 0.279164, 0.27723, 0.27752, 0.28094, 0.278138, 0.277944, 0.280769, 0.278083, 0.277121, 0.280104, 0.277026, 0.277015, 0.280554, 0.277585, 0.27732, 0.281218, 0.277934, 0.277137, 0.280445, 0.277523, 0.27644, 0.28018, 0.277409, 0.277468, 0.281109, 0.278551, 0.278086, 0.281319, 0.277998, 0.276775, 0.280261, 0.277329, 0.277043, 0.280644, 0.277654, 0.27787, 0.281074, 0.278148, 0.277702, 0.280734, 0.277561, 0.277243, 0.28041, 0.277672, 0.277626, 0.280965, 0.278509, 0.277967, 0.281093, 0.278201, 0.277654, 0.280586, 0.27746, 0.277559, 0.281017, 0.278422, 0.278245, 0.280967, 0.278646, 0.278034, 0.280999, 0.278079, 0.277901, 0.281104, 0.278398, 0.278507, 0.281788, 0.278777, 0.278455, 0.281417, 0.278658, 0.278082, 0.281191, 0.278729, 0.278322, 0.281765, 0.279145, 0.278673, 0.281488, 0.278763, 0.278296, 0.280968, 0.278344, 0.277978, 0.281102, 0.278526, 0.278302, 0.281413, 0.27886, 0.278585, 0.281361, 0.278545, 0.278215, 0.281017, 0.278466, 0.278196, 0.281316, 0.27862, 0.278563, 0.281468, 0.27869, 0.278087, 0.280893, 0.278157, 0.278214, 0.280984, 0.278675, 0.278601, 0.281326, 0.278867, 0.278657, 0.281072, 0.278636, 0.278079, 0.281151, 0.278503, 0.27835, 0.280943, 0.278878, 0.278496, 0.281363, 0.278472, 0.278575, 0.281055, 0.278158, 0.278469, 0.280802, 0.278805, 0.278711, 0.281259, 0.278944],
@@ -14,13 +14,14 @@ const content_curves = {
     "GC": [0.551994, 0.439437, 0.430969, 0.460405, 0.445607, 0.437578, 0.439341, 0.439862, 0.433702, 0.445371, 0.438905, 0.441293, 0.442982, 0.436286, 0.438269, 0.445088, 0.440954, 0.442772, 0.448318, 0.441015, 0.441247, 0.446396, 0.437689, 0.439287, 0.444808, 0.43895, 0.440876, 0.446271, 0.440643, 0.442437, 0.447071, 0.439639, 0.440528, 0.444743, 0.438173, 0.440279, 0.445173, 0.439506, 0.441759, 0.446364, 0.440465, 0.441505, 0.445898, 0.438422, 0.439575, 0.444771, 0.438603, 0.440893, 0.446151, 0.440286, 0.441547, 0.446148, 0.438934, 0.440208, 0.444621, 0.438356, 0.440082, 0.445106, 0.439352, 0.441214, 0.446274, 0.439192, 0.440619, 0.44499, 0.438379, 0.439826, 0.444558, 0.438606, 0.440703, 0.445735, 0.439537, 0.440873, 0.445484, 0.4389, 0.440003, 0.444201, 0.438052, 0.439981, 0.444824, 0.438998, 0.441012, 0.445549, 0.43905, 0.440163, 0.444096, 0.437798, 0.439193, 0.444123, 0.438434, 0.440124, 0.444699, 0.438927, 0.440288, 0.444138, 0.438146, 0.439384, 0.443908, 0.438246, 0.440018, 0.444621, 0.439153, 0.440659, 0.445071, 0.439132, 0.440129, 0.444291, 0.438267, 0.439727, 0.443991, 0.438548, 0.440251, 0.444845, 0.439073, 0.440434, 0.444508, 0.438512, 0.439868, 0.443945, 0.438188, 0.440171, 0.444317, 0.438681, 0.440068, 0.444597, 0.438956, 0.440062, 0.443879, 0.4384, 0.439672, 0.443757, 0.43836, 0.440145, 0.444113, 0.438923, 0.440363, 0.444389, 0.438444, 0.439997, 0.443715, 0.438547, 0.439514, 0.444095, 0.438831, 0.440398, 0.444317, 0.439063, 0.440121, 0.443856, 0.438688, 0.439818],
 }
 
-export function LineFigNode({id}: { id: string }) {
-    const edges = useStore((state) => state.edges);
-    const chartRef = useRef<HTMLDivElement>(null);
-
-    const isHandleConnected = (handleId: string) => {
-        return edges.some(edge => edge.sourceHandle === handleId || edge.targetHandle === handleId);
+export function LineFigNode() {
+    const handles = {
+        inputs: [{id: 1, description: "Line data"},],
+        outputs: []
     };
+    const topPadding = 4 + (6 * Math.max(handles.inputs.length, handles.outputs.length))
+
+    const chartRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (!chartRef.current) return;
@@ -72,18 +73,11 @@ export function LineFigNode({id}: { id: string }) {
         };
     }, []);
 
-    return (
-        <div className="flex justify-center relative">
-            <p className="absolute text-xs text-neutral-400 left-5 top-12 transform -translate-y-1/2">Line figure</p>
-            <Handle
-                id={`${id}-in1`}
-                type="target"
-                position={Position.Left}
-                className={`w-2.5 h-2.5 !top-12 !left-2.5 rounded-full border-2 border-green-400 shadow-sm transition-all duration-200 hover:scale-110 ${isHandleConnected(`${id}-in1`) ? '!bg-green-400' : '!bg-white'}`}
-            />
-
-            <Card className="w-[600px] py-0 gap-3 bg-gray-50 shadow-lg">
-                <CardHeader className="nodeDragable h-8 py-2 bg-indigo-600 rounded-t-xl flex flex-row items-center">
+    const figCard = () => {
+        return (
+            <Card className="w-full h-full py-0 gap-3 bg-gray-50 shadow-lg">
+                <CardHeader
+                    className="nodeDragable h-8 py-2 bg-gradient-to-r from-blue-500 to-sky-500 rounded-t-lg flex flex-row items-center">
                     <CardTitle className="text-white">
                         Line
                     </CardTitle>
@@ -96,10 +90,28 @@ export function LineFigNode({id}: { id: string }) {
                         </Tooltip>
                     </TooltipProvider>
                 </CardHeader>
-                <CardContent className="pt-6 pb-4">
-                    <div ref={chartRef} className="w-full h-[500px] rounded-sm border bg-white"></div>
+                <CardContent className="p-3" style={{paddingTop: `calc(var(--spacing) * ${topPadding})`}}>
+                    <div ref={chartRef} className="w-[500px] h-[500px] rounded-sm border bg-white"></div>
                 </CardContent>
+                <CardFooter className="h-4">
+                    <div className="absolute bottom-2 right-2 flex space-x-1">
+                        <div className="w-2 h-2 rounded-full bg-blue-400"></div>
+                        <div className="w-2 h-2 rounded-full bg-sky-400"></div>
+                        <div className="w-2 h-2 rounded-full bg-cyan-400"></div>
+                    </div>
+                </CardFooter>
             </Card>
-        </div>
+        );
+    }
+
+    return (
+        <BaseResizeableNode
+            handles={handles}
+            nodeComponent={figCard()}
+            onResize={() => {
+            }}
+            minH={600}
+            minW={600}
+        />
     );
 }

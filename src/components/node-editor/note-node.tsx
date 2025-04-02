@@ -1,8 +1,9 @@
-import {NodeResizer, NodeProps, useNodeId, useNodesData, useReactFlow} from '@xyflow/react';
+import {useNodeId, useNodesData, useReactFlow} from '@xyflow/react';
 import {Textarea} from "@/components/ui/textarea.tsx";
 import {useEffect, useState} from "react";
+import {BaseResizeableNode} from "@/components/node-editor/base-node.tsx";
 
-export const ResizableNodeSelected = ({selected}: NodeProps) => {
+const NoteCard = () => {
     const nodeId = useNodeId();
     // @ts-expect-error no need
     const nodeData = useNodesData(nodeId);
@@ -28,21 +29,41 @@ export const ResizableNodeSelected = ({selected}: NodeProps) => {
     }, [args, nodeId, setNodes]);
 
     return (
-        <div className={`flex h-full w-full relative`}>
-            <NodeResizer
-                color="#ffffff"
-                isVisible={selected}
-                minWidth={100}
-                minHeight={30}
-            />
+        <div className="absolute w-full h-full top-0 border border-gray-200 bg-white rounded-xl overflow-hidden">
+            <div className="nodeDragable bg-gradient-to-r from-indigo-500 to-purple-500 h-8 flex items-center px-3">
+                <span className="text-white text-sm font-medium">Note</span>
+            </div>
             <Textarea
-                className="flex w-fit h-fit max-w-5/6 rounded-none resize-none bg-amber-200 z-10"
+                className="w-full h-[calc(100%-2rem)] p-3 rounded-none resize-none border-none focus:ring-0 focus:outline-none bg-white text-gray-700"
                 placeholder="Enter notes here..."
                 value={args}
                 onChange={(e) => {
                     setArgs(e.target.value)
-                }}/>
-            <div className="nodeDragable absolute w-full h-[calc(100%-calc(var(--spacing)*5))] top-5 border-2 border-purple-400 bg-purple-50 rounded"></div>
+                }}
+            />
+            <div className="absolute bottom-2 right-2 flex space-x-1">
+                <div className="w-2 h-2 rounded-full bg-indigo-400"></div>
+                <div className="w-2 h-2 rounded-full bg-purple-400"></div>
+                <div className="w-2 h-2 rounded-full bg-pink-400"></div>
+            </div>
         </div>
     );
 };
+
+export function NoteNode() {
+    const handles = {
+        inputs: [],
+        outputs: []
+    };
+
+    return (
+        <BaseResizeableNode
+            handles={handles}
+            nodeComponent={<NoteCard/>}
+            onResize={() => {
+            }}
+            minH={120}
+            minW={250}
+        />
+    )
+}

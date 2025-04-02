@@ -1,4 +1,4 @@
-import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card.tsx";
+import {Card, CardContent, CardFooter, CardHeader, CardTitle} from "@/components/ui/card.tsx";
 import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip.tsx";
 import {Info} from "lucide-react";
 import {Label} from "@/components/ui/label.tsx";
@@ -6,10 +6,7 @@ import {Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVal
 import {BaseToolNode} from "@/components/node-editor/base-node.tsx";
 import {Input} from "@/components/ui/input.tsx";
 
-export function JsonFilterNode({id}: { id: string }) {
-    const self_data = {
-        prefix: id,
-    }
+export function JsonFilterNode() {
     const handles = {
         inputs: [
             {id: 1, description: "json data"},
@@ -18,13 +15,14 @@ export function JsonFilterNode({id}: { id: string }) {
             {id: 1, description: "dataframe"},
         ]
     }
+    const topPadding = 4 + (6 * Math.max(handles.inputs.length, handles.outputs.length))
 
     const selectList = ["read1_after_filtering", "coverage_across_reference", "coverage_histogram"]
 
     const card = () => {
         return (
-            <Card className="w-[350px] py-0 gap-3 bg-gray-50 shadow-lg">
-                <CardHeader className="nodeDragable h-8 py-2 bg-amber-600 rounded-t-xl flex flex-row items-center">
+            <Card className="w-[300px] py-0 gap-0 bg-white shadow-lg">
+                <CardHeader className="nodeDragable h-8 py-2 bg-gradient-to-r from-orange-500 to-amber-500 rounded-t-lg flex flex-row items-center">
                     <CardTitle className="text-white">
                         Json Data Filter
                     </CardTitle>
@@ -37,7 +35,7 @@ export function JsonFilterNode({id}: { id: string }) {
                         </Tooltip>
                     </TooltipProvider>
                 </CardHeader>
-                <CardContent className="pt-6 pb-4">
+                <CardContent className="p-3" style={{paddingTop: `calc(var(--spacing) * ${topPadding})`}}>
                     <Label className="pb-2 font-medium">Key:</Label>
                     <Select>
                         <SelectTrigger className="w-[200px] bg-white">
@@ -52,19 +50,23 @@ export function JsonFilterNode({id}: { id: string }) {
                         </SelectContent>
                     </Select>
                 </CardContent>
+                <CardFooter className="h-4">
+                    <div className="absolute bottom-2 right-2 flex space-x-1">
+                        <div className="w-2 h-2 rounded-full bg-amber-400"></div>
+                        <div className="w-2 h-2 rounded-full bg-orange-400"></div>
+                        <div className="w-2 h-2 rounded-full bg-yellow-400"></div>
+                    </div>
+                </CardFooter>
             </Card>
         )
     }
 
     return (
-        <BaseToolNode data={self_data} handles={handles} nodeComponent={card()}/>
+        <BaseToolNode handles={handles} nodeComponent={card()}/>
     )
 }
 
-export function CutNode({id}: { id: string }) {
-    const self_data = {
-        prefix: id,
-    }
+export function CutNode() {
     const handles = {
         inputs: [
             {id: 1, description: "input"},
@@ -73,11 +75,12 @@ export function CutNode({id}: { id: string }) {
             {id: 1, description: "output"},
         ]
     }
+    const topPadding = 4 + (6 * Math.max(handles.inputs.length, handles.outputs.length))
 
     const card = () => {
         return (
-            <Card className="w-[350px] py-0 gap-3 bg-gray-50 shadow-lg">
-                <CardHeader className="nodeDragable h-8 py-2 bg-amber-600 rounded-t-xl flex flex-row items-center">
+            <Card className="w-[300px] py-0 gap-0 bg-white shadow-lg">
+                <CardHeader className="nodeDragable h-8 py-2 bg-gradient-to-r from-orange-500 to-amber-500  rounded-t-lg flex flex-row items-center">
                     <CardTitle className="text-white">
                         Text Cut
                     </CardTitle>
@@ -90,15 +93,22 @@ export function CutNode({id}: { id: string }) {
                         </Tooltip>
                     </TooltipProvider>
                 </CardHeader>
-                <CardContent className="pt-6 pb-4">
+                <CardContent className="p-3" style={{paddingTop: `calc(var(--spacing) * ${topPadding})`}}>
                     <Label className="pb-2 font-medium">Head:</Label>
                     <Input className="bg-white" type="number"></Input>
                 </CardContent>
+                <CardFooter className="h-4">
+                    <div className="absolute bottom-2 right-2 flex space-x-1">
+                        <div className="w-2 h-2 rounded-full bg-amber-400"></div>
+                        <div className="w-2 h-2 rounded-full bg-orange-400"></div>
+                        <div className="w-2 h-2 rounded-full bg-yellow-400"></div>
+                    </div>
+                </CardFooter>
             </Card>
         )
     }
 
     return (
-        <BaseToolNode data={self_data} handles={handles} nodeComponent={card()}/>
+        <BaseToolNode handles={handles} nodeComponent={card()}/>
     )
 }

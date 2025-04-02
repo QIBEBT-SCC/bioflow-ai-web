@@ -1,48 +1,65 @@
 import {useEffect, useState} from "react";
-import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card.tsx";
+import {Card, CardContent, CardFooter, CardHeader, CardTitle} from "@/components/ui/card.tsx";
 import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip.tsx";
 import {Info} from "lucide-react";
 import {Label} from "@/components/ui/label.tsx";
 import {Input} from "@/components/ui/input.tsx";
 import {BaseToolNode} from "@/components/node-editor/base-node.tsx";
+import {useNodeId, useNodesData, useReactFlow} from "@xyflow/react";
 
 const FileCard = (
     {
-        data,
+        title,
+        description,
+        topPadding,
     }: {
-        data: {
-            prefix: string,
-            title: string;
-            description: string;
-            defaultArgs: string;
-
-        };
+        title: string;
+        description: string;
+        topPadding: number;
     }) => {
-    const [args, setArgs] = useState(data.defaultArgs);
+    const nodeId = useNodeId();
+    // @ts-expect-error no need
+    const nodeData = useNodesData(nodeId);
+    const {setNodes} = useReactFlow();
+    // @ts-expect-error no need
+    const [args, setArgs] = useState<string>(nodeData.data.args);
 
     useEffect(() => {
-        setArgs(data.defaultArgs);
-    }, [data.defaultArgs, data.prefix]);
+        setNodes((nodes) =>
+            nodes.map((node) => {
+                if (node.id === nodeId) {
+                    return {
+                        ...node,
+                        data: {
+                            ...node.data,
+                            args: args,
+                        },
+                    };
+                }
+                return node;
+            })
+        );
+    }, [args, nodeId, setNodes]);
 
     return (
-        <Card className="w-[350px] py-0 gap-3 bg-gray-50 shadow-lg">
-            <CardHeader className="nodeDragable h-8 py-2 bg-emerald-600 rounded-t-xl flex flex-row items-center">
+        <Card className="w-[350px] py-0 gap-3 bg-white shadow-lg">
+            <CardHeader className="nodeDragable h-8 py-2 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-t-xl flex flex-row items-center">
                 <CardTitle className="text-white">
-                    {data.title}
+                    {title}
                 </CardTitle>
                 <TooltipProvider>
                     <Tooltip>
                         <TooltipTrigger><Info className="w-3 h-3 text-gray-300"/></TooltipTrigger>
                         <TooltipContent>
-                            <p>{data.description}</p>
+                            <p>{description}</p>
                         </TooltipContent>
                     </Tooltip>
                 </TooltipProvider>
             </CardHeader>
-            <CardContent className="pt-5 pb-4">
+            <CardContent className="p-3" style={{paddingTop: `calc(var(--spacing) * ${topPadding})`}}>
                 <Label className="pb-2 font-medium">File:</Label>
                 <Input
-                    className="text-sm bg-white !focus:ring-1"
+                    className="w-full border-gray-200 focus:ring-teal-500 focus:border-teal-500"
                     placeholder="Enter arguments here..."
                     value={args}
                     onChange={(e) => {
@@ -50,17 +67,18 @@ const FileCard = (
                     }}
                 />
             </CardContent>
+            <CardFooter className="h-4">
+                <div className="absolute bottom-2 right-2 flex space-x-1">
+                    <div className="w-2 h-2 rounded-full bg-teal-400"></div>
+                    <div className="w-2 h-2 rounded-full bg-cyan-400"></div>
+                    <div className="w-2 h-2 rounded-full bg-emerald-400"></div>
+                </div>
+            </CardFooter>
         </Card>
     )
 }
 
-export function FileInputNode({id, data}: { id: string; data: { defaultArgs: string } }) {
-    const self_data = {
-        title: "File Input",
-        prefix: id,
-        description: "load file from local path",
-        defaultArgs: data.defaultArgs
-    }
+export function FileInputNode() {
     const handles = {
         inputs: [],
         outputs: [
@@ -69,6 +87,10 @@ export function FileInputNode({id, data}: { id: string; data: { defaultArgs: str
     }
 
     return (
-        <BaseToolNode data={self_data} handles={handles} nodeComponent={<FileCard data={self_data}/>}/>
+        <BaseToolNode handles={handles} nodeComponent={<FileCard
+            title="File Input"
+            description="load file from local path."
+            topPadding={(6 * Math.max(handles.inputs.length, handles.outputs.length))}
+        />}/>
     )
 }

@@ -1,7 +1,7 @@
 "use client"
 
 import {BaseToolNode} from "@/components/node-editor/base-node.tsx";
-import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card.tsx";
+import {Card, CardContent, CardFooter, CardHeader, CardTitle} from "@/components/ui/card.tsx";
 import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip.tsx";
 import {Info} from "lucide-react";
 import {Label} from "@/components/ui/label.tsx";
@@ -45,8 +45,9 @@ const ToolCard = (
     }, [args, nodeId, setNodes]);
 
     return (
-        <Card className="w-[350px] py-0 gap-0 bg-gray-50 shadow-lg">
-            <CardHeader className="nodeDragable h-8 py-2 bg-fuchsia-600 rounded-t-xl flex flex-row items-center">
+        <Card className="w-[300px] py-0 gap-0 bg-white shadow-lg">
+            <CardHeader
+                className="nodeDragable h-8 py-2 bg-gradient-to-r from-rose-500 to-pink-500 rounded-t-lg flex flex-row items-center">
                 <CardTitle className="text-white">{title}</CardTitle>
                 <TooltipProvider>
                     <Tooltip>
@@ -57,10 +58,10 @@ const ToolCard = (
                     </Tooltip>
                 </TooltipProvider>
             </CardHeader>
-            <CardContent className="pb-4" style={{paddingTop: `calc(var(--spacing) * ${topPadding})`}}>
+            <CardContent className="p-3" style={{paddingTop: `calc(var(--spacing) * ${topPadding})`}}>
                 <Label className="pb-2 font-medium">Args:</Label>
                 <Textarea
-                    className="h-[80px] text-sm resize-none bg-white overflow-y-auto !focus:ring-1"
+                    className="w-full h-[80px] text-sm resize-none overflow-y-auto border-gray-200 focus:ring-rose-500 focus:border-rose-500"
                     placeholder="Enter arguments here..."
                     value={args}
                     onChange={(e) => {
@@ -68,6 +69,13 @@ const ToolCard = (
                     }}
                 />
             </CardContent>
+            <CardFooter className="h-4">
+                <div className="absolute bottom-2 right-2 flex space-x-1">
+                    <div className="w-2 h-2 rounded-full bg-rose-400"></div>
+                    <div className="w-2 h-2 rounded-full bg-pink-400"></div>
+                    <div className="w-2 h-2 rounded-full bg-red-400"></div>
+                </div>
+            </CardFooter>
         </Card>
     )
 }
