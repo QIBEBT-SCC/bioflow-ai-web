@@ -99,7 +99,10 @@ export const BaseToolNode = ({handles, nodeComponent}: NodeProps) => {
 
 export const BaseResizeableNode = ({handles, nodeComponent, onResize, minW, minH}: ResizeNodeProps) => {
     return (
-        <div className={`flex h-full w-full min-w-[${minW}px] min-h-[${minH}px] relative font-sans shadow-lg rounded-xl overflow-hidden`}>
+        <div
+            className={`flex h-full w-full relative font-sans shadow-lg rounded-xl overflow-hidden`}
+            style={{minWidth: `${minW}px`, minHeight: `${minH}px`}}
+        >
             {/* Input handles */}
             {handles.inputs.map((input) => (
                 <NodeHandle
@@ -112,7 +115,7 @@ export const BaseResizeableNode = ({handles, nodeComponent, onResize, minW, minH
             ))}
 
             <NodeResizer
-                color="#ffffff"
+                color="#ffff"
                 onResizeEnd={() => {
                     console.log('resized');
                     onResize()

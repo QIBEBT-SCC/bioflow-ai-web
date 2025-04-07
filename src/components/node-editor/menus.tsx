@@ -1,8 +1,8 @@
 import {
     Bowtie2Node,
-    CheckM2Node,
+    CheckM2Node, DiamondNode,
     FastPNode,
-    KrakenNode,
+    KrakenNode, MeganDaa2RmaNode, MeganRma2InfoNode,
     QualiMapNode,
     SamToolsNode,
     SpadesNode
@@ -19,12 +19,15 @@ export const nodeTypes = {
     samtool: SamToolsNode,
     qualimap: QualiMapNode,
     spades: SpadesNode,
+    diamond: DiamondNode,
     checkm: CheckM2Node,
     fileInput: FileInputNode,
     lineFig: LineFigNode,
     dataFilter: JsonFilterNode,
     dataCut: CutNode,
-    note: NoteNode
+    note: NoteNode,
+    daa2rma: MeganDaa2RmaNode,
+    rma2info: MeganRma2InfoNode,
 };
 
 // 节点类型配置
@@ -39,6 +42,9 @@ export const nodeConfig = {
             {type: 'qualimap', label: 'QualiMap'},
             {type: 'spades', label: 'Spades'},
             {type: 'checkm', label: 'CheckM2'},
+            {type: 'diamond', label: 'Diamond'},
+            {type: 'daa2rma', label: 'daa2rma'},
+            {type: 'rma2info', label: 'rma2info'},
         ]
     },
     dataProcessing: {

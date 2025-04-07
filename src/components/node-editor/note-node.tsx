@@ -34,7 +34,7 @@ const NoteCard = () => {
                 <span className="text-white text-sm font-medium">Note</span>
             </div>
             <Textarea
-                className="w-full h-[calc(100%-2rem)] p-3 rounded-none resize-none border-none focus:ring-0 focus:outline-none bg-white text-gray-700"
+                className="w-full h-[calc(100%-3.5rem)] p-3 rounded-none resize-none border-none focus:ring-0 focus:outline-none bg-white text-gray-700"
                 placeholder="Enter notes here..."
                 value={args}
                 onChange={(e) => {

@@ -75,7 +75,7 @@ export function LineFigNode() {
 
     const figCard = () => {
         return (
-            <Card className="w-full h-full py-0 gap-3 bg-gray-50 shadow-lg">
+            <Card className="w-full h-full py-0 gap-3 bg-white shadow-lg">
                 <CardHeader
                     className="nodeDragable h-8 py-2 bg-gradient-to-r from-blue-500 to-sky-500 rounded-t-lg flex flex-row items-center">
                     <CardTitle className="text-white">

@@ -240,3 +240,73 @@ export function CheckM2Node() {
         }/>
     )
 }
+
+export function DiamondNode(){
+    const handles = {
+        inputs: [
+            {id: 1, description: "raw fasta file"},
+        ],
+        outputs: [
+            {id: 1, description: "BLAST pairwise"},
+            {id: 2, description: "BLAST XML"},
+            {id: 3, description: "BLAST tabular"},
+            {id: 4, description: "DAA"},
+            {id: 5, description: "SAM"},
+            {id: 6, description: "Taxonomic classification"},
+            {id: 7, description: "PAF"},
+            {id: 8, description: "JSON (flat)"},
+        ]
+    };
+
+    return (
+        <BaseToolNode handles={handles} nodeComponent={
+            <ToolCard
+                title="Diamond blastx"
+                description="Align translated DNA query sequences against a protein reference database."
+                topPadding={4 + (6 * Math.max(handles.inputs.length, handles.outputs.length))}
+            />
+        }/>
+    )
+}
+
+export function MeganDaa2RmaNode() {
+    const handles = {
+        inputs: [
+            {id: 1, description: "raw DAA file"},
+        ],
+        outputs: [
+            {id: 1, description: "rma6"},
+        ]
+    };
+
+    return (
+        <BaseToolNode handles={handles} nodeComponent={
+            <ToolCard
+                title="MEGAN6 daa2rma"
+                description="Computes a MEGAN .rma6 file from a DIAMOND .daa file"
+                topPadding={4 + (6 * Math.max(handles.inputs.length, handles.outputs.length))}
+            />
+        }/>
+    )
+}
+
+export function MeganRma2InfoNode() {
+    const handles = {
+        inputs: [
+            {id: 1, description: "rma6 file"},
+        ],
+        outputs: [
+            {id: 1, description: "report text"},
+        ]
+    };
+
+    return (
+        <BaseToolNode handles={handles} nodeComponent={
+            <ToolCard
+                title="MEGAN6 rma2info"
+                description="Analyses an RMA file"
+                topPadding={4 + (6 * Math.max(handles.inputs.length, handles.outputs.length))}
+            />
+        }/>
+    )
+}
