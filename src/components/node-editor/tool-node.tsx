@@ -1,11 +1,12 @@
 "use client"
 
-import {BaseToolNode} from "@/components/node-editor/base-node.tsx";
-import {Card, CardContent, CardFooter, CardHeader, CardTitle} from "@/components/ui/card.tsx";
-import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip.tsx";
+
 import {Info} from "lucide-react";
+import {Card, CardContent, CardFooter, CardHeader, CardTitle} from "@/components/ui/card.tsx";
 import {Label} from "@/components/ui/label.tsx";
+import {Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger} from "@/components/ui/sheet.tsx";
 import {Textarea} from "@/components/ui/textarea.tsx";
+import {BaseToolNode} from "@/components/node-editor/base-node.tsx";
 import {useEffect, useState} from "react";
 import {useNodeId, useNodesData, useReactFlow} from '@xyflow/react';
 
@@ -49,14 +50,15 @@ const ToolCard = (
             <CardHeader
                 className="nodeDragable h-8 py-2 bg-gradient-to-r from-rose-500 to-pink-500 rounded-t-lg flex flex-row items-center">
                 <CardTitle className="text-white">{title}</CardTitle>
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger><Info className="w-3 h-3 text-gray-300"/></TooltipTrigger>
-                        <TooltipContent>
-                            <p>{description}</p>
-                        </TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
+                <Sheet>
+                    <SheetTrigger><Info className="w-3 h-3 text-gray-300"/></SheetTrigger>
+                    <SheetContent>
+                        <SheetHeader>
+                            <SheetTitle>{title}</SheetTitle>
+                            <SheetDescription>{description}</SheetDescription>
+                        </SheetHeader>
+                    </SheetContent>
+                </Sheet>
             </CardHeader>
             <CardContent className="p-3" style={{paddingTop: `calc(var(--spacing) * ${topPadding})`}}>
                 <Label className="pb-2 font-medium">Args:</Label>
@@ -83,13 +85,13 @@ const ToolCard = (
 export function FastPNode() {
     const handles = {
         inputs: [
-            {id: 1, description: "raw r1 file"},
-            {id: 2, description: "raw r2 file"}
+            {id: 1, argName: "r1", description: "raw r1 file"},
+            {id: 2, argName: "r2", description: "raw r2 file"}
         ],
         outputs: [
-            {id: 1, description: "clean r1 file"},
-            {id: 2, description: "clean r2 file"},
-            {id: 3, description: "fastp report"},
+            {id: 1, argName: "r1", description: "clean r1 file"},
+            {id: 2, argName: "r2", description: "clean r2 file"},
+            {id: 3, argName: "json_report", description: "fastp report"},
         ]
     };
 
@@ -104,23 +106,23 @@ export function FastPNode() {
     )
 }
 
-export function KrakenNode() {
+export function MetaPhlanNode() {
     const handles = {
         inputs: [
-            {id: 1, description: "raw r1 file"},
-            {id: 2, description: "raw r2 file"},
+            {id: 1, argName: "r1", description: "raw r1 file"},
+            {id: 2, argName: "r2", description: "raw r2 file"},
         ],
         outputs: [
-            {id: 1, description: "kraken report"},
-            {id: 2, description: "kraken output"},
+            {id: 1, argName: "bowtie2out", description: "bowtie2 output"},
+            {id: 2, argName: "taxon", description: "taxon report"},
         ]
     }
 
     return (
         <BaseToolNode handles={handles} nodeComponent={
             <ToolCard
-                title="Kraken 2"
-                description="The second version of the Kraken taxonomic sequence classification system."
+                title="MetaPhlan"
+                description="MetaPhlAn is a computational tool for species-level microbial profiling (bacteria, archaea, eukaryotes, and viruses) from metagenomic shotgun sequencing data."
                 topPadding={4 + (6 * Math.max(handles.inputs.length, handles.outputs.length))}
             />
         }/>
@@ -128,133 +130,14 @@ export function KrakenNode() {
 }
 
 
-export function Bowtie2Node() {
+export function DiamondNode() {
     const handles = {
         inputs: [
-            {id: 1, description: "raw r1 file"},
-            {id: 2, description: "raw r2 file"},
-            {id: 3, description: "bowtie index"},
+            {id: 1, argName: "input_path", description: "raw fasta file"},
+            // {id: 2, description: "diamond nr db"},
         ],
         outputs: [
-            {id: 1, description: "bam file"}
-        ]
-    };
-
-    return (
-        <BaseToolNode handles={handles} nodeComponent={
-            <ToolCard
-                title="Bowtie2"
-                description="Bowtie 2 is an ultrafast and memory-efficient tool for aligning sequencing reads to long reference sequences."
-                topPadding={4 + (6 * Math.max(handles.inputs.length, handles.outputs.length))}
-            />
-        }/>
-    )
-}
-
-
-export function SamToolsNode() {
-    const handles = {
-        inputs: [
-            {id: 1, description: "raw bam file"},
-        ],
-        outputs: [
-            {id: 1, description: "output bam file"},
-        ]
-    }
-
-    return (
-        <BaseToolNode handles={handles} nodeComponent={
-            <ToolCard
-                title="Samtools"
-                description="Samtools is a suite of programs for interacting with high-throughput sequencing data."
-                topPadding={4 + (6 * Math.max(handles.inputs.length, handles.outputs.length))}
-            />
-        }/>
-    )
-}
-
-
-export function QualiMapNode() {
-    const handles = {
-        inputs: [
-            {id: 1, description: "raw bam file"},
-            {id: 2, description: "gff file"}
-        ],
-        outputs: [
-            {id: 1, description: "qualimap reports"}
-        ]
-    };
-
-    return (
-        <BaseToolNode handles={handles} nodeComponent={
-            <ToolCard
-                title="QualiMap"
-                description="QualiMap 2, a platform-independent application written in Java and R that provides both a Graphical User Inteface (GUI) and a command-line interface to facilitate the quality control of alignment sequencing data and its derivatives like feature counts."
-                topPadding={4 + (6 * Math.max(handles.inputs.length, handles.outputs.length))}
-            />
-        }/>
-    )
-}
-
-
-export function SpadesNode() {
-    const handles = {
-        inputs: [
-            {id: 1, description: "raw r1 file"},
-            {id: 2, description: "raw r2 file"}
-        ],
-        outputs: [
-            {id: 1, description: "contigs"},
-        ]
-    }
-
-    return (
-        <BaseToolNode handles={handles} nodeComponent={
-            <ToolCard
-                title="Spades"
-                description="SPAdes is a versatile toolkit designed for assembly and analysis of sequencing data."
-                topPadding={4 + (6 * Math.max(handles.inputs.length, handles.outputs.length))}
-            />
-        }/>
-    )
-}
-
-
-export function CheckM2Node() {
-    const handles = {
-        inputs: [
-            {id: 1, description: "contigs file"},
-        ],
-        outputs: [
-            {id: 1, description: "checkm2 reports"}
-        ]
-    };
-
-    return (
-        <BaseToolNode handles={handles} nodeComponent={
-            <ToolCard
-                title="CheckM2"
-                description="Rapid assessment of genome bin quality using machine learning."
-                topPadding={4 + (6 * Math.max(handles.inputs.length, handles.outputs.length))}
-            />
-        }/>
-    )
-}
-
-export function DiamondNode(){
-    const handles = {
-        inputs: [
-            {id: 1, description: "raw fasta file"},
-        ],
-        outputs: [
-            {id: 1, description: "BLAST pairwise"},
-            {id: 2, description: "BLAST XML"},
-            {id: 3, description: "BLAST tabular"},
-            {id: 4, description: "DAA"},
-            {id: 5, description: "SAM"},
-            {id: 6, description: "Taxonomic classification"},
-            {id: 7, description: "PAF"},
-            {id: 8, description: "JSON (flat)"},
+            {id: 1, argName: "daa_file", description: "daa file"},
         ]
     };
 
@@ -269,13 +152,38 @@ export function DiamondNode(){
     )
 }
 
-export function MeganDaa2RmaNode() {
+export function MeganPrepareNode() {
     const handles = {
         inputs: [
-            {id: 1, description: "raw DAA file"},
+            {id: 1, argName: "daa", description: "raw DAA file"},
+            {id: 2, argName: "mdb", description: "megan map db"},
         ],
         outputs: [
-            {id: 1, description: "rma6"},
+            {id: 1, argName: "daa_file", description: "meganized daa file"},
+        ]
+    };
+
+    return (
+        <BaseToolNode handles={handles} nodeComponent={
+            <ToolCard
+                title="MEGAN6 daa-meganizer"
+                description="Computes a MEGAN .rma6 file from a DIAMOND .daa file"
+                topPadding={4 + (6 * Math.max(handles.inputs.length, handles.outputs.length))}
+            />
+        }/>
+    )
+}
+
+
+export function Daa2RmaNode() {
+    const handles = {
+        inputs: [
+            {id: 1, argName: "daa_r1", description: "raw r1 DAA file"},
+            {id: 2, argName: "daa_r2", description: "raw r2 DAA file"},
+            {id: 3, argName: "mdb", description: "megan map db"},
+        ],
+        outputs: [
+            {id: 1, argName: "megan_rma", description: "rma6"},
         ]
     };
 
@@ -290,13 +198,13 @@ export function MeganDaa2RmaNode() {
     )
 }
 
-export function MeganRma2InfoNode() {
+export function Rma2InfoNode() {
     const handles = {
         inputs: [
-            {id: 1, description: "rma6 file"},
+            {id: 1, argName: "rma", description: "rma6 file"},
         ],
         outputs: [
-            {id: 1, description: "report text"},
+            {id: 1, argName: "report", description: "report file"},
         ]
     };
 

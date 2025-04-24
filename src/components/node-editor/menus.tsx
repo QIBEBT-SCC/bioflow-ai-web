@@ -1,11 +1,8 @@
 import {
-    Bowtie2Node,
-    CheckM2Node, DiamondNode,
-    FastPNode,
-    KrakenNode, MeganDaa2RmaNode, MeganRma2InfoNode,
-    QualiMapNode,
-    SamToolsNode,
-    SpadesNode
+    Daa2RmaNode,
+    DiamondNode,
+    FastPNode, MeganPrepareNode,
+    MetaPhlanNode, Rma2InfoNode
 } from "@/components/node-editor/tool-node.tsx";
 import {FileInputNode} from "@/components/node-editor/input-node.tsx";
 import {LineFigNode} from "@/components/node-editor/draw-node.tsx";
@@ -14,37 +11,33 @@ import {NoteNode} from "@/components/node-editor/note-node.tsx";
 
 export const nodeTypes = {
     fastp: FastPNode,
-    kraken2: KrakenNode,
-    bowtie2: Bowtie2Node,
-    samtool: SamToolsNode,
-    qualimap: QualiMapNode,
-    spades: SpadesNode,
+    metaphlan: MetaPhlanNode,
     diamond: DiamondNode,
-    checkm: CheckM2Node,
+    daa_meganizer: MeganPrepareNode,
+    daa2rma: Daa2RmaNode,
+    rma2info_taxon: Rma2InfoNode,
+    rma2info_go: Rma2InfoNode,
+    rma2info_eggnog: Rma2InfoNode,
     fileInput: FileInputNode,
     lineFig: LineFigNode,
     dataFilter: JsonFilterNode,
     dataCut: CutNode,
     note: NoteNode,
-    daa2rma: MeganDaa2RmaNode,
-    rma2info: MeganRma2InfoNode,
 };
 
 // 节点类型配置
 export const nodeConfig = {
     tools: {
-        name: '工具',
+        name: '分析工具',
         items: [
             {type: 'fastp', label: 'FastP'},
-            {type: 'kraken2', label: 'Kraken2'},
-            {type: 'bowtie2', label: 'Bowtie2'},
-            {type: 'samtool', label: 'SamTools'},
-            {type: 'qualimap', label: 'QualiMap'},
-            {type: 'spades', label: 'Spades'},
-            {type: 'checkm', label: 'CheckM2'},
+            {type: 'metaphlan', label: 'MetaPhlan'},
             {type: 'diamond', label: 'Diamond'},
+            {type: 'daa_meganizer', label: 'daa-meganizer'},
             {type: 'daa2rma', label: 'daa2rma'},
-            {type: 'rma2info', label: 'rma2info'},
+            {type: 'rma2info_taxon', label: 'rma2info(Taxon)'},
+            {type: 'rma2info_go', label: 'rma2info(GO)'},
+            {type: 'rma2info_eggnog', label: 'rma2info(eggNOG)'},
         ]
     },
     dataProcessing: {

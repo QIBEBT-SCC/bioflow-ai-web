@@ -6,6 +6,7 @@ import * as React from "react";
 // 基础类型定义
 interface HandleConfig {
     id: number;
+    argName: string;
     description: string;
 }
 
@@ -30,17 +31,18 @@ interface ResizeNodeProps {
 
 interface HandleProps {
     id: number;
+    argName: string;
     type: 'source' | 'target';
     position: Position;
     description: string;
 }
 
 // 基础 Handle 组件
-const NodeHandle = ({id, type, position, description,}: HandleProps) => {
+const NodeHandle = ({id, argName, type, position, description,}: HandleProps) => {
     const nodeId = useNodeId();
     const edges = useEdges();
 
-    const handleId = `${nodeId}-${type === 'source' ? 'out' : 'in'}${id}`
+    const handleId = `${nodeId}-${type === 'source' ? 'out' : 'in'}-${argName}`
     const topPos = (id + 1) * 6
 
     const isConnected = () => {
@@ -75,6 +77,7 @@ export const BaseToolNode = ({handles, nodeComponent}: NodeProps) => {
                 <NodeHandle
                     key={`in${input.id}`}
                     id={input.id}
+                    argName={input.argName}
                     type="target"
                     position={Position.Left}
                     description={input.description}
@@ -88,6 +91,7 @@ export const BaseToolNode = ({handles, nodeComponent}: NodeProps) => {
                 <NodeHandle
                     key={`out${output.id}`}
                     id={output.id}
+                    argName={output.argName}
                     type="source"
                     position={Position.Right}
                     description={output.description}
@@ -108,6 +112,7 @@ export const BaseResizeableNode = ({handles, nodeComponent, onResize, minW, minH
                 <NodeHandle
                     key={`in${input.id}`}
                     id={input.id}
+                    argName={input.argName}
                     type="target"
                     position={Position.Left}
                     description={input.description}
@@ -130,6 +135,7 @@ export const BaseResizeableNode = ({handles, nodeComponent, onResize, minW, minH
                 <NodeHandle
                     key={`out${output.id}`}
                     id={output.id}
+                    argName={output.argName}
                     type="source"
                     position={Position.Right}
                     description={output.description}

@@ -11,7 +11,7 @@ import {
     ReactFlow, Background, Controls, applyNodeChanges, applyEdgeChanges, addEdge, MiniMap, BackgroundVariant,
     ReactFlowProvider, useReactFlow
 } from "@xyflow/react";
-import {useCallback, useState} from "react";
+import {type MouseEvent as ReactMouseEvent, useCallback, useState} from "react";
 import {Button} from "@/components/ui/button.tsx";
 import {Play, Save, SaveAll, Download, Menu, CheckCircle2} from "lucide-react";
 import {useSaveWorkflow} from '@/hooks/useWorkflow.tsx';
@@ -24,6 +24,7 @@ import {
     ContextMenuSubTrigger,
     ContextMenuSubContent
 } from "@/components/ui/context-menu.tsx";
+import {v4 as uuid4} from 'uuid';
 import {type Node, type Edge, type OnNodesChange, type OnEdgesChange, type OnConnect} from "@xyflow/react";
 import {useToolStore} from '@/stores/toolStore.tsx';
 import {nodeConfig, nodeTypes} from "@/components/node-editor/menus.tsx";
@@ -63,20 +64,20 @@ function FlowContent() {
             y: event.clientY,
         });
 
-        const lastId = nodes.length == 0 ? -1 : parseInt(nodes[nodes.length - 1].id.replace("node", ""))
+        const nodeId = uuid4();
         const newNode = {
-            id: `node${lastId + 1}`,
+            id: nodeId,
             type,
             dragHandle: '.nodeDragable',
             position,
             data: {
-                args: defaultArgs[`${type}_arg` as keyof typeof defaultArgs] ?? ''
+                args: defaultArgs[`${type}` as keyof typeof defaultArgs] ?? ''
             },
             zIndex: type === 'note' ? -10 : 20,
         };
 
         setNodes((nds) => [...nds, newNode]);
-    }, [nodes, screenToFlowPosition, defaultArgs]);
+    }, [screenToFlowPosition, defaultArgs]);
 
     const handleSave = () => {
         const workflow = {
@@ -103,6 +104,23 @@ function FlowContent() {
             </ContextMenuSub>
         ));
     }, [onAddNode]);
+
+    const showPanelMenu = (e: ReactMouseEvent | MouseEvent) => {
+        console.log(e)
+        return (
+            // <DropdownMenu open={true} onOpenChange={}>
+            //     <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            //     <DropdownMenuSeparator />
+            //     <DropdownMenuItem>Profile</DropdownMenuItem>
+            //     <DropdownMenuItem>Billing</DropdownMenuItem>
+            //     <DropdownMenuItem>Team</DropdownMenuItem>
+            //     <DropdownMenuItem>Subscription</DropdownMenuItem>
+            // </DropdownMenu>
+            <div>
+                <p>test</p>
+            </div>
+        )
+    }
 
     return (
         <SidebarInset>
@@ -204,6 +222,7 @@ function FlowContent() {
                             onEdgesChange={onEdgesChange}
                             onConnect={onConnect}
                             nodeTypes={nodeTypes}
+                            onPaneContextMenu={showPanelMenu}
                             fitView
                         >
                             <Background variant={BackgroundVariant.Dots} className="!bg-gray-100"/>
@@ -215,6 +234,20 @@ function FlowContent() {
                         {renderMenuItems()}
                     </ContextMenuContent>
                 </ContextMenu>
+                {/*<ReactFlow*/}
+                {/*    nodes={nodes}*/}
+                {/*    edges={edges}*/}
+                {/*    onNodesChange={onNodesChange}*/}
+                {/*    onEdgesChange={onEdgesChange}*/}
+                {/*    onConnect={onConnect}*/}
+                {/*    nodeTypes={nodeTypes}*/}
+                {/*    onPaneContextMenu={showPanelMenu}*/}
+                {/*    fitView*/}
+                {/*>*/}
+                {/*    <Background variant={BackgroundVariant.Dots} className="!bg-gray-100"/>*/}
+                {/*    <Controls/>*/}
+                {/*    <MiniMap nodeStrokeWidth={3} zoomable pannable/>*/}
+                {/*</ReactFlow>*/}
             </div>
         </SidebarInset>
     );

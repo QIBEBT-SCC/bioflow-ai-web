@@ -1,11 +1,12 @@
-import {useEffect, useState} from "react";
-import {Card, CardContent, CardFooter, CardHeader, CardTitle} from "@/components/ui/card.tsx";
-import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip.tsx";
 import {Info} from "lucide-react";
+import {Card, CardContent, CardFooter, CardHeader, CardTitle} from "@/components/ui/card.tsx";
 import {Label} from "@/components/ui/label.tsx";
 import {Input} from "@/components/ui/input.tsx";
+import {Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger} from "@/components/ui/sheet.tsx";
 import {BaseToolNode} from "@/components/node-editor/base-node.tsx";
 import {useNodeId, useNodesData, useReactFlow} from "@xyflow/react";
+import {useEffect, useState} from "react";
+
 
 const FileCard = (
     {
@@ -43,18 +44,20 @@ const FileCard = (
 
     return (
         <Card className="w-[350px] py-0 gap-3 bg-white shadow-lg">
-            <CardHeader className="nodeDragable h-8 py-2 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-t-xl flex flex-row items-center">
+            <CardHeader
+                className="nodeDragable h-8 py-2 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-t-xl flex flex-row items-center">
                 <CardTitle className="text-white">
                     {title}
                 </CardTitle>
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger><Info className="w-3 h-3 text-gray-300"/></TooltipTrigger>
-                        <TooltipContent>
-                            <p>{description}</p>
-                        </TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
+                <Sheet>
+                    <SheetTrigger><Info className="w-3 h-3 text-gray-300"/></SheetTrigger>
+                    <SheetContent>
+                        <SheetHeader>
+                            <SheetTitle>{title}</SheetTitle>
+                            <SheetDescription>{description}</SheetDescription>
+                        </SheetHeader>
+                    </SheetContent>
+                </Sheet>
             </CardHeader>
             <CardContent className="p-3" style={{paddingTop: `calc(var(--spacing) * ${topPadding})`}}>
                 <Label className="pb-2 font-medium">File:</Label>
@@ -82,7 +85,7 @@ export function FileInputNode() {
     const handles = {
         inputs: [],
         outputs: [
-            {id: 1, description: "output file"},
+            {id: 1, argName: "file_path", description: "output file"},
         ]
     }
 
