@@ -9,7 +9,7 @@ export function useToolArgs() {
         if (Object.keys(defaultArgs).length === 0) {
             toolApi.getDefaultArgs().then(setDefaultArgs);
         }
-    }, [defaultArgs]);
+    }, [defaultArgs, setDefaultArgs]);
 
     return defaultArgs;
 } 
