@@ -1,16 +1,27 @@
 import axios from 'axios';
 import {type Edge, type Node} from "@xyflow/react";
+import {isTokenExpired, useAuthStore} from "@/stores/authStore";
 
-const api = axios.create({
-    baseURL: '/api/v1', // 通过vite的proxy配置，会自动代理到 http://172.18.19.113:8000
+export const api = axios.create({
+    baseURL: '/api/v1',
 });
+
+export const apiPublic = axios.create({
+    baseURL: '/api/v1'
+})
 
 // 添加认证拦截器
 api.interceptors.request.use((config) => {
     const token = localStorage.getItem('token');
-    if (token) {
+
+    // 检查token是否过期
+    if (token && !isTokenExpired(token)) {
         config.headers.Authorization = `Bearer ${token}`;
+    } else if (token) {
+        // 如果token存在但已过期，执行登出操作
+        useAuthStore.getState().logout();
     }
+
     return config;
 });
 
@@ -19,16 +30,12 @@ api.interceptors.response.use(
     (response) => response,
     async (error) => {
         if (error.response?.status === 401) {
-            // 清除本地存储的token
-            localStorage.removeItem('token');
-            // 可以在这里添加重定向到登录页面的逻辑
-            window.location.href = '/login';
+            // 执行登出操作
+            useAuthStore.getState().logout();
         }
         return Promise.reject(error);
     }
 );
-
-export { api };
 
 export interface WorkflowDefinition {
     nodes: Node[];
@@ -57,7 +64,7 @@ export const workflowApi = {
 
 export const toolApi = {
     getDefaultArgs: async () => {
-        const {data} = await api.get<DefaultArgs>('/tool/args');
+        const {data} = await apiPublic.get<DefaultArgs>('/tool/args');
         return data;
     },
 }; 
