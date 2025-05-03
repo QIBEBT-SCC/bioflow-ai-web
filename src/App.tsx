@@ -52,29 +52,33 @@ export default function App() {
                 element: <PublicRoute><LoginPage/></PublicRoute>,
             },
             {
-                path: "/dashboard",
-                children: [
-                    {
-                        path: "workflow",
-                        element: <ProtectedRoute><MainLayout/></ProtectedRoute>,
-                    },
-                    {
-                        path: "workflow/:workflowId",
-                        element: <ProtectedRoute><MainLayout/></ProtectedRoute>,
-                    },
-                ]
+                path: "/home",
+                element: <ProtectedRoute><MainLayout page={"home"}/></ProtectedRoute>,
             },
+            {
+                path: "/project",
+                element: <ProtectedRoute><MainLayout page={"project"}/></ProtectedRoute>
+            },
+            // {
+            //     path: "/dashboard",
+            //     children: [
+            //         {
+            //             path: "workflow",
+            //             element: <ProtectedRoute><MainLayout/></ProtectedRoute>,
+            //         },
+            //         {
+            //             path: "workflow/:workflowId",
+            //             element: <ProtectedRoute><MainLayout/></ProtectedRoute>,
+            //         },
+            //     ]
+            // },
             {
                 path: "/",
-                element: <Navigate to="/dashboard/workflow" replace/>,
-            },
-            {
-                path: "/dashboard",
-                element: <Navigate to="/dashboard/workflow" replace/>,
+                element: <Navigate to="/home" replace/>,
             },
             {
                 path: "*",
-                element: <Navigate to="/dashboard/workflow" replace/>,
+                element: <Navigate to="/home" replace/>,
             }
         ]
     )
