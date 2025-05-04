@@ -1,28 +1,33 @@
 import {Button} from "@/components/ui/button.tsx"
 import {Input} from "@/components/ui/input.tsx"
-import {Badge} from "@/components/ui/badge.tsx"
-import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs.tsx"
+import {Tabs, TabsList, TabsTrigger} from "@/components/ui/tabs.tsx"
 import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger} from "@/components/ui/dropdown-menu.tsx"
 import {
     Search,
     Plus,
-    Star,
-    Clock,
-    PlayCircle,
-    MoreHorizontal,
-    Edit,
-    Trash2,
-    Copy,
     Filter,
-    ChevronUp,
 } from "lucide-react"
-import {Link} from "react-router-dom";
 import {SidebarInset, SidebarTrigger} from "@/components/ui/sidebar.tsx";
 import {Separator} from "@/components/ui/separator.tsx";
 import {Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage} from "@/components/ui/breadcrumb.tsx";
 import {TagList} from "@/components/project/tag-list.tsx";
+import {useProjectStore} from "@/stores/projectStore.tsx";
+import {useEffect} from "react";
+import {projectApi} from "@/services/api.tsx";
+import {AllProjectTab, MyProjectTab, StarredProjectTab} from "@/components/project/project-list.tsx";
 
 export function ProjectsPage() {
+    const {projects, setProjects} = useProjectStore();
+    useEffect(() => {
+        if (projects.length === 0) {
+            projectApi.getProjectList()
+                .then(setProjects)
+                .catch(() => {/* 错误处理可扩展 */
+                });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [projects]);
+
     return (
         <SidebarInset>
             <header
@@ -71,7 +76,7 @@ export function ProjectsPage() {
                                         <TabsList>
                                             <TabsTrigger value="all">全部项目</TabsTrigger>
                                             <TabsTrigger value="starred">已收藏</TabsTrigger>
-                                            <TabsTrigger value="recent">最近使用</TabsTrigger>
+                                            <TabsTrigger value="my">我创建的</TabsTrigger>
                                         </TabsList>
 
                                         <div className="flex items-center gap-2">
@@ -111,311 +116,13 @@ export function ProjectsPage() {
                                     </div>
 
                                     {/* 项目列表 - 全部 */}
-                                    <TabsContent value="all" className="mt-6">
-                                        <div className="rounded-md border">
-                                            <div className="relative w-full overflow-auto">
-                                                <table className="w-full caption-bottom text-sm">
-                                                    <thead className="bg-muted/50">
-                                                    <tr className="border-b">
-                                                        <th className="h-12 px-4 text-left align-middle font-medium">
-                                                            <div className="flex items-center space-x-1">
-                                                                <span>项目名称</span>
-                                                                <ChevronUp className="h-4 w-4"/>
-                                                            </div>
-                                                        </th>
-                                                        <th className="h-12 px-4 text-left align-middle font-medium hidden md:table-cell">描述</th>
-                                                        <th className="h-12 px-4 text-left align-middle font-medium hidden lg:table-cell">标签</th>
-                                                        <th className="h-12 px-4 text-left align-middle font-medium">更新时间</th>
-                                                        <th className="h-12 px-4 text-left align-middle font-medium">运行次数</th>
-                                                        <th className="h-12 px-4 text-right align-middle font-medium">操作</th>
-                                                    </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                    {/* 创建新项目行 */}
-                                                    <tr className="border-b bg-muted/30">
-                                                        <td colSpan={6} className="p-4">
-                                                            <div className="flex items-center justify-center py-2">
-                                                                <Button>
-                                                                    <Plus className="h-4 w-4 mr-2"/>
-                                                                    创建新项目
-                                                                </Button>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-
-                                                    {/* 项目列表行 */}
-                                                    {projects.map((project) => (
-                                                        <tr key={project.id} className="border-b hover:bg-muted/50 transition-colors">
-                                                            <td className="p-4">
-                                                                <div className="flex items-center gap-2">
-                                                                    <Button
-                                                                        variant="ghost"
-                                                                        size="icon"
-                                                                        className={project.starred ? "text-amber-400" : "text-muted-foreground"}
-                                                                    >
-                                                                        <Star className="h-4 w-4"/>
-                                                                        <span className="sr-only">收藏</span>
-                                                                    </Button>
-                                                                    <Link to={`/projects/${project.id}`}
-                                                                          className="font-medium hover:underline">
-                                                                        {project.name}
-                                                                    </Link>
-                                                                </div>
-                                                            </td>
-                                                            <td className="p-4 text-muted-foreground hidden md:table-cell">
-                                                                <div className="line-clamp-1">{project.description}</div>
-                                                            </td>
-                                                            <td className="p-4 hidden lg:table-cell">
-                                                                <div className="flex flex-wrap gap-1">
-                                                                    {project.tags.map((tag) => (
-                                                                        <Badge
-                                                                            key={tag.id}
-                                                                            className={`bg-${tag.color}-100 text-${tag.color}-800 hover:bg-${tag.color}-200 border-0`}
-                                                                        >
-                                                                            {tag.name}
-                                                                        </Badge>
-                                                                    ))}
-                                                                </div>
-                                                            </td>
-                                                            <td className="p-4 text-muted-foreground">
-                                                                <div className="flex items-center">
-                                                                    <Clock className="h-3 w-3 mr-1"/>
-                                                                    {project.lastUpdated}
-                                                                </div>
-                                                            </td>
-                                                            <td className="p-4 text-muted-foreground">
-                                                                <div className="flex items-center">
-                                                                    <PlayCircle className="h-3 w-3 mr-1"/>
-                                                                    {project.runs}
-                                                                </div>
-                                                            </td>
-                                                            <td className="p-4 text-right">
-                                                                <DropdownMenu>
-                                                                    <DropdownMenuTrigger asChild>
-                                                                        <Button variant="ghost" size="icon">
-                                                                            <MoreHorizontal className="h-4 w-4"/>
-                                                                            <span className="sr-only">更多选项</span>
-                                                                        </Button>
-                                                                    </DropdownMenuTrigger>
-                                                                    <DropdownMenuContent align="end">
-                                                                        <DropdownMenuItem>
-                                                                            <Edit className="h-4 w-4 mr-2"/>
-                                                                            编辑项目
-                                                                        </DropdownMenuItem>
-                                                                        <DropdownMenuItem>
-                                                                            <Copy className="h-4 w-4 mr-2"/>
-                                                                            复制项目
-                                                                        </DropdownMenuItem>
-                                                                        <DropdownMenuItem className="text-destructive">
-                                                                            <Trash2 className="h-4 w-4 mr-2"/>
-                                                                            删除项目
-                                                                        </DropdownMenuItem>
-                                                                    </DropdownMenuContent>
-                                                                </DropdownMenu>
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    </TabsContent>
+                                    <AllProjectTab/>
 
                                     {/* 项目列表 - 已收藏 */}
-                                    <TabsContent value="starred" className="mt-6">
-                                        <div className="rounded-md border">
-                                            <div className="relative w-full overflow-auto">
-                                                <table className="w-full caption-bottom text-sm">
-                                                    <thead className="bg-muted/50">
-                                                    <tr className="border-b">
-                                                        <th className="h-12 px-4 text-left align-middle font-medium">
-                                                            <div className="flex items-center space-x-1">
-                                                                <span>项目名称</span>
-                                                                <ChevronUp className="h-4 w-4"/>
-                                                            </div>
-                                                        </th>
-                                                        <th className="h-12 px-4 text-left align-middle font-medium hidden md:table-cell">描述</th>
-                                                        <th className="h-12 px-4 text-left align-middle font-medium hidden lg:table-cell">标签</th>
-                                                        <th className="h-12 px-4 text-left align-middle font-medium">更新时间</th>
-                                                        <th className="h-12 px-4 text-left align-middle font-medium">运行次数</th>
-                                                        <th className="h-12 px-4 text-right align-middle font-medium">操作</th>
-                                                    </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                    {projects
-                                                        .filter((project) => project.starred)
-                                                        .map((project) => (
-                                                            <tr key={project.id} className="border-b hover:bg-muted/50 transition-colors">
-                                                                <td className="p-4">
-                                                                    <div className="flex items-center gap-2">
-                                                                        <Button variant="ghost" size="icon" className="text-amber-400">
-                                                                            <Star className="h-4 w-4"/>
-                                                                            <span className="sr-only">收藏</span>
-                                                                        </Button>
-                                                                        <Link to={`/projects/${project.id}`}
-                                                                              className="font-medium hover:underline">
-                                                                            {project.name}
-                                                                        </Link>
-                                                                    </div>
-                                                                </td>
-                                                                <td className="p-4 text-muted-foreground hidden md:table-cell">
-                                                                    <div className="line-clamp-1">{project.description}</div>
-                                                                </td>
-                                                                <td className="p-4 hidden lg:table-cell">
-                                                                    <div className="flex flex-wrap gap-1">
-                                                                        {project.tags.map((tag) => (
-                                                                            <Badge
-                                                                                key={tag.id}
-                                                                                className={`bg-${tag.color}-100 text-${tag.color}-800 hover:bg-${tag.color}-200 border-0`}
-                                                                            >
-                                                                                {tag.name}
-                                                                            </Badge>
-                                                                        ))}
-                                                                    </div>
-                                                                </td>
-                                                                <td className="p-4 text-muted-foreground">
-                                                                    <div className="flex items-center">
-                                                                        <Clock className="h-3 w-3 mr-1"/>
-                                                                        {project.lastUpdated}
-                                                                    </div>
-                                                                </td>
-                                                                <td className="p-4 text-muted-foreground">
-                                                                    <div className="flex items-center">
-                                                                        <PlayCircle className="h-3 w-3 mr-1"/>
-                                                                        {project.runs}
-                                                                    </div>
-                                                                </td>
-                                                                <td className="p-4 text-right">
-                                                                    <DropdownMenu>
-                                                                        <DropdownMenuTrigger asChild>
-                                                                            <Button variant="ghost" size="icon">
-                                                                                <MoreHorizontal className="h-4 w-4"/>
-                                                                                <span className="sr-only">更多选项</span>
-                                                                            </Button>
-                                                                        </DropdownMenuTrigger>
-                                                                        <DropdownMenuContent align="end">
-                                                                            <DropdownMenuItem>
-                                                                                <Edit className="h-4 w-4 mr-2"/>
-                                                                                编辑项目
-                                                                            </DropdownMenuItem>
-                                                                            <DropdownMenuItem>
-                                                                                <Copy className="h-4 w-4 mr-2"/>
-                                                                                复制项目
-                                                                            </DropdownMenuItem>
-                                                                            <DropdownMenuItem className="text-destructive">
-                                                                                <Trash2 className="h-4 w-4 mr-2"/>
-                                                                                删除项目
-                                                                            </DropdownMenuItem>
-                                                                        </DropdownMenuContent>
-                                                                    </DropdownMenu>
-                                                                </td>
-                                                            </tr>
-                                                        ))}
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    </TabsContent>
+                                    <StarredProjectTab/>
 
-                                    {/* 项目列表 - 最近使用 */}
-                                    <TabsContent value="recent" className="mt-6">
-                                        <div className="rounded-md border">
-                                            <div className="relative w-full overflow-auto">
-                                                <table className="w-full caption-bottom text-sm">
-                                                    <thead className="bg-muted/50">
-                                                    <tr className="border-b">
-                                                        <th className="h-12 px-4 text-left align-middle font-medium">
-                                                            <div className="flex items-center space-x-1">
-                                                                <span>项目名称</span>
-                                                                <ChevronUp className="h-4 w-4"/>
-                                                            </div>
-                                                        </th>
-                                                        <th className="h-12 px-4 text-left align-middle font-medium hidden md:table-cell">描述</th>
-                                                        <th className="h-12 px-4 text-left align-middle font-medium hidden lg:table-cell">标签</th>
-                                                        <th className="h-12 px-4 text-left align-middle font-medium">更新时间</th>
-                                                        <th className="h-12 px-4 text-left align-middle font-medium">运行次数</th>
-                                                        <th className="h-12 px-4 text-right align-middle font-medium">操作</th>
-                                                    </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                    {projects
-                                                        .filter((project) => project.recentlyUsed)
-                                                        .map((project) => (
-                                                            <tr key={project.id} className="border-b hover:bg-muted/50 transition-colors">
-                                                                <td className="p-4">
-                                                                    <div className="flex items-center gap-2">
-                                                                        <Button
-                                                                            variant="ghost"
-                                                                            size="icon"
-                                                                            className={project.starred ? "text-amber-400" : "text-muted-foreground"}
-                                                                        >
-                                                                            <Star className="h-4 w-4"/>
-                                                                            <span className="sr-only">收藏</span>
-                                                                        </Button>
-                                                                        <Link to={`/projects/${project.id}`}
-                                                                              className="font-medium hover:underline">
-                                                                            {project.name}
-                                                                        </Link>
-                                                                    </div>
-                                                                </td>
-                                                                <td className="p-4 text-muted-foreground hidden md:table-cell">
-                                                                    <div className="line-clamp-1">{project.description}</div>
-                                                                </td>
-                                                                <td className="p-4 hidden lg:table-cell">
-                                                                    <div className="flex flex-wrap gap-1">
-                                                                        {project.tags.map((tag) => (
-                                                                            <Badge
-                                                                                key={tag.id}
-                                                                                className={`bg-${tag.color}-100 text-${tag.color}-800 hover:bg-${tag.color}-200 border-0`}
-                                                                            >
-                                                                                {tag.name}
-                                                                            </Badge>
-                                                                        ))}
-                                                                    </div>
-                                                                </td>
-                                                                <td className="p-4 text-muted-foreground">
-                                                                    <div className="flex items-center">
-                                                                        <Clock className="h-3 w-3 mr-1"/>
-                                                                        {project.lastUpdated}
-                                                                    </div>
-                                                                </td>
-                                                                <td className="p-4 text-muted-foreground">
-                                                                    <div className="flex items-center">
-                                                                        <PlayCircle className="h-3 w-3 mr-1"/>
-                                                                        {project.runs}
-                                                                    </div>
-                                                                </td>
-                                                                <td className="p-4 text-right">
-                                                                    <DropdownMenu>
-                                                                        <DropdownMenuTrigger asChild>
-                                                                            <Button variant="ghost" size="icon">
-                                                                                <MoreHorizontal className="h-4 w-4"/>
-                                                                                <span className="sr-only">更多选项</span>
-                                                                            </Button>
-                                                                        </DropdownMenuTrigger>
-                                                                        <DropdownMenuContent align="end">
-                                                                            <DropdownMenuItem>
-                                                                                <Edit className="h-4 w-4 mr-2"/>
-                                                                                编辑项目
-                                                                            </DropdownMenuItem>
-                                                                            <DropdownMenuItem>
-                                                                                <Copy className="h-4 w-4 mr-2"/>
-                                                                                复制项目
-                                                                            </DropdownMenuItem>
-                                                                            <DropdownMenuItem className="text-destructive">
-                                                                                <Trash2 className="h-4 w-4 mr-2"/>
-                                                                                删除项目
-                                                                            </DropdownMenuItem>
-                                                                        </DropdownMenuContent>
-                                                                    </DropdownMenu>
-                                                                </td>
-                                                            </tr>
-                                                        ))}
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    </TabsContent>
+                                    {/* 项目列表 - 我的 */}
+                                    <MyProjectTab/>
                                 </Tabs>
                             </div>
                         </div>
@@ -425,72 +132,3 @@ export function ProjectsPage() {
         </SidebarInset>
     )
 }
-
-// 模拟数据
-const projects = [
-    {
-        id: "tensorflow-models",
-        name: "tensorflow_models",
-        description: "TensorFlow 模型集合，包含图像分类、目标检测和分割模型",
-        lastUpdated: "1 天前",
-        runs: 64,
-        starred: true,
-        recentlyUsed: true,
-        tags: [
-            {id: "ml", name: "海水样品", color: "red"},
-            {id: "cv", name: "meta genome", color: "blue"},
-        ],
-    },
-    {
-        id: "nlp-transformers",
-        name: "nlp_transformers",
-        description: "基于 Transformer 架构的自然语言处理模型实现",
-        lastUpdated: "3 天前",
-        runs: 42,
-        starred: true,
-        recentlyUsed: true,
-        tags: [
-            {id: "ml", name: "海水样品", color: "red"},
-            {id: "nlp", name: "自然语言处理", color: "green"},
-        ],
-    },
-    {
-        id: "reinforcement-learning",
-        name: "reinforcement_learning",
-        description: "强化学习算法实现，包括 DQN、PPO 和 A3C",
-        lastUpdated: "1 周前",
-        runs: 28,
-        starred: false,
-        recentlyUsed: true,
-        tags: [
-            {id: "ml", name: "海水样品", color: "red"},
-            {id: "rl", name: "强化学习", color: "yellow"},
-        ],
-    },
-    {
-        id: "gan-models",
-        name: "gan_models",
-        description: "生成对抗网络模型集合，包括 DCGAN、StyleGAN 和 CycleGAN",
-        lastUpdated: "2 周前",
-        runs: 36,
-        starred: false,
-        recentlyUsed: false,
-        tags: [
-            {id: "ml", name: "海水样品", color: "red"},
-            {id: "dl", name: "深度学习", color: "purple"},
-        ],
-    },
-    {
-        id: "object-detection",
-        name: "object_detection",
-        description: "目标检测模型实现，包括 YOLO、SSD 和 Faster R-CNN",
-        lastUpdated: "3 周前",
-        runs: 52,
-        starred: false,
-        recentlyUsed: false,
-        tags: [
-            {id: "ml", name: "海水样品", color: "red"},
-            {id: "cv", name: "meta genome", color: "blue"},
-        ],
-    },
-]

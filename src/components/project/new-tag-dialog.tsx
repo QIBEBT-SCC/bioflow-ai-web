@@ -14,7 +14,7 @@ import {Input} from "@/components/ui/input.tsx";
 import {useState} from "react";
 import {colorClassMap, colorList} from "@/types/color.tsx";
 import {projectApi} from '@/services/api.tsx';
-import {useTagStore} from '@/stores/tagStore';
+import {useTagStore} from '@/stores/projectStore.tsx';
 
 export function NewTagDialog() {
     const [name, setName] = useState('')

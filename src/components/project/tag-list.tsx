@@ -4,7 +4,7 @@ import {Badge} from "@/components/ui/badge.tsx";
 import {NewTagDialog} from "@/components/project/new-tag-dialog.tsx";
 import {colorClassMap} from '@/types/color.tsx';
 import {projectApi} from '@/services/api.tsx';
-import {useTagStore} from '@/stores/tagStore';
+import {useTagStore} from '@/stores/projectStore.tsx';
 import {useEffect} from 'react';
 
 export function TagList() {
@@ -14,9 +14,11 @@ export function TagList() {
         if (tags.length === 0) {
             projectApi.getTagList()
                 .then(setTags)
-                .catch(() => {/* 错误处理可扩展 */});
+                .catch(() => {/* 错误处理可扩展 */
+                });
         }
-    }, [tags, setTags]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [tags]);
 
     return (
         <aside className="w-full md:w-64 shrink-0">
@@ -31,7 +33,7 @@ export function TagList() {
                     {tags.map(tag => (
                         <Button key={tag.name} variant="outline" className="w-full justify-start" size="sm">
                             <Badge className={`mr-2 border-0 ${colorClassMap[tag.color]}`}>{tag.name}</Badge>
-                            <span className="text-muted-foreground ml-auto">??</span>
+                            <span className="text-muted-foreground ml-auto">{tag.project_count ? tag.project_count : '--'}</span>
                         </Button>
                     ))}
                 </div>

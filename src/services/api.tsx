@@ -1,7 +1,7 @@
 import axios from 'axios';
 import {type Edge, type Node} from "@xyflow/react";
 import {isTokenExpired, useAuthStore} from "@/stores/authStore";
-import {Tag} from "@/types/project.tsx";
+import {Project, Tag} from "@/types/project.tsx";
 
 export const api = axios.create({
     baseURL: '/api/v1',
@@ -72,13 +72,25 @@ export const toolApi = {
 
 export const projectApi = {
     newTag: async (name: string, color: string) => {
-        const { data } = await api.post('/project/tags', null, {
-            params: { name, color }
+        const {data} = await api.post('/tags', null, {
+            params: {name, color}
         });
         return data;
     },
     getTagList: async () => {
-        const { data } = await api.get<Tag[]>('/project/tags');
+        const {data} = await api.get<Tag[]>('/tags');
         return data;
     },
+    getProjectList: async () => {
+        const {data} = await api.get<Project[]>('/projects');
+        return data;
+    },
+    getStarredProjectList: async () => {
+        const {data} = await api.get<Project[]>('/projects/starred');
+        return data;
+    },
+    getMyProjectList: async () => {
+        const {data} = await api.get<Project[]>('/projects/my');
+        return data;
+    }
 }; 
