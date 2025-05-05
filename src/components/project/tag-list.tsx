@@ -18,7 +18,7 @@ export function TagList() {
                 });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [tags]);
+    }, []);
 
     return (
         <aside className="w-full md:w-64 shrink-0">

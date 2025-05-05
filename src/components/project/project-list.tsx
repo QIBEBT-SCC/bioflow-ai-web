@@ -54,7 +54,7 @@ function ProjectTable({name, projects}: { name: string; projects: Project[] }) {
                                             <Star className="h-4 w-4"/>
                                             <span className="sr-only">收藏</span>
                                         </Button>
-                                        <Link to={`/projects/${project.id}`}
+                                        <Link to={`/project/${project.id}`}
                                               className="font-medium hover:underline">
                                             {project.name}
                                         </Link>
