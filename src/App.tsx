@@ -59,19 +59,10 @@ export default function App() {
                 path: "/project",
                 element: <ProtectedRoute><MainLayout page={"project"}/></ProtectedRoute>
             },
-            // {
-            //     path: "/dashboard",
-            //     children: [
-            //         {
-            //             path: "workflow",
-            //             element: <ProtectedRoute><MainLayout/></ProtectedRoute>,
-            //         },
-            //         {
-            //             path: "workflow/:workflowId",
-            //             element: <ProtectedRoute><MainLayout/></ProtectedRoute>,
-            //         },
-            //     ]
-            // },
+            {
+                path: "/project/:projectId",
+                element: <ProtectedRoute><MainLayout page={"projectInfo"}/></ProtectedRoute>
+            },
             {
                 path: "/",
                 element: <Navigate to="/home" replace/>,

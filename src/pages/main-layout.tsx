@@ -3,9 +3,10 @@ import {AppSidebar} from "@/components/sidebar/app-sidebaar.tsx";
 import {FlowWorkspace} from "@/components/node-editor/viewport.tsx";
 import {HomePage} from "@/pages/home-page.tsx";
 import {ProjectsPage} from "@/pages/project/project-page.tsx";
+import {ProjectDetailPage} from "@/pages/project/project-detail-page.tsx";
 
 interface MainLayoutProps {
-    page: 'home' | 'project' | 'about' | 'setting';
+    page: 'home' | 'project' | 'projectInfo' | 'about' | 'setting';
 }
 
 export function MainLayout({page}: MainLayoutProps) {
@@ -16,6 +17,8 @@ export function MainLayout({page}: MainLayoutProps) {
                 <HomePage/>
             ) : (page === 'project') ? (
                 <ProjectsPage/>
+            ) : (page === 'projectInfo') ? (
+                <ProjectDetailPage/>
             ) : (
                 <FlowWorkspace/>
             )}

@@ -92,5 +92,9 @@ export const projectApi = {
     getMyProjectList: async () => {
         const {data} = await api.get<Project[]>('/projects/my');
         return data;
+    },
+    getProject: async (id: string) => {
+        const {data} = await api.get<Project>(`/projects/${id}`);
+        return data;
     }
 }; 
