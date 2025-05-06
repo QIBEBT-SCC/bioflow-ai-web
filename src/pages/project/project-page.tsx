@@ -1,6 +1,6 @@
 import {Button} from "@/components/ui/button.tsx"
 import {Input} from "@/components/ui/input.tsx"
-import {Tabs, TabsList, TabsTrigger} from "@/components/ui/tabs.tsx"
+import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs.tsx"
 import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger} from "@/components/ui/dropdown-menu.tsx"
 import {
     Search,
@@ -14,7 +14,7 @@ import {TagList} from "@/components/project/tag-list.tsx";
 import {useProjectStore} from "@/stores/projectStore.tsx";
 import {useEffect} from "react";
 import {projectApi} from "@/services/api.tsx";
-import {AllProjectTab, MyProjectTab, StarredProjectTab} from "@/components/project/project-list.tsx";
+import {AllProjectTable, MyProjectTable, StarredProjectTable} from "@/components/project/project-list.tsx";
 
 export function ProjectsPage() {
     const {projects, setProjects} = useProjectStore();
@@ -116,13 +116,19 @@ export function ProjectsPage() {
                                     </div>
 
                                     {/* 项目列表 - 全部 */}
-                                    <AllProjectTab/>
+                                    <TabsContent value="all" className="mt-6">
+                                        <AllProjectTable/>
+                                    </TabsContent>
 
                                     {/* 项目列表 - 已收藏 */}
-                                    <StarredProjectTab/>
+                                    <TabsContent value="starred" className="mt-6">
+                                        <StarredProjectTable/>
+                                    </TabsContent>
 
                                     {/* 项目列表 - 我的 */}
-                                    <MyProjectTab/>
+                                    <TabsContent value="my" className="mt-6">
+                                        <MyProjectTable/>
+                                    </TabsContent>
                                 </Tabs>
                             </div>
                         </div>

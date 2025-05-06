@@ -2,12 +2,16 @@ import {SidebarInset, SidebarTrigger} from "@/components/ui/sidebar.tsx";
 import {Separator} from "@/components/ui/separator.tsx";
 import {Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage} from "@/components/ui/breadcrumb.tsx";
 import {Card, CardContent} from "@/components/ui/card.tsx";
-import {ClockIcon, FolderIcon, PlayIcon, StarIcon, UsersIcon} from "lucide-react";
+import {FolderIcon, PlayIcon, StarIcon, UsersIcon} from "lucide-react";
 import {Button} from "@/components/ui/button.tsx";
 import {Badge} from "@/components/ui/badge.tsx";
 import {Link} from "react-router-dom";
+import {useProjectStore} from "@/stores/projectStore.tsx";
+import {RecentProjectCard, StarredProjectTable} from "@/components/project/project-list.tsx";
 
 export function HomePage() {
+    const starredProjects = useProjectStore((state) => state.starredProjects)
+
     return (
         <SidebarInset>
             <header
@@ -26,19 +30,24 @@ export function HomePage() {
                     </Breadcrumb>
                 </div>
             </header>
-            <div className="container mx-auto py-6 space-y-8">
+            <div className="container mx-auto px-4 py-6 space-y-8">
                 {/* 收藏的项目 */}
                 <section>
                     <h2 className="text-xl font-medium mb-4">收藏的项目</h2>
-                    <Card className="border rounded-lg gap-0 py-0">
-                        <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-                            <div className="bg-amber-50 p-4 rounded-full mb-4">
-                                <StarIcon className="h-6 w-6 text-amber-400"/>
-                            </div>
-                            <h3 className="text-lg font-medium mb-2">没有收藏的项目</h3>
-                            <p className="text-muted-foreground">从您的项目列表中收藏一个项目，它将始终显示在这里。</p>
-                        </CardContent>
-                    </Card>
+                    {(starredProjects.length == 0) ? (
+                        <Card className="border rounded-lg gap-0 py-0">
+                            <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+                                <div className="bg-amber-50 p-4 rounded-full mb-4">
+                                    <StarIcon className="h-6 w-6 text-amber-400"/>
+                                </div>
+                                <h3 className="text-lg font-medium mb-2">没有收藏的项目</h3>
+                                <p className="text-muted-foreground">从您的项目列表中收藏一个项目，它将始终显示在这里。</p>
+                            </CardContent>
+                        </Card>
+                    ) : (
+                        <StarredProjectTable/>
+                    )}
+
                 </section>
 
                 {/* 最近的项目 */}
@@ -46,7 +55,7 @@ export function HomePage() {
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-xl font-medium">您最近的项目</h2>
                         <div className="flex items-center gap-2">
-                            <Link to="/projects" className="text-sm text-muted-foreground flex items-center">
+                            <Link to="/project" className="text-sm text-muted-foreground flex items-center">
                                 查看全部 <span className="ml-1">→</span>
                             </Link>
                             <Button size="sm">
@@ -54,24 +63,14 @@ export function HomePage() {
                             </Button>
                         </div>
                     </div>
+                    <RecentProjectCard/>
 
-                    <Card className="border rounded-lg gap-0 py-0">
-                        <Link to="/projects/tensorflow-models" className="block p-4 hover:bg-slate-50 transition-colors">
-                            <div className="font-medium mb-2">tensorflow_models</div>
-                            <div className="flex items-center text-xs text-muted-foreground">
-                                <ClockIcon className="h-3 w-3 mr-1"/> 最后更新 1 天前
-                                <span className="mx-2">•</span>
-                                <span className="flex items-center">
-                <PlayIcon className="h-3 w-3 mr-1"/> 64 次运行
-              </span>
-                            </div>
-                        </Link>
-                    </Card>
+
                 </section>
 
-                {/* 没有最近的报告 */}
+                {/* 最近的报告 */}
                 <section>
-                    <h2 className="text-xl font-medium mb-4">您没有任何最近的报告</h2>
+                    <h2 className="text-xl font-medium mb-4">最近的报告</h2>
                     <Card className="border rounded-lg gap-0 py-0">
                         <CardContent className="p-6">
                             <div className="grid md:grid-cols-2 gap-6">
@@ -82,7 +81,7 @@ export function HomePage() {
                                     </div>
                                 </div>
                                 <div>
-                                    <h3 className="text-lg font-medium mb-2">为 tensorflow_models 创建您的第一份报告</h3>
+                                    <h3 className="text-lg font-medium mb-2">创建您的第一份报告</h3>
                                     <p className="text-sm text-muted-foreground mb-4">
                                         报告是您的想法记录、灵感时刻以及其他所有内容。它们可以与 Web
                                         中的其他内容很好地配合，因此您可以分享、存储或解释您的发现。

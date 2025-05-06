@@ -93,8 +93,12 @@ export const projectApi = {
         const {data} = await api.get<Project[]>('/projects/my');
         return data;
     },
+    getRecentProject: async () => {
+        const {data} = await api.get<Project>('/projects/recent');
+        return data;
+    },
     getProject: async (id: string) => {
         const {data} = await api.get<Project>(`/projects/${id}`);
         return data;
-    }
+    },
 }; 
