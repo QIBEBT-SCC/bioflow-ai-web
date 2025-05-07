@@ -13,33 +13,31 @@ import {Label} from "@/components/ui/label.tsx";
 import {Input} from "@/components/ui/input.tsx";
 import {useState} from "react";
 import {colorClassMap, colorList} from "@/types/color.tsx";
-import {projectApi} from '@/services/api.tsx';
-import {useTagStore} from '@/stores/projectStore.tsx';
+import {useCreateTag} from "@/hooks/useProject.tsx";
 
 export function NewTagDialog() {
     const [name, setName] = useState('')
     const [color, setColor] = useState("red")
     const [open, setOpen] = useState(false)
-    const [loading, setLoading] = useState(false)
-    const setTags = useTagStore(state => state.setTags);
 
-    const handleCreate = async () => {
+    const {mutate: createTag, isPending} = useCreateTag();
+
+    const handleCreate = () => {
         if (!name) return;
-        setLoading(true);
-        try {
-            await projectApi.newTag(name, color);
-            // 创建成功后刷新标签列表
-            const tags = await projectApi.getTagList();
-            setTags(tags);
-            setOpen(false);
-        } catch (e) {
-            // 可扩展错误提示
-            console.log(e)
-        } finally {
-            setName('');
-            setColor('red');
-            setLoading(false);
-        }
+        createTag(
+            {name, color},
+            {
+                onSuccess: () => {
+                    setOpen(false);
+                    setName('');
+                    setColor('red');
+                },
+                onError: (e) => {
+                    // 错误处理
+                    console.log(e);
+                }
+            }
+        );
     };
 
     return (
@@ -84,8 +82,8 @@ export function NewTagDialog() {
                     </div>
                 </div>
                 <DialogFooter className="sm:justify-end">
-                    <Button type="button" onClick={handleCreate} disabled={loading}>
-                        {loading ? '创建中...' : 'Create'}
+                    <Button type="button" onClick={handleCreate} disabled={isPending}>
+                        {isPending ? '创建中...' : 'Create'}
                     </Button>
                 </DialogFooter>
             </DialogContent>

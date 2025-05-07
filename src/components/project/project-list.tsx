@@ -1,6 +1,3 @@
-import {useProjectStore} from "@/stores/projectStore.tsx";
-import {useEffect, useState} from "react";
-import {projectApi} from "@/services/api.tsx";
 import {Clock, ClockIcon, PlayIcon, Star, UserIcon} from "lucide-react";
 import {Button} from "@/components/ui/button.tsx";
 import {Link} from "react-router-dom";
@@ -8,32 +5,13 @@ import {Badge} from "@/components/ui/badge.tsx";
 import {colorClassMap} from "@/types/color.tsx";
 import {Project} from "@/types/project.tsx";
 import {Card, CardContent} from "@/components/ui/card.tsx";
+import {useAllProjects, useMyProjects, useRecentProject, useStarProject, useStarredProjects} from "@/hooks/useProject.tsx";
 
-function ProjectTable({projects, setProjects}: { projects: Project[], setProjects: (projects: Project[]) => void; }) {
-    const [loadingId, setLoadingId] = useState<number>(-1);
+function ProjectTable({projects}: { projects: Project[] }) {
+    const {mutate: starProject, isPending, variables} = useStarProject();
 
-    const handleStar = async (project: Project) => {
-        setLoadingId(project.id);
-        try {
-            if (project.starred) {
-                await projectApi.unstarProject(`${project.id}`);
-                const newProjects = projects.map(p =>
-                    p.id === project.id ? {...p, starred: false} : p
-                );
-                setProjects(newProjects);
-            } else {
-                await projectApi.starProject(`${project.id}`);
-                const newProjects = projects.map(p =>
-                    p.id === project.id ? {...p, starred: true} : p
-                );
-                setProjects(newProjects);
-            }
-
-        } catch (e) {
-            console.log(e)
-        } finally {
-            setLoadingId(-1);
-        }
+    const handleStar = (project: Project) => {
+        starProject({id: project.id, starred: project.starred});
     };
 
     return (
@@ -76,7 +54,7 @@ function ProjectTable({projects, setProjects}: { projects: Project[], setProject
                                         size="icon"
                                         className={project.starred ? "text-amber-400" : "text-muted-foreground"}
                                         onClick={() => handleStar(project)}
-                                        disabled={loadingId == project.id}
+                                        disabled={isPending && variables?.id === project.id}
                                     >
                                         <Star className="h-4 w-4"/>
                                         <span className="sr-only">收藏</span>
@@ -121,68 +99,40 @@ function ProjectTable({projects, setProjects}: { projects: Project[], setProject
 }
 
 export function AllProjectTable() {
-    const {projects, setProjects} = useProjectStore();
+    const {data: projects = [], isLoading, error} = useAllProjects();
 
-    useEffect(() => {
-        if (projects.length === 0) {
-            projectApi.getProjectList()
-                .then(setProjects)
-                .catch(() => {/* 错误处理可扩展 */
-                });
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    if (isLoading) return <div>加载中...</div>;
+    if (error) return <div>加载失败</div>;
 
     return (
-        <ProjectTable projects={projects} setProjects={setProjects}/>
+        <ProjectTable projects={projects}/>
     )
 }
 
 export function StarredProjectTable() {
-    const {starredProjects, setStarredProjects} = useProjectStore();
+    const {data: projects = [], isLoading, error} = useStarredProjects();
 
-    useEffect(() => {
-        if (starredProjects.length === 0) {
-            projectApi.getStarredProjectList()
-                .then(setStarredProjects)
-                .catch(() => {/* 错误处理可扩展 */
-                });
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    if (isLoading) return <div>加载中...</div>;
+    if (error) return <div>加载失败</div>;
 
     return (
-        <ProjectTable projects={starredProjects} setProjects={setStarredProjects}/>
+        <ProjectTable projects={projects}/>
     )
 }
 
 export function MyProjectTable() {
-    const {myProjects, setMyProjects} = useProjectStore();
+    const {data: projects = [], isLoading, error} = useMyProjects();
 
-    useEffect(() => {
-        if (myProjects.length === 0) {
-            projectApi.getMyProjectList()
-                .then(setMyProjects)
-                .catch(() => {/* 错误处理可扩展 */
-                });
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    if (isLoading) return <div>加载中...</div>;
+    if (error) return <div>加载失败</div>;
 
     return (
-        <ProjectTable projects={myProjects} setProjects={setMyProjects}/>
+        <ProjectTable projects={projects}/>
     )
 }
 
 export function RecentProjectCard() {
-    const [recentProject, setRecentProject] = useState<Project>()
-
-    useEffect(() => {
-        projectApi.getRecentProject()
-            .then(setRecentProject)
-            .catch(() => {
-            });
-    }, []);
+    const {data: recentProject = null} = useRecentProject();
 
     return (
         (!recentProject) ? (

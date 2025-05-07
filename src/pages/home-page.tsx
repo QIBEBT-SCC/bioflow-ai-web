@@ -6,11 +6,11 @@ import {FolderIcon, PlayIcon, StarIcon, UsersIcon} from "lucide-react";
 import {Button} from "@/components/ui/button.tsx";
 import {Badge} from "@/components/ui/badge.tsx";
 import {Link} from "react-router-dom";
-import {useProjectStore} from "@/stores/projectStore.tsx";
 import {RecentProjectCard, StarredProjectTable} from "@/components/project/project-list.tsx";
+import {useStarredProjects} from "@/hooks/useProject.tsx";
 
 export function HomePage() {
-    const starredProjects = useProjectStore((state) => state.starredProjects)
+    const { data: projects = []} = useStarredProjects();
 
     return (
         <SidebarInset>
@@ -34,7 +34,7 @@ export function HomePage() {
                 {/* 收藏的项目 */}
                 <section>
                     <h2 className="text-xl font-medium mb-4">收藏的项目</h2>
-                    {(starredProjects.length == 0) ? (
+                    {(projects.length == 0) ? (
                         <Card className="border rounded-lg gap-0 py-0">
                             <CardContent className="flex flex-col items-center justify-center py-16 text-center">
                                 <div className="bg-amber-50 p-4 rounded-full mb-4">

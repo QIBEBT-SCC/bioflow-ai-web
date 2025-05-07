@@ -3,22 +3,13 @@ import {Button} from "@/components/ui/button.tsx";
 import {Badge} from "@/components/ui/badge.tsx";
 import {NewTagDialog} from "@/components/project/new-tag-dialog.tsx";
 import {colorClassMap} from '@/types/color.tsx';
-import {projectApi} from '@/services/api.tsx';
-import {useTagStore} from '@/stores/projectStore.tsx';
-import {useEffect} from 'react';
+import {useTagList} from "@/hooks/useProject.tsx";
 
 export function TagList() {
-    const {tags, setTags} = useTagStore();
+    const {data: tags = [], isLoading, error} = useTagList();
 
-    useEffect(() => {
-        if (tags.length === 0) {
-            projectApi.getTagList()
-                .then(setTags)
-                .catch(() => {/* 错误处理可扩展 */
-                });
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    if (isLoading) return <div>加载中...</div>;
+    if (error) return <div>加载失败</div>;
 
     return (
         <aside className="w-full md:w-64 shrink-0">

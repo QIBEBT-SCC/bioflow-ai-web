@@ -11,23 +11,9 @@ import {SidebarInset, SidebarTrigger} from "@/components/ui/sidebar.tsx";
 import {Separator} from "@/components/ui/separator.tsx";
 import {Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage} from "@/components/ui/breadcrumb.tsx";
 import {TagList} from "@/components/project/tag-list.tsx";
-import {useProjectStore} from "@/stores/projectStore.tsx";
-import {useEffect} from "react";
-import {projectApi} from "@/services/api.tsx";
 import {AllProjectTable, MyProjectTable, StarredProjectTable} from "@/components/project/project-list.tsx";
 
 export function ProjectsPage() {
-    const {projects, setProjects} = useProjectStore();
-    useEffect(() => {
-        if (projects.length === 0) {
-            projectApi.getProjectList()
-                .then(setProjects)
-                .catch(() => {/* 错误处理可扩展 */
-                });
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [projects]);
-
     return (
         <SidebarInset>
             <header

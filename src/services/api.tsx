@@ -72,8 +72,9 @@ export const toolApi = {
 
 export const projectApi = {
     newTag: async (name: string, color: string) => {
-        const {data} = await api.post('/tags', null, {
-            params: {name, color}
+        const {data} = await api.post('/tags', {
+            name: name,
+            color: color
         });
         return data;
     },
