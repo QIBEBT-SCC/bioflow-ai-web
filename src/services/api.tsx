@@ -77,6 +77,14 @@ export const projectApi = {
         });
         return data;
     },
+    starProject: async (project_id: string,) => {
+        const {data} = await api.post(`/projects/${project_id}/star`);
+        return data;
+    },
+    unstarProject: async (project_id: string,) => {
+        const {data} = await api.post(`/projects/${project_id}/unstar`);
+        return data;
+    },
     getTagList: async () => {
         const {data} = await api.get<Tag[]>('/tags');
         return data;

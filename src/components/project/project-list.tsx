@@ -9,7 +9,33 @@ import {colorClassMap} from "@/types/color.tsx";
 import {Project} from "@/types/project.tsx";
 import {Card, CardContent} from "@/components/ui/card.tsx";
 
-function ProjectTable({projects}: { projects: Project[] }) {
+function ProjectTable({projects, setProjects}: { projects: Project[], setProjects: (projects: Project[]) => void; }) {
+    const [loadingId, setLoadingId] = useState<number>(-1);
+
+    const handleStar = async (project: Project) => {
+        setLoadingId(project.id);
+        try {
+            if (project.starred) {
+                await projectApi.unstarProject(`${project.id}`);
+                const newProjects = projects.map(p =>
+                    p.id === project.id ? {...p, starred: false} : p
+                );
+                setProjects(newProjects);
+            } else {
+                await projectApi.starProject(`${project.id}`);
+                const newProjects = projects.map(p =>
+                    p.id === project.id ? {...p, starred: true} : p
+                );
+                setProjects(newProjects);
+            }
+
+        } catch (e) {
+            console.log(e)
+        } finally {
+            setLoadingId(-1);
+        }
+    };
+
     return (
         <div className="rounded-md border">
             <div className="relative w-full overflow-auto">
@@ -49,6 +75,8 @@ function ProjectTable({projects}: { projects: Project[] }) {
                                         variant="ghost"
                                         size="icon"
                                         className={project.starred ? "text-amber-400" : "text-muted-foreground"}
+                                        onClick={() => handleStar(project)}
+                                        disabled={loadingId == project.id}
                                     >
                                         <Star className="h-4 w-4"/>
                                         <span className="sr-only">收藏</span>
@@ -106,7 +134,7 @@ export function AllProjectTable() {
     }, []);
 
     return (
-        <ProjectTable projects={projects}/>
+        <ProjectTable projects={projects} setProjects={setProjects}/>
     )
 }
 
@@ -124,7 +152,7 @@ export function StarredProjectTable() {
     }, []);
 
     return (
-        <ProjectTable projects={starredProjects}/>
+        <ProjectTable projects={starredProjects} setProjects={setStarredProjects}/>
     )
 }
 
@@ -142,7 +170,7 @@ export function MyProjectTable() {
     }, []);
 
     return (
-        <ProjectTable projects={myProjects}/>
+        <ProjectTable projects={myProjects} setProjects={setMyProjects}/>
     )
 }
 
