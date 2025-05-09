@@ -44,6 +44,12 @@ const queryClient = new QueryClient({
 
 export default function App() {
     useToolArgs();
+    const { loadUser } = useAuthStore();
+    
+    // 应用启动时加载用户信息
+    useEffect(() => {
+        loadUser();
+    }, [loadUser]);
 
     const router = createBrowserRouter(
         [
@@ -62,6 +68,10 @@ export default function App() {
             {
                 path: "/project/:projectId",
                 element: <ProtectedRoute><MainLayout page={"projectInfo"}/></ProtectedRoute>
+            },
+            {
+                path: "/editor",
+                element: <ProtectedRoute><MainLayout page={"editor"}/></ProtectedRoute>
             },
             {
                 path: "/",

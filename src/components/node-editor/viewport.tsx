@@ -1,20 +1,13 @@
-import {SidebarInset, SidebarTrigger} from "@/components/ui/sidebar.tsx";
-import {Separator} from "@/components/ui/separator.tsx";
+import React, {type ReactNode, useCallback, useState} from "react";
 import {
-    Breadcrumb,
-    BreadcrumbItem,
-    BreadcrumbList,
-    BreadcrumbPage,
-    BreadcrumbSeparator
-} from "@/components/ui/breadcrumb.tsx";
-import {
-    ReactFlow, Background, Controls, applyNodeChanges, applyEdgeChanges, addEdge, MiniMap, BackgroundVariant,
-    ReactFlowProvider, useReactFlow
-} from "@xyflow/react";
-import {type MouseEvent as ReactMouseEvent, useCallback, useState} from "react";
-import {Button} from "@/components/ui/button.tsx";
-import {Play, Save, SaveAll, Download, Menu, CheckCircle2} from "lucide-react";
-import {useSaveWorkflow} from '@/hooks/useWorkflow.tsx';
+    PlayIcon,
+    SaveIcon,
+    DownloadIcon,
+    MenuIcon,
+    CheckCircle2,
+    UploadIcon,
+    SaveAllIcon,
+} from "lucide-react";
 import {
     ContextMenu,
     ContextMenuContent,
@@ -24,10 +17,41 @@ import {
     ContextMenuSubTrigger,
     ContextMenuSubContent
 } from "@/components/ui/context-menu.tsx";
-import {v4 as uuid4} from 'uuid';
-import {type Node, type Edge, type OnNodesChange, type OnEdgesChange, type OnConnect} from "@xyflow/react";
+import {SidebarInset, SidebarTrigger} from "@/components/ui/sidebar.tsx";
+import {Separator} from "@/components/ui/separator.tsx";
+import {
+    Breadcrumb,
+    BreadcrumbItem,
+    BreadcrumbList,
+    BreadcrumbPage,
+    BreadcrumbSeparator
+} from "@/components/ui/breadcrumb.tsx";
+import {Button} from "@/components/ui/button.tsx";
+import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip.tsx";
+import {
+    ReactFlow,
+    Background,
+    Controls,
+    applyNodeChanges,
+    applyEdgeChanges,
+    addEdge,
+    MiniMap,
+    ReactFlowProvider,
+    BackgroundVariant,
+    useReactFlow
+} from "@xyflow/react";
+import {
+    type Node,
+    type Edge,
+    type OnNodesChange,
+    type OnEdgesChange,
+    type OnConnect
+} from "@xyflow/react";
+import {useSaveWorkflow} from '@/hooks/useWorkflow.tsx';
 import {useToolStore} from '@/stores/toolStore.tsx';
 import {nodeConfig, nodeTypes} from "@/components/node-editor/menus.tsx";
+import {v4 as uuid4} from 'uuid';
+
 
 export function FlowWorkspace() {
     return (
@@ -35,6 +59,28 @@ export function FlowWorkspace() {
             <FlowContent/>
         </ReactFlowProvider>
     );
+}
+
+function MenuButton({icon, tooltip, onClick}: { icon: ReactNode, tooltip: string, onClick: () => void }) {
+    return (
+        <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className="border-0 shadow-none text-muted-foreground hover:text-foreground"
+                        onClick={onClick}
+                    >
+                        {icon}
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                    <p>{tooltip}</p>
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
+    )
 }
 
 function FlowContent() {
@@ -105,23 +151,6 @@ function FlowContent() {
         ));
     }, [onAddNode]);
 
-    const showPanelMenu = (e: ReactMouseEvent | MouseEvent) => {
-        console.log(e)
-        return (
-            // <DropdownMenu open={true} onOpenChange={}>
-            //     <DropdownMenuLabel>My Account</DropdownMenuLabel>
-            //     <DropdownMenuSeparator />
-            //     <DropdownMenuItem>Profile</DropdownMenuItem>
-            //     <DropdownMenuItem>Billing</DropdownMenuItem>
-            //     <DropdownMenuItem>Team</DropdownMenuItem>
-            //     <DropdownMenuItem>Subscription</DropdownMenuItem>
-            // </DropdownMenu>
-            <div>
-                <p>test</p>
-            </div>
-        )
-    }
-
     return (
         <SidebarInset>
             <header
@@ -145,70 +174,45 @@ function FlowContent() {
                 </div>
                 <div className="flex items-center px-3 h-12 border-t bg-muted/30">
                     <div className="flex items-center gap-1 mr-2">
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            title="加载配置"
-                            className="border-0 shadow-none text-muted-foreground hover:text-foreground"
+                        <MenuButton
+                            icon={<MenuIcon className="h-4 w-4"/>}
                             onClick={() => {
                             }}
-                        >
-                            <Menu className="h-4 w-4"/>
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            title="保存"
-                            className="border-0 shadow-none text-muted-foreground hover:text-foreground"
+                            tooltip={"加载配置"}
+                        />
+                        <MenuButton
+                            icon={<SaveIcon className="h-4 w-4"/>}
                             onClick={handleSave}
-                            disabled={isSaving}
-                        >
-                            <Save className="h-4 w-4"/>
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            title="另存为"
-                            className="border-0 shadow-none text-muted-foreground hover:text-foreground"
+                            tooltip={"保存"}
+                        />
+                        <MenuButton
+                            icon={<SaveAllIcon className="h-4 w-4"/>}
                             onClick={handleSave}
-                            disabled={isSaving}
-                        >
-                            <SaveAll className="h-4 w-4"/>
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            title="导出配置"
-                            className="border-0 shadow-none text-muted-foreground hover:text-foreground"
-                            onClick={() => {
-                            }}
-                        >
-                            <Download className="h-4 w-4"/>
-                        </Button>
+                            tooltip={"另存为"}
+                        />
+                        <MenuButton
+                            icon={<DownloadIcon className="h-4 w-4"/>}
+                            onClick={handleSave}
+                            tooltip={"导出配置"}
+                        />
+                        <MenuButton
+                            icon={<UploadIcon className="h-4 w-4"/>}
+                            onClick={handleSave}
+                            tooltip={"从JSON导入"}
+                        />
                     </div>
-
                     <Separator orientation="vertical" className="!h-8"/>
-
                     <div className="flex items-center gap-1 ml-1">
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            title="运行"
-                            className="border-0 shadow-none text-muted-foreground hover:text-foreground"
+                        <MenuButton
+                            icon={<PlayIcon className="h-4 w-4 text-green-400"/>}
                             onClick={() => setIsRunning(!isRunning)}
-                        >
-                            <Play className="h-4 w-4"/>
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            title="检查合法性"
-                            className="border-0 shadow-none text-muted-foreground hover:text-foreground"
-                            onClick={() => {
-                            }}
-                        >
-                            <CheckCircle2 className="h-4 w-4"/>
-                        </Button>
+                            tooltip={"Run"}
+                        />
+                        <MenuButton
+                            icon={<CheckCircle2 className="h-4 w-4 text-yellow-400"/>}
+                            onClick={() => {}}
+                            tooltip={"检查合法性"}
+                        />
                     </div>
                 </div>
             </header>
@@ -222,7 +226,6 @@ function FlowContent() {
                             onEdgesChange={onEdgesChange}
                             onConnect={onConnect}
                             nodeTypes={nodeTypes}
-                            onPaneContextMenu={showPanelMenu}
                             fitView
                         >
                             <Background variant={BackgroundVariant.Dots} className="!bg-gray-100"/>
@@ -234,20 +237,6 @@ function FlowContent() {
                         {renderMenuItems()}
                     </ContextMenuContent>
                 </ContextMenu>
-                {/*<ReactFlow*/}
-                {/*    nodes={nodes}*/}
-                {/*    edges={edges}*/}
-                {/*    onNodesChange={onNodesChange}*/}
-                {/*    onEdgesChange={onEdgesChange}*/}
-                {/*    onConnect={onConnect}*/}
-                {/*    nodeTypes={nodeTypes}*/}
-                {/*    onPaneContextMenu={showPanelMenu}*/}
-                {/*    fitView*/}
-                {/*>*/}
-                {/*    <Background variant={BackgroundVariant.Dots} className="!bg-gray-100"/>*/}
-                {/*    <Controls/>*/}
-                {/*    <MiniMap nodeStrokeWidth={3} zoomable pannable/>*/}
-                {/*</ReactFlow>*/}
             </div>
         </SidebarInset>
     );

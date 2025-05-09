@@ -8,11 +8,10 @@ import {
     GitFork,
     Home,
     Settings2,
-    TvMinimal
+    TvMinimal,
+    Edit
 } from "lucide-react"
-
 import {ProjectOutlined} from "@ant-design/icons"
-
 import {
     Sidebar,
     SidebarContent,
@@ -64,6 +63,11 @@ const data = {
             name: "Tasks",
             url: "/task",
             icon: TvMinimal
+        },
+        {
+            name: "Editor",
+            url: "/editor",
+            icon: Edit
         },
         {
             name: "Setting",

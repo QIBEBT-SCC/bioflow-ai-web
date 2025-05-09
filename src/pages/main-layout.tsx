@@ -6,7 +6,7 @@ import {ProjectsPage} from "@/pages/project/project-page.tsx";
 import {ProjectDetailPage} from "@/pages/project/project-detail-page.tsx";
 
 interface MainLayoutProps {
-    page: 'home' | 'project' | 'projectInfo' | 'about' | 'setting';
+    page: 'home' | 'project' | 'projectInfo' | 'editor' | 'setting';
 }
 
 export function MainLayout({page}: MainLayoutProps) {
@@ -19,8 +19,10 @@ export function MainLayout({page}: MainLayoutProps) {
                 <ProjectsPage/>
             ) : (page === 'projectInfo') ? (
                 <ProjectDetailPage/>
-            ) : (
+            ) : (page === 'editor') ? (
                 <FlowWorkspace/>
+            ) : (
+                <HomePage/>
             )}
         </SidebarProvider>
     );
