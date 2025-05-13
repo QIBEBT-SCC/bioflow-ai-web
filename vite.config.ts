@@ -37,7 +37,7 @@ export default defineConfig({
             // http://localhost:5173/foo
             // -> http://localhost:4567/foo
             '/api': {
-                target: 'http://172.18.19.113:8001',
+                target: 'http://172.18.19.113:8003',
                 changeOrigin: true
             },
         },

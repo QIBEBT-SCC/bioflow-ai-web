@@ -9,7 +9,8 @@ import {
     Home,
     Settings2,
     TvMinimal,
-    Edit
+    EditIcon,
+    BoxesIcon
 } from "lucide-react"
 import {ProjectOutlined} from "@ant-design/icons"
 import {
@@ -67,12 +68,12 @@ const data = {
         {
             name: "Editor",
             url: "/editor",
-            icon: Edit
+            icon: EditIcon
         },
         {
-            name: "Setting",
-            url: "/setting",
-            icon: Settings2,
+            name: "ToolConfig",
+            url: "/tool",
+            icon: BoxesIcon,
         },
     ],
 }

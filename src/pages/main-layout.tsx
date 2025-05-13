@@ -4,9 +4,11 @@ import {FlowWorkspace} from "@/components/node-editor/viewport.tsx";
 import {HomePage} from "@/pages/home-page.tsx";
 import {ProjectsPage} from "@/pages/project/project-page.tsx";
 import {ProjectDetailPage} from "@/pages/project/project-detail-page.tsx";
+import {AddToolPage} from "@/pages/tool/add-tool-page.tsx";
+import {ToolsPage} from "@/pages/tool/tool-page.tsx";
 
 interface MainLayoutProps {
-    page: 'home' | 'project' | 'projectInfo' | 'editor' | 'setting';
+    page: 'home' | 'project' | 'projectInfo' | 'editor' | 'tool' | 'addTool' | 'setting';
 }
 
 export function MainLayout({page}: MainLayoutProps) {
@@ -21,6 +23,10 @@ export function MainLayout({page}: MainLayoutProps) {
                 <ProjectDetailPage/>
             ) : (page === 'editor') ? (
                 <FlowWorkspace/>
+            ) : (page === 'tool') ? (
+                <ToolsPage/>
+            ) : (page === 'addTool') ? (
+                <AddToolPage/>
             ) : (
                 <HomePage/>
             )}
