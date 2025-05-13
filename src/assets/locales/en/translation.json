@@ -1,0 +1,10 @@
+{
+  "login": {
+    "title": "Welcome Back",
+    "forget_password": "Forgot your password?",
+    "login": "Sign in",
+    "login...": "Sign in...",
+    "no_account": "Don't have an account?",
+    "signup": "Sing up"
+  }
+}

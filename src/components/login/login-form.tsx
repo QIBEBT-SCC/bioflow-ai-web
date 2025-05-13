@@ -3,7 +3,6 @@ import {Button} from "@/components/ui/button"
 import {
     Card,
     CardContent,
-    CardDescription,
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
@@ -12,6 +11,7 @@ import {Label} from "@/components/ui/label"
 import React, {useState} from "react"
 import {useAuthStore} from "@/stores/authStore"
 import {Link, useNavigate} from "react-router-dom"
+import {useTranslation} from "react-i18next";
 
 export function LoginForm({
                               className,
@@ -21,6 +21,8 @@ export function LoginForm({
     const [password, setPassword] = useState('')
     const {login, isLoading, errorMsg} = useAuthStore()
     const navigate = useNavigate()
+
+    const { t } = useTranslation();
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
@@ -33,10 +35,7 @@ export function LoginForm({
         <div className={cn("flex flex-col gap-6", className)} {...props}>
             <Card>
                 <CardHeader className="text-center">
-                    <CardTitle className="text-xl">Welcome back</CardTitle>
-                    <CardDescription>
-                        Login with your Apple or Google account
-                    </CardDescription>
+                    <CardTitle className="text-xl">{t('login.title')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleSubmit}>
@@ -61,7 +60,7 @@ export function LoginForm({
                                             href="#"
                                             className="ml-auto text-sm underline-offset-4 hover:underline"
                                         >
-                                            Forgot your password?
+                                            {t('login.forget_password')}
                                         </a>
                                     </div>
                                     <Input
@@ -79,13 +78,13 @@ export function LoginForm({
                                     </div>
                                 )}
                                 <Button type="submit" className="w-full" disabled={isLoading}>
-                                    {isLoading ? "登录中..." : "登录"}
+                                    {isLoading ? t("login.login...") : t("login.login")}
                                 </Button>
                             </div>
                             <div className="text-center text-sm">
-                                没有账户？{" "}
+                                {t("login.no_account")}{" "}
                                 <Link to="/register" className="underline">
-                                    注册
+                                    {t("login.signup")}
                                 </Link>
                             </div>
                             <div
