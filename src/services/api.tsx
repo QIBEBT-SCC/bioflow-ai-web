@@ -2,7 +2,7 @@ import axios from 'axios';
 import {type Edge, type Node} from "@xyflow/react";
 import {isTokenExpired, useAuthStore} from "@/stores/authStore";
 import {Project, ProjectTag} from "@/types/project.tsx";
-import {DockerToolCreate, SimpleToolInfo, ToolTag} from "@/types/tool.tsx";
+import {DockerToolCreate, SimpleToolInfo, ToolInfo, ToolTag} from "@/types/tool.tsx";
 
 export const api = axios.create({
     baseURL: '/api/v1',
@@ -80,7 +80,11 @@ export const toolApi = {
     getToolList: async () => {
         const {data} = await api.get<SimpleToolInfo[]>('/tools');
         return data
-    }
+    },
+    getTool: async (uid: string) => {
+        const {data} = await api.get<ToolInfo>(`/tools/${uid}`);
+        return data;
+    },
 };
 
 export const projectApi = {

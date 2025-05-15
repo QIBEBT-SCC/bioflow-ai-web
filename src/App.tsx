@@ -1,6 +1,6 @@
 import {MainLayout} from "@/pages/main-layout.tsx";
 import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
-import {useToolArgs} from '@/hooks/useToolArgs';
+import {useToolArgs} from '@/hooks/useTool.tsx';
 import {isTokenExpired, useAuthStore} from "@/stores/authStore.tsx";
 import {createBrowserRouter, Navigate, RouterProvider} from "react-router-dom";
 import React, {useEffect} from "react";
@@ -74,6 +74,10 @@ export default function App() {
             {
                 path: "/tool/add",
                 element: <ProtectedRoute><MainLayout page={"addTool"}/></ProtectedRoute>
+            },
+            {
+                path: "/tool/:toolUid",
+                element: <ProtectedRoute><MainLayout page={"toolInfo"}/></ProtectedRoute>
             },
             {
                 path: "/",
