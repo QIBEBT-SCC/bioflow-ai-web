@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import {Link} from "react-router-dom";
+import {ToolList} from "@/components/tool/tool-list.tsx";
 
 // 分组类型定义
 interface ToolGroup {
@@ -289,7 +290,7 @@ export function ToolsPage() {
             <div className="flex flex-col md:flex-row gap-6">
                 {/* 侧边栏 - 分组筛选 */}
                 <aside className="w-full md:w-64 shrink-0">
-                    <Card>
+                    <Card className="py-0 gap-0">
                         <CardContent className="p-4">
                             <div className="flex justify-between items-center mb-4">
                                 <h2 className="text-md font-medium">工具分组</h2>
@@ -364,11 +365,17 @@ export function ToolsPage() {
                     </div>
 
                     {/* 工具列表 */}
-                    <Tabs defaultValue="grouped" className="w-full">
+                    <Tabs defaultValue="all" className="w-full">
                         <TabsList>
-                            <TabsTrigger value="grouped">按分组</TabsTrigger>
                             <TabsTrigger value="all">全部工具</TabsTrigger>
+                            <TabsTrigger value="grouped">按分组</TabsTrigger>
                         </TabsList>
+
+                        {/* 全部工具 */}
+                        <TabsContent value="all" className="mt-6">
+                            {/*{renderToolList(filteredTools)}*/}
+                            <ToolList viewMode={viewMode}/>
+                        </TabsContent>
 
                         {/* 按分组显示 */}
                         <TabsContent value="grouped" className="mt-6 space-y-6">
@@ -424,11 +431,6 @@ export function ToolsPage() {
                                         )
                                     })
                             )}
-                        </TabsContent>
-
-                        {/* 全部工具 */}
-                        <TabsContent value="all" className="mt-6">
-                            {renderToolList(filteredTools)}
                         </TabsContent>
                     </Tabs>
                 </main>

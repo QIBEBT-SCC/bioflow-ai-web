@@ -2,7 +2,7 @@ import {useEffect} from 'react';
 import {toolApi} from '@/services/api';
 import {useToolStore} from '@/stores/toolStore.tsx';
 import {useMutation, useQuery, useQueryClient, UseQueryOptions} from "@tanstack/react-query";
-import {DockerToolCreate, ToolTag} from "@/types/tool.tsx";
+import {DockerToolCreate, SimpleToolInfo, ToolTag} from "@/types/tool.tsx";
 
 export function useToolTagList() {
     const options: UseQueryOptions<ToolTag[], Error> = {
@@ -33,4 +33,13 @@ export function useToolArgs() {
     }, [defaultArgs, setDefaultArgs]);
 
     return defaultArgs;
-} 
+}
+
+export function useAllTools() {
+    const options: UseQueryOptions<SimpleToolInfo[], Error> = {
+        queryKey: ['allTools'],
+        queryFn: toolApi.getToolList,
+    };
+
+    return useQuery(options);
+}

@@ -40,3 +40,15 @@ export interface DockerToolCreate {
     use_temp_dir: boolean
     help_command: string
 }
+
+export interface SimpleToolInfo {
+    uid: string
+    name: string
+    description: string
+    tool_type: ParamType
+    group_id?: number
+
+    docker_image: string
+
+    tags: ToolTag[]
+}
