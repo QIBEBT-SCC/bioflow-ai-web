@@ -1,3 +1,8 @@
+export enum ToolType {
+    DOCKER = 0,
+    COMMAND_LINE = 1,
+}
+
 // 参数类型枚举
 export enum ParamType {
     INPUT = 0,
@@ -45,10 +50,34 @@ export interface SimpleToolInfo {
     uid: string
     name: string
     description: string
-    tool_type: ParamType
+    tool_type: ToolType
     group_id?: number
 
     docker_image: string
+
+    tags: ToolTag[]
+}
+
+export interface ToolInfo {
+    uid: string
+    name: string
+    description: string
+    tool_type: ToolType
+    group_id?: number
+
+    command_template: string
+    required_params: ParamDefine[]
+    optional_params: string
+    output_files: OutputFile[]
+
+    help_command: string
+    complete_command: string
+
+    mkdir_output: boolean
+    use_temp_dir: boolean
+
+    docker_repo: string
+    docker_tag: string
 
     tags: ToolTag[]
 }

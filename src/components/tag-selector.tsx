@@ -7,7 +7,7 @@ import {Command, CommandEmpty, CommandGroup, CommandItem, CommandList} from "@/c
 import {Plus, X} from "lucide-react"
 import {cn} from "@/lib/utils"
 import {ToolTag} from "@/types/tool.tsx";
-import {useToolTagList} from "@/hooks/useToolArgs.tsx";
+import {useToolTagList} from "@/hooks/useTool.tsx";
 
 export interface TagSelectorProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "onChange"> {
     /** 当前选中的标签 */

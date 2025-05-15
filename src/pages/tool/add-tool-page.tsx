@@ -27,7 +27,7 @@ import {
     BreadcrumbSeparator
 } from "@/components/ui/breadcrumb.tsx";
 import {DockerToolCreate, OutputFile, ParamDefine, ParamType} from "@/types/tool"
-import {useCreateTool} from "@/hooks/useToolArgs.tsx";
+import {useCreateTool} from "@/hooks/useTool.tsx";
 import {TagSelector} from "@/components/tag-selector.tsx";
 
 

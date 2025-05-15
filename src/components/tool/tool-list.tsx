@@ -10,7 +10,7 @@ import {
 import {Button} from "@/components/ui/button.tsx";
 import {Copy, Edit, MoreHorizontal, Tag, Trash2} from "lucide-react";
 import {Card, CardContent} from "@/components/ui/card.tsx";
-import {useAllTools} from "@/hooks/useToolArgs.tsx";
+import {useAllTools} from "@/hooks/useTool.tsx";
 
 export function ToolList({viewMode}: { viewMode: "list" | "grid" }) {
     const {data: allTools = [], isLoading, error} = useAllTools();
