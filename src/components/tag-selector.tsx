@@ -1,25 +1,19 @@
 "use client"
 
 import * as React from "react"
-import { useState, useRef, useEffect } from "react"
-import { Badge } from "@/components/ui/badge"
-import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command"
-import { Plus, X } from "lucide-react"
-import { cn } from "@/lib/utils"
-
-// 标签类型定义 - 只包含id和name
-export type Tag = {
-    id: string // 已存在的标签有id，新建的标签id为空字符串
-    name: string
-}
+import {useState, useRef, useEffect} from "react"
+import {Badge} from "@/components/ui/badge"
+import {Command, CommandEmpty, CommandGroup, CommandItem, CommandList} from "@/components/ui/command"
+import {Plus, X} from "lucide-react"
+import {cn} from "@/lib/utils"
+import {ToolTag} from "@/types/tool.tsx";
+import {useToolTagList} from "@/hooks/useToolArgs.tsx";
 
 export interface TagSelectorProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "onChange"> {
     /** 当前选中的标签 */
-    value: Tag[]
+    value: ToolTag[]
     /** 当标签选择变化时的回调函数 */
-    onChange: (tags: Tag[]) => void
-    /** 可用的标签列表 */
-    availableTags: Tag[]
+    onChange: (tags: ToolTag[]) => void
     /** 是否禁用 */
     disabled?: boolean
     /** 占位符文本 */
@@ -41,7 +35,6 @@ export const TagSelector = React.forwardRef<HTMLDivElement, TagSelectorProps>(
         {
             value,
             onChange,
-            availableTags,
             disabled = false,
             placeholder = "搜索标签...",
             allowCreate = true,
@@ -57,6 +50,8 @@ export const TagSelector = React.forwardRef<HTMLDivElement, TagSelectorProps>(
         const [open, setOpen] = useState(false)
         const inputRef = useRef<HTMLInputElement>(null)
         const selectedTags = value || []
+
+        const {data: availableTags = []} = useToolTagList();
 
         // 检查是否达到最大标签数
         const isMaxTagsReached = maxTags !== undefined && selectedTags.length >= maxTags
@@ -78,17 +73,17 @@ export const TagSelector = React.forwardRef<HTMLDivElement, TagSelectorProps>(
             !selectedTags.some((tag) => tag.name.toLowerCase() === inputValue.toLowerCase())
 
         // 判断标签是否为新建标签（id为空）
-        const isNewTag = (tag: Tag) => tag.id === ""
+        const isNewTag = (tag: ToolTag) => tag.id === -1
 
         // 更新选中的标签
-        const updateTags = (newTags: Tag[]) => {
+        const updateTags = (newTags: ToolTag[]) => {
             onChange(newTags)
             setInputValue("")
             inputRef.current?.focus()
         }
 
         // 选择已存在的标签
-        const selectTag = (tag: Tag) => {
+        const selectTag = (tag: ToolTag) => {
             if (disabled || isMaxTagsReached) return
             updateTags([...selectedTags, tag])
         }
@@ -96,8 +91,8 @@ export const TagSelector = React.forwardRef<HTMLDivElement, TagSelectorProps>(
         // 创建并选择新标签
         const createNewTag = () => {
             if (canCreateNewTag) {
-                const newTag: Tag = {
-                    id: "",
+                const newTag: ToolTag = {
+                    id: -1,
                     name: inputValue.trim(),
                 }
                 updateTags([...selectedTags, newTag])
@@ -149,7 +144,7 @@ export const TagSelector = React.forwardRef<HTMLDivElement, TagSelectorProps>(
                             variant={isNewTag(tag) ? "outline" : "secondary"}
                             className={cn("h-6 px-2 text-sm", isNewTag(tag) && "border-dashed", disabled && "opacity-70")}
                         >
-                            {isNewTag(tag) && <Plus className="w-3 h-3 mr-1" />}
+                            {isNewTag(tag) && <Plus className="w-3 h-3 mr-1"/>}
                             {tag.name}
                             {!disabled && (
                                 <button
@@ -160,7 +155,7 @@ export const TagSelector = React.forwardRef<HTMLDivElement, TagSelectorProps>(
                                         removeTag(index)
                                     }}
                                 >
-                                    <X className="w-3 h-3" />
+                                    <X className="w-3 h-3"/>
                                     <span className="sr-only">Remove {tag.name}</span>
                                 </button>
                             )}
@@ -191,7 +186,8 @@ export const TagSelector = React.forwardRef<HTMLDivElement, TagSelectorProps>(
                                             ) : (
                                                 <CommandGroup>
                                                     {filteredTags.map((tag) => (
-                                                        <CommandItem key={tag.id} onSelect={() => selectTag(tag)} className="cursor-pointer">
+                                                        <CommandItem key={tag.id} onSelect={() => selectTag(tag)}
+                                                                     className="cursor-pointer">
                                                             {tag.name}
                                                         </CommandItem>
                                                     ))}
@@ -200,7 +196,7 @@ export const TagSelector = React.forwardRef<HTMLDivElement, TagSelectorProps>(
                                                             onSelect={createNewTag}
                                                             className="cursor-pointer flex items-center text-primary"
                                                         >
-                                                            <Plus className="w-4 h-4 mr-2" />
+                                                            <Plus className="w-4 h-4 mr-2"/>
                                                             创建新标签 "{inputValue}"
                                                         </CommandItem>
                                                     )}

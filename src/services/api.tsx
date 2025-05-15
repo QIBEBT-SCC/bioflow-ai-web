@@ -1,7 +1,8 @@
 import axios from 'axios';
 import {type Edge, type Node} from "@xyflow/react";
 import {isTokenExpired, useAuthStore} from "@/stores/authStore";
-import {Project, Tag} from "@/types/project.tsx";
+import {Project, ProjectTag} from "@/types/project.tsx";
+import {DockerToolCreate, ToolTag} from "@/types/tool.tsx";
 
 export const api = axios.create({
     baseURL: '/api/v1',
@@ -64,30 +65,30 @@ export const workflowApi = {
 };
 
 export const toolApi = {
+    newTool: async (tool: DockerToolCreate) => {
+        const {data} = await api.post('/tools', tool);
+        return data;
+    },
+    getTagList: async () => {
+        const {data} = await api.get<ToolTag[]>('/tool-tags');
+        return data;
+    },
     getDefaultArgs: async () => {
-        const {data} = await apiPublic.get<DefaultArgs>('/tool/args');
+        const {data} = await apiPublic.get<DefaultArgs>('/tools/args');
         return data;
     },
 };
 
 export const projectApi = {
     newTag: async (name: string, color: string) => {
-        const {data} = await api.post('/tags', {
+        const {data} = await api.post('/project-tags', {
             name: name,
             color: color
         });
         return data;
     },
-    starProject: async (project_id: string,) => {
-        const {data} = await api.post(`/projects/${project_id}/star`);
-        return data;
-    },
-    unstarProject: async (project_id: string,) => {
-        const {data} = await api.post(`/projects/${project_id}/unstar`);
-        return data;
-    },
     getTagList: async () => {
-        const {data} = await api.get<Tag[]>('/tags');
+        const {data} = await api.get<ProjectTag[]>('/project-tags');
         return data;
     },
     getProjectList: async () => {
@@ -108,6 +109,14 @@ export const projectApi = {
     },
     getProject: async (id: string) => {
         const {data} = await api.get<Project>(`/projects/${id}`);
+        return data;
+    },
+    starProject: async (project_id: string,) => {
+        const {data} = await api.post(`/projects/${project_id}/star`);
+        return data;
+    },
+    unstarProject: async (project_id: string,) => {
+        const {data} = await api.post(`/projects/${project_id}/unstar`);
         return data;
     },
 }; 

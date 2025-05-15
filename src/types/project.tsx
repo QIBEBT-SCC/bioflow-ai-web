@@ -1,4 +1,4 @@
-export interface Tag {
+export interface ProjectTag {
     id: number;
     name: string;
     color: string;
@@ -13,5 +13,5 @@ export interface Project {
     starred: boolean;
     create_time: string;
     update_time: string;
-    tags: Tag[];
+    tags: ProjectTag[];
 }

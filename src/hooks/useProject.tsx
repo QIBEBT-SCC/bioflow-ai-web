@@ -1,9 +1,9 @@
 import {useMutation, useQuery, useQueryClient, UseQueryOptions} from "@tanstack/react-query";
 import {projectApi} from "@/services/api.tsx";
-import {Project, Tag} from "@/types/project.tsx";
+import {Project, ProjectTag} from "@/types/project.tsx";
 
 export function useTagList() {
-    const options: UseQueryOptions<Tag[], Error> = {
+    const options: UseQueryOptions<ProjectTag[], Error> = {
         queryKey: ['tagList'],
         queryFn: projectApi.getTagList,
     };

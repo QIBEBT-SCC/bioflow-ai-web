@@ -1,5 +1,25 @@
 {
   "login": {
-    "title": "欢迎回来"
+    "title": "欢迎回来",
+    "forget_password": "忘记密码？",
+    "login": "登录",
+    "login...": "登陆中...",
+    "no_account": "没有账号？",
+    "signup": "注册"
+  },
+  "add_tool": {
+    "back": "返回工具列表",
+    "title": "添加新工具",
+    "sub_title": "新建Docker容器工具",
+    "base_info": "基本信息",
+    "base_info_desc": "设置工具的基本信息和Docker配置",
+    "tool_name": "工具名称",
+    "tool_name_placeholder": "例如: fastp",
+    "docker_repo": "Docker 仓库",
+    "docker_repo_placeholder": "例如: staphb/fastp",
+    "docker_tag": "标签",
+    "docker_tag_placeholder": "例如: 0.24.0",
+    "param_setting": "参数配置",
+    "file_output": "输出文件"
   }
 }
