@@ -1,11 +1,11 @@
 "use client"
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {useState} from "react"
+import {Button} from "@/components/ui/button"
+import {Badge} from "@/components/ui/badge"
+import {Input} from "@/components/ui/input"
+import {Card, CardContent} from "@/components/ui/card"
+import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs"
 import {
     Search,
     Plus,
@@ -32,7 +32,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import {Collapsible, CollapsibleContent, CollapsibleTrigger} from "@/components/ui/collapsible"
 import {Link} from "react-router-dom";
 import {ToolList} from "@/components/tool/tool-list.tsx";
 
@@ -89,7 +89,7 @@ export function ToolsPage() {
 
         // 首先创建所有分组的映射
         groups.forEach((group) => {
-            groupMap[group.id] = { ...group, children: [] }
+            groupMap[group.id] = {...group, children: []}
         })
 
         // 然后构建树结构
@@ -162,9 +162,9 @@ export function ToolsPage() {
                                     onClick={() => setSelectedGroupId(group.id)}
                                 >
                                     {isGroupExpanded(group.id) ? (
-                                        <FolderOpen className="h-4 w-4 mr-2" />
+                                        <FolderOpen className="h-4 w-4 mr-2"/>
                                     ) : (
-                                        <Folder className="h-4 w-4 mr-2" />
+                                        <Folder className="h-4 w-4 mr-2"/>
                                     )}
                                     <span>{group.name}</span>
                                     <Badge className="ml-auto">
@@ -189,7 +189,7 @@ export function ToolsPage() {
                             size="sm"
                             onClick={() => setSelectedGroupId(group.id)}
                         >
-                            <Folder className="h-4 w-4 mr-2" />
+                            <Folder className="h-4 w-4 mr-2"/>
                             <span>{group.name}</span>
                             <Badge className="ml-auto">{tools.filter((tool) => tool.groupIds.includes(group.id)).length}</Badge>
                         </Button>
@@ -249,7 +249,7 @@ export function ToolsPage() {
                 <h1 className="text-2xl font-bold">工具管理</h1>
                 <div className="flex gap-2 w-full sm:w-auto">
                     <div className="relative flex-1 sm:flex-initial">
-                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground"/>
                         <Input
                             type="search"
                             placeholder="搜索工具..."
@@ -261,25 +261,25 @@ export function ToolsPage() {
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline">
-                                <Plus className="h-4 w-4 mr-2" />
+                                <Plus className="h-4 w-4 mr-2"/>
                                 添加
-                                <ChevronDown className="h-4 w-4 ml-2" />
+                                <ChevronDown className="h-4 w-4 ml-2"/>
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                             <Link to="/tool/add">
                                 <DropdownMenuItem>
-                                    <Plus className="h-4 w-4 mr-2" />
+                                    <Plus className="h-4 w-4 mr-2"/>
                                     添加工具
                                 </DropdownMenuItem>
                             </Link>
                             <DropdownMenuItem>
-                                <FolderPlus className="h-4 w-4 mr-2" />
+                                <FolderPlus className="h-4 w-4 mr-2"/>
                                 创建分组
                             </DropdownMenuItem>
-                            <DropdownMenuSeparator />
+                            <DropdownMenuSeparator/>
                             <DropdownMenuItem>
-                                <Download className="h-4 w-4 mr-2" />
+                                <Download className="h-4 w-4 mr-2"/>
                                 导入工具
                             </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -295,7 +295,7 @@ export function ToolsPage() {
                             <div className="flex justify-between items-center mb-4">
                                 <h2 className="text-md font-medium">工具分组</h2>
                                 <Button variant="ghost" size="icon" className="h-8 w-8">
-                                    <FolderPlus className="h-4 w-4" />
+                                    <FolderPlus className="h-4 w-4"/>
                                 </Button>
                             </div>
 
@@ -340,7 +340,7 @@ export function ToolsPage() {
                         </h2>
                         <div className="flex items-center gap-2">
                             <Button variant="outline" size="sm">
-                                <Filter className="h-4 w-4 mr-2" />
+                                <Filter className="h-4 w-4 mr-2"/>
                                 筛选
                             </Button>
                             <div className="border rounded-md flex">
@@ -350,7 +350,7 @@ export function ToolsPage() {
                                     className="rounded-r-none"
                                     onClick={() => setViewMode("list")}
                                 >
-                                    <List className="h-4 w-4" />
+                                    <List className="h-4 w-4"/>
                                 </Button>
                                 <Button
                                     variant={viewMode === "grid" ? "secondary" : "ghost"}
@@ -358,7 +358,7 @@ export function ToolsPage() {
                                     className="rounded-l-none"
                                     onClick={() => setViewMode("grid")}
                                 >
-                                    <Grid className="h-4 w-4" />
+                                    <Grid className="h-4 w-4"/>
                                 </Button>
                             </div>
                         </div>
@@ -383,12 +383,13 @@ export function ToolsPage() {
                                 // 显示选中分组的工具
                                 <div>
                                     <Collapsible defaultOpen={true} className="border rounded-md overflow-hidden">
-                                        <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-muted/30 hover:bg-muted/50 transition-colors">
+                                        <CollapsibleTrigger
+                                            className="flex items-center justify-between w-full p-4 bg-muted/30 hover:bg-muted/50 transition-colors">
                                             <div className="flex items-center">
                                                 <h3 className="font-medium">{allGroups.find((g) => g.id === selectedGroupId)?.name || ""}</h3>
                                                 <Badge className="ml-2">{toolsByGroup[selectedGroupId]?.length || 0}</Badge>
                                             </div>
-                                            <ChevronRight className="h-4 w-4 transition-transform ui-open:rotate-90" />
+                                            <ChevronRight className="h-4 w-4 transition-transform ui-open:rotate-90"/>
                                         </CollapsibleTrigger>
                                         <CollapsibleContent>{renderToolList(toolsByGroup[selectedGroupId] || [])}</CollapsibleContent>
                                     </Collapsible>
@@ -398,12 +399,13 @@ export function ToolsPage() {
                                         .filter((group) => group.parentId === selectedGroupId)
                                         .map((subGroup) => (
                                             <Collapsible key={subGroup.id} defaultOpen={true} className="border rounded-md overflow-hidden">
-                                                <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-muted/30 hover:bg-muted/50 transition-colors">
+                                                <CollapsibleTrigger
+                                                    className="flex items-center justify-between w-full p-4 bg-muted/30 hover:bg-muted/50 transition-colors">
                                                     <div className="flex items-center">
                                                         <h3 className="font-medium">{subGroup.name}</h3>
                                                         <Badge className="ml-2">{toolsByGroup[subGroup.id]?.length || 0}</Badge>
                                                     </div>
-                                                    <ChevronRight className="h-4 w-4 transition-transform ui-open:rotate-90" />
+                                                    <ChevronRight className="h-4 w-4 transition-transform ui-open:rotate-90"/>
                                                 </CollapsibleTrigger>
                                                 <CollapsibleContent>{renderToolList(toolsByGroup[subGroup.id] || [])}</CollapsibleContent>
                                             </Collapsible>
@@ -419,12 +421,13 @@ export function ToolsPage() {
 
                                         return (
                                             <Collapsible key={group.id} defaultOpen={true} className="border rounded-md overflow-hidden">
-                                                <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-muted/30 hover:bg-muted/50 transition-colors">
+                                                <CollapsibleTrigger
+                                                    className="flex items-center justify-between w-full p-4 bg-muted/30 hover:bg-muted/50 transition-colors">
                                                     <div className="flex items-center">
                                                         <h3 className="font-medium">{group.name}</h3>
                                                         <Badge className="ml-2">{groupTools.length}</Badge>
                                                     </div>
-                                                    <ChevronRight className="h-4 w-4 transition-transform ui-open:rotate-90" />
+                                                    <ChevronRight className="h-4 w-4 transition-transform ui-open:rotate-90"/>
                                                 </CollapsibleTrigger>
                                                 <CollapsibleContent>{renderToolList(groupTools)}</CollapsibleContent>
                                             </Collapsible>
@@ -499,26 +502,26 @@ export function ToolsPage() {
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <Button variant="ghost" size="icon">
-                                            <MoreHorizontal className="h-4 w-4" />
+                                            <MoreHorizontal className="h-4 w-4"/>
                                             <span className="sr-only">更多选项</span>
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
                                         <DropdownMenuItem>
-                                            <Edit className="h-4 w-4 mr-2" />
+                                            <Edit className="h-4 w-4 mr-2"/>
                                             编辑工具
                                         </DropdownMenuItem>
                                         <DropdownMenuItem>
-                                            <Copy className="h-4 w-4 mr-2" />
+                                            <Copy className="h-4 w-4 mr-2"/>
                                             复制工具
                                         </DropdownMenuItem>
                                         <DropdownMenuItem>
-                                            <Tag className="h-4 w-4 mr-2" />
+                                            <Tag className="h-4 w-4 mr-2"/>
                                             管理分组
                                         </DropdownMenuItem>
-                                        <DropdownMenuSeparator />
+                                        <DropdownMenuSeparator/>
                                         <DropdownMenuItem className="text-destructive">
-                                            <Trash2 className="h-4 w-4 mr-2" />
+                                            <Trash2 className="h-4 w-4 mr-2"/>
                                             删除工具
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
@@ -541,25 +544,25 @@ export function ToolsPage() {
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <Button variant="ghost" size="icon" className="h-8 w-8">
-                                            <MoreHorizontal className="h-4 w-4" />
+                                            <MoreHorizontal className="h-4 w-4"/>
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
                                         <DropdownMenuItem>
-                                            <Edit className="h-4 w-4 mr-2" />
+                                            <Edit className="h-4 w-4 mr-2"/>
                                             编辑工具
                                         </DropdownMenuItem>
                                         <DropdownMenuItem>
-                                            <Copy className="h-4 w-4 mr-2" />
+                                            <Copy className="h-4 w-4 mr-2"/>
                                             复制工具
                                         </DropdownMenuItem>
                                         <DropdownMenuItem>
-                                            <Tag className="h-4 w-4 mr-2" />
+                                            <Tag className="h-4 w-4 mr-2"/>
                                             管理分组
                                         </DropdownMenuItem>
-                                        <DropdownMenuSeparator />
+                                        <DropdownMenuSeparator/>
                                         <DropdownMenuItem className="text-destructive">
-                                            <Trash2 className="h-4 w-4 mr-2" />
+                                            <Trash2 className="h-4 w-4 mr-2"/>
                                             删除工具
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
@@ -583,7 +586,7 @@ export function ToolsPage() {
                   {tool.repository}:{tool.tag}
                 </span>
                                 <div className="flex items-center">
-                                    <Clock className="h-3 w-3 mr-1" />
+                                    <Clock className="h-3 w-3 mr-1"/>
                                     {tool.addedAt}
                                 </div>
                             </div>
@@ -606,30 +609,30 @@ export function ToolsPage() {
 // 模拟数据 - 工具分组（支持多级结构）
 const allGroups: ToolGroup[] = [
     // 顶级分组
-    { id: "qc", name: "质控", description: "用于数据质量控制的工具" },
-    { id: "align", name: "比对", description: "用于序列比对的工具" },
-    { id: "assembly", name: "组装", description: "用于基因组组装的工具" },
-    { id: "variant", name: "变异检测", description: "用于变异检测的工具" },
-    { id: "anno", name: "注释", description: "用于基因组注释的工具" },
+    {id: "qc", name: "质控"},
+    {id: "align", name: "比对"},
+    {id: "assembly", name: "组装"},
+    {id: "variant", name: "变异检测"},
+    {id: "anno", name: "注释"},
 
     // 子分组
-    { id: "samtools", name: "SAMtools", description: "SAM/BAM处理工具集", parentId: "align" },
-    { id: "bwa", name: "BWA", description: "Burrows-Wheeler Aligner工具集", parentId: "align" },
-    { id: "fastqc", name: "FastQC", description: "FastQC工具集", parentId: "qc" },
-    { id: "spades", name: "SPAdes", description: "SPAdes组装工具集", parentId: "assembly" },
+    {id: "samtools", name: "SAMtools", parentId: "align"},
+    {id: "bwa", name: "BWA", parentId: "align"},
+    {id: "fastqc", name: "FastQC", parentId: "qc"},
+    {id: "spades", name: "SPAdes", parentId: "assembly"},
 
     // 三级分组
-    { id: "samtools_view", name: "SAMtools View", description: "SAM/BAM查看工具", parentId: "samtools" },
-    { id: "samtools_sort", name: "SAMtools Sort", description: "SAM/BAM排序工具", parentId: "samtools" },
+    {id: "samtools_view", name: "SAMtools View", parentId: "samtools"},
+    {id: "samtools_sort", name: "SAMtools Sort", parentId: "samtools"},
 ]
 
 // 模拟数据 - 常用标签
 const commonTags = [
-    { id: "ngs", name: "NGS" },
-    { id: "rna", name: "RNA-Seq" },
-    { id: "dna", name: "DNA-Seq" },
-    { id: "qc", name: "质控" },
-    { id: "assembly", name: "组装" },
+    {id: "ngs", name: "NGS"},
+    {id: "rna", name: "RNA-Seq"},
+    {id: "dna", name: "DNA-Seq"},
+    {id: "qc", name: "质控"},
+    {id: "assembly", name: "组装"},
 ]
 
 // 模拟数据 - 工具列表
@@ -643,9 +646,9 @@ const tools: Tool[] = [
         addedAt: "2023-04-15",
         groupIds: ["qc"],
         tags: [
-            { id: "ngs", name: "NGS" },
-            { id: "qc", name: "质控" },
-            { id: "preproc", name: "预处理" },
+            {id: "ngs", name: "NGS"},
+            {id: "qc", name: "质控"},
+            {id: "preproc", name: "预处理"},
         ],
     },
     {
@@ -657,9 +660,9 @@ const tools: Tool[] = [
         addedAt: "2023-04-20",
         groupIds: ["align", "bwa"],
         tags: [
-            { id: "align", name: "比对" },
-            { id: "genome", name: "基因组" },
-            { id: "dna", name: "DNA-Seq" },
+            {id: "align", name: "比对"},
+            {id: "genome", name: "基因组"},
+            {id: "dna", name: "DNA-Seq"},
         ],
     },
     {
@@ -671,8 +674,8 @@ const tools: Tool[] = [
         addedAt: "2023-04-22",
         groupIds: ["align", "samtools", "samtools_view"],
         tags: [
-            { id: "sam", name: "SAM/BAM" },
-            { id: "process", name: "处理" },
+            {id: "sam", name: "SAM/BAM"},
+            {id: "process", name: "处理"},
         ],
     },
     {
@@ -684,8 +687,8 @@ const tools: Tool[] = [
         addedAt: "2023-04-23",
         groupIds: ["align", "samtools", "samtools_sort"],
         tags: [
-            { id: "sam", name: "SAM/BAM" },
-            { id: "process", name: "处理" },
+            {id: "sam", name: "SAM/BAM"},
+            {id: "process", name: "处理"},
         ],
     },
     {
@@ -697,9 +700,9 @@ const tools: Tool[] = [
         addedAt: "2023-05-01",
         groupIds: ["variant"],
         tags: [
-            { id: "variant", name: "变异检测" },
-            { id: "genome", name: "基因组" },
-            { id: "dna", name: "DNA-Seq" },
+            {id: "variant", name: "变异检测"},
+            {id: "genome", name: "基因组"},
+            {id: "dna", name: "DNA-Seq"},
         ],
     },
     {
@@ -711,8 +714,8 @@ const tools: Tool[] = [
         addedAt: "2023-05-10",
         groupIds: ["align"],
         tags: [
-            { id: "align", name: "比对" },
-            { id: "search", name: "序列搜索" },
+            {id: "align", name: "比对"},
+            {id: "search", name: "序列搜索"},
         ],
     },
     {
@@ -724,8 +727,8 @@ const tools: Tool[] = [
         addedAt: "2023-05-15",
         groupIds: ["align"],
         tags: [
-            { id: "align", name: "比对" },
-            { id: "rna", name: "RNA-Seq" },
+            {id: "align", name: "比对"},
+            {id: "rna", name: "RNA-Seq"},
         ],
     },
     {
@@ -737,8 +740,8 @@ const tools: Tool[] = [
         addedAt: "2023-05-20",
         groupIds: ["align"],
         tags: [
-            { id: "align", name: "比对" },
-            { id: "rna", name: "RNA-Seq" },
+            {id: "align", name: "比对"},
+            {id: "rna", name: "RNA-Seq"},
         ],
     },
     {
@@ -750,8 +753,8 @@ const tools: Tool[] = [
         addedAt: "2023-05-25",
         groupIds: ["qc", "fastqc"],
         tags: [
-            { id: "qc", name: "质控" },
-            { id: "ngs", name: "NGS" },
+            {id: "qc", name: "质控"},
+            {id: "ngs", name: "NGS"},
         ],
     },
     {
@@ -763,8 +766,8 @@ const tools: Tool[] = [
         addedAt: "2023-06-01",
         groupIds: ["assembly", "spades"],
         tags: [
-            { id: "assembly", name: "组装" },
-            { id: "genome", name: "基因组" },
+            {id: "assembly", name: "组装"},
+            {id: "genome", name: "基因组"},
         ],
     },
 ]
