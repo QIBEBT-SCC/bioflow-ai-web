@@ -160,7 +160,7 @@ export function AddToolPage() {
                 <div className="container mx-auto py-6 max-w-4xl">
                     <div className="mb-6">
                         <Link
-                            to="/tools"
+                            to="/tool"
                             className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-2"
                         >
                             <ArrowLeft className="h-4 w-4 mr-1"/>
@@ -600,7 +600,7 @@ export function AddToolPage() {
                             }}>
                                 取消
                             </Button>
-                            <Button type="submit" className="bg-green-600 hover:bg-green-700">
+                            <Button type="submit" className="bg-green-600 hover:bg-green-700" disabled={isPending}>
                                 <Save className="h-4 w-4 mr-2"/>
                                 保存工具
                             </Button>
