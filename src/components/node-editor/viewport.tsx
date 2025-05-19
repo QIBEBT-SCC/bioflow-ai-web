@@ -118,7 +118,6 @@ function FlowContent() {
 
     const closeMenu = () => {
         setIsMenuOpen(false)
-        setClickPosition({x: 0, y: 0})
     }
 
     const onAddNode = (toolType: string, toolUid?: string) => {

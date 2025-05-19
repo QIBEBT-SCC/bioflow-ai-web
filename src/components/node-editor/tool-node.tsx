@@ -16,35 +16,37 @@ const ToolCard = (
     {
         title,
         description,
+        defaultArgs,
         topPadding,
     }: {
         title: string;
         description: string;
+        defaultArgs: string;
         topPadding: number;
     }) => {
     const nodeId = useNodeId();
-    // @ts-expect-error no need
-    const nodeData = useNodesData(nodeId);
+    const nodeData = useNodesData(nodeId ? nodeId : '');
     const {setNodes} = useReactFlow();
-    // @ts-expect-error no need
-    const [args, setArgs] = useState<string>(nodeData.data.args);
+    const [args, setArgs] = useState<string>(defaultArgs);
 
     useEffect(() => {
-        setNodes((nodes) =>
-            nodes.map((node) => {
-                if (node.id === nodeId) {
-                    return {
-                        ...node,
-                        data: {
-                            ...node.data,
-                            args: args,
-                        },
-                    };
-                }
-                return node;
-            })
-        );
-    }, [args, nodeId, setNodes]);
+        if (nodeData && nodeData.data.args !== args) {
+            setNodes((nodes) =>
+                nodes.map((node) => {
+                    if (node.id === nodeId) {
+                        return {
+                            ...node,
+                            data: {
+                                ...node.data,
+                                args: args,
+                            },
+                        };
+                    }
+                    return node;
+                })
+            );
+        }
+    }, [args, nodeId, setNodes, nodeData]);
 
     return (
         <Card className="w-[300px] py-0 gap-0 bg-white shadow-lg">
@@ -87,17 +89,22 @@ export function ToolNode() {
     const nodeId = useNodeId();
     const nodeData = useNodesData(nodeId ? nodeId : '');
     // @ts-expect-error no need
-    const {data: toolData} = useToolArg({uid: nodeData.data.tool_uid})
+    const {data: toolData, isLoading} = useToolArg({uid: nodeData.data.tool_uid})
     const handles = {
         inputs: toolData ? toolData.input_handles : [],
         outputs: toolData ? toolData.output_handles : []
     };
+
+    if (isLoading) return (
+        <ToolCard defaultArgs={''} description={''} title={''} topPadding={4}/>
+    )
 
     return (
         <BaseToolNode handles={handles} nodeComponent={
             <ToolCard
                 title={toolData ? toolData.name : ''}
                 description={toolData ? toolData.description : ''}
+                defaultArgs={toolData ? toolData.optional_params : ''}
                 topPadding={4 + (6 * Math.max(handles.inputs.length, handles.outputs.length))}
             />
         }/>
