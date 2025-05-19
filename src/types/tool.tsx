@@ -11,8 +11,10 @@ export enum ParamType {
 
 // 参数定义接口
 export interface ParamDefine {
+    key: string
     name: string
     command: string
+    description: string
     is_file: boolean
     mount_path?: string
     param_type: ParamType
@@ -22,6 +24,8 @@ export interface ParamDefine {
 export interface OutputFile {
     name: string
     file_path: string
+    is_report: boolean
+    is_log: boolean
     mount_path: string
 }
 
@@ -30,12 +34,19 @@ export interface ToolTag {
     name: string;
 }
 
+export interface ToolGroup {
+    id: number;
+    name: string;
+    parent_id?: number | null;
+}
+
 // 工具创建接口
 export interface DockerToolCreate {
     name: string
     repository: string
     tag: string
     description: string
+    homepage: string
     tool_tag: ToolTag[]
     command_template: string
     required_params: ParamDefine[]

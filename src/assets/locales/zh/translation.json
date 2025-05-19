@@ -19,6 +19,8 @@
     "docker_repo_placeholder": "例如: staphb/fastp",
     "docker_tag": "标签",
     "docker_tag_placeholder": "例如: 0.24.0",
+    "homepage": "工具主页",
+    "tags": "工具标签",
     "param_setting": "参数配置",
     "file_output": "输出文件"
   }

@@ -2,13 +2,47 @@ import {useEffect} from 'react';
 import {toolApi} from '@/services/api';
 import {useToolStore} from '@/stores/toolStore.tsx';
 import {useMutation, useQuery, useQueryClient, UseQueryOptions} from "@tanstack/react-query";
-import {DockerToolCreate, SimpleToolInfo, ToolInfo, ToolTag} from "@/types/tool.tsx";
+import {type DockerToolCreate, type SimpleToolInfo, type ToolInfo, type ToolTag, type ToolGroup} from "@/types/tool.tsx";
 
 export function useToolTagList() {
     const options: UseQueryOptions<ToolTag[], Error> = {
         queryKey: ['toolTagList'],
         queryFn: toolApi.getTagList,
     };
+
+    return useQuery(options);
+}
+
+export function useToolGroupList() {
+    const options: UseQueryOptions<ToolGroup[], Error> = {
+        queryKey: ['toolGroupList'],
+        queryFn: toolApi.getGroupList,
+    };
+
+    return useQuery(options);
+}
+
+export function useGroupTools({parent_id}: { parent_id?: number }) {
+    const options: UseQueryOptions<SimpleToolInfo[], Error> = {
+        queryKey: ['groupTools', parent_id],
+        queryFn: ({queryKey}) => {
+            const [, parent_id] = queryKey as [string, number | undefined];
+            return toolApi.getGroupTools(parent_id);
+        },
+    };
+
+    return useQuery(options);
+}
+
+export function useSearchTools({name, offset}: { name: string, offset?: number }) {
+    const options: UseQueryOptions<SimpleToolInfo[], Error> = {
+        queryKey: ['searchTools', name, offset],
+        queryFn: ({queryKey}) => {
+            const [, name, offset] = queryKey as [string, string, number | undefined];
+            return toolApi.searchToolList(name, offset);
+        },
+        enabled: !!name,
+    }
 
     return useQuery(options);
 }
