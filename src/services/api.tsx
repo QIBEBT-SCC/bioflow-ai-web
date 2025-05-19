@@ -94,10 +94,6 @@ export const toolApi = {
         const {data} = await api.get<SimpleToolInfo[]>(url);
         return data;
     },
-    getDefaultArgs: async () => {
-        const {data} = await apiPublic.get<DefaultArgs>('/tools/args');
-        return data;
-    },
     getTool: async (uid: string) => {
         const {data} = await api.get<ToolInfo>(`/tools/${uid}`);
         return data;

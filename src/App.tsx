@@ -1,6 +1,5 @@
 import {MainLayout} from "@/pages/main-layout.tsx";
 import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
-import {useToolArgs} from '@/hooks/useTool.tsx';
 import {isTokenExpired, useAuthStore} from "@/stores/authStore.tsx";
 import {createBrowserRouter, Navigate, RouterProvider} from "react-router-dom";
 import React, {useEffect} from "react";
@@ -43,8 +42,6 @@ const queryClient = new QueryClient({
 })
 
 export default function App() {
-    useToolArgs();
-
     const router = createBrowserRouter(
         [
             {

@@ -1,6 +1,4 @@
-import {useEffect} from 'react';
 import {toolApi} from '@/services/api';
-import {useToolStore} from '@/stores/toolStore.tsx';
 import {useMutation, useQuery, useQueryClient, UseQueryOptions} from "@tanstack/react-query";
 import {type DockerToolCreate, type SimpleToolInfo, type ToolInfo, type ToolTag, type ToolGroup} from "@/types/tool.tsx";
 import {ToolArgPublic} from "@/types/node.tsx";
@@ -56,18 +54,6 @@ export function useCreateTool() {
             queryClient.invalidateQueries({queryKey: ['tools']}).then();
         }
     });
-}
-
-export function useToolArgs() {
-    const {defaultArgs, setDefaultArgs} = useToolStore();
-
-    useEffect(() => {
-        if (Object.keys(defaultArgs).length === 0) {
-            toolApi.getDefaultArgs().then(setDefaultArgs);
-        }
-    }, [defaultArgs, setDefaultArgs]);
-
-    return defaultArgs;
 }
 
 export function useAllTools() {
