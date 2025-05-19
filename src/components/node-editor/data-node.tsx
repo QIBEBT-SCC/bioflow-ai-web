@@ -9,10 +9,10 @@ import {Input} from "@/components/ui/input.tsx";
 export function JsonFilterNode() {
     const handles = {
         inputs: [
-            {id: 1, argName: "json_data", description: "json data"},
+            {name: "json_data", description: "json data"},
         ],
         outputs: [
-            {id: 1, argName: "dataframe", description: "dataframe"},
+            {name: "dataframe", description: "dataframe"},
         ]
     }
     const topPadding = 4 + (6 * Math.max(handles.inputs.length, handles.outputs.length))
@@ -70,10 +70,10 @@ export function JsonFilterNode() {
 export function CutNode() {
     const handles = {
         inputs: [
-            {id: 1, argName: "input_file", description: "input"},
+            {name: "input_file", description: "input"},
         ],
         outputs: [
-            {id: 1, argName: "top_lines", description: "output"},
+            {name: "top_lines", description: "output"},
         ]
     }
     const topPadding = 4 + (6 * Math.max(handles.inputs.length, handles.outputs.length))
@@ -118,10 +118,10 @@ export function CutNode() {
 export function FileListNode() {
     const handles = {
         inputs: [
-            {id: 1, argName: "input_files", description: "files"},
+            {name: "input_files", description: "files"},
         ],
         outputs: [
-            {id: 1, argName: "file_list", description: "file list"},
+            {name: "file_list", description: "file list"},
         ]
     }
 

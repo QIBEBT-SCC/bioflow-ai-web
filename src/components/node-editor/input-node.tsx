@@ -85,7 +85,7 @@ export function FileInputNode() {
     const handles = {
         inputs: [],
         outputs: [
-            {id: 1, argName: "file_path", description: "output file"},
+            {name: "file_path", description: "output file"},
         ]
     }
 

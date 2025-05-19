@@ -16,7 +16,7 @@ const content_curves = {
 
 export function LineFigNode() {
     const handles = {
-        inputs: [{id: 1, argName: "dataframe", description: "Line data"},],
+        inputs: [{name: "dataframe", description: "Line data"},],
         outputs: []
     };
     const topPadding = 4 + (6 * Math.max(handles.inputs.length, handles.outputs.length))

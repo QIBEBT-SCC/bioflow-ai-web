@@ -2,26 +2,21 @@
 
 import {Handle, NodeResizer, Position, useEdges, useNodeId} from '@xyflow/react';
 import * as React from "react";
+import {HandleDefine} from "@/types/node.tsx";
 
 // 基础类型定义
-interface HandleConfig {
-    id: number;
-    argName: string;
-    description: string;
-}
-
 interface NodeProps {
     handles: {
-        inputs: HandleConfig[];
-        outputs: HandleConfig[];
+        inputs: HandleDefine[];
+        outputs: HandleDefine[];
     };
     nodeComponent: React.ReactNode;
 }
 
 interface ResizeNodeProps {
     handles: {
-        inputs: HandleConfig[];
-        outputs: HandleConfig[];
+        inputs: HandleDefine[];
+        outputs: HandleDefine[];
     };
     nodeComponent: React.ReactNode;
     minW: number;
@@ -43,7 +38,7 @@ const NodeHandle = ({id, argName, type, position, description,}: HandleProps) =>
     const edges = useEdges();
 
     const handleId = `${nodeId}-${type === 'source' ? 'out' : 'in'}-${argName}`
-    const topPos = (id + 1) * 6
+    const topPos = (id + 2) * 6
 
     const isConnected = () => {
         return edges.some(edge => edge.sourceHandle === handleId || edge.targetHandle === handleId);
@@ -73,28 +68,28 @@ export const BaseToolNode = ({handles, nodeComponent}: NodeProps) => {
     return (
         <div className="flex justify-center relative">
             {/* Input handles */}
-            {handles.inputs.map((input) => (
+            {handles.inputs.map((input, index) => (
                 <NodeHandle
-                    key={`in${input.id}`}
-                    id={input.id}
-                    argName={input.argName}
+                    key={`in${index}`}
+                    id={index}
+                    argName={input.name}
                     type="target"
                     position={Position.Left}
-                    description={input.description}
+                    description={input.name.replace("_", " ")}
                 />
             ))}
 
             {nodeComponent}
 
             {/* Output handles */}
-            {handles.outputs.map((output) => (
+            {handles.outputs.map((output, index) => (
                 <NodeHandle
-                    key={`out${output.id}`}
-                    id={output.id}
-                    argName={output.argName}
+                    key={`out${index}`}
+                    id={index}
+                    argName={output.name}
                     type="source"
                     position={Position.Right}
-                    description={output.description}
+                    description={output.name.replace("_", " ")}
                 />
             ))}
         </div>
@@ -108,14 +103,14 @@ export const BaseResizeableNode = ({handles, nodeComponent, onResize, minW, minH
             style={{minWidth: `${minW}px`, minHeight: `${minH}px`}}
         >
             {/* Input handles */}
-            {handles.inputs.map((input) => (
+            {handles.inputs.map((input, index) => (
                 <NodeHandle
-                    key={`in${input.id}`}
-                    id={input.id}
-                    argName={input.argName}
+                    key={`in${index}`}
+                    id={index}
+                    argName={input.name}
                     type="target"
                     position={Position.Left}
-                    description={input.description}
+                    description={input.name.replace("_", " ")}
                 />
             ))}
 
@@ -131,14 +126,14 @@ export const BaseResizeableNode = ({handles, nodeComponent, onResize, minW, minH
             {nodeComponent}
 
             {/* Output handles */}
-            {handles.outputs.map((output) => (
+            {handles.outputs.map((output, index) => (
                 <NodeHandle
-                    key={`out${output.id}`}
-                    id={output.id}
-                    argName={output.argName}
+                    key={`out${index}`}
+                    id={index}
+                    argName={output.name}
                     type="source"
                     position={Position.Right}
-                    description={output.description}
+                    description={output.name.replace("_", " ")}
                 />
             ))}
         </div>

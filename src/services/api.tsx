@@ -2,7 +2,8 @@ import axios from 'axios';
 import {type Edge, type Node} from "@xyflow/react";
 import {isTokenExpired, useAuthStore} from "@/stores/authStore";
 import {Project, ProjectTag} from "@/types/project.tsx";
-import {DockerToolCreate, SimpleToolInfo, ToolInfo, ToolTag} from "@/types/tool.tsx";
+import {DockerToolCreate, SimpleToolInfo, ToolGroup, ToolInfo, ToolTag} from "@/types/tool.tsx";
+import {ToolArgPublic} from "@/types/node.tsx";
 
 export const api = axios.create({
     baseURL: '/api/v1',
@@ -65,24 +66,44 @@ export const workflowApi = {
 };
 
 export const toolApi = {
-    newTool: async (tool: DockerToolCreate) => {
-        const {data} = await api.post('/tools', tool);
-        return data;
-    },
     getTagList: async () => {
         const {data} = await api.get<ToolTag[]>('/tool-tags');
         return data;
     },
-    getDefaultArgs: async () => {
-        const {data} = await apiPublic.get<DefaultArgs>('/tools/args');
+    getGroupList: async () => {
+        const {data} = await api.get<ToolGroup[]>('/tool-groups');
+        return data;
+    },
+    getGroupTools: async (parent_id?: number) => {
+        const url = parent_id !== undefined
+            ? `/tool-groups/tools?parent_id=${parent_id}`
+            : '/tool-groups/tools';
+        const {data} = await api.get<SimpleToolInfo[]>(url);
+        return data;
+    },
+    newTool: async (tool: DockerToolCreate) => {
+        const {data} = await api.post('/tools', tool);
         return data;
     },
     getToolList: async () => {
         const {data} = await api.get<SimpleToolInfo[]>('/tools');
         return data
     },
+    searchToolList: async (name: string, offset?: number) => {
+        const url = `tools/search?name=${name}${offset !== undefined ? `&offset=${offset}` : ''}&limit=8`;
+        const {data} = await api.get<SimpleToolInfo[]>(url);
+        return data;
+    },
+    getDefaultArgs: async () => {
+        const {data} = await apiPublic.get<DefaultArgs>('/tools/args');
+        return data;
+    },
     getTool: async (uid: string) => {
         const {data} = await api.get<ToolInfo>(`/tools/${uid}`);
+        return data;
+    },
+    getToolArg: async (uid: string) => {
+        const {data} = await api.get<ToolArgPublic>(`/tools/${uid}/args`);
         return data;
     },
 };

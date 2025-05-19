@@ -9,6 +9,7 @@ import {Textarea} from "@/components/ui/textarea.tsx";
 import {BaseToolNode} from "@/components/node-editor/base-node.tsx";
 import {useEffect, useState} from "react";
 import {useNodeId, useNodesData, useReactFlow} from '@xyflow/react';
+import {useToolArg} from "@/hooks/useTool.tsx";
 
 
 const ToolCard = (
@@ -82,137 +83,21 @@ const ToolCard = (
     )
 }
 
-export function FastPNode() {
+export function ToolNode() {
+    const nodeId = useNodeId();
+    const nodeData = useNodesData(nodeId ? nodeId : '');
+    // @ts-expect-error no need
+    const {data: toolData} = useToolArg({uid: nodeData.data.tool_uid})
     const handles = {
-        inputs: [
-            {id: 1, argName: "r1", description: "raw r1 file"},
-            {id: 2, argName: "r2", description: "raw r2 file"}
-        ],
-        outputs: [
-            {id: 1, argName: "r1", description: "clean r1 file"},
-            {id: 2, argName: "r2", description: "clean r2 file"},
-            {id: 3, argName: "json_report", description: "fastp report"},
-        ]
+        inputs: toolData ? toolData.input_handles : [],
+        outputs: toolData ? toolData.output_handles : []
     };
 
     return (
         <BaseToolNode handles={handles} nodeComponent={
             <ToolCard
-                title="FastP"
-                description="A tool designed to provide ultrafast all-in-one preprocessing and quality control for FastQ data."
-                topPadding={4 + (6 * Math.max(handles.inputs.length, handles.outputs.length))}
-            />
-        }/>
-    )
-}
-
-export function MetaPhlanNode() {
-    const handles = {
-        inputs: [
-            {id: 1, argName: "r1", description: "raw r1 file"},
-            {id: 2, argName: "r2", description: "raw r2 file"},
-        ],
-        outputs: [
-            {id: 1, argName: "bowtie2out", description: "bowtie2 output"},
-            {id: 2, argName: "taxon", description: "taxon report"},
-        ]
-    }
-
-    return (
-        <BaseToolNode handles={handles} nodeComponent={
-            <ToolCard
-                title="MetaPhlan"
-                description="MetaPhlAn is a computational tool for species-level microbial profiling (bacteria, archaea, eukaryotes, and viruses) from metagenomic shotgun sequencing data."
-                topPadding={4 + (6 * Math.max(handles.inputs.length, handles.outputs.length))}
-            />
-        }/>
-    )
-}
-
-
-export function DiamondNode() {
-    const handles = {
-        inputs: [
-            {id: 1, argName: "input_path", description: "raw fasta file"},
-            // {id: 2, description: "diamond nr db"},
-        ],
-        outputs: [
-            {id: 1, argName: "daa_file", description: "daa file"},
-        ]
-    };
-
-    return (
-        <BaseToolNode handles={handles} nodeComponent={
-            <ToolCard
-                title="Diamond blastx"
-                description="Align translated DNA query sequences against a protein reference database."
-                topPadding={4 + (6 * Math.max(handles.inputs.length, handles.outputs.length))}
-            />
-        }/>
-    )
-}
-
-export function MeganPrepareNode() {
-    const handles = {
-        inputs: [
-            {id: 1, argName: "daa", description: "raw DAA file"},
-            {id: 2, argName: "mdb", description: "megan map db"},
-        ],
-        outputs: [
-            {id: 1, argName: "daa_file", description: "meganized daa file"},
-        ]
-    };
-
-    return (
-        <BaseToolNode handles={handles} nodeComponent={
-            <ToolCard
-                title="MEGAN6 daa-meganizer"
-                description="Computes a MEGAN .rma6 file from a DIAMOND .daa file"
-                topPadding={4 + (6 * Math.max(handles.inputs.length, handles.outputs.length))}
-            />
-        }/>
-    )
-}
-
-
-export function Daa2RmaNode() {
-    const handles = {
-        inputs: [
-            {id: 1, argName: "daa_r1", description: "raw r1 DAA file"},
-            {id: 2, argName: "daa_r2", description: "raw r2 DAA file"},
-            {id: 3, argName: "mdb", description: "megan map db"},
-        ],
-        outputs: [
-            {id: 1, argName: "megan_rma", description: "rma6"},
-        ]
-    };
-
-    return (
-        <BaseToolNode handles={handles} nodeComponent={
-            <ToolCard
-                title="MEGAN6 daa2rma"
-                description="Computes a MEGAN .rma6 file from a DIAMOND .daa file"
-                topPadding={4 + (6 * Math.max(handles.inputs.length, handles.outputs.length))}
-            />
-        }/>
-    )
-}
-
-export function Rma2InfoNode() {
-    const handles = {
-        inputs: [
-            {id: 1, argName: "rma", description: "rma6 file"},
-        ],
-        outputs: [
-            {id: 1, argName: "report", description: "report file"},
-        ]
-    };
-
-    return (
-        <BaseToolNode handles={handles} nodeComponent={
-            <ToolCard
-                title="MEGAN6 rma2info"
-                description="Analyses an RMA file"
+                title={toolData ? toolData.name : ''}
+                description={toolData ? toolData.description : ''}
                 topPadding={4 + (6 * Math.max(handles.inputs.length, handles.outputs.length))}
             />
         }/>

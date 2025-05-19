@@ -8,15 +8,6 @@ import {
     UploadIcon,
     SaveAllIcon,
 } from "lucide-react";
-import {
-    ContextMenu,
-    ContextMenuContent,
-    ContextMenuItem,
-    ContextMenuTrigger,
-    ContextMenuSub,
-    ContextMenuSubTrigger,
-    ContextMenuSubContent
-} from "@/components/ui/context-menu.tsx";
 import {SidebarInset, SidebarTrigger} from "@/components/ui/sidebar.tsx";
 import {Separator} from "@/components/ui/separator.tsx";
 import {
@@ -38,7 +29,8 @@ import {
     MiniMap,
     ReactFlowProvider,
     BackgroundVariant,
-    useReactFlow
+    useReactFlow,
+    type XYPosition
 } from "@xyflow/react";
 import {
     type Node,
@@ -48,20 +40,16 @@ import {
     type OnConnect
 } from "@xyflow/react";
 import {useSaveWorkflow} from '@/hooks/useWorkflow.tsx';
-import {useToolStore} from '@/stores/toolStore.tsx';
-import {nodeConfig, nodeTypes} from "@/components/node-editor/menus.tsx";
-import {v4 as uuid4} from 'uuid';
+import {v7 as uuid7} from 'uuid';
+import {FileInputNode} from "@/components/node-editor/input-node.tsx";
+import {LineFigNode} from "@/components/node-editor/draw-node.tsx";
+import {CutNode, JsonFilterNode} from "@/components/node-editor/data-node.tsx";
+import {NoteNode} from "@/components/node-editor/note-node.tsx";
+import {PanelMenu} from "@/components/node-editor/panel-menu.tsx";
+import {ToolNode} from "@/components/node-editor/tool-node.tsx";
 
 
-export function FlowWorkspace() {
-    return (
-        <ReactFlowProvider>
-            <FlowContent/>
-        </ReactFlowProvider>
-    );
-}
-
-function MenuButton({icon, tooltip, onClick}: { icon: ReactNode, tooltip: string, onClick: () => void }) {
+function MenuButton({icon, tooltip, onClick, disable}: { icon: ReactNode, tooltip: string, onClick: () => void, disable: boolean }) {
     return (
         <TooltipProvider>
             <Tooltip>
@@ -71,6 +59,7 @@ function MenuButton({icon, tooltip, onClick}: { icon: ReactNode, tooltip: string
                         size="icon"
                         className="border-0 shadow-none text-muted-foreground hover:text-foreground"
                         onClick={onClick}
+                        disabled={disable}
                     >
                         {icon}
                     </Button>
@@ -83,13 +72,26 @@ function MenuButton({icon, tooltip, onClick}: { icon: ReactNode, tooltip: string
     )
 }
 
+const nodeTypes = {
+    tool: ToolNode,
+    fileInput: FileInputNode,
+    lineFig: LineFigNode,
+    dataFilter: JsonFilterNode,
+    dataCut: CutNode,
+    note: NoteNode,
+}
+
 function FlowContent() {
+
+
     const [nodes, setNodes] = useState<Node[]>([]);
     const [edges, setEdges] = useState<Edge[]>([]);
     const [isRunning, setIsRunning] = useState(false);
     const {saveWorkflow, isRunning: isSaving} = useSaveWorkflow();
-    const {screenToFlowPosition} = useReactFlow();
-    const defaultArgs = useToolStore(state => state.defaultArgs);
+    const reactFlow = useReactFlow();
+
+    const [isMenuOpen, setIsMenuOpen] = useState(false)
+    const [clickPosition, setClickPosition] = useState<XYPosition>({x: 0, y: 0})
 
     const onNodesChange: OnNodesChange = useCallback(
         (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
@@ -104,26 +106,48 @@ function FlowContent() {
         [setEdges],
     );
 
-    const onAddNode = useCallback((event: React.MouseEvent, type: string) => {
-        const position = screenToFlowPosition({
+    const openMenu = (event: MouseEvent | React.MouseEvent<Element, MouseEvent>) => {
+        event.preventDefault()
+        const position = {
             x: event.clientX,
             y: event.clientY,
-        });
+        }
+        setClickPosition(position)
+        setIsMenuOpen(true)
+    }
 
-        const nodeId = uuid4();
-        const newNode = {
-            id: nodeId,
-            type,
-            dragHandle: '.nodeDragable',
-            position,
-            data: {
-                args: defaultArgs[`${type}` as keyof typeof defaultArgs] ?? ''
-            },
-            zIndex: type === 'note' ? -10 : 20,
-        };
+    const closeMenu = () => {
+        setIsMenuOpen(false)
+        setClickPosition({x: 0, y: 0})
+    }
 
-        setNodes((nds) => [...nds, newNode]);
-    }, [screenToFlowPosition, defaultArgs]);
+    const onAddNode = (toolType: string, toolUid?: string) => {
+        const nodeId = uuid7();
+        const position = reactFlow.screenToFlowPosition(clickPosition, {snapToGrid: true});
+
+        if (toolType === "tool") {
+            const newNode = {
+                id: nodeId,
+                type: "tool",
+                dragHandle: '.nodeDragable',
+                position: position,
+                data: {tool_uid: toolUid, args: ''},
+                zIndex: 20,
+            }
+            setNodes((nds) => [...nds, newNode]);
+        } else {
+            const newNode = {
+                id: nodeId,
+                type: toolType,
+                dragHandle: '.nodeDragable',
+                position: position,
+                data: {args: ''},
+                zIndex: toolType === 'note' ? -10 : 20,
+            }
+            console.log(newNode)
+            setNodes((nds) => [...nds, newNode]);
+        }
+    }
 
     const handleSave = () => {
         const workflow = {
@@ -132,24 +156,6 @@ function FlowContent() {
         };
         saveWorkflow(workflow);
     };
-
-    const renderMenuItems = useCallback(() => {
-        return Object.entries(nodeConfig).map(([key, category]) => (
-            <ContextMenuSub key={key}>
-                <ContextMenuSubTrigger>{category.name}</ContextMenuSubTrigger>
-                <ContextMenuSubContent>
-                    {category.items.map((item) => (
-                        <ContextMenuItem
-                            key={item.type}
-                            onClick={(e) => onAddNode(e, item.type)}
-                        >
-                            {item.label}
-                        </ContextMenuItem>
-                    ))}
-                </ContextMenuSubContent>
-            </ContextMenuSub>
-        ));
-    }, [onAddNode]);
 
     return (
         <SidebarInset>
@@ -179,26 +185,31 @@ function FlowContent() {
                             onClick={() => {
                             }}
                             tooltip={"加载配置"}
+                            disable={isSaving}
                         />
                         <MenuButton
                             icon={<SaveIcon className="h-4 w-4"/>}
                             onClick={handleSave}
                             tooltip={"保存"}
+                            disable={isSaving}
                         />
                         <MenuButton
                             icon={<SaveAllIcon className="h-4 w-4"/>}
                             onClick={handleSave}
                             tooltip={"另存为"}
+                            disable={isSaving}
                         />
                         <MenuButton
                             icon={<DownloadIcon className="h-4 w-4"/>}
                             onClick={handleSave}
                             tooltip={"导出配置"}
+                            disable={isSaving}
                         />
                         <MenuButton
                             icon={<UploadIcon className="h-4 w-4"/>}
                             onClick={handleSave}
                             tooltip={"从JSON导入"}
+                            disable={isSaving}
                         />
                     </div>
                     <Separator orientation="vertical" className="!h-8"/>
@@ -207,37 +218,44 @@ function FlowContent() {
                             icon={<PlayIcon className="h-4 w-4 text-green-400"/>}
                             onClick={() => setIsRunning(!isRunning)}
                             tooltip={"Run"}
+                            disable={isSaving}
                         />
                         <MenuButton
                             icon={<CheckCircle2 className="h-4 w-4 text-yellow-400"/>}
-                            onClick={() => {}}
+                            onClick={() => {
+                            }}
                             tooltip={"检查合法性"}
+                            disable={isSaving}
                         />
                     </div>
                 </div>
             </header>
             <div className="h-full w-full">
-                <ContextMenu>
-                    <ContextMenuTrigger>
-                        <ReactFlow
-                            nodes={nodes}
-                            edges={edges}
-                            onNodesChange={onNodesChange}
-                            onEdgesChange={onEdgesChange}
-                            onConnect={onConnect}
-                            nodeTypes={nodeTypes}
-                            fitView
-                        >
-                            <Background variant={BackgroundVariant.Dots} className="!bg-gray-100"/>
-                            <Controls/>
-                            <MiniMap nodeStrokeWidth={3} zoomable pannable/>
-                        </ReactFlow>
-                    </ContextMenuTrigger>
-                    <ContextMenuContent>
-                        {renderMenuItems()}
-                    </ContextMenuContent>
-                </ContextMenu>
+                <ReactFlow
+                    nodes={nodes}
+                    edges={edges}
+                    onNodesChange={onNodesChange}
+                    onEdgesChange={onEdgesChange}
+                    onPaneContextMenu={openMenu}
+                    onPaneClick={closeMenu}
+                    onConnect={onConnect}
+                    nodeTypes={nodeTypes}
+                    fitView
+                >
+                    <Background variant={BackgroundVariant.Dots} className="!bg-gray-100"/>
+                    <Controls/>
+                    <MiniMap nodeStrokeWidth={3} zoomable pannable/>
+                </ReactFlow>
+                <PanelMenu isOpen={isMenuOpen} position={clickPosition} onClose={closeMenu} onSelectTool={onAddNode}/>
             </div>
         </SidebarInset>
+    );
+}
+
+export function FlowWorkspace() {
+    return (
+        <ReactFlowProvider>
+            <FlowContent/>
+        </ReactFlowProvider>
     );
 }
