@@ -73,6 +73,7 @@ export interface ToolInfo {
     uid: string
     name: string
     description: string
+    homepage: string
     tool_type: ToolType
     group_id?: number
 

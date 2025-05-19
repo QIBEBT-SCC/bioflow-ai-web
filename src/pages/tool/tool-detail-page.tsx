@@ -21,7 +21,7 @@ import {
 
 export function ToolDetailPage() {
     const {toolUid} = useParams();
-    const {data: tool, isLoading, error} = useTool({uid: toolUid ? toolUid : ''});
+    const {data: tool, isLoading} = useTool({uid: toolUid ? toolUid : ''});
 
     // 复制命令到剪贴板
     const copyToClipboard = (text: string) => {
@@ -35,7 +35,7 @@ export function ToolDetailPage() {
             })
     }
 
-    if (!tool) return (<div></div>)
+    if (isLoading || !tool) return (<div></div>)
 
     return (
         <SidebarInset className="h-screen flex flex-col">
@@ -80,9 +80,13 @@ export function ToolDetailPage() {
                             <p className="text-muted-foreground mt-1">{tool.docker_repo}</p>
                         </div>
                         <div className="flex gap-2">
-                            <Button variant="outline" size="sm">
-                                <FileText className="h-4 w-4 mr-2"/>
-                                查看文档
+                            <Button asChild variant="outline" size="sm">
+                                <a
+                                    href={tool.homepage}
+                                >
+                                    <FileText className="h-4 w-4 mr-2"/>
+                                    查看文档
+                                </a>
                             </Button>
                             <Button asChild variant="outline" size="sm">
                                 <a
@@ -90,7 +94,7 @@ export function ToolDetailPage() {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                 >
-                                    <ExternalLink className="h-4 w-4 mr-2" />
+                                    <ExternalLink className="h-4 w-4 mr-2"/>
                                     Docker Hub
                                 </a>
                             </Button>
