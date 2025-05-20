@@ -4,6 +4,7 @@ import {isTokenExpired, useAuthStore} from "@/stores/authStore.tsx";
 import {createBrowserRouter, Navigate, RouterProvider} from "react-router-dom";
 import React, {useEffect} from "react";
 import {LoginPage} from "@/pages/login-page.tsx";
+import {TooltipProvider} from "@/components/ui/tooltip.tsx";
 
 // 受保护的路由组件
 const ProtectedRoute = ({children}: { children: React.ReactNode }) => {
@@ -65,6 +66,10 @@ export default function App() {
                 element: <ProtectedRoute><MainLayout page={"editor"}/></ProtectedRoute>
             },
             {
+                path: "/editor/:workflowUid",
+                element: <ProtectedRoute><MainLayout page={"editor"}/></ProtectedRoute>
+            },
+            {
                 path: "/tool",
                 element: <ProtectedRoute><MainLayout page={"tool"}/></ProtectedRoute>,
             },
@@ -88,13 +93,13 @@ export default function App() {
     )
 
     return (
-        <div>
-            <QueryClientProvider client={queryClient}>
+        <QueryClientProvider client={queryClient}>
+            <TooltipProvider>
                 <RouterProvider
                     router={router}
                 />
-            </QueryClientProvider>
-        </div>
+            </TooltipProvider>
+        </QueryClientProvider>
     );
 }
 

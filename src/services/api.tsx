@@ -1,9 +1,9 @@
 import axios from 'axios';
-import {type Edge, type Node} from "@xyflow/react";
 import {isTokenExpired, useAuthStore} from "@/stores/authStore";
 import {Project, ProjectTag} from "@/types/project.tsx";
 import {DockerToolCreate, SimpleToolInfo, ToolGroup, ToolInfo, ToolTag} from "@/types/tool.tsx";
 import {ToolArgPublic} from "@/types/node.tsx";
+import {SimpleWorkflowInfo, Workflow} from "@/types/workflow.tsx";
 
 export const api = axios.create({
     baseURL: '/api/v1',
@@ -40,27 +40,23 @@ api.interceptors.response.use(
     }
 );
 
-export interface WorkflowDefinition {
-    nodes: Node[];
-    edges: Edge[];
-}
-
-export interface DefaultArgs {
-    [key: string]: string;
-}
 
 export const workflowApi = {
-    // TODO: 后续通过状态管理或props传入工作流名称
-    saveWorkflow: async (workflow: WorkflowDefinition) => {
-        const {data} = await api.post('/workflow/flows/default_workflow', workflow);
+    getWorkflows: async (offset: number) => {
+        const url = `/workflows?offset=${offset}&limit=8`;
+        const {data} = await api.get<SimpleWorkflowInfo[]>(url);
         return data;
     },
-    getWorkflows: async () => {
-        const {data} = await api.get<string[]>('/workflow/flows');
+    getWorkflowCount: async () => {
+        const {data} = await api.get<number>('/workflows/count');
         return data;
     },
-    getWorkflow: async (name: string) => {
-        const {data} = await api.get<WorkflowDefinition>(`/workflow/flows/${name}`);
+    getWorkflow: async (uid: string) => {
+        const {data} = await api.get<Workflow>(`/workflows/${uid}`);
+        return data;
+    },
+    saveWorkflow: async (workflow: Workflow) => {
+        const {data} = await api.post('/workflows', workflow);
         return data;
     },
 };
@@ -90,7 +86,7 @@ export const toolApi = {
         return data
     },
     searchToolList: async (name: string, offset?: number) => {
-        const url = `tools/search?name=${name}${offset !== undefined ? `&offset=${offset}` : ''}&limit=8`;
+        const url = `/tools/search?name=${name}${offset !== undefined ? `&offset=${offset}` : ''}&limit=8`;
         const {data} = await api.get<SimpleToolInfo[]>(url);
         return data;
     },

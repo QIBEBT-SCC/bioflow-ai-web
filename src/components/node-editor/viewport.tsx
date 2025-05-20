@@ -1,4 +1,4 @@
-import React, {type ReactNode, useCallback, useState} from "react";
+import React, {useCallback, useState} from "react";
 import {
     PlayIcon,
     SaveIcon,
@@ -17,29 +17,26 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator
 } from "@/components/ui/breadcrumb.tsx";
-import {Button} from "@/components/ui/button.tsx";
-import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip.tsx";
 import {
     ReactFlow,
     Background,
     Controls,
-    applyNodeChanges,
-    applyEdgeChanges,
     addEdge,
     MiniMap,
     ReactFlowProvider,
     BackgroundVariant,
     useReactFlow,
-    type XYPosition
+    useNodesState,
+    useEdgesState
 } from "@xyflow/react";
-import {
-    type Node,
-    type Edge,
-    type OnNodesChange,
-    type OnEdgesChange,
-    type OnConnect
+import type {
+    Node,
+    Edge,
+    XYPosition,
+    OnConnect
 } from "@xyflow/react";
 import {useSaveWorkflow} from '@/hooks/useWorkflow.tsx';
+import {workflowApi} from '@/services/api.tsx';
 import {v7 as uuid7} from 'uuid';
 import {FileInputNode} from "@/components/node-editor/input-node.tsx";
 import {LineFigNode} from "@/components/node-editor/draw-node.tsx";
@@ -47,30 +44,8 @@ import {CutNode, JsonFilterNode} from "@/components/node-editor/data-node.tsx";
 import {NoteNode} from "@/components/node-editor/note-node.tsx";
 import {PanelMenu} from "@/components/node-editor/panel-menu.tsx";
 import {ToolNode} from "@/components/node-editor/tool-node.tsx";
+import {LoadMenu, MenuButton} from "@/components/node-editor/editor-menu.tsx";
 
-
-function MenuButton({icon, tooltip, onClick, disable}: { icon: ReactNode, tooltip: string, onClick: () => void, disable: boolean }) {
-    return (
-        <TooltipProvider>
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        className="border-0 shadow-none text-muted-foreground hover:text-foreground"
-                        onClick={onClick}
-                        disabled={disable}
-                    >
-                        {icon}
-                    </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                    <p>{tooltip}</p>
-                </TooltipContent>
-            </Tooltip>
-        </TooltipProvider>
-    )
-}
 
 const nodeTypes = {
     tool: ToolNode,
@@ -82,25 +57,16 @@ const nodeTypes = {
 }
 
 function FlowContent() {
-
-
-    const [nodes, setNodes] = useState<Node[]>([]);
-    const [edges, setEdges] = useState<Edge[]>([]);
-    const [isRunning, setIsRunning] = useState(false);
-    const {saveWorkflow, isRunning: isSaving} = useSaveWorkflow();
+    const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
+    const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
     const reactFlow = useReactFlow();
+
+    const [isRunning, setIsRunning] = useState(false);
+    const {mutate: saveWorkflow, isPending: isSaving} = useSaveWorkflow();
 
     const [isMenuOpen, setIsMenuOpen] = useState(false)
     const [clickPosition, setClickPosition] = useState<XYPosition>({x: 0, y: 0})
 
-    const onNodesChange: OnNodesChange = useCallback(
-        (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
-        [setNodes],
-    );
-    const onEdgesChange: OnEdgesChange = useCallback(
-        (changes) => setEdges((eds) => applyEdgeChanges(changes, eds)),
-        [setEdges],
-    );
     const onConnect: OnConnect = useCallback(
         (connection) => setEdges((eds) => addEdge(connection, eds)),
         [setEdges],
@@ -133,7 +99,7 @@ function FlowContent() {
                 data: {tool_uid: toolUid, args: ''},
                 zIndex: 20,
             }
-            setNodes((nds) => [...nds, newNode]);
+            setNodes((nds) => nds.concat(newNode));
         } else {
             const newNode = {
                 id: nodeId,
@@ -144,17 +110,34 @@ function FlowContent() {
                 zIndex: toolType === 'note' ? -10 : 20,
             }
             console.log(newNode)
-            setNodes((nds) => [...nds, newNode]);
+            setNodes((nds) => nds.concat(newNode));
         }
     }
 
     const handleSave = () => {
         const workflow = {
-            nodes,
-            edges
+            name: '',
+            workflow: {
+                nodes,
+                edges
+            },
+            public: true
         };
-        saveWorkflow(workflow);
+        saveWorkflow({workflow: workflow});
     };
+
+    const onLoadWorkflow = (uid: string) => {
+        workflowApi.getWorkflow(uid)
+            .then((data) => {
+                if (data?.workflow) {
+                    setNodes(data.workflow.nodes || []);
+                    setEdges(data.workflow.edges || []);
+                }
+            })
+            .catch((error) => {
+                console.error('加载工作流失败:', error);
+            });
+    }
 
     return (
         <SidebarInset>
@@ -167,7 +150,7 @@ function FlowContent() {
                         <BreadcrumbList>
                             <BreadcrumbItem className="hidden md:block">
                                 <BreadcrumbPage>
-                                    Building Your Application
+                                    workflow editor
                                 </BreadcrumbPage>
                             </BreadcrumbItem>
                             <BreadcrumbSeparator className="hidden md:block"/>
@@ -179,10 +162,9 @@ function FlowContent() {
                 </div>
                 <div className="flex items-center px-3 h-12 border-t bg-muted/30">
                     <div className="flex items-center gap-1 mr-2">
-                        <MenuButton
+                        <LoadMenu
                             icon={<MenuIcon className="h-4 w-4"/>}
-                            onClick={() => {
-                            }}
+                            onClick={onLoadWorkflow}
                             tooltip={"加载配置"}
                             disable={isSaving}
                         />
@@ -239,6 +221,7 @@ function FlowContent() {
                     onPaneClick={closeMenu}
                     onConnect={onConnect}
                     nodeTypes={nodeTypes}
+                    defaultEdgeOptions={{animated: true}}
                     fitView
                 >
                     <Background variant={BackgroundVariant.Dots} className="!bg-gray-100"/>

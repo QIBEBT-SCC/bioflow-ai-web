@@ -1,39 +1,38 @@
 import {useMutation, useQuery, UseQueryOptions} from '@tanstack/react-query';
-import {workflowApi, WorkflowDefinition} from '@/services/api.tsx';
+import {workflowApi} from '@/services/api.tsx';
+import {SimpleWorkflowInfo, Workflow} from "@/types/workflow.tsx";
+
+export function useWorkflows({offset}: { offset: number }) {
+    const options: UseQueryOptions<SimpleWorkflowInfo[], Error> = {
+        queryKey: ['workflows', offset],
+        queryFn: () => workflowApi.getWorkflows(offset),
+    };
+
+    return useQuery(options);
+}
+
+
+export function useWorkflowCount() {
+    const options: UseQueryOptions<number, Error> = {
+        queryKey: ['workflowCount'],
+        queryFn: workflowApi.getWorkflowCount,
+    };
+
+    return useQuery(options);
+}
+
+export function useWorkflow({uid}: { uid: string }) {
+    const options: UseQueryOptions<Workflow, Error> = {
+        queryKey: ['workflow', uid],
+        queryFn: () => workflowApi.getWorkflow(uid),
+        enabled: !!uid,
+    };
+
+    return useQuery(options);
+}
 
 export function useSaveWorkflow() {
-    const runWorkflowMutation = useMutation({
-        mutationFn: workflowApi.saveWorkflow,
-        onSuccess: () => {
-            console.log('工作流保存成功');
-        },
-        onError: (error) => {
-            console.error('保存工作流时出错：', error);
-        }
+    return useMutation({
+        mutationFn: ({workflow}: { workflow: Workflow }) => workflowApi.saveWorkflow(workflow),
     });
-
-    return {
-        saveWorkflow: runWorkflowMutation.mutate,
-        isRunning: runWorkflowMutation.isPending,
-        error: runWorkflowMutation.error
-    };
 }
-
-export function useWorkflows() {
-    const options: UseQueryOptions<string[], Error> = {
-        queryKey: ['workflows'],
-        queryFn: workflowApi.getWorkflows,
-    };
-
-    return useQuery(options);
-}
-
-export function useWorkflow(name: string) {
-    const options: UseQueryOptions<WorkflowDefinition, Error> = {
-        queryKey: ['workflow', name],
-        queryFn: () => workflowApi.getWorkflow(name),
-        enabled: !!name, // 只有当 name 存在时才执行查询
-    };
-
-    return useQuery(options);
-} 
