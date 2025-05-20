@@ -3,7 +3,7 @@ import {Card, CardContent, CardFooter, CardHeader, CardTitle} from "@/components
 import {Label} from "@/components/ui/label.tsx";
 import {Input} from "@/components/ui/input.tsx";
 import {Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger} from "@/components/ui/sheet.tsx";
-import {BaseToolNode} from "@/components/node-editor/base-node.tsx";
+import {BaseToolNode} from "@/components/node-editor/node/base-node.tsx";
 import {useNodeId, useNodesData, useReactFlow} from "@xyflow/react";
 import {useEffect, useState} from "react";
 

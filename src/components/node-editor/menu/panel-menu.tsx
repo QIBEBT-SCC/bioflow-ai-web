@@ -12,7 +12,7 @@ import {
     PenToolIcon,
     ChevronRight,
 } from "lucide-react"
-import {HierarchicalMenu} from "@/components/node-editor/hierarchical-menu.tsx";
+import {HierarchicalMenu} from "@/components/node-editor/menu/hierarchical-menu.tsx";
 
 // 菜单数据结构
 const menuData = {

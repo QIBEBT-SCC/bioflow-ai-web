@@ -1,16 +1,16 @@
 "use client"
 
 import {type ReactNode, useState} from "react"
-import {Button} from "@/components/ui/button"
-import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger} from "@/components/ui/dialog"
+import {Button} from "@/components/ui/button.tsx"
+import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger} from "@/components/ui/dialog.tsx"
 import {
     Pagination,
     PaginationContent,
     PaginationItem,
     PaginationLink,
     PaginationEllipsis,
-} from "@/components/ui/pagination"
-import {Input} from "@/components/ui/input"
+} from "@/components/ui/pagination.tsx"
+import {Input} from "@/components/ui/input.tsx"
 import {File, Search, ChevronLeft, ChevronRight} from "lucide-react"
 import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip.tsx";
 import {useWorkflowCount, useWorkflows} from "@/hooks/useWorkflow.tsx";

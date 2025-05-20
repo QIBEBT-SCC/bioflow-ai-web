@@ -7,7 +7,6 @@ import {
     GalleryVerticalEnd,
     GitFork,
     Home,
-    Settings2,
     TvMinimal,
     EditIcon,
     BoxesIcon
@@ -55,6 +54,11 @@ const data = {
             icon: ProjectOutlined,
         },
         {
+            name: "Editor",
+            url: "/editor",
+            icon: EditIcon
+        },
+        {
             name: "Workflows",
             url: "/workflow",
             icon: GitFork,
@@ -64,11 +68,6 @@ const data = {
             name: "Tasks",
             url: "/task",
             icon: TvMinimal
-        },
-        {
-            name: "Editor",
-            url: "/editor",
-            icon: EditIcon
         },
         {
             name: "ToolConfig",

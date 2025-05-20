@@ -1,7 +1,7 @@
 import {useNodeId, useNodesData, useReactFlow} from '@xyflow/react';
 import {Textarea} from "@/components/ui/textarea.tsx";
 import {useEffect, useState} from "react";
-import {BaseResizeableNode} from "@/components/node-editor/base-node.tsx";
+import {BaseResizeableNode} from "@/components/node-editor/node/base-node.tsx";
 
 const NoteCard = () => {
     const nodeId = useNodeId();

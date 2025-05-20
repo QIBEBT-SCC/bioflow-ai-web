@@ -3,7 +3,7 @@ import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/compon
 import {Info} from "lucide-react";
 import {Label} from "@/components/ui/label.tsx";
 import {Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select.tsx";
-import {BaseToolNode} from "@/components/node-editor/base-node.tsx";
+import {BaseToolNode} from "@/components/node-editor/node/base-node.tsx";
 import {Input} from "@/components/ui/input.tsx";
 
 export function JsonFilterNode() {
