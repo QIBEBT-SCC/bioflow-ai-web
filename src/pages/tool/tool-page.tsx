@@ -35,6 +35,9 @@ import {
 import {Collapsible, CollapsibleContent, CollapsibleTrigger} from "@/components/ui/collapsible"
 import {Link} from "react-router-dom";
 import {ToolList} from "@/components/tool/tool-list.tsx";
+import {SidebarInset, SidebarTrigger} from "@/components/ui/sidebar.tsx";
+import {Separator} from "@/components/ui/separator.tsx";
+import {Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage} from "@/components/ui/breadcrumb.tsx";
 
 // 分组类型定义
 interface ToolGroup {
@@ -243,202 +246,224 @@ export function ToolsPage() {
     const toolsByGroup = organizeToolsByGroup()
 
     return (
-        <div className="container mx-auto py-6">
-            {/* 顶部操作栏 */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center mb-6">
-                <h1 className="text-2xl font-bold">工具管理</h1>
-                <div className="flex gap-2 w-full sm:w-auto">
-                    <div className="relative flex-1 sm:flex-initial">
-                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground"/>
-                        <Input
-                            type="search"
-                            placeholder="搜索工具..."
-                            className="pl-8 w-full sm:w-[250px]"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                    </div>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline">
-                                <Plus className="h-4 w-4 mr-2"/>
-                                添加
-                                <ChevronDown className="h-4 w-4 ml-2"/>
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <Link to="/tool/add">
-                                <DropdownMenuItem>
-                                    <Plus className="h-4 w-4 mr-2"/>
-                                    添加工具
-                                </DropdownMenuItem>
-                            </Link>
-                            <DropdownMenuItem>
-                                <FolderPlus className="h-4 w-4 mr-2"/>
-                                创建分组
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator/>
-                            <DropdownMenuItem>
-                                <Download className="h-4 w-4 mr-2"/>
-                                导入工具
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+        <SidebarInset>
+            <header
+                className="flex flex-col shrink-0 border-b">
+                <div className="flex items-center gap-2 px-4 h-12 bg-background">
+                    <SidebarTrigger className="-ml-1"/>
+                    <Separator orientation="vertical" className="!mr-2 !h-4"/>
+                    <Breadcrumb>
+                        <BreadcrumbList>
+                            <BreadcrumbItem className="hidden md:block">
+                                <BreadcrumbPage>
+                                    Tools
+                                </BreadcrumbPage>
+                            </BreadcrumbItem>
+                        </BreadcrumbList>
+                    </Breadcrumb>
                 </div>
-            </div>
-
-            <div className="flex flex-col md:flex-row gap-6">
-                {/* 侧边栏 - 分组筛选 */}
-                <aside className="w-full md:w-64 shrink-0">
-                    <Card className="py-0 gap-0">
-                        <CardContent className="p-4">
-                            <div className="flex justify-between items-center mb-4">
-                                <h2 className="text-md font-medium">工具分组</h2>
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                    <FolderPlus className="h-4 w-4"/>
-                                </Button>
+            </header>
+            <div className="flex-1 overflow-y-auto">
+                <div className="container mx-auto py-6">
+                    {/* 顶部操作栏 */}
+                    <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center mb-6">
+                        <h1 className="text-2xl font-bold">工具管理</h1>
+                        <div className="flex gap-2 w-full sm:w-auto">
+                            <div className="relative flex-1 sm:flex-initial">
+                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground"/>
+                                <Input
+                                    type="search"
+                                    placeholder="搜索工具..."
+                                    className="pl-8 w-full sm:w-[250px]"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
                             </div>
-
-                            <div className="space-y-1 mb-4">
-                                <Button
-                                    variant={selectedGroupId === null ? "secondary" : "ghost"}
-                                    className="w-full justify-start"
-                                    size="sm"
-                                    onClick={() => setSelectedGroupId(null)}
-                                >
-                                    <span>所有工具</span>
-                                    <Badge className="ml-auto">{tools.length}</Badge>
-                                </Button>
-
-                                {renderGroupTree(groupTree)}
-                            </div>
-
-                            <div className="mt-6">
-                                <h3 className="text-sm font-medium mb-2">常用标签</h3>
-                                <div className="flex flex-wrap gap-1">
-                                    {commonTags.map((tag) => (
-                                        <Badge
-                                            key={tag.id}
-                                            variant="outline"
-                                            className="bg-blue-50 text-blue-600 border-blue-200 cursor-pointer"
-                                        >
-                                            {tag.name}
-                                        </Badge>
-                                    ))}
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </aside>
-
-                {/* 主内容区 */}
-                <main className="flex-1 space-y-6">
-                    {/* 视图切换和筛选 */}
-                    <div className="flex justify-between items-center">
-                        <h2 className="text-lg font-medium">
-                            {getSelectedGroupPath(selectedGroupId)} ({filteredTools.length})
-                        </h2>
-                        <div className="flex items-center gap-2">
-                            <Button variant="outline" size="sm">
-                                <Filter className="h-4 w-4 mr-2"/>
-                                筛选
-                            </Button>
-                            <div className="border rounded-md flex">
-                                <Button
-                                    variant={viewMode === "list" ? "secondary" : "ghost"}
-                                    size="sm"
-                                    className="rounded-r-none"
-                                    onClick={() => setViewMode("list")}
-                                >
-                                    <List className="h-4 w-4"/>
-                                </Button>
-                                <Button
-                                    variant={viewMode === "grid" ? "secondary" : "ghost"}
-                                    size="sm"
-                                    className="rounded-l-none"
-                                    onClick={() => setViewMode("grid")}
-                                >
-                                    <Grid className="h-4 w-4"/>
-                                </Button>
-                            </div>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline">
+                                        <Plus className="h-4 w-4 mr-2"/>
+                                        添加
+                                        <ChevronDown className="h-4 w-4 ml-2"/>
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <Link to="/tool/add">
+                                        <DropdownMenuItem>
+                                            <Plus className="h-4 w-4 mr-2"/>
+                                            添加工具
+                                        </DropdownMenuItem>
+                                    </Link>
+                                    <DropdownMenuItem>
+                                        <FolderPlus className="h-4 w-4 mr-2"/>
+                                        创建分组
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator/>
+                                    <DropdownMenuItem>
+                                        <Download className="h-4 w-4 mr-2"/>
+                                        导入工具
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </div>
                     </div>
 
-                    {/* 工具列表 */}
-                    <Tabs defaultValue="all" className="w-full">
-                        <TabsList>
-                            <TabsTrigger value="all">全部工具</TabsTrigger>
-                            <TabsTrigger value="grouped">按分组</TabsTrigger>
-                        </TabsList>
+                    <div className="flex flex-col md:flex-row gap-6">
+                        {/* 侧边栏 - 分组筛选 */}
+                        <aside className="w-full md:w-64 shrink-0">
+                            <Card className="py-0 gap-0">
+                                <CardContent className="p-4">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <h2 className="text-md font-medium">工具分组</h2>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                                            <FolderPlus className="h-4 w-4"/>
+                                        </Button>
+                                    </div>
 
-                        {/* 全部工具 */}
-                        <TabsContent value="all" className="mt-6">
-                            {/*{renderToolList(filteredTools)}*/}
-                            <ToolList viewMode={viewMode}/>
-                        </TabsContent>
+                                    <div className="space-y-1 mb-4">
+                                        <Button
+                                            variant={selectedGroupId === null ? "secondary" : "ghost"}
+                                            className="w-full justify-start"
+                                            size="sm"
+                                            onClick={() => setSelectedGroupId(null)}
+                                        >
+                                            <span>所有工具</span>
+                                            <Badge className="ml-auto">{tools.length}</Badge>
+                                        </Button>
 
-                        {/* 按分组显示 */}
-                        <TabsContent value="grouped" className="mt-6 space-y-6">
-                            {selectedGroupId ? (
-                                // 显示选中分组的工具
-                                <div>
-                                    <Collapsible defaultOpen={true} className="border rounded-md overflow-hidden">
-                                        <CollapsibleTrigger
-                                            className="flex items-center justify-between w-full p-4 bg-muted/30 hover:bg-muted/50 transition-colors">
-                                            <div className="flex items-center">
-                                                <h3 className="font-medium">{allGroups.find((g) => g.id === selectedGroupId)?.name || ""}</h3>
-                                                <Badge className="ml-2">{toolsByGroup[selectedGroupId]?.length || 0}</Badge>
-                                            </div>
-                                            <ChevronRight className="h-4 w-4 transition-transform ui-open:rotate-90"/>
-                                        </CollapsibleTrigger>
-                                        <CollapsibleContent>{renderToolList(toolsByGroup[selectedGroupId] || [])}</CollapsibleContent>
-                                    </Collapsible>
+                                        {renderGroupTree(groupTree)}
+                                    </div>
 
-                                    {/* 子分组的工具 */}
-                                    {allGroups
-                                        .filter((group) => group.parentId === selectedGroupId)
-                                        .map((subGroup) => (
-                                            <Collapsible key={subGroup.id} defaultOpen={true} className="border rounded-md overflow-hidden">
-                                                <CollapsibleTrigger
-                                                    className="flex items-center justify-between w-full p-4 bg-muted/30 hover:bg-muted/50 transition-colors">
-                                                    <div className="flex items-center">
-                                                        <h3 className="font-medium">{subGroup.name}</h3>
-                                                        <Badge className="ml-2">{toolsByGroup[subGroup.id]?.length || 0}</Badge>
-                                                    </div>
-                                                    <ChevronRight className="h-4 w-4 transition-transform ui-open:rotate-90"/>
-                                                </CollapsibleTrigger>
-                                                <CollapsibleContent>{renderToolList(toolsByGroup[subGroup.id] || [])}</CollapsibleContent>
-                                            </Collapsible>
-                                        ))}
+                                    <div className="mt-6">
+                                        <h3 className="text-sm font-medium mb-2">常用标签</h3>
+                                        <div className="flex flex-wrap gap-1">
+                                            {commonTags.map((tag) => (
+                                                <Badge
+                                                    key={tag.id}
+                                                    variant="outline"
+                                                    className="bg-blue-50 text-blue-600 border-blue-200 cursor-pointer"
+                                                >
+                                                    {tag.name}
+                                                </Badge>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </aside>
+
+                        {/* 主内容区 */}
+                        <main className="flex-1 space-y-6">
+                            {/* 视图切换和筛选 */}
+                            <div className="flex justify-between items-center">
+                                <h2 className="text-lg font-medium">
+                                    {getSelectedGroupPath(selectedGroupId)} ({filteredTools.length})
+                                </h2>
+                                <div className="flex items-center gap-2">
+                                    <Button variant="outline" size="sm">
+                                        <Filter className="h-4 w-4 mr-2"/>
+                                        筛选
+                                    </Button>
+                                    <div className="border rounded-md flex">
+                                        <Button
+                                            variant={viewMode === "list" ? "secondary" : "ghost"}
+                                            size="sm"
+                                            className="rounded-r-none"
+                                            onClick={() => setViewMode("list")}
+                                        >
+                                            <List className="h-4 w-4"/>
+                                        </Button>
+                                        <Button
+                                            variant={viewMode === "grid" ? "secondary" : "ghost"}
+                                            size="sm"
+                                            className="rounded-l-none"
+                                            onClick={() => setViewMode("grid")}
+                                        >
+                                            <Grid className="h-4 w-4"/>
+                                        </Button>
+                                    </div>
                                 </div>
-                            ) : (
-                                // 显示所有顶级分组
-                                allGroups
-                                    .filter((group) => !group.parentId)
-                                    .map((group) => {
-                                        const groupTools = toolsByGroup[group.id] || []
-                                        if (groupTools.length === 0) return null
+                            </div>
 
-                                        return (
-                                            <Collapsible key={group.id} defaultOpen={true} className="border rounded-md overflow-hidden">
+                            {/* 工具列表 */}
+                            <Tabs defaultValue="all" className="w-full">
+                                <TabsList>
+                                    <TabsTrigger value="all">全部工具</TabsTrigger>
+                                    <TabsTrigger value="grouped">按分组</TabsTrigger>
+                                </TabsList>
+
+                                {/* 全部工具 */}
+                                <TabsContent value="all" className="mt-6">
+                                    {/*{renderToolList(filteredTools)}*/}
+                                    <ToolList viewMode={viewMode}/>
+                                </TabsContent>
+
+                                {/* 按分组显示 */}
+                                <TabsContent value="grouped" className="mt-6 space-y-6">
+                                    {selectedGroupId ? (
+                                        // 显示选中分组的工具
+                                        <div>
+                                            <Collapsible defaultOpen={true} className="border rounded-md overflow-hidden">
                                                 <CollapsibleTrigger
                                                     className="flex items-center justify-between w-full p-4 bg-muted/30 hover:bg-muted/50 transition-colors">
                                                     <div className="flex items-center">
-                                                        <h3 className="font-medium">{group.name}</h3>
-                                                        <Badge className="ml-2">{groupTools.length}</Badge>
+                                                        <h3 className="font-medium">{allGroups.find((g) => g.id === selectedGroupId)?.name || ""}</h3>
+                                                        <Badge className="ml-2">{toolsByGroup[selectedGroupId]?.length || 0}</Badge>
                                                     </div>
                                                     <ChevronRight className="h-4 w-4 transition-transform ui-open:rotate-90"/>
                                                 </CollapsibleTrigger>
-                                                <CollapsibleContent>{renderToolList(groupTools)}</CollapsibleContent>
+                                                <CollapsibleContent>{renderToolList(toolsByGroup[selectedGroupId] || [])}</CollapsibleContent>
                                             </Collapsible>
-                                        )
-                                    })
-                            )}
-                        </TabsContent>
-                    </Tabs>
-                </main>
+
+                                            {/* 子分组的工具 */}
+                                            {allGroups
+                                                .filter((group) => group.parentId === selectedGroupId)
+                                                .map((subGroup) => (
+                                                    <Collapsible key={subGroup.id} defaultOpen={true}
+                                                                 className="border rounded-md overflow-hidden">
+                                                        <CollapsibleTrigger
+                                                            className="flex items-center justify-between w-full p-4 bg-muted/30 hover:bg-muted/50 transition-colors">
+                                                            <div className="flex items-center">
+                                                                <h3 className="font-medium">{subGroup.name}</h3>
+                                                                <Badge className="ml-2">{toolsByGroup[subGroup.id]?.length || 0}</Badge>
+                                                            </div>
+                                                            <ChevronRight className="h-4 w-4 transition-transform ui-open:rotate-90"/>
+                                                        </CollapsibleTrigger>
+                                                        <CollapsibleContent>{renderToolList(toolsByGroup[subGroup.id] || [])}</CollapsibleContent>
+                                                    </Collapsible>
+                                                ))}
+                                        </div>
+                                    ) : (
+                                        // 显示所有顶级分组
+                                        allGroups
+                                            .filter((group) => !group.parentId)
+                                            .map((group) => {
+                                                const groupTools = toolsByGroup[group.id] || []
+                                                if (groupTools.length === 0) return null
+
+                                                return (
+                                                    <Collapsible key={group.id} defaultOpen={true}
+                                                                 className="border rounded-md overflow-hidden">
+                                                        <CollapsibleTrigger
+                                                            className="flex items-center justify-between w-full p-4 bg-muted/30 hover:bg-muted/50 transition-colors">
+                                                            <div className="flex items-center">
+                                                                <h3 className="font-medium">{group.name}</h3>
+                                                                <Badge className="ml-2">{groupTools.length}</Badge>
+                                                            </div>
+                                                            <ChevronRight className="h-4 w-4 transition-transform ui-open:rotate-90"/>
+                                                        </CollapsibleTrigger>
+                                                        <CollapsibleContent>{renderToolList(groupTools)}</CollapsibleContent>
+                                                    </Collapsible>
+                                                )
+                                            })
+                                    )}
+                                </TabsContent>
+                            </Tabs>
+                        </main>
+                    </div>
+                </div>
             </div>
-        </div>
+        </SidebarInset>
     )
 
     // 渲染工具列表（列表或网格视图）
@@ -582,9 +607,7 @@ export function ToolsPage() {
                                 {tool.groupIds.length > 2 && <Badge variant="outline">+{tool.groupIds.length - 2}</Badge>}
                             </div>
                             <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>
-                  {tool.repository}:{tool.tag}
-                </span>
+                                <span>{tool.repository}:{tool.tag}</span>
                                 <div className="flex items-center">
                                     <Clock className="h-3 w-3 mr-1"/>
                                     {tool.addedAt}
@@ -602,6 +625,7 @@ export function ToolsPage() {
                     </Card>
                 ))}
             </div>
+
         )
     }
 }
