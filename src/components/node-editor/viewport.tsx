@@ -61,6 +61,8 @@ function FlowContent() {
     const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
     const reactFlow = useReactFlow();
 
+    const [flowName, setFlowName] = useState('');
+    const [flowUid, setFlowUid] = useState('');
     const [isRunning, setIsRunning] = useState(false);
     const {mutate: saveWorkflow, isPending: isSaving} = useSaveWorkflow();
 
@@ -133,6 +135,10 @@ function FlowContent() {
                     setNodes(data.workflow.nodes || []);
                     setEdges(data.workflow.edges || []);
                 }
+                if (data?.name) {
+                    setFlowName(data.name);
+                }
+                setFlowUid(uid);
             })
             .catch((error) => {
                 console.error('加载工作流失败:', error);
@@ -153,10 +159,15 @@ function FlowContent() {
                                     workflow editor
                                 </BreadcrumbPage>
                             </BreadcrumbItem>
-                            <BreadcrumbSeparator className="hidden md:block"/>
-                            <BreadcrumbItem>
-                                <BreadcrumbPage>Data Fetching</BreadcrumbPage>
-                            </BreadcrumbItem>
+                            {(!!flowName) && (
+                                <>
+                                    <BreadcrumbSeparator className="hidden md:block"/>
+                                    <BreadcrumbItem>
+                                        <BreadcrumbPage className="font-semibold">{flowName}</BreadcrumbPage>
+                                    </BreadcrumbItem>
+                                </>
+                            )}
+
                         </BreadcrumbList>
                     </Breadcrumb>
                 </div>
@@ -172,7 +183,7 @@ function FlowContent() {
                             icon={<SaveIcon className="h-4 w-4"/>}
                             onClick={handleSave}
                             tooltip={"保存"}
-                            disable={isSaving}
+                            disable={!flowUid || isSaving}
                         />
                         <MenuButton
                             icon={<SaveAllIcon className="h-4 w-4"/>}
