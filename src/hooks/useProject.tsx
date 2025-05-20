@@ -1,6 +1,16 @@
 import {useMutation, useQuery, useQueryClient, UseQueryOptions} from "@tanstack/react-query";
 import {projectApi} from "@/services/api.tsx";
-import {Project, ProjectTag} from "@/types/project.tsx";
+import {Project, ProjectCreateProp, ProjectTag} from "@/types/project.tsx";
+
+export function useCreateTag() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({name, color}: { name: string, color: string }) => projectApi.newTag(name, color),
+        onSuccess: () => {
+            queryClient.invalidateQueries({queryKey: ['tagList']}).then();
+        }
+    });
+}
 
 export function useTagList() {
     const options: UseQueryOptions<ProjectTag[], Error> = {
@@ -11,12 +21,16 @@ export function useTagList() {
     return useQuery(options);
 }
 
-export function useCreateTag() {
+
+export function useCreateProject() {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: ({ name, color }: { name: string, color: string }) => projectApi.newTag(name, color),
+        mutationFn: ({project}: { project: ProjectCreateProp }) => projectApi.newProject(project),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['tagList'] }).then();
+            queryClient.invalidateQueries({queryKey: ['allProjects']}).then();
+            queryClient.invalidateQueries({queryKey: ['allStarredProjects']}).then();
+            queryClient.invalidateQueries({queryKey: ['allMyProjects']}).then();
+            queryClient.invalidateQueries({queryKey: ['recentProject']}).then();
         }
     });
 }
@@ -63,9 +77,9 @@ export function useStarProject() {
     return useMutation({
         mutationFn: ({id, starred}: { id: number, starred: boolean }) => {
             if (starred) {
-                return  projectApi.unstarProject(`${id}`);
+                return projectApi.unstarProject(`${id}`);
             } else {
-                return  projectApi.starProject(`${id}`);
+                return projectApi.starProject(`${id}`);
             }
         },
         onSuccess: () => {

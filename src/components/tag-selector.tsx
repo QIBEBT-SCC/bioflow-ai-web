@@ -7,13 +7,14 @@ import {Command, CommandEmpty, CommandGroup, CommandItem, CommandList} from "@/c
 import {Plus, X} from "lucide-react"
 import {cn} from "@/lib/utils"
 import {ToolTag} from "@/types/tool.tsx";
-import {useToolTagList} from "@/hooks/useTool.tsx";
+import {ProjectTag} from "@/types/project.tsx"
 
 export interface TagSelectorProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "onChange"> {
+    availableTags: (ToolTag | ProjectTag)[]
     /** 当前选中的标签 */
-    value: ToolTag[]
+    value: (ToolTag | ProjectTag)[]
     /** 当标签选择变化时的回调函数 */
-    onChange: (tags: ToolTag[]) => void
+    onChange: (tags: (ToolTag | ProjectTag)[]) => void
     /** 是否禁用 */
     disabled?: boolean
     /** 占位符文本 */
@@ -33,6 +34,7 @@ export interface TagSelectorProps extends Omit<React.HTMLAttributes<HTMLDivEleme
 export const TagSelector = React.forwardRef<HTMLDivElement, TagSelectorProps>(
     (
         {
+            availableTags,
             value,
             onChange,
             disabled = false,
@@ -50,8 +52,6 @@ export const TagSelector = React.forwardRef<HTMLDivElement, TagSelectorProps>(
         const [open, setOpen] = useState(false)
         const inputRef = useRef<HTMLInputElement>(null)
         const selectedTags = value || []
-
-        const {data: availableTags = []} = useToolTagList();
 
         // 检查是否达到最大标签数
         const isMaxTagsReached = maxTags !== undefined && selectedTags.length >= maxTags
@@ -72,18 +72,18 @@ export const TagSelector = React.forwardRef<HTMLDivElement, TagSelectorProps>(
             !filteredTags.some((tag) => tag.name.toLowerCase() === inputValue.toLowerCase()) &&
             !selectedTags.some((tag) => tag.name.toLowerCase() === inputValue.toLowerCase())
 
-        // 判断标签是否为新建标签（id为空）
-        const isNewTag = (tag: ToolTag) => tag.id === -1
+        // 判断标签是否为新建标签（id为-1）
+        const isNewTag = (tag: ToolTag | ProjectTag) => tag.id === -1
 
         // 更新选中的标签
-        const updateTags = (newTags: ToolTag[]) => {
+        const updateTags = (newTags: (ToolTag | ProjectTag)[]) => {
             onChange(newTags)
             setInputValue("")
             inputRef.current?.focus()
         }
 
         // 选择已存在的标签
-        const selectTag = (tag: ToolTag) => {
+        const selectTag = (tag: ToolTag | ProjectTag) => {
             if (disabled || isMaxTagsReached) return
             updateTags([...selectedTags, tag])
         }

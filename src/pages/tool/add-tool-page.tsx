@@ -26,7 +26,7 @@ import {
     BreadcrumbSeparator
 } from "@/components/ui/breadcrumb.tsx";
 import {type DockerToolCreate, type OutputFile, type ParamDefine, ParamType} from "@/types/tool"
-import {useCreateTool} from "@/hooks/useTool.tsx";
+import {useCreateTool, useToolTagList} from "@/hooks/useTool.tsx";
 import {TagSelector} from "@/components/tag-selector.tsx";
 import {FileCard, ParamCard} from "@/components/tool/tool-setting-card.tsx";
 
@@ -34,6 +34,7 @@ import {FileCard, ParamCard} from "@/components/tool/tool-setting-card.tsx";
 export function AddToolPage() {
     const {t} = useTranslation();
     const {mutate: createTool, isPending} = useCreateTool();
+    const {data: availableTags = []} = useToolTagList();
 
     // 初始化工具状态
     const [tool, setTool] = useState<DockerToolCreate>({
@@ -281,6 +282,7 @@ export function AddToolPage() {
                                         <div className="space-y-2">
                                             <Label>{t("add_tool.tags")}</Label>
                                             <TagSelector
+                                                availableTags={availableTags}
                                                 onChange={(tags) => setTool({...tool, tool_tag: tags})}
                                                 value={tool.tool_tag}
                                             />

@@ -1,6 +1,6 @@
 import axios from 'axios';
 import {isTokenExpired, useAuthStore} from "@/stores/authStore";
-import {Project, ProjectTag} from "@/types/project.tsx";
+import {Project, ProjectCreateProp, ProjectTag} from "@/types/project.tsx";
 import {DockerToolCreate, SimpleToolInfo, ToolGroup, ToolInfo, ToolTag} from "@/types/tool.tsx";
 import {ToolArgPublic} from "@/types/node.tsx";
 import {SimpleWorkflowInfo, Workflow} from "@/types/workflow.tsx";
@@ -110,6 +110,10 @@ export const projectApi = {
     },
     getTagList: async () => {
         const {data} = await api.get<ProjectTag[]>('/project-tags');
+        return data;
+    },
+    newProject: async (project: ProjectCreateProp) => {
+        const {data} = await api.post('/projects', project);
         return data;
     },
     getProjectList: async () => {

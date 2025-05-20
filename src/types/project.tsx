@@ -5,6 +5,13 @@ export interface ProjectTag {
     project_count?: number;
 }
 
+export interface ProjectCreateProp {
+    name: string;
+    description: string;
+    public: boolean;
+    tag_ids: number[];
+}
+
 export interface Project {
     id: number;
     owner_name: string;

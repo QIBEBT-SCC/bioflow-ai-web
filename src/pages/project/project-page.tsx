@@ -2,16 +2,13 @@ import {Button} from "@/components/ui/button.tsx"
 import {Input} from "@/components/ui/input.tsx"
 import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs.tsx"
 import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger} from "@/components/ui/dropdown-menu.tsx"
-import {
-    Search,
-    Plus,
-    Filter,
-} from "lucide-react"
+import {Search, Filter} from "lucide-react"
 import {SidebarInset, SidebarTrigger} from "@/components/ui/sidebar.tsx";
 import {Separator} from "@/components/ui/separator.tsx";
 import {Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage} from "@/components/ui/breadcrumb.tsx";
 import {TagList} from "@/components/project/tag-list.tsx";
 import {AllProjectTable, MyProjectTable, StarredProjectTable} from "@/components/project/project-list.tsx";
+import {NewProjectDialog} from "@/components/project/new-project-dialog.tsx";
 
 export function ProjectsPage() {
     return (
@@ -47,10 +44,7 @@ export function ProjectsPage() {
                                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground"/>
                                     <Input type="search" placeholder="搜索项目..." className="pl-8 w-full sm:w-[250px]"/>
                                 </div>
-                                <Button>
-                                    <Plus className="h-4 w-4 mr-2"/>
-                                    新项目
-                                </Button>
+                                <NewProjectDialog/>
                             </div>
                         </div>
 
