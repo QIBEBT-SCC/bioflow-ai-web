@@ -32,7 +32,10 @@ const menuData = {
     io: {
         name: "输入输出",
         icon: <FileInput className="h-4 w-4 mr-2"/>,
-        items: [{type: "fileInput", label: "文件输入", icon: <FileInput className="h-4 w-4 mr-2"/>}],
+        items: [
+            {type: "fileInput", label: "文件输入", icon: <FileInput className="h-4 w-4 mr-2"/>},
+            {type: "globalInput", label: "全局输入", icon: <FileInput className="h-4 w-4 mr-2"/>},
+        ],
     },
     visualization: {
         name: "可视化",
