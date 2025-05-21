@@ -38,7 +38,7 @@ import type {
 import {useSaveWorkflow} from '@/hooks/useWorkflow.tsx';
 import {workflowApi} from '@/services/api.tsx';
 import {v7 as uuid7} from 'uuid';
-import {FileInputNode} from "@/components/node-editor/node/input-node.tsx";
+import {FileInputNode, GlobalInputNode} from "@/components/node-editor/node/input-node.tsx";
 import {LineFigNode} from "@/components/node-editor/node/draw-node.tsx";
 import {CutNode, JsonFilterNode} from "@/components/node-editor/node/data-node.tsx";
 import {NoteNode} from "@/components/node-editor/node/note-node.tsx";
@@ -50,6 +50,7 @@ import {LoadMenu, MenuButton} from "@/components/node-editor/menu/editor-menu.ts
 const nodeTypes = {
     tool: ToolNode,
     fileInput: FileInputNode,
+    globalInput: GlobalInputNode,
     lineFig: LineFigNode,
     dataFilter: JsonFilterNode,
     dataCut: CutNode,

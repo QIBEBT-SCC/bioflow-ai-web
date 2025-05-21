@@ -97,3 +97,22 @@ export function FileInputNode() {
         />}/>
     )
 }
+
+export function GlobalInputNode() {
+    const handles = {
+        inputs: [],
+        outputs: [
+            {name: "file_path", description: "output file"},
+        ]
+    }
+
+    return (
+        <BaseToolNode handles={handles} nodeComponent={
+            <FileCard
+                title="Workflow Input"
+                description="load file from local path."
+                topPadding={(6 * Math.max(handles.inputs.length, handles.outputs.length))}
+            />
+        }/>
+    )
+}
