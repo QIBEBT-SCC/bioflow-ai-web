@@ -1,7 +1,4 @@
 import {Link, useParams} from "react-router-dom";
-import {useEffect, useState} from "react";
-import {Project} from "@/types/project.tsx";
-import {projectApi} from "@/services/api.tsx";
 import {
     AlertCircle,
     ArrowLeft,
@@ -21,25 +18,14 @@ import {Badge} from "@/components/ui/badge.tsx";
 import {colorClassMap} from "@/types/color.tsx";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card.tsx";
 import {Progress} from "@/components/ui/progress.tsx";
+import {useProjectDetail} from "@/hooks/useProject.tsx";
 
 export function ProjectDetailCard() {
     const {projectId} = useParams();
-    const [project, setProject] = useState<Project>()
+    const {data: project, isLoading} = useProjectDetail(projectId)
 
-    useEffect(() => {
-        if (projectId) {
-            projectApi.getProject(projectId)
-                .then(setProject)
-                .catch(() => {/* 错误处理可扩展 */
-                });
-        }
-    }, [projectId]);
-
-    if (!project) {
-        return (<div>
-
-        </div>)
-    }
+    if (isLoading) return null
+    if (!project) return null
 
     return (
         <div>
@@ -103,6 +89,17 @@ export function ProjectDetailCard() {
                 <Card>
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium flex items-center">
+                            <Database className="h-4 w-4 mr-2"/>
+                            样本数量
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-2xl font-bold">{20}</p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium flex items-center">
                             <FlaskConical className="h-4 w-4 mr-2"/>
                             工作流状态
                         </CardTitle>
@@ -110,24 +107,24 @@ export function ProjectDetailCard() {
                     <CardContent>
                         <div className="flex items-center justify-between mb-1">
                             <p className="text-2xl font-bold">
-                                {project.completedWorkflows}/{tempProject.totalWorkflows}
+                                {project.completedWorkflows}/{project.totalWorkflows}
                             </p>
                             <div className="flex items-center gap-2">
                                 <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200 flex items-center">
                                     <CheckCircle2 className="h-3 w-3 mr-1"/>
-                                    {tempProject.completedWorkflows}
+                                    {project.completedWorkflows}
                                 </Badge>
                                 <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200 flex items-center">
                                     <Loader2 className="h-3 w-3 mr-1 animate-spin"/>
-                                    {tempProject.inProgressWorkflows}
+                                    {project.inProgressWorkflows}
                                 </Badge>
                                 <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200 flex items-center">
                                     <AlertCircle className="h-3 w-3 mr-1"/>
-                                    {tempProject.failedWorkflows}
+                                    {project.failedWorkflows}
                                 </Badge>
                             </div>
                         </div>
-                        <Progress value={(tempProject.completedWorkflows / tempProject.totalWorkflows) * 100} className="h-2"/>
+                        <Progress value={(project.completedWorkflows / project.totalWorkflows) * 100} className="h-2"/>
                     </CardContent>
                 </Card>
 
@@ -139,19 +136,7 @@ export function ProjectDetailCard() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-2xl font-bold">{tempProject.lastUpdated}</p>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium flex items-center">
-                            <Database className="h-4 w-4 mr-2"/>
-                            样本数量
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-2xl font-bold">{tempProject.sampleCount.toLocaleString()}</p>
+                        <p className="text-2xl font-bold">{project.update_time}</p>
                     </CardContent>
                 </Card>
             </div>

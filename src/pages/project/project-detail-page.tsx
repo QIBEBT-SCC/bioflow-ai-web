@@ -1,21 +1,12 @@
 import {Button} from "@/components/ui/button"
-import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
 import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs"
 import {Badge} from "@/components/ui/badge"
 import {Progress} from "@/components/ui/progress"
 import {
-    ArrowLeft,
-    Star,
-    Clock,
-    Settings,
     FileText,
-    Play,
-    Download,
-    Share2,
     CheckCircle2,
     AlertCircle,
     Loader2,
-    Database,
     FlaskConical,
     FileBarChart,
     Plus,
@@ -24,10 +15,6 @@ import {
 } from "lucide-react"
 import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger} from "@/components/ui/dropdown-menu"
 import {Link, useParams} from "react-router-dom";
-import {useEffect, useState} from "react";
-import {Project} from "@/types/project.tsx";
-import {projectApi} from "@/services/api.tsx";
-import {colorClassMap} from "@/types/color.tsx";
 import {SidebarInset, SidebarTrigger} from "@/components/ui/sidebar.tsx";
 import {Separator} from "@/components/ui/separator.tsx";
 import {
@@ -38,19 +25,13 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator
 } from "@/components/ui/breadcrumb.tsx";
+import {ProjectDetailCard} from "@/components/project/project-detail-card.tsx";
+import {useProjectDetail} from "@/hooks/useProject.tsx";
+import {ProjectResourcesList} from "@/components/project/project-resources-list.tsx";
 
 export function ProjectDetailPage() {
     const {projectId} = useParams();
-    const [project, setProject] = useState<Project>()
-
-    useEffect(() => {
-        if (projectId) {
-            projectApi.getProject(projectId)
-                .then(setProject)
-                .catch(() => {/* 错误处理可扩展 */
-                });
-        }
-    }, [projectId]);
+    const {data: project} = useProjectDetail(projectId)
 
 
     // 在实际应用中，这里会根据 params.id 从数据库获取项目信息
@@ -185,7 +166,7 @@ export function ProjectDetailPage() {
                                         {/*Projects*/}
                                     </BreadcrumbLink>
                                 </BreadcrumbItem>
-                                <BreadcrumbSeparator className="hidden md:block" />
+                                <BreadcrumbSeparator className="hidden md:block"/>
                                 <BreadcrumbItem>
                                     <BreadcrumbPage>--</BreadcrumbPage>
                                 </BreadcrumbItem>
@@ -215,7 +196,7 @@ export function ProjectDetailPage() {
                                     {/*Projects*/}
                                 </BreadcrumbLink>
                             </BreadcrumbItem>
-                            <BreadcrumbSeparator className="hidden md:block" />
+                            <BreadcrumbSeparator className="hidden md:block"/>
                             <BreadcrumbItem>
                                 <BreadcrumbPage>{project.name}</BreadcrumbPage>
                             </BreadcrumbItem>
@@ -225,121 +206,15 @@ export function ProjectDetailPage() {
             </header>
             <div className="container mx-auto px-4 py-6 space-y-6">
                 {/* 返回和项目标题 */}
-                <div className="flex flex-col sm:flex-row gap-4 justify-between items-start">
-                    <div>
-                        <Link
-                            to="/project"
-                            className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-2"
-                        >
-                            <ArrowLeft className="h-4 w-4 mr-1"/>
-                            返回项目列表
-                        </Link>
-                        <div className="flex items-start gap-2">
-                            <h1 className="text-2xl font-bold">{project.name}</h1>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className={project.starred ? "text-amber-400" : "text-muted-foreground"}
-                            >
-                                <Star className="h-5 w-5"/>
-                                <span className="sr-only">收藏</span>
-                            </Button>
-                        </div>
-                        <p className="text-muted-foreground mt-1">{project.description}</p>
-
-                        <div className="flex flex-wrap gap-1 mt-3">
-                            {project.tags.map((tag) => (
-                                <Badge
-                                    key={tag.id}
-                                    className={`${colorClassMap[tag.color]} border-0`}
-                                >
-                                    {tag.name}
-                                </Badge>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="flex flex-wrap gap-2">
-                        <Button>
-                            <Play className="h-4 w-4 mr-2"/>
-                            运行工作流
-                        </Button>
-                        <Button variant="outline">
-                            <Download className="h-4 w-4 mr-2"/>
-                            导出
-                        </Button>
-                        <Button variant="outline">
-                            <Share2 className="h-4 w-4 mr-2"/>
-                            分享
-                        </Button>
-                        <Button variant="outline">
-                            <Settings className="h-4 w-4 mr-2"/>
-                            设置
-                        </Button>
-                    </div>
-                </div>
-
-                {/* 项目信息卡片 */}
-                <div className="grid gap-4 md:grid-cols-3">
-                    <Card>
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium flex items-center">
-                                <FlaskConical className="h-4 w-4 mr-2"/>
-                                工作流状态
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="flex items-center justify-between mb-1">
-                                <p className="text-2xl font-bold">
-                                    {tempProject.completedWorkflows}/{tempProject.totalWorkflows}
-                                </p>
-                                <div className="flex items-center gap-2">
-                                    <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200 flex items-center">
-                                        <CheckCircle2 className="h-3 w-3 mr-1"/>
-                                        {tempProject.completedWorkflows}
-                                    </Badge>
-                                    <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200 flex items-center">
-                                        <Loader2 className="h-3 w-3 mr-1 animate-spin"/>
-                                        {tempProject.inProgressWorkflows}
-                                    </Badge>
-                                    <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200 flex items-center">
-                                        <AlertCircle className="h-3 w-3 mr-1"/>
-                                        {tempProject.failedWorkflows}
-                                    </Badge>
-                                </div>
-                            </div>
-                            <Progress value={(tempProject.completedWorkflows / tempProject.totalWorkflows) * 100} className="h-2"/>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium flex items-center">
-                                <Clock className="h-4 w-4 mr-2"/>
-                                最后更新
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-2xl font-bold">{tempProject.lastUpdated}</p>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium flex items-center">
-                                <Database className="h-4 w-4 mr-2"/>
-                                样本数量
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-2xl font-bold">{tempProject.sampleCount.toLocaleString()}</p>
-                        </CardContent>
-                    </Card>
-                </div>
+                <ProjectDetailCard/>
 
                 {/* 项目内容标签页 */}
-                <Tabs defaultValue="workflows" className="w-full">
+                <Tabs defaultValue="files" className="w-full">
                     <TabsList className="grid grid-cols-3 md:w-auto md:inline-flex">
+                        <TabsTrigger value="files" className="flex items-center">
+                            <FileText className="h-4 w-4 mr-2"/>
+                            文件
+                        </TabsTrigger>
                         <TabsTrigger value="workflows" className="flex items-center">
                             <FlaskConical className="h-4 w-4 mr-2"/>
                             工作流
@@ -347,10 +222,6 @@ export function ProjectDetailPage() {
                         <TabsTrigger value="reports" className="flex items-center">
                             <FileBarChart className="h-4 w-4 mr-2"/>
                             报告
-                        </TabsTrigger>
-                        <TabsTrigger value="files" className="flex items-center">
-                            <FileText className="h-4 w-4 mr-2"/>
-                            文件
                         </TabsTrigger>
                     </TabsList>
 
@@ -389,7 +260,8 @@ export function ProjectDetailPage() {
                                     {tempProject.workflows.map((workflow) => (
                                         <tr key={workflow.id} className="border-b hover:bg-muted/50 transition-colors">
                                             <td className="p-4 font-medium">
-                                                <Link to={`/projects/${tempProject.id}/workflows/${workflow.id}`} className="hover:underline">
+                                                <Link to={`/projects/${tempProject.id}/workflows/${workflow.id}`}
+                                                      className="hover:underline">
                                                     {workflow.name}
                                                 </Link>
                                             </td>
@@ -512,106 +384,7 @@ export function ProjectDetailPage() {
 
                     {/* 文件标签页内容 */}
                     <TabsContent value="files" className="mt-6">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-lg font-medium">项目文件</h2>
-                            <Button size="sm">
-                                <Plus className="h-4 w-4 mr-2"/>
-                                上传文件
-                            </Button>
-                        </div>
-
-                        <div className="rounded-md border">
-                            <div className="relative w-full overflow-auto">
-                                <table className="w-full caption-bottom text-sm">
-                                    <thead className="bg-muted/50">
-                                    <tr className="border-b">
-                                        <th className="h-12 px-4 text-left align-middle font-medium">文件名</th>
-                                        <th className="h-12 px-4 text-left align-middle font-medium">类型</th>
-                                        <th className="h-12 px-4 text-left align-middle font-medium">大小</th>
-                                        <th className="h-12 px-4 text-left align-middle font-medium">上传时间</th>
-                                        <th className="h-12 px-4 text-right align-middle font-medium">操作</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    <tr className="border-b hover:bg-muted/50 transition-colors">
-                                        <td className="p-4 font-medium">
-                                            <Link to="#" className="hover:underline">
-                                                dataset_cifar10.zip
-                                            </Link>
-                                        </td>
-                                        <td className="p-4 text-muted-foreground">ZIP</td>
-                                        <td className="p-4 text-muted-foreground">1.2 GB</td>
-                                        <td className="p-4 text-muted-foreground">2023-05-01</td>
-                                        <td className="p-4 text-right">
-                                            <Button variant="ghost" size="sm">
-                                                下载
-                                            </Button>
-                                        </td>
-                                    </tr>
-                                    <tr className="border-b hover:bg-muted/50 transition-colors">
-                                        <td className="p-4 font-medium">
-                                            <Link to="#" className="hover:underline">
-                                                model_config.yaml
-                                            </Link>
-                                        </td>
-                                        <td className="p-4 text-muted-foreground">YAML</td>
-                                        <td className="p-4 text-muted-foreground">4.5 KB</td>
-                                        <td className="p-4 text-muted-foreground">2023-05-02</td>
-                                        <td className="p-4 text-right">
-                                            <Button variant="ghost" size="sm">
-                                                下载
-                                            </Button>
-                                        </td>
-                                    </tr>
-                                    <tr className="border-b hover:bg-muted/50 transition-colors">
-                                        <td className="p-4 font-medium">
-                                            <Link to="#" className="hover:underline">
-                                                pretrained_weights.h5
-                                            </Link>
-                                        </td>
-                                        <td className="p-4 text-muted-foreground">H5</td>
-                                        <td className="p-4 text-muted-foreground">250 MB</td>
-                                        <td className="p-4 text-muted-foreground">2023-05-03</td>
-                                        <td className="p-4 text-right">
-                                            <Button variant="ghost" size="sm">
-                                                下载
-                                            </Button>
-                                        </td>
-                                    </tr>
-                                    <tr className="border-b hover:bg-muted/50 transition-colors">
-                                        <td className="p-4 font-medium">
-                                            <Link to="#" className="hover:underline">
-                                                data_preprocessing.py
-                                            </Link>
-                                        </td>
-                                        <td className="p-4 text-muted-foreground">Python</td>
-                                        <td className="p-4 text-muted-foreground">12.8 KB</td>
-                                        <td className="p-4 text-muted-foreground">2023-05-04</td>
-                                        <td className="p-4 text-right">
-                                            <Button variant="ghost" size="sm">
-                                                下载
-                                            </Button>
-                                        </td>
-                                    </tr>
-                                    <tr className="border-b hover:bg-muted/50 transition-colors">
-                                        <td className="p-4 font-medium">
-                                            <Link to="#" className="hover:underline">
-                                                evaluation_results.csv
-                                            </Link>
-                                        </td>
-                                        <td className="p-4 text-muted-foreground">CSV</td>
-                                        <td className="p-4 text-muted-foreground">1.5 MB</td>
-                                        <td className="p-4 text-muted-foreground">2023-05-05</td>
-                                        <td className="p-4 text-right">
-                                            <Button variant="ghost" size="sm">
-                                                下载
-                                            </Button>
-                                        </td>
-                                    </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+                        <ProjectResourcesList/>
                     </TabsContent>
                 </Tabs>
             </div>

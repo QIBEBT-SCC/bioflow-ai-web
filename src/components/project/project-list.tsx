@@ -6,6 +6,7 @@ import {colorClassMap} from "@/types/color.tsx";
 import {Project} from "@/types/project.tsx";
 import {Card, CardContent} from "@/components/ui/card.tsx";
 import {useAllProjects, useMyProjects, useRecentProject, useStarProject, useStarredProjects} from "@/hooks/useProject.tsx";
+import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table.tsx";
 
 function ProjectTable({projects}: { projects: Project[] }) {
     const {mutate: starProject, isPending, variables} = useStarProject();
@@ -17,82 +18,74 @@ function ProjectTable({projects}: { projects: Project[] }) {
     return (
         <div className="rounded-md border">
             <div className="relative w-full overflow-auto">
-                <table className="w-full caption-bottom text-sm">
-                    <thead className="bg-muted/50">
-                    <tr className="border-b">
-                        <th className="h-12 px-4 text-left align-middle font-medium hidden md:table-cell">项目名称</th>
-                        <th className="h-12 px-4 text-left align-middle font-medium hidden md:table-cell">描述</th>
-                        <th className="h-12 px-4 text-left align-middle font-medium hidden lg:table-cell">标签</th>
-                        <th className="h-12 px-4 text-left align-middle font-medium">
-                            <div className="flex items-center">
-                                <UserIcon className="h-3 w-3 mr-1"/>
-                                创建人
-                            </div>
-                        </th>
-                        <th className="h-12 px-4 text-left align-middle font-medium">
-                            <div className="flex items-center">
-                                <Clock className="h-3 w-3 mr-1"/>
-                                上次更新
-                            </div>
-                        </th>
-                        <th className="h-12 px-4 text-left align-middle font-medium">
-                            <div className="flex items-center">
-                                <Clock className="h-3 w-3 mr-1"/>
-                                创建
-                            </div>
-                        </th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {/* 项目列表行 */}
-                    {projects.map((project) => (
-                        <tr key={project.id} className="border-b hover:bg-muted/50 transition-colors">
-                            <td className="p-4">
-                                <div className="flex items-center gap-2">
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className={project.starred ? "text-amber-400" : "text-muted-foreground"}
-                                        onClick={() => handleStar(project)}
-                                        disabled={isPending && variables?.id === project.id}
-                                    >
-                                        <Star className="h-4 w-4"/>
-                                        <span className="sr-only">收藏</span>
-                                    </Button>
-                                    <Link to={`/project/${project.id}`}
-                                          className="font-medium hover:underline">
-                                        {project.name}
-                                    </Link>
+                <Table>
+                    <TableHeader className="bg-muted/50">
+                        <TableRow>
+                            <TableHead className="h-12 px-4">项目名称</TableHead>
+                            <TableHead className="h-12 px-4">描述</TableHead>
+                            <TableHead className="h-12 px-4">标签</TableHead>
+                            <TableHead className="h-12 text-right">
+                                <div className="flex items-center justify-end">
+                                    <UserIcon className="h-3 w-3 mr-1"/>
+                                    创建人
                                 </div>
-                            </td>
-                            <td className="p-4 text-muted-foreground hidden md:table-cell">
-                                <div className="line-clamp-1">{project.description}</div>
-                            </td>
-                            <td className="p-4 hidden lg:table-cell">
-                                <div className="flex flex-wrap gap-1">
-                                    {project.tags.map((tag) => (
-                                        <Badge
-                                            key={tag.id}
-                                            className={`${colorClassMap[tag.color]} border-0`}
+                            </TableHead>
+                            <TableHead className="h-12 text-right">
+                                <div className="flex items-center justify-end">
+                                    <Clock className="h-3 w-3 mr-1"/>
+                                    上次更新
+                                </div>
+                            </TableHead>
+                            <TableHead className="h-12 text-right">
+                                <div className="flex items-center justify-end">
+                                    <Clock className="h-3 w-3 mr-1"/>
+                                    创建
+                                </div>
+                            </TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {/* 项目列表行 */}
+                        {projects.map((project) => (
+                            <TableRow key={project.id}>
+                                <TableCell>
+                                    <div className="flex items-center gap-2">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className={project.starred ? "text-amber-400" : "text-muted-foreground"}
+                                            onClick={() => handleStar(project)}
+                                            disabled={isPending && variables?.id === project.id}
                                         >
-                                            {tag.name}
-                                        </Badge>
-                                    ))}
-                                </div>
-                            </td>
-                            <td className="p-4 text-muted-foreground">
-                                {project.owner_name}
-                            </td>
-                            <td className="p-4 text-muted-foreground">
-                                {project.update_time}
-                            </td>
-                            <td className="p-4 text-muted-foreground">
-                                {project.create_time}
-                            </td>
-                        </tr>
-                    ))}
-                    </tbody>
-                </table>
+                                            <Star className="h-4 w-4"/>
+                                            <span className="sr-only">收藏</span>
+                                        </Button>
+                                        <Link to={`/project/${project.id}`}
+                                              className="font-medium hover:underline">
+                                            {project.name}
+                                        </Link>
+                                    </div>
+                                </TableCell>
+                                <TableCell><div className="line-clamp-1">{project.description}</div></TableCell>
+                                <TableCell>
+                                    <div className="flex flex-wrap gap-1">
+                                        {project.tags.map((tag) => (
+                                            <Badge
+                                                key={tag.id}
+                                                className={`${colorClassMap[tag.color]} border-0`}
+                                            >
+                                                {tag.name}
+                                            </Badge>
+                                        ))}
+                                    </div>
+                                </TableCell>
+                                <TableCell className="text-right">{project.owner_name}</TableCell>
+                                <TableCell className="text-right">{project.update_time}</TableCell>
+                                <TableCell className="text-right">{project.create_time}</TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
             </div>
         </div>
     )

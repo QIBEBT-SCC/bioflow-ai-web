@@ -90,4 +90,16 @@ export function useStarProject() {
     });
 }
 
+export function useProjectDetail(id?: string) {
+    const options: UseQueryOptions<Project, Error> = {
+        queryKey: ['projectDetail', id],
+        queryFn: ({queryKey}) => {
+            const [, id] = queryKey as [string, string];
+            return projectApi.getProject(id);
+        },
+        enabled: !!id
+    };
+
+    return useQuery(options);
+}
 
