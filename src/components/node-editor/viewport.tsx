@@ -36,7 +36,7 @@ import type {
     OnConnect
 } from "@xyflow/react";
 import {useSaveWorkflow} from '@/hooks/useWorkflow.tsx';
-import {workflowApi} from '@/services/api.tsx';
+import {instanceApi, workflowApi} from '@/services/api.tsx';
 import {v7 as uuid7} from 'uuid';
 import {FileInputNode, GlobalInputNode} from "@/components/node-editor/node/input-node.tsx";
 import {LineFigNode} from "@/components/node-editor/node/draw-node.tsx";
@@ -112,7 +112,6 @@ function FlowContent() {
                 data: {args: ''},
                 zIndex: toolType === 'note' ? -10 : 20,
             }
-            console.log(newNode)
             setNodes((nds) => nds.concat(newNode));
         }
     }
@@ -144,6 +143,19 @@ function FlowContent() {
             .catch((error) => {
                 console.error('加载工作流失败:', error);
             });
+    }
+
+    const onRun = () => {
+        setIsRunning(true)
+        const workflow = {
+            nodes,
+            edges
+        }
+        instanceApi.newRunInstance(workflow).then((data) => {
+            if (data) {
+                console.log(data)
+            }
+        })
     }
 
     return (
@@ -209,7 +221,7 @@ function FlowContent() {
                     <div className="flex items-center gap-1 ml-1">
                         <MenuButton
                             icon={<PlayIcon className="h-4 w-4 text-green-400"/>}
-                            onClick={() => setIsRunning(!isRunning)}
+                            onClick={onRun}
                             tooltip={"Run"}
                             disable={isSaving}
                         />
