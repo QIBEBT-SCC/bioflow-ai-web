@@ -102,9 +102,9 @@ export function ToolNode() {
     return (
         <BaseToolNode handles={handles} nodeComponent={
             <ToolCard
-                title={toolData ? toolData.name : ''}
-                description={toolData ? toolData.description : ''}
-                defaultArgs={toolData ? toolData.optional_params : ''}
+                title={toolData?.name ?? '--'}
+                description={toolData?.description ?? ''}
+                defaultArgs={toolData?.static_params ?? ''}
                 topPadding={4 + (6 * Math.max(handles.inputs.length, handles.outputs.length))}
             />
         }/>

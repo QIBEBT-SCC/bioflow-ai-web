@@ -9,5 +9,5 @@ export interface ToolArgPublic {
     description: string
     input_handles: HandleDefine[]
     output_handles: HandleDefine[]
-    optional_params: string
+    static_params: string
 }
