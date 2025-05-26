@@ -44,8 +44,9 @@ import {NoteNode} from "@/components/node-editor/node/note-node.tsx";
 import {PanelMenu} from "@/components/node-editor/menu/panel-menu.tsx";
 import {ToolNode} from "@/components/node-editor/node/tool-node.tsx";
 import {LoadWorkflowDialog, SaveWorkflowDialog, MenuButton} from "@/components/node-editor/menu/editor-menu-component";
-import {useWorkflow} from "@/hooks/useWorkflow.tsx";
+import {useUpdateWorkflow, useWorkflow} from "@/hooks/useWorkflow.tsx";
 import {useNodeEditorStore} from "@/stores/nodeviewStore.tsx";
+import {useQueryClient} from "@tanstack/react-query";
 
 
 const nodeTypes = {
@@ -63,8 +64,10 @@ function FlowContent() {
     const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
     const reactFlow = useReactFlow();
 
+    const queryClient = useQueryClient();
     const {currentWorkflowUid, setCurrentWorkflowUid} = useNodeEditorStore()
     const {data: workflowData} = useWorkflow({uid: currentWorkflowUid})
+    const {mutate: updateWorkflow} = useUpdateWorkflow()
 
     const [isMenuOpen, setIsMenuOpen] = useState(false)
     const [clickPosition, setClickPosition] = useState<XYPosition>({x: 0, y: 0})
@@ -128,6 +131,23 @@ function FlowContent() {
         }
     }, [currentWorkflowUid, workflowData])
 
+    const onUpdate = () => {
+        const workflow = {
+            nodes: nodes,
+            edges: edges
+        }
+
+        updateWorkflow({uid: currentWorkflowUid, workflow: workflow}, {
+            onSuccess: () => {
+                queryClient.invalidateQueries({queryKey: ['workflow', currentWorkflowUid]}).then();
+                alert("修改已保存！")
+            },
+            onError: (error) => {
+                console.log(error)
+            }
+        })
+    }
+
     const onRun = () => {
         const workflow = {
             nodes,
@@ -175,8 +195,7 @@ function FlowContent() {
                         />
                         <MenuButton
                             icon={<SaveIcon className="h-4 w-4"/>}
-                            onClick={() => {
-                            }}
+                            onClick={onUpdate}
                             tooltip={"保存"}
                             disable={!currentWorkflowUid}
                         />

@@ -1,6 +1,6 @@
 import {useMutation, useQuery, UseQueryOptions} from '@tanstack/react-query';
 import {workflowApi} from '@/services/api.tsx';
-import {SimpleWorkflowInfo, Workflow} from "@/types/workflow.tsx";
+import {SimpleWorkflowInfo, Workflow, WorkflowDefinition} from "@/types/workflow.tsx";
 
 export function useWorkflows({offset}: { offset: number }) {
     const options: UseQueryOptions<SimpleWorkflowInfo[], Error> = {
@@ -34,5 +34,12 @@ export function useWorkflow({uid}: { uid: string }) {
 export function useSaveWorkflow() {
     return useMutation({
         mutationFn: ({workflow}: { workflow: Workflow }) => workflowApi.saveWorkflow(workflow),
+    });
+}
+
+export function useUpdateWorkflow() {
+
+    return useMutation({
+        mutationFn: ({uid, workflow}: { uid: string, workflow: WorkflowDefinition }) => workflowApi.updateWorkflow(uid, workflow),
     });
 }

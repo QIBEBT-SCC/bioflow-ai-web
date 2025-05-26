@@ -59,6 +59,10 @@ export const workflowApi = {
         const {data} = await api.post('/workflows', workflow);
         return data;
     },
+    updateWorkflow: async (uid: string, workflow: WorkflowDefinition) => {
+        const {data} = await api.patch(`/workflows/${uid}`, workflow);
+        return data;
+    },
 };
 
 export const instanceApi = {
