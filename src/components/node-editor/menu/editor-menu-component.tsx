@@ -2,7 +2,7 @@
 
 import {type ReactNode, useState} from "react"
 import {Button} from "@/components/ui/button.tsx"
-import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger} from "@/components/ui/dialog.tsx"
+import {Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger} from "@/components/ui/dialog.tsx"
 import {
     Pagination,
     PaginationContent,
@@ -13,9 +13,20 @@ import {
 import {Input} from "@/components/ui/input.tsx"
 import {File, Search, ChevronLeft, ChevronRight} from "lucide-react"
 import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip.tsx";
-import {useWorkflowCount, useWorkflows} from "@/hooks/useWorkflow.tsx";
+import {useSaveWorkflow, useWorkflowCount, useWorkflows} from "@/hooks/useWorkflow.tsx";
+import {Label} from "@/components/ui/label.tsx";
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select.tsx";
+import {WorkflowType} from "@/types/workflow.tsx";
+import {Switch} from "@/components/ui/switch.tsx";
+import {useEdges, useNodes} from "@xyflow/react";
+import {useNodeEditorStore} from "@/stores/nodeviewStore.tsx";
 
-export function MenuButton({icon, tooltip, onClick, disable}: { icon: ReactNode, tooltip: string, onClick: () => void, disable: boolean }) {
+export function MenuButton({icon, tooltip, onClick, disable = false}: {
+    icon: ReactNode,
+    tooltip: string,
+    onClick: () => void,
+    disable?: boolean
+}) {
     return (
         <Tooltip>
             <TooltipTrigger asChild>
@@ -36,11 +47,10 @@ export function MenuButton({icon, tooltip, onClick, disable}: { icon: ReactNode,
     )
 }
 
-export function LoadMenu({icon, tooltip, onClick, disable}: {
+export function LoadWorkflowDialog({icon, tooltip, onClick}: {
     icon: ReactNode,
     tooltip: string,
     onClick: (uid: string) => void,
-    disable: boolean
 }) {
     const [currentPage, setCurrentPage] = useState(1)
     const [searchQuery, setSearchQuery] = useState("")
@@ -76,7 +86,7 @@ export function LoadMenu({icon, tooltip, onClick, disable}: {
                             variant="outline"
                             size="icon"
                             className="border-0 shadow-none text-muted-foreground hover:text-foreground"
-                            disabled={disable || loadingCount || loadingWorkflows}
+                            disabled={loadingCount || loadingWorkflows}
                         >
                             {icon}
                         </Button>
@@ -183,6 +193,141 @@ export function LoadMenu({icon, tooltip, onClick, disable}: {
                         </PaginationContent>
                     </Pagination>
                 )}
+            </DialogContent>
+        </Dialog>
+    )
+}
+
+
+export function SaveWorkflowDialog({icon, tooltip}: {
+    icon: ReactNode,
+    tooltip: string
+}) {
+    const [open, setOpen] = useState(false)
+
+    const [name, setName] = useState('')
+    const [isPublic, setIsPublic] = useState(false)
+    const [workflowType, setWorkflowType] = useState<WorkflowType>(WorkflowType.TEMPLATE)
+    const [nameError, setNameError] = useState<string | null>(null)
+
+    const nodes = useNodes();
+    const edges = useEdges();
+
+    const {mutate: saveWorkflow, isPending: isSaving} = useSaveWorkflow();
+    const setCurrentWorkflowUid = useNodeEditorStore((state) => state.setCurrentWorkflowUid)
+
+    function resetError() {
+        setNameError(null);
+    }
+
+    const handleSave = () => {
+        resetError();
+        const workflow = {
+            name: name,
+            workflow: {
+                nodes: nodes,
+                edges: edges
+            },
+            public: isPublic,
+            wf_type: workflowType,
+        };
+
+        console.log(workflow)
+        saveWorkflow({workflow: workflow}, {
+            onSuccess: (data: string) => {
+                setOpen(false);
+                setName('');
+                setIsPublic(false);
+                setWorkflowType(WorkflowType.TEMPLATE);
+                resetError();
+                setCurrentWorkflowUid(data)
+            },
+            onError: (error) => {
+                // @ts-expect-error no need
+                if (error.status === 409) {
+                    setNameError('该名称已存在')
+                }
+            }
+        });
+    };
+
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <DialogTrigger asChild>
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                className="border-0 shadow-none text-muted-foreground hover:text-foreground"
+                                disabled={nodes.length === 0}
+                            >
+                                {icon}
+                            </Button>
+                        </DialogTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>{tooltip}</p>
+                    </TooltipContent>
+                </Tooltip>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                    <DialogTitle>保存工作流</DialogTitle>
+                    <DialogDescription>设置工作流的基本信息，包括名称、可见性和保存类型。</DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    {/* 工作流名称 */}
+                    <div className="grid gap-2">
+                        <Label htmlFor="workflow-name">工作流名称</Label>
+                        <Input
+                            id="workflow-name"
+                            placeholder="请输入工作流名称"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            className={nameError ? "border-red-500 focus:ring-red-500" : ""}
+                        />
+                        {nameError && (
+                            <div className="text-sm text-red-500 mt-1">{nameError}</div>
+                        )}
+                    </div>
+
+                    {/* 是否公开 */}
+                    <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                            <Label htmlFor="is-public">公开工作流</Label>
+                            <div className="text-sm text-muted-foreground">其他用户可以查看和使用此工作流</div>
+                        </div>
+                        <Switch id="is-public" checked={isPublic} onCheckedChange={setIsPublic}/>
+                    </div>
+
+                    {/* 保存类型 */}
+                    <div className="grid gap-2">
+                        <Label htmlFor="save-type">保存类型</Label>
+                        <Select value={String(workflowType)} onValueChange={(value) => setWorkflowType(Number(value))}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="选择保存类型"/>
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value={String(WorkflowType.SUBMODULE)}>子模块</SelectItem>
+                                <SelectItem value={String(WorkflowType.TEMPLATE)}>模板</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <div className="text-sm text-muted-foreground">
+                            {workflowType === WorkflowType.TEMPLATE && "保存为可重复使用的工作流模板"}
+                            {workflowType === WorkflowType.SUBMODULE && "保存为可嵌入其他工作流的子模块"}
+                        </div>
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => setOpen(false)}>
+                        取消
+                    </Button>
+                    <Button onClick={handleSave} disabled={isSaving || !name}>
+                        保存
+                    </Button>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
     )

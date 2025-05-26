@@ -1,11 +1,11 @@
 import {create} from "zustand";
 
 interface NodeEditorStore {
-    currentRunInstanceId: string;
-    setCurrentRunInstanceId: (uid: string) => void;
+    currentWorkflowUid: string;
+    setCurrentWorkflowUid: (uid: string) => void;
 }
 
 export const useNodeEditorStore = create<NodeEditorStore>((set) => ({
-    currentRunInstanceId: '',
-    setCurrentRunInstanceId: (uid) => set({currentRunInstanceId: uid})
+    currentWorkflowUid: '',
+    setCurrentWorkflowUid: (uid) => set({currentWorkflowUid: uid})
 }))
