@@ -119,7 +119,7 @@ export function ToolDetailPage() {
                                 <Layers className="h-4 w-4 mr-2"/>
                                 参数
                                 <Badge variant="outline" className="ml-2">
-                                    {tool.required_params.length}
+                                    {tool.dynamic_params.length}
                                 </Badge>
                             </TabsTrigger>
                             <TabsTrigger value="outputs">
@@ -229,7 +229,7 @@ export function ToolDetailPage() {
                                     <div>
                                         <h3 className="text-lg font-medium mb-4">必要参数</h3>
                                         <div className="grid grid-cols-1 gap-4">
-                                            {tool.required_params.map((param, index) => (
+                                            {tool.dynamic_params.map((param, index) => (
                                                 <div
                                                     key={index}
                                                     className={`p-4 rounded-lg border ${
@@ -272,10 +272,10 @@ export function ToolDetailPage() {
 
                                     <div>
                                         <h3 className="text-lg font-medium mb-4">可选参数</h3>
-                                        {tool.optional_params ? (
+                                        {tool.static_params ? (
                                             <div className="bg-muted p-4 rounded-lg">
                                                 <code
-                                                    className="text-sm block overflow-x-auto whitespace-pre-wrap">{tool.optional_params}</code>
+                                                    className="text-sm block overflow-x-auto whitespace-pre-wrap">{tool.static_params}</code>
                                             </div>
                                         ) : (
                                             <p className="text-muted-foreground">无可选参数</p>

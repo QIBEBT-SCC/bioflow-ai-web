@@ -45,22 +45,21 @@ export function AddToolPage() {
         homepage: "",
         tool_tag: [],
         command_template: "",
-        required_params: [],
-        optional_params: "",
+        dynamic_params: [],
+        static_params: "",
         output_files: [],
         mkdir_output: true,
         use_temp_dir: false,
         help_command: "",
     })
 
-    // 添加必需参数
+    // 添加动态参数
     const addRequiredParam = () => {
         setTool({
             ...tool,
-            required_params: [
-                ...tool.required_params,
+            dynamic_params: [
+                ...tool.dynamic_params,
                 {
-                    key: "",
                     name: "",
                     command: "",
                     description: "",
@@ -72,18 +71,18 @@ export function AddToolPage() {
         })
     }
 
-    // 更新必需参数
-    const updateRequiredParam = (index: number, field: keyof ParamDefine, value: string | number | boolean) => {
-        const updatedParams = [...tool.required_params]
+    // 更新动态参数
+    const updateDynamicParam = (index: number, field: keyof ParamDefine, value: string | number | boolean) => {
+        const updatedParams = [...tool.dynamic_params]
         updatedParams[index] = {...updatedParams[index], [field]: value}
-        setTool({...tool, required_params: updatedParams})
+        setTool({...tool, dynamic_params: updatedParams})
     }
 
-    // 删除必需参数
+    // 删除动态参数
     const removeRequiredParam = (index: number) => {
-        const updatedParams = [...tool.required_params]
+        const updatedParams = [...tool.dynamic_params]
         updatedParams.splice(index, 1)
-        setTool({...tool, required_params: updatedParams})
+        setTool({...tool, dynamic_params: updatedParams})
     }
 
     // 添加输出文件
@@ -120,8 +119,6 @@ export function AddToolPage() {
     // 处理表单提交
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-
-        console.log(tool)
 
         createTool(
             {tool},
@@ -189,9 +186,9 @@ export function AddToolPage() {
                                 </TabsTrigger>
                                 <TabsTrigger value="params">
                                     {t("add_tool.param_setting")}
-                                    {tool.required_params.length > 0 && (
+                                    {tool.dynamic_params.length > 0 && (
                                         <Badge variant="outline" className="ml-2">
-                                            {tool.required_params.length}
+                                            {tool.dynamic_params.length}
                                         </Badge>
                                     )}
                                 </TabsTrigger>
@@ -360,7 +357,7 @@ export function AddToolPage() {
                                                 </Label>
                                             </div>
 
-                                            {tool.required_params.length === 0 ? (
+                                            {tool.dynamic_params.length === 0 ? (
                                                 <div
                                                     className="text-center py-6 text-muted-foreground border rounded-md bg-muted/30"
                                                     id="required_params"
@@ -369,11 +366,11 @@ export function AddToolPage() {
                                                 </div>
                                             ) : (
                                                 <div className="space-y-4" id="required_params">
-                                                    {tool.required_params.map((param, index) => (
+                                                    {tool.dynamic_params.map((param, index) => (
                                                         <ParamCard
                                                             index={index}
                                                             param={param}
-                                                            update={updateRequiredParam}
+                                                            update={updateDynamicParam}
                                                             remove={removeRequiredParam}
                                                         />
                                                     ))}
@@ -388,13 +385,13 @@ export function AddToolPage() {
                                             </div>
 
                                             <div className="space-y-2 mt-6 pt-6 border-t">
-                                                <Label htmlFor="optional_params" className="text-lg font-semibold">
+                                                <Label htmlFor="static_params" className="text-lg font-semibold">
                                                     可选参数
                                                 </Label>
                                                 <Textarea
-                                                    id="optional_params"
-                                                    value={tool.optional_params}
-                                                    onChange={(e) => setTool({...tool, optional_params: e.target.value})}
+                                                    id="static_params"
+                                                    value={tool.static_params}
+                                                    onChange={(e) => setTool({...tool, static_params: e.target.value})}
                                                     placeholder="例如: --thread 8"
                                                     rows={3}
                                                 />

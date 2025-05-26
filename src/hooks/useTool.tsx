@@ -51,7 +51,8 @@ export function useCreateTool() {
     return useMutation({
         mutationFn: ({tool}: { tool: DockerToolCreate }) => toolApi.newTool(tool),
         onSuccess: () => {
-            queryClient.invalidateQueries({queryKey: ['tools']}).then();
+            queryClient.invalidateQueries({queryKey: ['allTools']}).then();
+            queryClient.invalidateQueries({queryKey: ['groupTools']}).then();
         }
     });
 }

@@ -17,13 +17,13 @@ export function ParamCard({index, param, remove, update}: {
     remove: (index: number) => void
 }) {
     return (
-        <Card key={index}
+        <Card key={`param-card-${index}`}
               className="overflow-hidden border-l-4 border-l-primary pt-0 gap-0">
             <CardHeader className="py-3 bg-muted/30">
                 <div className="flex justify-between items-center">
                     <CardTitle className="text-base">
-                        参数 {index + 1}: {param.key || "未命名"}
-                        {param.param_type === ParamType.INPUT && (
+                        参数 {index + 1}: {param.name || "未命名"}
+                        {param.param_type !== ParamType.OUTPUT && (
                             <Badge className="ml-2 bg-blue-500">输入</Badge>
                         )}
                         {param.param_type === ParamType.OUTPUT && (
@@ -48,19 +48,7 @@ export function ParamCard({index, param, remove, update}: {
             </CardHeader>
             <CardContent className="pt-4">
                 <div className="flex gap-4 mb-4">
-                    <div className="space-y-2 flex-1/5">
-                        <Label htmlFor={`param-key-${index}`}>
-                            参数id <span className="text-red-500">*</span>
-                        </Label>
-                        <Input
-                            id={`param-key-${index}`}
-                            value={param.key}
-                            onChange={(e) => update(index, "key", e.target.value)}
-                            placeholder="例如: raw_r1"
-                            required
-                        />
-                    </div>
-                    <div className="space-y-2 flex-1/4">
+                    <div className="space-y-2 flex-3">
                         <Label htmlFor={`param-key-${index}`}>
                             参数名称
                         </Label>
@@ -72,7 +60,7 @@ export function ParamCard({index, param, remove, update}: {
                             required
                         />
                     </div>
-                    <div className="space-y-2 flex-1">
+                    <div className="space-y-2 flex-2">
                         <Label htmlFor={`param-type-${index}`}>
                             参数类型 <span className="text-red-500">*</span>
                         </Label>
@@ -84,10 +72,15 @@ export function ParamCard({index, param, remove, update}: {
                                 <SelectValue placeholder="选择参数类型"/>
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem
-                                    value={String(ParamType.INPUT)}>输入</SelectItem>
-                                <SelectItem
-                                    value={String(ParamType.OUTPUT)}>输出</SelectItem>
+                                <SelectItem value={String(ParamType.INPUT)}>
+                                    输入参数
+                                </SelectItem>
+                                <SelectItem value={String(ParamType.INPUT_POSITION)}>
+                                    位置参数
+                                </SelectItem>
+                                <SelectItem value={String(ParamType.OUTPUT)}>
+                                    输出参数
+                                </SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -104,31 +97,49 @@ export function ParamCard({index, param, remove, update}: {
                     </div>
                 </div>
 
-                <div className="space-y-2 mb-4">
-                    <Label htmlFor={`param-command-${index}`}>
-                        命令 <span className="text-red-500">*</span>
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <HelpCircle
-                                        className="h-4 w-4 inline-block ml-1 text-muted-foreground"/>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p className="max-w-xs">
-                                        使用 {"{参数名}"} 作为值的占位符，例如: -i {"{r1}"}
-                                    </p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    </Label>
-                    <Input
-                        id={`param-command-${index}`}
-                        value={param.command}
-                        onChange={(e) => update(index, "command", e.target.value)}
-                        placeholder="例如: -i {r1}"
-                        required
-                    />
+                <div className="flex gap-4 mb-4">
+                    <div className="space-y-2 flex flex-col flex-4">
+                        <Label htmlFor={`param-command-${index}`}>
+                            命令 <span className="text-red-500">*</span>
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <HelpCircle
+                                            className="h-4 w-4 inline-block ml-1 text-muted-foreground"/>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p className="max-w-xs">
+                                            使用 {"{参数名}"} 作为值的占位符，例如: -i {"{r1}"}
+                                        </p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        </Label>
+                        <Input
+                            id={`param-command-${index}`}
+                            value={param.command}
+                            onChange={(e) => update(index, "command", e.target.value)}
+                            placeholder="例如: -i {r1}"
+                            required
+                        />
+                    </div>
+                    {param.param_type === ParamType.INPUT_POSITION && (
+                        <div className="space-y-2 flex flex-col flex-1">
+                            <Label htmlFor={`param-command-${index}`}>
+                                位置索引 <span className="text-red-500">*</span>
+                            </Label>
+                            <Input
+                                id={`param-index-${index}`}
+                                type='number'
+                                value={param.index}
+                                onChange={(e) => update(index, "index", e.target.value)}
+                                placeholder="1"
+                                required
+                            />
+                        </div>
+                    )}
                 </div>
+
 
                 <div className="space-y-2 mb-4">
                     <Label htmlFor={`param-description-${index}`}>描述</Label>
@@ -141,7 +152,7 @@ export function ParamCard({index, param, remove, update}: {
                     />
                 </div>
 
-                {param.param_type === ParamType.INPUT && (
+                {param.param_type !== ParamType.OUTPUT && (
                     <div className="space-y-2">
                         <Label htmlFor={`param-mount-path-${index}`}>挂载路径 <span className="text-red-500"> *</span></Label>
                         <Input

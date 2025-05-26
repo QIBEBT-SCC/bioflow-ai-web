@@ -6,18 +6,19 @@ export enum ToolType {
 // 参数类型枚举
 export enum ParamType {
     INPUT = 0,
-    OUTPUT = 1,
+    INPUT_POSITION = 1,
+    OUTPUT = 2,
 }
 
 // 参数定义接口
 export interface ParamDefine {
-    key: string
     name: string
     command: string
-    description: string
-    is_file: boolean
-    mount_path?: string
     param_type: ParamType
+    is_file: boolean
+    index?: number
+    mount_path?: string
+    description?: string
 }
 
 // 输出文件接口
@@ -27,6 +28,7 @@ export interface OutputFile {
     is_report: boolean
     is_log: boolean
     mount_path: string
+    description?: string
 }
 
 export interface ToolTag {
@@ -49,8 +51,8 @@ export interface DockerToolCreate {
     homepage: string
     tool_tag: ToolTag[]
     command_template: string
-    required_params: ParamDefine[]
-    optional_params: string
+    dynamic_params: ParamDefine[]
+    static_params: string
     output_files: OutputFile[]
     mkdir_output: boolean
     use_temp_dir: boolean
@@ -78,8 +80,8 @@ export interface ToolInfo {
     group_id?: number
 
     command_template: string
-    required_params: ParamDefine[]
-    optional_params: string
+    dynamic_params: ParamDefine[]
+    static_params: string
     output_files: OutputFile[]
 
     help_command: string
