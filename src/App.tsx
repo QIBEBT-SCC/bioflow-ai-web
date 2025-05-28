@@ -70,6 +70,10 @@ export default function App() {
                 element: <ProtectedRoute><MainLayout page={"editor"}/></ProtectedRoute>
             },
             {
+              path:"/task",
+              element:<ProtectedRoute><MainLayout page={"task"}/></ProtectedRoute>
+            },
+            {
                 path: "/tool",
                 element: <ProtectedRoute><MainLayout page={"tool"}/></ProtectedRoute>,
             },

@@ -7,9 +7,10 @@ import {ProjectDetailPage} from "@/pages/project/project-detail-page.tsx";
 import {AddToolPage} from "@/pages/tool/add-tool-page.tsx";
 import {ToolsPage} from "@/pages/tool/tool-page.tsx";
 import {ToolDetailPage} from "@/pages/tool/tool-detail-page.tsx";
+import {TaskPage} from "@/pages/task/task-page.tsx";
 
 interface MainLayoutProps {
-    page: 'home' | 'project' | 'projectInfo' | 'editor' | 'tool' | 'addTool' | 'toolInfo' | 'setting';
+    page: 'home' | 'project' | 'projectInfo' | 'editor' | 'task' | 'tool' | 'addTool' | 'toolInfo' | 'setting';
 }
 
 export function MainLayout({page}: MainLayoutProps) {
@@ -26,6 +27,8 @@ export function MainLayout({page}: MainLayoutProps) {
                 <FlowWorkspace/>
             ) : (page === 'tool') ? (
                 <ToolsPage/>
+            ) : (page === 'task') ? (
+                <TaskPage/>
             ) : (page === 'addTool') ? (
                 <AddToolPage/>
             ) : (page === 'toolInfo') ? (
