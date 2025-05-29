@@ -1,66 +1,32 @@
 "use client"
 
-import { useState } from "react"
-import { format } from "date-fns"
-import { ChevronDown, ChevronUp, MoreHorizontal } from "lucide-react"
 
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
-import { TaskStatusBadge } from "@/components/task/task-status-badge"
+import {format} from "date-fns"
+import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table"
+import {TaskStatusBadge} from "@/components/task/task-status-badge"
+import {useTaskCount, useTaskList} from "@/hooks/use-instance.tsx";
+import {TaskInstance} from "@/types/instance.tsx";
+import {Link} from "react-router-dom";
+import {
+    Pagination,
+    PaginationContent,
+    PaginationEllipsis,
+    PaginationItem,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious
+} from "@/components/ui/pagination.tsx";
+import {useState} from "react";
 
-interface Task {
-    uid: string
-    instance_uid: string
-    owner_id: number
-    name: string
-    commands: string | null
-    result: any
-    status: string
-    create_time: string
-    start_time: string | null
-    end_time: string | null
-}
+export function TaskTable() {
+    const [recentOffset, setRecentOffset] = useState<number>(0)
 
-interface TaskTableProps {
-    tasks: Task[]
-}
+    const {data: taskCount = 0} = useTaskCount()
+    const {data: tasks = []} = useTaskList(recentOffset)
 
-export function TaskTable({ tasks }: TaskTableProps) {
-    const [sortField, setSortField] = useState<keyof Task>("create_time")
-    const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc")
-
-    const handleSort = (field: keyof Task) => {
-        if (field === sortField) {
-            setSortDirection(sortDirection === "asc" ? "desc" : "asc")
-        } else {
-            setSortField(field)
-            setSortDirection("desc")
-        }
-    }
-
-    const sortedTasks = [...tasks].sort((a, b) => {
-        if (sortField === "create_time" || sortField === "start_time" || sortField === "end_time") {
-            const aValue = a[sortField] ? new Date(a[sortField] as string).getTime() : 0
-            const bValue = b[sortField] ? new Date(b[sortField] as string).getTime() : 0
-
-            return sortDirection === "asc" ? aValue - bValue : bValue - aValue
-        }
-
-        const aValue = a[sortField]
-        const bValue = b[sortField]
-
-        if (aValue === bValue) return 0
-        if (aValue === null) return sortDirection === "asc" ? -1 : 1
-        if (bValue === null) return sortDirection === "asc" ? 1 : -1
-
-        return sortDirection === "asc"
-            ? String(aValue).localeCompare(String(bValue))
-            : String(bValue).localeCompare(String(aValue))
-    })
 
     // Calculate duration between start and end time (or now for running tasks)
-    const getDuration = (task: Task) => {
+    const getDuration = (task: TaskInstance) => {
         if (!task.start_time) return "-"
 
         const startTime = new Date(task.start_time)
@@ -82,92 +48,107 @@ export function TaskTable({ tasks }: TaskTableProps) {
         return `${hours}h ${remainingMinutes}m`
     }
 
-    const formatTime = (timeString: string | null) => {
-        if (!timeString) return "-"
-        return format(new Date(timeString), "HH:mm:ss")
+    const formatTime = (timeString: string | undefined) => {
+        if (!timeString) return "--"
+        return format(new Date(timeString), "MM-dd HH:mm")
     }
 
-    const SortIcon = ({ field }: { field: keyof Task }) => {
-        if (field !== sortField) return null
+    // 分页相关
+    const pageSize = 8;
+    const totalPages = Math.ceil(taskCount / pageSize);
+    const currentPage = Math.floor(recentOffset / pageSize) + 1;
 
-        return sortDirection === "asc" ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />
-    }
+    // 生成页码数组（最多显示5页，超出用省略号）
+    const getPageNumbers = () => {
+        if (totalPages <= 5) {
+            return Array.from({ length: totalPages }, (_, i) => i + 1);
+        }
+        if (currentPage <= 3) {
+            return [1, 2, 3, 4, 'ellipsis', totalPages];
+        }
+        if (currentPage >= totalPages - 2) {
+            return [1, 'ellipsis', totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+        }
+        return [1, 'ellipsis', currentPage - 1, currentPage, currentPage + 1, 'ellipsis', totalPages];
+    };
+
+    const handlePageChange = (page: number) => {
+        setRecentOffset((page - 1) * pageSize);
+    };
+    const handlePrev = () => {
+        if (currentPage > 1) setRecentOffset((currentPage - 2) * pageSize);
+    };
+    const handleNext = () => {
+        if (currentPage < totalPages) setRecentOffset(currentPage * pageSize);
+    };
 
     return (
-        <div className="rounded-md border">
+        <div>
             <Table>
-                <TableHeader>
+                <TableHeader className="bg-muted/50">
                     <TableRow>
-                        <TableHead className="w-[200px] cursor-pointer" onClick={() => handleSort("name")}>
-                            <div className="flex items-center">
-                                Task Name
-                                <SortIcon field="name" />
-                            </div>
-                        </TableHead>
-                        <TableHead className="w-[120px] cursor-pointer" onClick={() => handleSort("status")}>
-                            <div className="flex items-center">
-                                Status
-                                <SortIcon field="status" />
-                            </div>
-                        </TableHead>
-                        <TableHead className="w-[120px] cursor-pointer" onClick={() => handleSort("create_time")}>
-                            <div className="flex items-center">
-                                Created
-                                <SortIcon field="create_time" />
-                            </div>
-                        </TableHead>
-                        <TableHead className="w-[120px] cursor-pointer" onClick={() => handleSort("start_time")}>
-                            <div className="flex items-center">
-                                Started
-                                <SortIcon field="start_time" />
-                            </div>
-                        </TableHead>
-                        <TableHead className="w-[120px] cursor-pointer" onClick={() => handleSort("end_time")}>
-                            <div className="flex items-center">
-                                Ended
-                                <SortIcon field="end_time" />
-                            </div>
-                        </TableHead>
-                        <TableHead className="w-[100px]">Duration</TableHead>
-                        <TableHead className="w-[80px]">Owner</TableHead>
-                        <TableHead className="w-[60px] text-right">Actions</TableHead>
+                        <TableHead className="h-12 px-4">Task Name</TableHead>
+                        <TableHead className="h-12 px-4">Status</TableHead>
+                        <TableHead className="h-12 px-4 text-right">Created</TableHead>
+                        <TableHead className="h-12 px-4 text-right">Started</TableHead>
+                        <TableHead className="h-12 px-4 text-right">Ended</TableHead>
+                        <TableHead className="h-12 px-4 text-right">Duration</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {sortedTasks.map((task) => (
+                    {tasks.map((task) => (
                         <TableRow key={task.uid}>
-                            <TableCell className="font-medium">{task.name}</TableCell>
+                            <TableCell className="font-medium p-4">
+                                <Link to={`/task/${task.uid}`}
+                                      className="font-medium hover:underline">
+                                    {task.name}
+                                </Link>
+                            </TableCell>
                             <TableCell>
-                                <TaskStatusBadge status={task.status} />
+                                <TaskStatusBadge status={task.status}/>
                             </TableCell>
-                            <TableCell>{formatTime(task.create_time)}</TableCell>
-                            <TableCell>{formatTime(task.start_time)}</TableCell>
-                            <TableCell>{formatTime(task.end_time)}</TableCell>
-                            <TableCell>{getDuration(task)}</TableCell>
-                            <TableCell>User {task.owner_id}</TableCell>
-                            <TableCell className="text-right">
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" size="icon">
-                                            <MoreHorizontal className="h-4 w-4" />
-                                            <span className="sr-only">Open menu</span>
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                        <DropdownMenuItem>View Details</DropdownMenuItem>
-                                        <DropdownMenuItem>View Results</DropdownMenuItem>
-                                        <DropdownMenuItem>View Logs</DropdownMenuItem>
-                                        {task.status === "RUNNING" && (
-                                            <DropdownMenuItem className="text-red-500">Cancel Task</DropdownMenuItem>
-                                        )}
-                                        {task.status === "FAILED" && <DropdownMenuItem>Retry Task</DropdownMenuItem>}
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            </TableCell>
+                            <TableCell className="text-right p-4">{formatTime(task.create_time)}</TableCell>
+                            <TableCell className="text-right p-4">{formatTime(task.start_time)}</TableCell>
+                            <TableCell className="text-right p-4">{formatTime(task.end_time)}</TableCell>
+                            <TableCell className="text-right p-4">{getDuration(task)}</TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
             </Table>
+            <Pagination className="pt-2">
+                <PaginationContent>
+                    <PaginationItem>
+                        <PaginationPrevious
+                            onClick={e => { e.preventDefault(); handlePrev(); }}
+                            aria-disabled={currentPage === 1}
+                            className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
+                        />
+                    </PaginationItem>
+                    {getPageNumbers().map((num, idx) =>
+                        num === 'ellipsis' ? (
+                            <PaginationItem key={"ellipsis-" + idx}>
+                                <PaginationEllipsis />
+                            </PaginationItem>
+                        ) : (
+                            <PaginationItem key={num}>
+                                <PaginationLink
+                                    isActive={num === currentPage}
+                                    onClick={e => { e.preventDefault(); handlePageChange(Number(num)); }}
+                                >
+                                    {num}
+                                </PaginationLink>
+                            </PaginationItem>
+                        )
+                    )}
+                    <PaginationItem>
+                        <PaginationNext
+                            onClick={e => { e.preventDefault(); handleNext(); }}
+                            aria-disabled={currentPage === totalPages || totalPages === 0}
+                            className={currentPage === totalPages || totalPages === 0 ? 'pointer-events-none opacity-50' : ''}
+                        />
+                    </PaginationItem>
+                </PaginationContent>
+            </Pagination>
         </div>
     )
 }

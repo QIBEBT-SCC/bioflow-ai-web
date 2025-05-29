@@ -76,6 +76,14 @@ export const instanceApi = {
         const {data} = await api.get<TaskInstance[]>(`/tasks/recent/${hour}`);
         return data;
     },
+    getTaskCount: async () => {
+        const {data} = await api.get<number>('/tasks/count');
+        return data;
+    },
+    getTaskList: async (offset: number) => {
+        const {data} = await api.get<TaskInstance[]>(`/tasks?offset=${offset}&limit=8`);
+        return data;
+    },
 }
 
 export const toolApi = {

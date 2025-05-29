@@ -1,52 +1,51 @@
-import { cn } from "@/lib/utils"
+import {Status} from "@/types/instance.tsx";
+import {Badge} from "@/components/ui/badge.tsx";
+import {AlertCircle, CheckCircle2, Loader2, EllipsisIcon} from "lucide-react";
 
-interface TaskStatusBadgeProps {
-    status: string
-    className?: string
-}
-
-export function TaskStatusBadge({ status, className }: TaskStatusBadgeProps) {
-    const getStatusConfig = (status: string) => {
-        switch (status) {
-            case "COMPLETED":
-                return {
-                    label: "Completed",
-                    className: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
-                }
-            case "RUNNING":
-                return {
-                    label: "Running",
-                    className: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
-                }
-            case "PENDING":
-                return {
-                    label: "Pending",
-                    className: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300",
-                }
-            case "FAILED":
-                return {
-                    label: "Failed",
-                    className: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
-                }
-            default:
-                return {
-                    label: status,
-                    className: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300",
-                }
-        }
+export function TaskStatusBadge({status}: { status: Status }) {
+    if (status === Status.SUCCESS) {
+        return (
+            <Badge
+                variant="outline"
+                className="bg-green-50 text-green-600 border-green-200 flex items-center"
+            >
+                <CheckCircle2 className="h-3 w-3 mr-1"/>
+                已完成
+            </Badge>
+        )
     }
 
-    const config = getStatusConfig(status)
+    if (status === Status.RUNNING) {
+        return (
+            <Badge
+                variant="outline"
+                className="bg-blue-50 text-blue-600 border-blue-200 flex items-center"
+            >
+                <Loader2 className="h-3 w-3 mr-1 animate-spin"/>
+                进行中
+            </Badge>
+        )
+    }
+
+    if (status === Status.ERROR) {
+        return (
+            <Badge
+                variant="outline"
+                className="bg-red-50 text-red-600 border-red-200 flex items-center"
+            >
+                <AlertCircle className="h-3 w-3 mr-1"/>
+                失败
+            </Badge>
+        )
+    }
 
     return (
-        <span
-            className={cn(
-                "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
-                config.className,
-                className,
-            )}
+        <Badge
+            variant="outline"
+            className="bg-gray-100 text-gray-800 border-gray-200 flex items-center"
         >
-      {config.label}
-    </span>
+            <EllipsisIcon className="h-3 w-3 mr-1"/>
+            等待中
+        </Badge>
     )
 }

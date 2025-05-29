@@ -13,3 +13,24 @@ export function useRecentTasks(hour: number) {
 
     return useQuery(options);
 }
+
+export function useTaskList(offset: number) {
+    const options: UseQueryOptions<TaskInstance[], Error> = {
+        queryKey: ['tasks', offset],
+        queryFn: ({queryKey}) => {
+            const [, offset] = queryKey as [string, number];
+            return instanceApi.getTaskList(offset);
+        }
+    }
+
+    return useQuery(options)
+}
+
+export function useTaskCount() {
+    const options: UseQueryOptions<number, Error> = {
+        queryKey: ['taskCount'],
+        queryFn: instanceApi.getTaskCount,
+    }
+
+    return useQuery(options)
+}
