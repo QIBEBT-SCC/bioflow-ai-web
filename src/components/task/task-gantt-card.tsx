@@ -1,5 +1,6 @@
 "use client"
 
+import React from "react"
 import {useEffect, useRef, useState} from "react"
 import {format, subHours} from "date-fns"
 import * as echarts from "echarts"
@@ -14,147 +15,172 @@ import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card.tsx
 import {useQueryClient} from "@tanstack/react-query";
 
 function TaskGanttChart({timeRange}: { timeRange: number }) {
-    const {data: tasks = []} = useRecentTasks(timeRange);
+    const {data: tasks = [], isLoading: dataLoading} = useRecentTasks(timeRange);
 
     const chartRef = useRef<HTMLDivElement>(null)
     const chartInstance = useRef<echarts.ECharts | null>(null)
+    const resizeObserver = useRef<ResizeObserver | null>(null)
 
     useEffect(() => {
-        // Initialize chart
+        if (dataLoading || tasks.length === 0) {
+            if (chartInstance.current) {
+                resizeObserver.current?.disconnect();
+                chartInstance.current.dispose();
+                chartInstance.current = null;
+                resizeObserver.current = null;
+            }
+            return;
+        }
+
         if (chartRef.current) {
-            chartInstance.current = echarts.init(chartRef.current)
-        }
+            if (!chartInstance.current) {
+                chartInstance.current = echarts.init(chartRef.current);
 
-        // Handle resize
-        const handleResize = () => {
-            chartInstance.current?.resize()
-        }
-
-        window.addEventListener("resize", handleResize)
-
-        return () => {
-            chartInstance.current?.dispose()
-            window.removeEventListener("resize", handleResize)
-        }
-    }, [])
-
-    useEffect(() => {
-        if (!chartInstance.current) return
-
-        const now = new Date()
-        const startTime = subHours(now, timeRange)
-
-        // Prepare data for ECharts
-        const data: any[] = []
-        const taskNames: string[] = []
-
-        tasks.forEach((task, index) => {
-            taskNames.push(task.name)
-
-            // For started tasks
-            const startTime = new Date(task?.start_time ?? '')
-            const endTime = task.end_time ? new Date(task.end_time) : now
-
-            let color
-            switch (task.status) {
-                case Status.SUCCESS:
-                    color = "#10b981" // green-500
-                    break
-                case Status.RUNNING:
-                    color = "#3b82f6" // blue-500
-                    break
-                case Status.ERROR:
-                    color = "#ef4444" // red-500
-                    break
-                default:
-                    color = "#9ca3af" // gray-400
+                resizeObserver.current = new ResizeObserver(() => {
+                    chartInstance.current?.resize();
+                });
+                resizeObserver.current.observe(chartRef.current);
             }
 
-            data.push({
-                name: task.name,
-                value: [index, startTime, endTime, task.status], // Store status in value[3]
-                itemStyle: {
-                    color,
-                },
+            const now = new Date()
+            const startTimeBoundary = subHours(now, timeRange)
+
+            const data: any[] = []
+            const taskNames: string[] = []
+
+            tasks.forEach((task, index) => {
+                taskNames.push(task.name)
+                const taskStartTime = new Date(task?.start_time ?? '')
+                const taskEndTime = task.end_time ? new Date(task.end_time) : now
+
+                let color
+                switch (task.status) {
+                    case Status.SUCCESS:
+                        color = "#10b981" // green-500
+                        break
+                    case Status.RUNNING:
+                        color = "#3b82f6" // blue-500
+                        break
+                    case Status.ERROR:
+                        color = "#ef4444" // red-500
+                        break
+                    default:
+                        color = "#9ca3af" // gray-400
+                }
+
+                data.push({
+                    name: task.name,
+                    value: [index, taskStartTime, taskEndTime, task.status],
+                    itemStyle: {
+                        color,
+                    },
+                })
             })
 
-        })
-
-        // Configure chart options
-        const option: echarts.EChartsOption = {
-            tooltip: {
-                formatter: (params: any) => {
-                    const data = params.data
-                    const status = data.value[3] // Get status from value[3]
-                    const startTime = format(data.value[1], "HH:mm:ss")
-
-                    const endTime = format(data.value[2], "HH:mm:ss")
-                    const durationMs = data.value[2].getTime() - data.value[1].getTime()
-                    const durationMinutes = Math.floor(durationMs / (1000 * 60))
-                    const durationSeconds = Math.floor((durationMs % (1000 * 60)) / 1000)
-                    const duration = durationMinutes > 0 ? `${durationMinutes}m ${durationSeconds}s` : `${durationSeconds}s`
-
-                    return renderToString(
-                        <div>
-                            <b>{data.name}</b><br/>
-                            Status: {Status[status]}<br/>
-                            Start: {startTime}<br/>
-                            {status === Status.RUNNING ? "Current" : "End"}: {endTime}<br/>
-                            Duration: {duration}
-                        </div>
-                    )
-                },
-            },
-            grid: {
-                height: 100,
-                right: 30,
-                top: 20,
-                bottom: 30,
-                left: 20,
-            },
-            xAxis: {
-                type: "time",
-                min: startTime.getTime(),
-                max: now.getTime(),
-                axisLabel: {
-                    formatter: (value: number) => {
-                        return format(new Date(value), "HH:mm")
+            const option: echarts.EChartsOption = {
+                tooltip: {
+                    formatter: (params: any) => {
+                        const itemData = params.data
+                        const status = itemData.value[3]
+                        const sTime = format(itemData.value[1], "HH:mm:ss")
+                        const eTime = format(itemData.value[2], "HH:mm:ss")
+                        const durationMs = itemData.value[2].getTime() - itemData.value[1].getTime()
+                        const durationMinutes = Math.floor(durationMs / (1000 * 60))
+                        const durationSeconds = Math.floor((durationMs % (1000 * 60)) / 1000)
+                        const duration = durationMinutes > 0 ? `${durationMinutes}m ${durationSeconds}s` : `${durationSeconds}s`
+                        return renderToString(
+                            React.createElement('div', null,
+                                React.createElement('b', null, itemData.name), React.createElement('br'),
+                                `Status: ${Status[status]}`, React.createElement('br'),
+                                `Start: ${sTime}`, React.createElement('br'),
+                                `${status === Status.RUNNING ? "Current" : "End"}: ${eTime}`, React.createElement('br'),
+                                `Duration: ${duration}`
+                            )
+                        );
                     },
                 },
-                splitLine: {
-                    show: true,
-                    lineStyle: {
-                        type: "dashed",
-                        color: "#e5e7eb", // gray-200
+                grid: {
+                    height: 150,
+                    right: 30,
+                    top: 20,
+                    bottom: 30,
+                    left: 20,
+                },
+                xAxis: {
+                    type: "time",
+                    min: startTimeBoundary.getTime(),
+                    max: now.getTime(),
+                    axisLabel: {
+                        formatter: (value: number) => {
+                            return format(new Date(value), "HH:mm")
+                        },
+                    },
+                    splitLine: {
+                        show: true,
+                        lineStyle: {
+                            type: "dashed",
+                            color: "#e5e7eb", // gray-200
+                        },
                     },
                 },
-            },
-            yAxis: {
-                type: "category",
-                data: taskNames,
-                axisLabel: {
-                    show: false
-                },
-                splitLine: {
-                    show: true,
-                    lineStyle: {
-                        type: "dashed",
-                        color: "#e5e7eb", // gray-200
+                yAxis: {
+                    type: "category",
+                    data: taskNames,
+                    axisLabel: {
+                        show: false
+                    },
+                    splitLine: {
+                        show: true,
+                        lineStyle: {
+                            type: "dashed",
+                            color: "#e5e7eb", // gray-200
+                        },
                     },
                 },
-            },
-            series: [
-                {
-                    type: "custom",
-                    renderItem: (params, api) => {
-                        const categoryIndex = api.value(0)
-                        const start = api.coord([api.value(1), categoryIndex])
-                        const end = api.coord([api.value(2), categoryIndex])
-                        const height = 20
-                        const status = api.value(3) // Get status from value[3]
+                series: [
+                    {
+                        type: "custom",
+                        renderItem: (params: any, api: any) => {
+                            const categoryIndex = api.value(0)
+                            const start = api.coord([api.value(1), categoryIndex])
+                            const end = api.coord([api.value(2), categoryIndex])
+                            const height = 20
+                            const status = api.value(3)
 
-                        // For running tasks, add a gradient effect
-                        if (status === Status.RUNNING) {
+                            if (status === Status.RUNNING) {
+                                return {
+                                    type: "group",
+                                    children: [
+                                        {
+                                            type: "rect",
+                                            shape: {
+                                                x: start[0],
+                                                y: start[1] - height / 2,
+                                                width: end[0] - start[0],
+                                                height: height,
+                                                r: 3,
+                                            },
+                                            style: {
+                                                fill: "#3b82f6", // blue-500
+                                                stroke: "#2563eb", // blue-600
+                                                lineWidth: 1,
+                                            },
+                                        },
+                                        {
+                                            type: "text",
+                                            style: {
+                                                text: Status[status],
+                                                textFill: "#ffffff",
+                                                textFont: "10px sans-serif",
+                                                textAlign: "center",
+                                                textVerticalAlign: "middle",
+                                            },
+                                            position: [start[0] + (end[0] - start[0]) / 2, start[1]],
+                                        },
+                                    ],
+                                }
+                            }
+
                             return {
                                 type: "group",
                                 children: [
@@ -167,16 +193,12 @@ function TaskGanttChart({timeRange}: { timeRange: number }) {
                                             height: height,
                                             r: 3,
                                         },
-                                        style: {
-                                            fill: "#3b82f6", // blue-500
-                                            stroke: "#2563eb", // blue-600
-                                            lineWidth: 1,
-                                        },
+                                        style: {fill: api.visual('color')},
                                     },
                                     {
                                         type: "text",
                                         style: {
-                                            text: status,
+                                            text: Status[status],
                                             textFill: "#ffffff",
                                             textFont: "10px sans-serif",
                                             textAlign: "center",
@@ -186,94 +208,61 @@ function TaskGanttChart({timeRange}: { timeRange: number }) {
                                     },
                                 ],
                             }
-                        }
-
-                        // For other tasks (completed, failed)
-                        return {
-                            type: "group",
-                            children: [
-                                {
-                                    type: "rect",
-                                    shape: {
-                                        x: start[0],
-                                        y: start[1] - height / 2,
-                                        width: end[0] - start[0],
-                                        height: height,
-                                        r: 3,
-                                    },
-                                    style: {fill: api.visual('color')},
-                                },
-                                {
-                                    type: "text",
-                                    style: {
-                                        text: status,
-                                        textFill: "#ffffff",
-                                        textFont: "10px sans-serif",
-                                        textAlign: "center",
-                                        textVerticalAlign: "middle",
-                                    },
-                                    position: [start[0] + (end[0] - start[0]) / 2, start[1]],
-                                },
-                            ],
-                        }
-                    },
-                    encode: {
-                        x: [1, 2],
-                        y: 0,
-                    },
-                    data: data,
-                },
-                // Current time marker
-                {
-                    type: "line",
-                    markLine: {
-                        symbol: "none",
-                        lineStyle: {
-                            color: "#ef4444", // red-500
-                            type: "solid",
-                            width: 2,
                         },
-                        label: {
-                            formatter: "Now",
-                            position: "start",
+                        encode: {
+                            x: [1, 2],
+                            y: 0,
                         },
-                        data: [
-                            {
-                                xAxis: now.getTime(),
-                            },
-                        ],
+                        data: data,
                     },
-                    data: [],
-                },
+                ],
+                dataZoom: [
+                    {
+                        type: 'slider',
+                        yAxisIndex: 0,
+                        orient: 'vertical',
+                        right: 10,
+                        width: 16,
+                        handleSize: 20,
+                        show: true,
+                        start: 0,
+                        end: 100,
+                    }
+                ],
+            }
 
-            ],
-            dataZoom: [
-                {
-                    type: 'slider',
-                    yAxisIndex: 0,
-                    orient: 'vertical',
-                    right: 10,
-                    width: 16,
-                    handleSize: 20,
-                    show: true,
-                    start: 0,
-                    end: 100,
-                }
-            ],
+            chartInstance.current.setOption(option)
+        } else if (!dataLoading && tasks.length > 0) {
+            console.error("TaskGanttChart: chartRef.current is null, but data is loaded and tasks exist. This is unexpected.");
         }
 
-        chartInstance.current.setOption(option)
-    }, [tasks, timeRange])
+        return () => {
+            if (chartInstance.current) {
+                resizeObserver.current?.disconnect();
+                chartInstance.current.dispose();
+                chartInstance.current = null;
+                resizeObserver.current = null;
+            }
+        };
+    }, [tasks, timeRange, dataLoading]);
 
-    if (tasks.length ===0){
+    if (dataLoading) {
         return (
-            <div className="w-full h-[100px] text-center">
+            <div className="w-full h-[200px] flex items-center justify-center text-muted-foreground">
+                加载中...
+            </div>
+        )
+    }
+
+    if (tasks.length === 0) {
+        return (
+            <div className="w-full h-[200px] text-center">
                 近期没有活动
             </div>
         )
     }
 
-    return <div ref={chartRef} style={{width: "100%", height: "150px"}}/>
+    return <div ref={chartRef} style={{width: "100%", height: "200px"}}/>
 }
 
 
