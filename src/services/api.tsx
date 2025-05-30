@@ -4,7 +4,7 @@ import {Project, ProjectCreateProp, ProjectTag} from "@/types/project.tsx";
 import {DockerToolCreate, SimpleToolInfo, ToolGroup, ToolInfo, ToolTag} from "@/types/tool.tsx";
 import {ToolArgPublic} from "@/types/node.tsx";
 import {SimpleWorkflowInfo, Workflow, WorkflowDefinition} from "@/types/workflow.tsx";
-import {TaskInstance} from "@/types/instance.tsx";
+import {MonitorRecord, TaskInstance} from "@/types/instance.tsx";
 
 export const api = axios.create({
     baseURL: '/api/v1',
@@ -84,6 +84,10 @@ export const instanceApi = {
         const {data} = await api.get<TaskInstance[]>(`/tasks?offset=${offset}&limit=8`);
         return data;
     },
+    getTaskMonitor: async (uid: string) => {
+        const {data} = await api.get<MonitorRecord[]>(`/tasks/${uid}/monitor`);
+        return data
+    }
 }
 
 export const toolApi = {

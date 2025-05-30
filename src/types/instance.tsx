@@ -18,3 +18,12 @@ export interface TaskInstance {
     start_time?: string;
     end_time?: string;
 }
+
+export interface MonitorRecord {
+    cpu_usage: number
+    mem_usage: number
+    mem_used: number
+    io_in: number
+    io_out: number
+    time: string
+}

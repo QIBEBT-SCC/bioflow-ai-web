@@ -1,6 +1,6 @@
 import {useQuery, UseQueryOptions} from "@tanstack/react-query";
 import {instanceApi} from "@/services/api.tsx";
-import {TaskInstance} from "@/types/instance.tsx";
+import {MonitorRecord, TaskInstance} from "@/types/instance.tsx";
 
 export function useRecentTasks(hour: number) {
     const options: UseQueryOptions<TaskInstance[], Error> = {
@@ -30,6 +30,18 @@ export function useTaskCount() {
     const options: UseQueryOptions<number, Error> = {
         queryKey: ['taskCount'],
         queryFn: instanceApi.getTaskCount,
+    }
+
+    return useQuery(options)
+}
+
+export function useTaskMonitor(uid: string) {
+    const options: UseQueryOptions<MonitorRecord[], Error> = {
+        queryKey: ['taskMonitor', uid],
+        queryFn: ({queryKey}) => {
+            const [, uid] = queryKey as [string, string];
+            return instanceApi.getTaskMonitor(uid);
+        }
     }
 
     return useQuery(options)

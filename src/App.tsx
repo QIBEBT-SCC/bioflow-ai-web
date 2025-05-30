@@ -15,6 +15,7 @@ const TaskPage = React.lazy(() => import("@/pages/task/task-page.tsx").then(m =>
 const ToolsPage = React.lazy(() => import("@/pages/tool/tool-page.tsx").then(m => ({default: m.ToolsPage})));
 const AddToolPage = React.lazy(() => import("@/pages/tool/add-tool-page.tsx").then(m => ({default: m.AddToolPage})));
 const ToolDetailPage = React.lazy(() => import("@/pages/tool/tool-detail-page.tsx").then(m => ({default: m.ToolDetailPage})));
+const TaskDetailPage = React.lazy(() => import("@/pages/task/task-detail-page.tsx").then(m => ({default: m.TaskDetailPage})))
 
 // 受保护的路由组件
 const ProtectedRoute = ({children}: { children: React.ReactNode }) => {
@@ -63,11 +64,28 @@ export default function App() {
             element: <ProtectedRoute><MainLayout/></ProtectedRoute>,
             children: [
                 {path: "home", element: withSuspense(HomePage)},
-                {path: "project", element: withSuspense(ProjectsPage)},
-                {path: "project/:projectId", element: withSuspense(ProjectDetailPage)},
-                {path: "editor", element: withSuspense(FlowWorkspace)},
-                {path: "editor/:workflowUid", element: withSuspense(FlowWorkspace)},
-                {path: "task", element: withSuspense(TaskPage)},
+                {
+                    path: "project",
+                    children: [
+                        {index: true, element: withSuspense(ProjectsPage)},
+                        {path: ":projectId", element: withSuspense(ProjectDetailPage)}
+                    ]
+                },
+                {
+                    path: "editor",
+
+                    children: [
+                        {index: true, element: withSuspense(FlowWorkspace),},
+                        {path: ":workflowUid", element: withSuspense(FlowWorkspace)},
+                    ]
+                },
+                {
+                    path: "task",
+                    children: [
+                        {index: true, element: withSuspense(TaskPage)},
+                        {path: ":taskUid", element: withSuspense(TaskDetailPage)}
+                    ]
+                },
                 {
                     path: "tool",
                     children: [
