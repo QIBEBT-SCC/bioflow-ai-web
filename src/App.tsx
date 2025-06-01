@@ -5,9 +5,9 @@ import {isTokenExpired, useAuthStore} from "@/stores/authStore.tsx";
 import {createBrowserRouter, Navigate, RouterProvider} from "react-router-dom";
 import {LoginPage} from "@/pages/login-page.tsx";
 import {TooltipProvider} from "@/components/ui/tooltip.tsx";
+import { HomePage } from "@/pages/home-page";
 
 // 懒加载页面组件，确保为默认导出
-const HomePage = React.lazy(() => import("@/pages/home-page.tsx").then(m => ({default: m.HomePage})));
 const ProjectsPage = React.lazy(() => import("@/pages/project/project-page.tsx").then(m => ({default: m.ProjectsPage})));
 const ProjectDetailPage = React.lazy(() => import("@/pages/project/project-detail-page.tsx").then(m => ({default: m.ProjectDetailPage})));
 const FlowWorkspace = React.lazy(() => import("@/components/node-editor/viewport.tsx").then(m => ({default: m.FlowWorkspace})));
@@ -63,7 +63,7 @@ export default function App() {
             path: "/",
             element: <ProtectedRoute><MainLayout/></ProtectedRoute>,
             children: [
-                {path: "home", element: withSuspense(HomePage)},
+                {path: "home", element: <HomePage/>},
                 {
                     path: "project",
                     children: [
