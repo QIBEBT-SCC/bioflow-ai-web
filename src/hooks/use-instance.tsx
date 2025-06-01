@@ -1,9 +1,9 @@
 import {useQuery, UseQueryOptions} from "@tanstack/react-query";
 import {instanceApi} from "@/services/api.tsx";
-import {MonitorRecord, TaskInstance} from "@/types/instance.tsx";
+import {MonitorRecord, SimpleTask, TaskPublic} from "@/types/instance.tsx";
 
 export function useRecentTasks(hour: number) {
-    const options: UseQueryOptions<TaskInstance[], Error> = {
+    const options: UseQueryOptions<SimpleTask[], Error> = {
         queryKey: ['recentTasks', hour],
         queryFn: ({queryKey}) => {
             const [, hour] = queryKey as [string, number];
@@ -15,7 +15,7 @@ export function useRecentTasks(hour: number) {
 }
 
 export function useTaskList(offset: number) {
-    const options: UseQueryOptions<TaskInstance[], Error> = {
+    const options: UseQueryOptions<SimpleTask[], Error> = {
         queryKey: ['tasks', offset],
         queryFn: ({queryKey}) => {
             const [, offset] = queryKey as [string, number];
@@ -35,12 +35,36 @@ export function useTaskCount() {
     return useQuery(options)
 }
 
+export function useTask(uid: string) {
+    const options: UseQueryOptions<TaskPublic, Error> = {
+        queryKey: ['task', uid],
+        queryFn: ({queryKey}) => {
+            const [, uid] = queryKey as [string, string];
+            return instanceApi.getTaskInfo(uid);
+        }
+    }
+
+    return useQuery(options)
+}
+
 export function useTaskMonitor(uid: string) {
     const options: UseQueryOptions<MonitorRecord[], Error> = {
         queryKey: ['taskMonitor', uid],
         queryFn: ({queryKey}) => {
             const [, uid] = queryKey as [string, string];
             return instanceApi.getTaskMonitor(uid);
+        }
+    }
+
+    return useQuery(options)
+}
+
+export function useTaskLog(uid: string) {
+    const options: UseQueryOptions<{ content: string }, Error> = {
+        queryKey: ['taskLog', uid],
+        queryFn: ({queryKey}) => {
+            const [, uid] = queryKey as [string, string];
+            return instanceApi.getTaskLog(uid);
         }
     }
 

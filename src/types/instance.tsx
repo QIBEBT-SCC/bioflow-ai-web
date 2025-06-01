@@ -1,3 +1,5 @@
+import {User} from "@/types/auth.tsx";
+
 export enum Status {
     WAITING = 0,
     RUNNING = 1,
@@ -13,6 +15,39 @@ export interface TaskInstance {
     commands?: string
     result?: Record<string, any>
     status: Status
+
+    create_time?: string;
+    start_time?: string;
+    end_time?: string;
+}
+
+export interface SimpleTask {
+    uid: string
+    name: string
+    owner: User
+    status: Status
+
+    create_time?: string;
+    start_time?: string;
+    end_time?: string;
+}
+
+export interface ToolOutput {
+    result?: Record<string, string>,
+    log?: string,
+    reports?: Record<string, string>
+}
+
+export interface TaskPublic {
+    uid: string
+    name: string
+    owner: User
+    commands?: string
+    tool_output?: ToolOutput
+    status: Status
+
+    system?: string
+    hostname: string
 
     create_time?: string;
     start_time?: string;

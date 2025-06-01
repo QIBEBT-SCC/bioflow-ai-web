@@ -1,11 +1,9 @@
 "use client"
 
 
-import {format} from "date-fns"
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table"
 import {TaskStatusBadge} from "@/components/task/task-status-badge"
 import {useTaskCount, useTaskList} from "@/hooks/use-instance.tsx";
-import {TaskInstance} from "@/types/instance.tsx";
 import {Link} from "react-router-dom";
 import {
     Pagination,
@@ -17,41 +15,13 @@ import {
     PaginationPrevious
 } from "@/components/ui/pagination.tsx";
 import {useState} from "react";
+import {formatTime, getDuration} from "@/lib/time-formatter.tsx";
 
 export function TaskTable() {
     const [recentOffset, setRecentOffset] = useState<number>(0)
 
     const {data: taskCount = 0} = useTaskCount()
     const {data: tasks = []} = useTaskList(recentOffset)
-
-
-    // Calculate duration between start and end time (or now for running tasks)
-    const getDuration = (task: TaskInstance) => {
-        if (!task.start_time) return "-"
-
-        const startTime = new Date(task.start_time)
-        const endTime = task.end_time ? new Date(task.end_time) : new Date()
-
-        const durationMs = endTime.getTime() - startTime.getTime()
-        const seconds = Math.floor(durationMs / 1000)
-
-        if (seconds < 60) return `${seconds}s`
-
-        const minutes = Math.floor(seconds / 60)
-        const remainingSeconds = seconds % 60
-
-        if (minutes < 60) return `${minutes}m ${remainingSeconds}s`
-
-        const hours = Math.floor(minutes / 60)
-        const remainingMinutes = minutes % 60
-
-        return `${hours}h ${remainingMinutes}m`
-    }
-
-    const formatTime = (timeString: string | undefined) => {
-        if (!timeString) return "--"
-        return format(new Date(timeString), "MM-dd HH:mm")
-    }
 
     // 分页相关
     const pageSize = 8;
@@ -61,7 +31,7 @@ export function TaskTable() {
     // 生成页码数组（最多显示5页，超出用省略号）
     const getPageNumbers = () => {
         if (totalPages <= 5) {
-            return Array.from({ length: totalPages }, (_, i) => i + 1);
+            return Array.from({length: totalPages}, (_, i) => i + 1);
         }
         if (currentPage <= 3) {
             return [1, 2, 3, 4, 'ellipsis', totalPages];
@@ -110,7 +80,7 @@ export function TaskTable() {
                             <TableCell className="text-right p-4">{formatTime(task.create_time)}</TableCell>
                             <TableCell className="text-right p-4">{formatTime(task.start_time)}</TableCell>
                             <TableCell className="text-right p-4">{formatTime(task.end_time)}</TableCell>
-                            <TableCell className="text-right p-4">{getDuration(task)}</TableCell>
+                            <TableCell className="text-right p-4">{getDuration(task.start_time, task.end_time)}</TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
@@ -119,7 +89,10 @@ export function TaskTable() {
                 <PaginationContent>
                     <PaginationItem>
                         <PaginationPrevious
-                            onClick={e => { e.preventDefault(); handlePrev(); }}
+                            onClick={e => {
+                                e.preventDefault();
+                                handlePrev();
+                            }}
                             aria-disabled={currentPage === 1}
                             className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
                         />
@@ -127,13 +100,16 @@ export function TaskTable() {
                     {getPageNumbers().map((num, idx) =>
                         num === 'ellipsis' ? (
                             <PaginationItem key={"ellipsis-" + idx}>
-                                <PaginationEllipsis />
+                                <PaginationEllipsis/>
                             </PaginationItem>
                         ) : (
                             <PaginationItem key={num}>
                                 <PaginationLink
                                     isActive={num === currentPage}
-                                    onClick={e => { e.preventDefault(); handlePageChange(Number(num)); }}
+                                    onClick={e => {
+                                        e.preventDefault();
+                                        handlePageChange(Number(num));
+                                    }}
                                 >
                                     {num}
                                 </PaginationLink>
@@ -142,7 +118,10 @@ export function TaskTable() {
                     )}
                     <PaginationItem>
                         <PaginationNext
-                            onClick={e => { e.preventDefault(); handleNext(); }}
+                            onClick={e => {
+                                e.preventDefault();
+                                handleNext();
+                            }}
                             aria-disabled={currentPage === totalPages || totalPages === 0}
                             className={currentPage === totalPages || totalPages === 0 ? 'pointer-events-none opacity-50' : ''}
                         />

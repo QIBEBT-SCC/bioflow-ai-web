@@ -4,7 +4,7 @@ import {Project, ProjectCreateProp, ProjectTag} from "@/types/project.tsx";
 import {DockerToolCreate, SimpleToolInfo, ToolGroup, ToolInfo, ToolTag} from "@/types/tool.tsx";
 import {ToolArgPublic} from "@/types/node.tsx";
 import {SimpleWorkflowInfo, Workflow, WorkflowDefinition} from "@/types/workflow.tsx";
-import {MonitorRecord, TaskInstance} from "@/types/instance.tsx";
+import {MonitorRecord, SimpleTask, TaskInstance, TaskPublic} from "@/types/instance.tsx";
 
 export const api = axios.create({
     baseURL: '/api/v1',
@@ -73,7 +73,7 @@ export const instanceApi = {
         return data;
     },
     getRecentTasks: async (hour: number) => {
-        const {data} = await api.get<TaskInstance[]>(`/tasks/recent/${hour}`);
+        const {data} = await api.get<SimpleTask[]>(`/tasks/recent/${hour}`);
         return data;
     },
     getTaskCount: async () => {
@@ -81,13 +81,22 @@ export const instanceApi = {
         return data;
     },
     getTaskList: async (offset: number) => {
-        const {data} = await api.get<TaskInstance[]>(`/tasks?offset=${offset}&limit=8`);
+        const {data} = await api.get<SimpleTask[]>(`/tasks?offset=${offset}&limit=8`);
+        return data;
+    },
+    getTaskInfo: async (uid: string) => {
+        const {data} = await api.get<TaskPublic>(`/tasks/${uid}`);
+        return data;
+    },
+    getTaskLog: async (uid: string) => {
+        const {data} = await api.get<{ content: string }>(`/tasks/${uid}/log`);
         return data;
     },
     getTaskMonitor: async (uid: string) => {
         const {data} = await api.get<MonitorRecord[]>(`/tasks/${uid}/monitor`);
-        return data
-    }
+        return data;
+    },
+
 }
 
 export const toolApi = {
