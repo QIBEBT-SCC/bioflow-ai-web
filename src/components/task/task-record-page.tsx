@@ -2,6 +2,7 @@ import {useTaskMonitor} from "@/hooks/use-instance.tsx";
 import {useParams} from "react-router-dom";
 import * as echarts from "echarts"
 import {useEffect, useRef} from "react";
+import {format} from "date-fns";
 
 export function TaskRecordPage() {
     const {taskUid = ''} = useParams();
@@ -50,12 +51,30 @@ export function TaskRecordPage() {
                 });
                 cpuResizeObserver.current.observe(cpuRef.current);
             }
+
             cpuChartInstance.current.setOption({
                 title: {text: 'CPU占用'},
-                tooltip: {trigger: 'axis'},
-                xAxis: {type: 'category', data: times},
+                tooltip: {
+                    trigger: 'axis',
+                    // @ts-expect-error no need
+                    formatter: function (params) {
+                        const item = params[0];
+                        const time = format(new Date(item.axisValue), "MM-dd HH:mm:ss");
+                        const value = Number(item.data).toFixed(4);
+                        return `${time}<br/>${item.marker}${item.seriesName} <b>${value}</b>`;
+                    }
+                },
+                xAxis: {
+                    type: 'category',
+                    data: times,
+                    axisLabel: {
+                        formatter: (value: number) => {
+                            return format(new Date(value), "HH:mm:ss")
+                        },
+                    },
+                },
                 yAxis: {type: 'value', name: '%'},
-                series: [{name: 'CPU占用', type: 'line', data: cpuData, smooth: true}]
+                series: [{name: 'CPU占用', type: 'line', data: cpuData, smooth: true, showSymbol: false}]
             });
         }
         return () => {
@@ -87,10 +106,27 @@ export function TaskRecordPage() {
             }
             memUsageChartInstance.current.setOption({
                 title: {text: '内存占用'},
-                tooltip: {trigger: 'axis'},
-                xAxis: {type: 'category', data: times},
+                tooltip: {
+                    trigger: 'axis',
+                    // @ts-expect-error no need
+                    formatter: function (params) {
+                        const item = params[0];
+                        const time = format(new Date(item.axisValue), "MM-dd HH:mm:ss");
+                        const value = Number(item.data).toFixed(4);
+                        return `${time}<br/>${item.marker}${item.seriesName} <b>${value}</b>`;
+                    }
+                },
+                xAxis: {
+                    type: 'category',
+                    data: times,
+                    axisLabel: {
+                        formatter: (value: number) => {
+                            return format(new Date(value), "HH:mm:ss")
+                        },
+                    },
+                },
                 yAxis: {type: 'value', name: '%'},
-                series: [{name: '内存占用', type: 'line', data: memUsageData, smooth: true}]
+                series: [{name: '内存占用', type: 'line', data: memUsageData, smooth: true, showSymbol: false}]
             });
         }
         return () => {
@@ -122,10 +158,27 @@ export function TaskRecordPage() {
             }
             memUsedChartInstance.current.setOption({
                 title: {text: '实际内存使用'},
-                tooltip: {trigger: 'axis'},
-                xAxis: {type: 'category', data: times},
+                tooltip: {
+                    trigger: 'axis',
+                    // @ts-expect-error no need
+                    formatter: function (params) {
+                        const item = params[0];
+                        const time = format(new Date(item.axisValue), "MM-dd HH:mm:ss");
+                        const value = Number(item.data).toFixed(4);
+                        return `${time}<br/>${item.marker}${item.seriesName} <b>${value}</b>`;
+                    }
+                },
+                xAxis: {
+                    type: 'category',
+                    data: times,
+                    axisLabel: {
+                        formatter: (value: number) => {
+                            return format(new Date(value), "HH:mm:ss")
+                        },
+                    },
+                },
                 yAxis: {type: 'value', name: 'MB'},
-                series: [{name: '实际内存使用', type: 'line', data: memUsedData, smooth: true}]
+                series: [{name: '实际内存使用', type: 'line', data: memUsedData, smooth: true, showSymbol: false}]
             });
         }
         return () => {
@@ -157,13 +210,33 @@ export function TaskRecordPage() {
             }
             ioChartInstance.current.setOption({
                 title: {text: 'IO流量'},
-                tooltip: {trigger: 'axis'},
+                tooltip: {
+                    trigger: 'axis',
+                    // @ts-expect-error no need
+                    formatter: function (params) {
+                        const time = format(new Date(params[0].axisValue), "HH:mm:ss");
+                        let str = `${time}<br/>`;
+                        // @ts-expect-error no need
+                        params.forEach(item => {
+                            str += `${item.marker}${item.seriesName} <b>${Number(item.data).toFixed(4)}</b><br/>`;
+                        });
+                        return str;
+                    }
+                },
                 legend: {data: ['IO In', 'IO Out']},
-                xAxis: {type: 'category', data: times},
+                xAxis: {
+                    type: 'category',
+                    data: times,
+                    axisLabel: {
+                        formatter: (value: number) => {
+                            return format(new Date(value), "HH:mm:ss")
+                        },
+                    },
+                },
                 yAxis: {type: 'value', name: 'MB/s'},
                 series: [
-                    {name: 'IO In', type: 'line', data: ioInData, smooth: true},
-                    {name: 'IO Out', type: 'line', data: ioOutData, smooth: true}
+                    {name: 'IO In', type: 'line', data: ioInData, smooth: true, showSymbol: false},
+                    {name: 'IO Out', type: 'line', data: ioOutData, smooth: true, showSymbol: false}
                 ]
             });
         }
@@ -184,10 +257,10 @@ export function TaskRecordPage() {
 
     return (
         <div style={{display: 'flex', flexDirection: 'column', gap: 24}}>
-            <div ref={cpuRef} style={{width: '100%', height: 260, background: '#fff', borderRadius: 8}} />
-            <div ref={memUsageRef} style={{width: '100%', height: 260, background: '#fff', borderRadius: 8}} />
-            <div ref={memUsedRef} style={{width: '100%', height: 260, background: '#fff', borderRadius: 8}} />
-            <div ref={ioRef} style={{width: '100%', height: 260, background: '#fff', borderRadius: 8}} />
+            <div ref={cpuRef} style={{width: '100%', height: 260, background: '#fff', borderRadius: 8}}/>
+            <div ref={memUsageRef} style={{width: '100%', height: 260, background: '#fff', borderRadius: 8}}/>
+            <div ref={memUsedRef} style={{width: '100%', height: 260, background: '#fff', borderRadius: 8}}/>
+            <div ref={ioRef} style={{width: '100%', height: 260, background: '#fff', borderRadius: 8}}/>
         </div>
     )
 }

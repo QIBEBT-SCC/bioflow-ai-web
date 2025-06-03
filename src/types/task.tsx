@@ -1,4 +1,6 @@
 import {User} from "@/types/auth.tsx";
+import {RunInfo4Task} from "@/types/run.tsx";
+import {ToolInfo4Task} from "@/types/tool.tsx";
 
 export enum Status {
     WAITING = 0,
@@ -13,7 +15,7 @@ export interface TaskInstance {
     owner_id: number
     name: string
     commands?: string
-    result?: Record<string, any>
+    tool_output?: ToolOutput
     status: Status
 
     create_time?: string;
@@ -25,6 +27,8 @@ export interface SimpleTask {
     uid: string
     name: string
     owner: User
+    run_instance: RunInfo4Task
+
     status: Status
 
     create_time?: string;
@@ -42,12 +46,16 @@ export interface TaskPublic {
     uid: string
     name: string
     owner: User
-    commands?: string
-    tool_output?: ToolOutput
-    status: Status
-
+    run_instance: RunInfo4Task
+    tool: ToolInfo4Task
     system?: string
     hostname: string
+
+    commands?: string
+    tool_output?: ToolOutput
+
+    status: Status
+
 
     create_time?: string;
     start_time?: string;

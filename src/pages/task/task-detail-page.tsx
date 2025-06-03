@@ -6,20 +6,20 @@ import {Separator} from "@/components/ui/separator"
 import {ScrollArea} from "@/components/ui/scroll-area"
 import {Progress} from "@/components/ui/progress"
 import {
-    Code,
-    FileText,
-    Link2,
-    RefreshCw,
-    CheckCircle2,
-    AlertCircle,
-    Pause,
-    ArrowLeft,
-    Copy,
-    User,
-    Server,
-    Cpu,
-    MemoryStick,
-    HardDrive,
+    CodeIcon,
+    FileTextIcon,
+    Link2Icon,
+    RefreshCwIcon,
+    CheckCircle2Icon,
+    AlertCircleIcon,
+    PauseIcon,
+    ArrowLeftIcon,
+    CopyIcon,
+    UserIcon,
+    ServerIcon,
+    CpuIcon,
+    MemoryStickIcon,
+    HardDriveIcon, AppWindowMacIcon,
 } from "lucide-react"
 import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs"
 import {SidebarInset, SidebarTrigger} from "@/components/ui/sidebar.tsx";
@@ -34,7 +34,7 @@ import {
 import {Link, useParams} from "react-router-dom";
 import {TaskRecordPage} from "@/components/task/task-record-page.tsx";
 import {useTask, useTaskLog} from "@/hooks/use-instance.tsx";
-import {Status} from "@/types/instance.tsx";
+import {Status} from "@/types/task.tsx";
 import {formatTime, getDuration} from "@/lib/time-formatter.tsx";
 import {Textarea} from "@/components/ui/textarea.tsx";
 
@@ -44,28 +44,28 @@ const statusConfig = {
         color: "bg-yellow-500",
         textColor: "text-yellow-700",
         bgColor: "bg-yellow-50",
-        icon: <Pause className="h-4 w-4"/>,
+        icon: <PauseIcon className="h-4 w-4"/>,
         text: "等待中",
     },
     1: {
         color: "bg-blue-500",
         textColor: "text-blue-700",
         bgColor: "bg-blue-50",
-        icon: <RefreshCw className="h-4 w-4 animate-spin"/>,
+        icon: <RefreshCwIcon className="h-4 w-4 animate-spin"/>,
         text: "运行中",
     },
     2: {
         color: "bg-red-500",
         textColor: "text-red-700",
         bgColor: "bg-red-50",
-        icon: <AlertCircle className="h-4 w-4"/>,
+        icon: <AlertCircleIcon className="h-4 w-4"/>,
         text: "失败",
     },
     3: {
         color: "bg-green-500",
         textColor: "text-green-700",
         bgColor: "bg-green-50",
-        icon: <CheckCircle2 className="h-4 w-4"/>,
+        icon: <CheckCircle2Icon className="h-4 w-4"/>,
         text: "已完成",
     },
 }
@@ -110,7 +110,7 @@ export function TaskDetailPage() {
                     {/* 页面头部 */}
                     <div className="mb-6">
                         <Link to="/task" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-2">
-                            <ArrowLeft className="h-4 w-4 mr-1"/>
+                            <ArrowLeftIcon className="h-4 w-4 mr-1"/>
                             任务列表
                         </Link>
                     </div>
@@ -136,7 +136,7 @@ export function TaskDetailPage() {
                                             <div className={`p-2 rounded-full ${statusInfo.color}`}>{statusInfo.icon}</div>
                                             <div>
                                                 <CardTitle className={statusInfo.textColor}>{statusInfo.text}</CardTitle>
-                                                <CardDescription>描述</CardDescription>
+                                                <CardDescription>{taskDetail?.tool?.description}</CardDescription>
                                             </div>
                                         </div>
                                     </div>
@@ -169,7 +169,7 @@ export function TaskDetailPage() {
                                     <Card>
                                         <CardHeader>
                                             <CardTitle className="flex items-center gap-2">
-                                                <FileText className="h-5 w-5"/>
+                                                <FileTextIcon className="h-5 w-5"/>
                                                 运行日志
                                             </CardTitle>
                                         </CardHeader>
@@ -187,7 +187,7 @@ export function TaskDetailPage() {
                                     <Card>
                                         <CardHeader>
                                             <CardTitle className="flex items-center gap-2">
-                                                <Code className="h-5 w-5"/>
+                                                <CodeIcon className="h-5 w-5"/>
                                                 执行指令
                                             </CardTitle>
                                         </CardHeader>
@@ -199,7 +199,7 @@ export function TaskDetailPage() {
                                                 </Textarea>
                                                 <Button variant="outline" size="sm" className="absolute top-2 right-2"
                                                         onClick={copyCommand}>
-                                                    <Copy className="h-4 w-4"/>
+                                                    <CopyIcon className="h-4 w-4"/>
                                                 </Button>
                                             </div>
                                         </CardContent>
@@ -228,15 +228,18 @@ export function TaskDetailPage() {
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     <div className="flex items-center gap-3">
-                                        <Link2 className="h-4 w-4 text-muted-foreground"/>
+                                        <Link2Icon className="h-4 w-4 text-muted-foreground"/>
                                         <div>
-                                            <div className="text-sm text-muted-foreground">系统</div>
-                                            <div className="font-medium">{taskDetail?.system}</div>
+                                            <div className="text-sm text-muted-foreground">所属工作流</div>
+                                            <Link to={`/workflow/${taskDetail?.run_instance?.uid}`} className="font-medium hover:underline">
+                                                {taskDetail?.run_instance?.name}
+                                            </Link>
+
                                         </div>
                                     </div>
                                     <Separator/>
                                     <div className="flex items-center gap-3">
-                                        <User className="h-4 w-4 text-muted-foreground"/>
+                                        <UserIcon className="h-4 w-4 text-muted-foreground"/>
                                         <div>
                                             <div className="text-sm text-muted-foreground">执行者</div>
                                             <div className="font-medium">{taskDetail?.owner?.username}</div>
@@ -244,7 +247,15 @@ export function TaskDetailPage() {
                                     </div>
                                     <Separator/>
                                     <div className="flex items-center gap-3">
-                                        <Server className="h-4 w-4 text-muted-foreground"/>
+                                        <AppWindowMacIcon className="h-4 w-4 text-muted-foreground"/>
+                                        <div>
+                                            <div className="text-sm text-muted-foreground">操作系统</div>
+                                            <div className="font-medium">{taskDetail?.system}</div>
+                                        </div>
+                                    </div>
+                                    <Separator/>
+                                    <div className="flex items-center gap-3">
+                                        <ServerIcon className="h-4 w-4 text-muted-foreground"/>
                                         <div>
                                             <div className="text-sm text-muted-foreground">执行服务器</div>
                                             <div className="font-medium">{taskDetail?.hostname}</div>
@@ -262,7 +273,7 @@ export function TaskDetailPage() {
                                     <div>
                                         <div className="flex items-center justify-between mb-2">
                                             <div className="flex items-center gap-2">
-                                                <Cpu className="h-4 w-4"/>
+                                                <CpuIcon className="h-4 w-4"/>
                                                 <span className="text-sm">CPU</span>
                                             </div>
                                             <span className="text-sm font-medium">0%</span>
@@ -272,7 +283,7 @@ export function TaskDetailPage() {
                                     <div>
                                         <div className="flex items-center justify-between mb-2">
                                             <div className="flex items-center gap-2">
-                                                <MemoryStick className="h-4 w-4"/>
+                                                <MemoryStickIcon className="h-4 w-4"/>
                                                 <span className="text-sm">内存</span>
                                             </div>
                                             <span className="text-sm font-medium">{0} GB</span>
@@ -282,7 +293,7 @@ export function TaskDetailPage() {
                                     <div>
                                         <div className="flex items-center justify-between mb-2">
                                             <div className="flex items-center gap-2">
-                                                <HardDrive className="h-4 w-4"/>
+                                                <HardDriveIcon className="h-4 w-4"/>
                                                 <span className="text-sm">磁盘I/O</span>
                                             </div>
                                             <span className="text-sm font-medium">{0} MB/s</span>

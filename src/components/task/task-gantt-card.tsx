@@ -5,7 +5,7 @@ import {useEffect, useRef, useState} from "react"
 import {format, subHours} from "date-fns"
 import * as echarts from "echarts"
 import {useRecentTasks} from "@/hooks/use-instance.tsx";
-import {Status} from "@/types/instance.tsx";
+import {Status} from "@/types/task.tsx";
 import {renderToString} from "react-dom/server";
 import {Tabs, TabsList, TabsTrigger} from "@/components/ui/tabs.tsx";
 import {Clock, RefreshCw} from "lucide-react";

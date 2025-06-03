@@ -4,7 +4,7 @@ import {Project, ProjectCreateProp, ProjectTag} from "@/types/project.tsx";
 import {DockerToolCreate, SimpleToolInfo, ToolGroup, ToolInfo, ToolTag} from "@/types/tool.tsx";
 import {ToolArgPublic} from "@/types/node.tsx";
 import {SimpleWorkflowInfo, Workflow, WorkflowDefinition} from "@/types/workflow.tsx";
-import {MonitorRecord, SimpleTask, TaskPublic} from "@/types/instance.tsx";
+import {MonitorRecord, SimpleTask, TaskPublic} from "@/types/task.tsx";
 
 export const api = axios.create({
     baseURL: '/api/v1',

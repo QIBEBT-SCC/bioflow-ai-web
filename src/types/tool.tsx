@@ -95,3 +95,11 @@ export interface ToolInfo {
 
     tags: ToolTag[]
 }
+
+export interface ToolInfo4Task {
+    uid: string
+    name: string
+    description: string
+
+    output_files: OutputFile[]
+}

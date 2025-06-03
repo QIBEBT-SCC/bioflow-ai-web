@@ -1,6 +1,6 @@
 import {useQuery, UseQueryOptions} from "@tanstack/react-query";
 import {instanceApi} from "@/services/api.tsx";
-import {MonitorRecord, SimpleTask, TaskPublic} from "@/types/instance.tsx";
+import {MonitorRecord, SimpleTask, TaskPublic} from "@/types/task.tsx";
 
 export function useRecentTasks(hour: number) {
     const options: UseQueryOptions<SimpleTask[], Error> = {

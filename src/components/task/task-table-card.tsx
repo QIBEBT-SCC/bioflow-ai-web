@@ -58,7 +58,8 @@ export function TaskTable() {
                 <TableHeader className="bg-muted/50">
                     <TableRow>
                         <TableHead className="h-12 px-4">Task Name</TableHead>
-                        <TableHead className="h-12 px-4">Status</TableHead>
+                        <TableHead className="h-12 px-4">Workflow</TableHead>
+                        <TableHead className="h-12 px-4 text-center">Status</TableHead>
                         <TableHead className="h-12 px-4 text-right">Created</TableHead>
                         <TableHead className="h-12 px-4 text-right">Started</TableHead>
                         <TableHead className="h-12 px-4 text-right">Ended</TableHead>
@@ -74,7 +75,8 @@ export function TaskTable() {
                                     {task.name}
                                 </Link>
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="text-muted-foreground p-4">{task.run_instance.name}</TableCell>
+                            <TableCell className="place-items-center">
                                 <TaskStatusBadge status={task.status}/>
                             </TableCell>
                             <TableCell className="text-right p-4">{formatTime(task.create_time)}</TableCell>

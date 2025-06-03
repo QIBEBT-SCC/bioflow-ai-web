@@ -1,4 +1,4 @@
-import {Status} from "@/types/instance.tsx";
+import {Status} from "@/types/task.tsx";
 import {Badge} from "@/components/ui/badge.tsx";
 import {AlertCircle, CheckCircle2, Loader2, EllipsisIcon} from "lucide-react";
 
