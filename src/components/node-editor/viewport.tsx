@@ -35,9 +35,9 @@ import type {
     XYPosition,
     OnConnect
 } from "@xyflow/react";
-import {instanceApi} from '@/services/api.tsx';
+import {workflowApi} from '@/services/api.tsx';
 import {v7 as uuid7} from 'uuid';
-import {FileInputNode, GlobalInputNode} from "@/components/node-editor/node/input-node.tsx";
+import {FileInputNode, GlobalInputNode, SequenceInputNode} from "@/components/node-editor/node/input-node.tsx";
 import {LineFigNode} from "@/components/node-editor/node/draw-node.tsx";
 import {CutNode, JsonFilterNode} from "@/components/node-editor/node/data-node.tsx";
 import {NoteNode} from "@/components/node-editor/node/note-node.tsx";
@@ -52,6 +52,7 @@ import {useQueryClient} from "@tanstack/react-query";
 const nodeTypes = {
     tool: ToolNode,
     fileInput: FileInputNode,
+    sequenceInputNode: SequenceInputNode,
     globalInput: GlobalInputNode,
     lineFig: LineFigNode,
     dataFilter: JsonFilterNode,
@@ -153,7 +154,8 @@ function FlowContent() {
             nodes,
             edges
         }
-        instanceApi.newRunInstance(workflow).then((data) => {
+        const template_name = workflowData?.name ?? undefined
+        workflowApi.newRunInstance(workflow, template_name).then((data) => {
             if (data) {
                 console.log(data)
             }

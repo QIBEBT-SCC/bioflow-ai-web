@@ -4,7 +4,7 @@ import {Project, ProjectCreateProp, ProjectTag} from "@/types/project.tsx";
 import {DockerToolCreate, SimpleToolInfo, ToolGroup, ToolInfo, ToolTag} from "@/types/tool.tsx";
 import {ToolArgPublic} from "@/types/node.tsx";
 import {SimpleWorkflowInfo, Workflow, WorkflowDefinition} from "@/types/workflow.tsx";
-import {MonitorRecord, SimpleTask, TaskInstance, TaskPublic} from "@/types/instance.tsx";
+import {MonitorRecord, SimpleTask, TaskPublic} from "@/types/instance.tsx";
 
 export const api = axios.create({
     baseURL: '/api/v1',
@@ -64,14 +64,14 @@ export const workflowApi = {
         const {data} = await api.patch(`/workflows/${uid}`, workflow);
         return data;
     },
-};
-
-export const instanceApi = {
-    newRunInstance: async (workflow: WorkflowDefinition, project_id?: string) => {
-        const url = project_id !== undefined ? `/runs?project_id=${project_id}` : '/runs';
+    newRunInstance: async (workflow: WorkflowDefinition, template_name?: string) => {
+        const url = template_name !== undefined ? `/workflows/run?template_name=${template_name}` : '/workflows/run';
         const {data} = await api.post(url, workflow);
         return data;
     },
+};
+
+export const instanceApi = {
     getRecentTasks: async (hour: number) => {
         const {data} = await api.get<SimpleTask[]>(`/tasks/recent/${hour}`);
         return data;
