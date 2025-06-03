@@ -8,6 +8,7 @@ import {Badge} from "@/components/ui/badge.tsx";
 import {Link} from "react-router-dom";
 import {RecentProjectCard, StarredProjectTable} from "@/components/project/project-list.tsx";
 import {useStarredProjects} from "@/hooks/useProject.tsx";
+import {ModeToggle} from "@/components/mode-toggle.tsx";
 
 export function HomePage() {
     const { data: projects = []} = useStarredProjects();
@@ -15,7 +16,7 @@ export function HomePage() {
     return (
         <SidebarInset>
             <header
-                className="flex flex-col shrink-0 border-b">
+                className="flex flex-row justify-between shrink-0 border-b">
                 <div className="flex items-center gap-2 px-4 h-12 bg-background">
                     <SidebarTrigger className="-ml-1"/>
                     <Separator orientation="vertical" className="!mr-2 !h-4"/>
@@ -29,6 +30,7 @@ export function HomePage() {
                         </BreadcrumbList>
                     </Breadcrumb>
                 </div>
+                <div className="items-center pt-1.5 px-3"><ModeToggle/></div>
             </header>
             <div className="container mx-auto px-4 py-6 space-y-8">
                 {/* 收藏的项目 */}
