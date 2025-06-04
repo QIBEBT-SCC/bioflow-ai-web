@@ -5,18 +5,20 @@ import {isTokenExpired, useAuthStore} from "@/stores/authStore.tsx";
 import {createBrowserRouter, Navigate, RouterProvider} from "react-router-dom";
 import {LoginPage} from "@/pages/login-page.tsx";
 import {TooltipProvider} from "@/components/ui/tooltip.tsx";
-import { HomePage } from "@/pages/home-page";
+import {HomePage} from "@/pages/home-page";
 import {ThemeProvider} from "@/components/theme-provider.tsx";
 
 // 懒加载页面组件，确保为默认导出
 const ProjectsPage = React.lazy(() => import("@/pages/project/project-page.tsx").then(m => ({default: m.ProjectsPage})));
 const ProjectDetailPage = React.lazy(() => import("@/pages/project/project-detail-page.tsx").then(m => ({default: m.ProjectDetailPage})));
 const FlowWorkspace = React.lazy(() => import("@/components/node-editor/viewport.tsx").then(m => ({default: m.FlowWorkspace})));
+const WorkflowPage = React.lazy(() => import("@/pages/workflow/workflow-page.tsx").then(m => ({default: m.WorkflowPage})));
 const TaskPage = React.lazy(() => import("@/pages/task/task-page.tsx").then(m => ({default: m.TaskPage})));
+const TaskDetailPage = React.lazy(() => import("@/pages/task/task-detail-page.tsx").then(m => ({default: m.TaskDetailPage})));
 const ToolsPage = React.lazy(() => import("@/pages/tool/tool-page.tsx").then(m => ({default: m.ToolsPage})));
 const AddToolPage = React.lazy(() => import("@/pages/tool/add-tool-page.tsx").then(m => ({default: m.AddToolPage})));
 const ToolDetailPage = React.lazy(() => import("@/pages/tool/tool-detail-page.tsx").then(m => ({default: m.ToolDetailPage})));
-const TaskDetailPage = React.lazy(() => import("@/pages/task/task-detail-page.tsx").then(m => ({default: m.TaskDetailPage})))
+
 
 // 受保护的路由组件
 const ProtectedRoute = ({children}: { children: React.ReactNode }) => {
@@ -78,6 +80,12 @@ export default function App() {
                     children: [
                         {index: true, element: withSuspense(FlowWorkspace),},
                         {path: ":workflowUid", element: withSuspense(FlowWorkspace)},
+                    ]
+                },
+                {
+                    path: "workflow",
+                    children: [
+                        {index: true, element: withSuspense(WorkflowPage)}
                     ]
                 },
                 {

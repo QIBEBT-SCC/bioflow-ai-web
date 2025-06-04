@@ -5,6 +5,7 @@ import {DockerToolCreate, SimpleToolInfo, ToolGroup, ToolInfo, ToolTag} from "@/
 import {ToolArgPublic} from "@/types/node.tsx";
 import {SimpleWorkflowInfo, Workflow, WorkflowDefinition} from "@/types/workflow.tsx";
 import {MonitorRecord, SimpleTask, TaskPublic} from "@/types/task.tsx";
+import {RunPublic, Stats} from "@/types/run.tsx";
 
 export const api = axios.create({
     baseURL: '/api/v1',
@@ -70,6 +71,21 @@ export const workflowApi = {
         return data;
     },
 };
+
+export const runInstanceApi = {
+    getRunStats: async () => {
+        const {data} = await api.get<Stats>('/runs/stats');
+        return data;
+    },
+    getRunCount: async () => {
+        const {data} = await api.get<number>('/runs/count');
+        return data;
+    },
+    getRunList: async (offset: number) => {
+        const {data} = await api.get<RunPublic[]>(`/runs?offset=${offset}&limit=8`);
+        return data;
+    }
+}
 
 export const instanceApi = {
     getRecentTasks: async (hour: number) => {
