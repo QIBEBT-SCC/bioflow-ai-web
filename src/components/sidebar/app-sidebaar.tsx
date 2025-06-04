@@ -5,13 +5,7 @@ import {
     AudioWaveform,
     Command,
     GalleryVerticalEnd,
-    GitFork,
-    Home,
-    TvMinimal,
-    EditIcon,
-    BoxesIcon
 } from "lucide-react"
-import {ProjectOutlined} from "@ant-design/icons"
 import {
     Sidebar,
     SidebarContent,
@@ -42,39 +36,6 @@ const data = {
             plan: "Free",
         },
     ],
-    projects: [
-        {
-            name: "Home",
-            url: "/home",
-            icon: Home,
-        },
-        {
-            name: "Projects",
-            url: "/project",
-            icon: ProjectOutlined,
-        },
-        {
-            name: "Editor",
-            url: "/editor",
-            icon: EditIcon
-        },
-        {
-            name: "Workflows",
-            url: "/workflow",
-            icon: GitFork,
-            icon_rotate: true,
-        },
-        {
-            name: "Tasks",
-            url: "/task",
-            icon: TvMinimal
-        },
-        {
-            name: "ToolConfig",
-            url: "/tool",
-            icon: BoxesIcon,
-        },
-    ],
 }
 
 export function AppSidebar({...props}: React.ComponentProps<typeof Sidebar>) {
@@ -84,7 +45,7 @@ export function AppSidebar({...props}: React.ComponentProps<typeof Sidebar>) {
                 <TeamSwitcher teams={data.teams}/>
             </SidebarHeader>
             <SidebarContent>
-                <NavMain projects={data.projects}/>
+                <NavMain/>
             </SidebarContent>
             <SidebarFooter>
                 <NavUser/>
