@@ -1,19 +1,10 @@
 "use client"
 
 
-import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table"
+import {Table, TableBody, TableCell, TableHead, TableHeader, TablePage, TableRow} from "@/components/ui/table"
 import {TaskStatusBadge} from "@/components/task/task-status-badge"
 import {useTaskCount, useTaskList} from "@/hooks/use-instance.tsx";
 import {Link} from "react-router-dom";
-import {
-    Pagination,
-    PaginationContent,
-    PaginationEllipsis,
-    PaginationItem,
-    PaginationLink,
-    PaginationNext,
-    PaginationPrevious
-} from "@/components/ui/pagination.tsx";
 import {useState} from "react";
 import {formatTime, getDuration} from "@/lib/time-formatter.tsx";
 
@@ -27,20 +18,6 @@ export function TaskTable() {
     const pageSize = 8;
     const totalPages = Math.ceil(taskCount / pageSize);
     const currentPage = Math.floor(recentOffset / pageSize) + 1;
-
-    // 生成页码数组（最多显示5页，超出用省略号）
-    const getPageNumbers = () => {
-        if (totalPages <= 5) {
-            return Array.from({length: totalPages}, (_, i) => i + 1);
-        }
-        if (currentPage <= 3) {
-            return [1, 2, 3, 4, 'ellipsis', totalPages];
-        }
-        if (currentPage >= totalPages - 2) {
-            return [1, 'ellipsis', totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
-        }
-        return [1, 'ellipsis', currentPage - 1, currentPage, currentPage + 1, 'ellipsis', totalPages];
-    };
 
     const handlePageChange = (page: number) => {
         setRecentOffset((page - 1) * pageSize);
@@ -87,49 +64,13 @@ export function TaskTable() {
                     ))}
                 </TableBody>
             </Table>
-            <Pagination className="pt-2">
-                <PaginationContent>
-                    <PaginationItem>
-                        <PaginationPrevious
-                            onClick={e => {
-                                e.preventDefault();
-                                handlePrev();
-                            }}
-                            aria-disabled={currentPage === 1}
-                            className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
-                        />
-                    </PaginationItem>
-                    {getPageNumbers().map((num, idx) =>
-                        num === 'ellipsis' ? (
-                            <PaginationItem key={"ellipsis-" + idx}>
-                                <PaginationEllipsis/>
-                            </PaginationItem>
-                        ) : (
-                            <PaginationItem key={num}>
-                                <PaginationLink
-                                    isActive={num === currentPage}
-                                    onClick={e => {
-                                        e.preventDefault();
-                                        handlePageChange(Number(num));
-                                    }}
-                                >
-                                    {num}
-                                </PaginationLink>
-                            </PaginationItem>
-                        )
-                    )}
-                    <PaginationItem>
-                        <PaginationNext
-                            onClick={e => {
-                                e.preventDefault();
-                                handleNext();
-                            }}
-                            aria-disabled={currentPage === totalPages || totalPages === 0}
-                            className={currentPage === totalPages || totalPages === 0 ? 'pointer-events-none opacity-50' : ''}
-                        />
-                    </PaginationItem>
-                </PaginationContent>
-            </Pagination>
+            <TablePage
+                totalPages={totalPages}
+                currentPage={currentPage}
+                handleNext={handleNext}
+                handlePageChange={handlePageChange}
+                handlePrev={handlePrev}
+            />
         </div>
     )
 }
