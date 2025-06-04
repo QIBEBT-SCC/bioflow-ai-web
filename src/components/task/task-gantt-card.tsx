@@ -1,18 +1,15 @@
 "use client"
 
 import React from "react"
-import {useEffect, useRef, useState} from "react"
+import {useEffect, useRef} from "react"
 import {format, subHours} from "date-fns"
 import * as echarts from "echarts"
 import {useRecentTasks} from "@/hooks/use-instance.tsx";
 import {Status} from "@/types/task.tsx";
 import {renderToString} from "react-dom/server";
-import {Tabs, TabsList, TabsTrigger} from "@/components/ui/tabs.tsx";
-import {Clock, RefreshCw} from "lucide-react";
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select.tsx";
-import {Button} from "@/components/ui/button.tsx";
-import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card.tsx";
-import {useQueryClient} from "@tanstack/react-query";
+import {Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card.tsx";
+import {ToggleGroup, ToggleGroupItem} from "@/components/ui/toggle-group.tsx";
+import {useTaskStore} from "@/stores/task-store.tsx";
 
 function TaskGanttChart({timeRange}: { timeRange: number }) {
     const {data: tasks = [], isLoading: dataLoading} = useRecentTasks(timeRange);
@@ -45,7 +42,7 @@ function TaskGanttChart({timeRange}: { timeRange: number }) {
             const now = new Date()
             const startTimeBoundary = subHours(now, timeRange)
 
-            const data: any[] = []
+            const data: never[] = []
             const taskNames: string[] = []
 
             tasks.forEach((task, index) => {
@@ -68,6 +65,7 @@ function TaskGanttChart({timeRange}: { timeRange: number }) {
                         color = "#9ca3af" // gray-400
                 }
 
+                // @ts-expect-error no need
                 data.push({
                     name: task.name,
                     value: [index, taskStartTime, taskEndTime, task.status],
@@ -79,7 +77,8 @@ function TaskGanttChart({timeRange}: { timeRange: number }) {
 
             const option: echarts.EChartsOption = {
                 tooltip: {
-                    formatter: (params: any) => {
+                    formatter: (params) => {
+                        // @ts-expect-error no need
                         const itemData = params.data
                         const status = itemData.value[3]
                         const sTime = format(itemData.value[1], "HH:mm:ss")
@@ -140,7 +139,7 @@ function TaskGanttChart({timeRange}: { timeRange: number }) {
                 series: [
                     {
                         type: "custom",
-                        renderItem: (params: any, api: any) => {
+                        renderItem: (_, api) => {
                             const categoryIndex = api.value(0)
                             const start = api.coord([api.value(1), categoryIndex])
                             const end = api.coord([api.value(2), categoryIndex])
@@ -180,7 +179,7 @@ function TaskGanttChart({timeRange}: { timeRange: number }) {
                                     ],
                                 }
                             }
-
+                            
                             return {
                                 type: "group",
                                 children: [
@@ -198,7 +197,8 @@ function TaskGanttChart({timeRange}: { timeRange: number }) {
                                     {
                                         type: "text",
                                         style: {
-                                            text: Status[status],
+                                            // @ts-expect-error no need
+                                            text: Status[status], 
                                             textFill: "#ffffff",
                                             textFont: "10px sans-serif",
                                             textAlign: "center",
@@ -216,19 +216,19 @@ function TaskGanttChart({timeRange}: { timeRange: number }) {
                         data: data,
                     },
                 ],
-                dataZoom: [
-                    {
-                        type: 'slider',
-                        yAxisIndex: 0,
-                        orient: 'vertical',
-                        right: 10,
-                        width: 16,
-                        handleSize: 20,
-                        show: true,
-                        start: 0,
-                        end: 100,
-                    }
-                ],
+                // dataZoom: [
+                //     {
+                //         type: 'slider',
+                //         yAxisIndex: 0,
+                //         orient: 'vertical',
+                //         right: 10,
+                //         width: 16,
+                //         handleSize: 20,
+                //         show: true,
+                //         start: 0,
+                //         end: 100,
+                //     }
+                // ],
             }
 
             chartInstance.current.setOption(option)
@@ -267,81 +267,27 @@ function TaskGanttChart({timeRange}: { timeRange: number }) {
 
 
 export function TaskGanttCard() {
-    const queryClient = useQueryClient();
+    const {timeRange, setTimeRange} = useTaskStore()
 
-    const [refreshInterval, setRefreshInterval] = useState<string>("off")
-    const [lastRefreshTime, setLastRefreshTime] = useState(new Date())
-    const [timeRange, setTimeRange] = useState("12")
-
-    // Force refresh function
-    const handleForceRefresh = () => {
-        setLastRefreshTime(new Date())
-        // Here you would typically refetch data from your API
-        queryClient.invalidateQueries({queryKey: ['recentTasks', 1]}).then();
-        queryClient.invalidateQueries({queryKey: ['recentTasks', 3]}).then();
-        queryClient.invalidateQueries({queryKey: ['recentTasks', 6]}).then();
-        queryClient.invalidateQueries({queryKey: ['recentTasks', 12]}).then();
-    }
-
-    // Auto refresh effect
-    useEffect(() => {
-        if (refreshInterval === "off") return
-
-        const intervalMs = {
-            "10s": 10000,
-            "30s": 30000,
-            "1m": 60000,
-            "5m": 300000,
-        }[refreshInterval]
-
-        if (!intervalMs) return
-
-        const interval = setInterval(() => {
-            setLastRefreshTime(new Date())
-            // Here you would typically refetch data from your API
-            queryClient.invalidateQueries({queryKey: ['recentTasks', Number(timeRange)]}).then();
-        }, intervalMs)
-
-        return () => clearInterval(interval)
-    }, [refreshInterval])
     return (
         <div className="space-y-4">
-            <Tabs defaultValue="12" onValueChange={setTimeRange}>
-                <div className="flex justify-between items-center">
-                    <TabsList>
-                        <TabsTrigger value="1">1 Hours</TabsTrigger>
-                        <TabsTrigger value="3">3 Hours</TabsTrigger>
-                        <TabsTrigger value="6">6 Hours</TabsTrigger>
-                        <TabsTrigger value="12">12 Hours</TabsTrigger>
-                    </TabsList>
-                    <div className="flex items-center gap-2 mt-4 md:mt-0">
-                        <div className="flex items-center text-sm text-muted-foreground">
-                            <Clock className="mr-1 h-4 w-4"/>
-                            Last updated: {format(lastRefreshTime, "HH:mm:ss")}
-                        </div>
-                        <Select value={refreshInterval} onValueChange={setRefreshInterval}>
-                            <SelectTrigger className="w-[140px]">
-                                <SelectValue placeholder="Auto refresh"/>
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="off">No refresh</SelectItem>
-                                <SelectItem value="10s">Every 10s</SelectItem>
-                                <SelectItem value="30s">Every 30s</SelectItem>
-                                <SelectItem value="1m">Every 1m</SelectItem>
-                                <SelectItem value="5m">Every 5m</SelectItem>
-                            </SelectContent>
-                        </Select>
-
-                        <Button variant="outline" size="icon" onClick={handleForceRefresh}>
-                            <RefreshCw className="h-4 w-4"/>
-                            <span className="sr-only">Force refresh</span>
-                        </Button>
-                    </div>
-                </div>
-            </Tabs>
             <Card>
                 <CardHeader className="pb-0">
-                    <CardTitle className="text-md font-medium">{`Task Execution Timeline (Last ${timeRange} Hours)`}</CardTitle>
+                    <CardTitle className="text-md font-medium">Task Execution Timeline</CardTitle>
+                    <CardDescription>{`Total for the last ${timeRange} hours`}</CardDescription>
+                    <CardAction>
+                        <ToggleGroup
+                            type="single"
+                            value={timeRange}
+                            onValueChange={setTimeRange}
+                            variant="outline"
+                        >
+                            <ToggleGroupItem value="1">Last 1 Hours</ToggleGroupItem>
+                            <ToggleGroupItem value="3">Last 3 Hours</ToggleGroupItem>
+                            <ToggleGroupItem value="6">Last 6 Hours</ToggleGroupItem>
+                            <ToggleGroupItem value="12">Last 12 Hours</ToggleGroupItem>
+                        </ToggleGroup>
+                    </CardAction>
                 </CardHeader>
                 <CardContent>
                     <TaskGanttChart timeRange={Number(timeRange)}/>
