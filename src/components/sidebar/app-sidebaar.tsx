@@ -16,6 +16,7 @@ import {
 import {NavMain} from "@/components/sidebar/nav-main.tsx";
 import {NavUser} from "@/components/sidebar/nav-user.tsx";
 import {TeamSwitcher} from "@/components/sidebar/team-switcher.tsx";
+import {NavSecond} from "@/components/sidebar/nav-second.tsx";
 
 // This is sample data.
 const data = {
@@ -46,6 +47,7 @@ export function AppSidebar({...props}: React.ComponentProps<typeof Sidebar>) {
             </SidebarHeader>
             <SidebarContent>
                 <NavMain/>
+                <NavSecond/>
             </SidebarContent>
             <SidebarFooter>
                 <NavUser/>
