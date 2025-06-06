@@ -24,6 +24,8 @@ export function WorkflowPage() {
     const handleForceRefresh = () => {
         setLastRefreshTime(new Date())
         queryClient.invalidateQueries({queryKey: ['runs']}).then();
+        queryClient.invalidateQueries({queryKey: ['runStats']}).then();
+        queryClient.invalidateQueries({queryKey: ['runCount']}).then();
     }
 
     // Auto refresh effect
