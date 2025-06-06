@@ -18,6 +18,7 @@ const TaskDetailPage = React.lazy(() => import("@/pages/task/task-detail-page.ts
 const ToolsPage = React.lazy(() => import("@/pages/tool/tool-page.tsx").then(m => ({default: m.ToolsPage})));
 const AddToolPage = React.lazy(() => import("@/pages/tool/add-tool-page.tsx").then(m => ({default: m.AddToolPage})));
 const ToolDetailPage = React.lazy(() => import("@/pages/tool/tool-detail-page.tsx").then(m => ({default: m.ToolDetailPage})));
+const ResourcePage = React.lazy(() => import("@/pages/resource/resource-page.tsx").then(m => ({default: m.ResourcePage})))
 
 
 // 受保护的路由组件
@@ -101,6 +102,12 @@ export default function App() {
                         {index: true, element: withSuspense(ToolsPage)},
                         {path: "add", element: withSuspense(AddToolPage)},
                         {path: ":toolUid", element: withSuspense(ToolDetailPage)},
+                    ]
+                },
+                {
+                    path: "resource",
+                    children: [
+                        {index: true, element: withSuspense(ResourcePage)}
                     ]
                 },
                 {path: "*", element: <Navigate to="/home" replace/>},
