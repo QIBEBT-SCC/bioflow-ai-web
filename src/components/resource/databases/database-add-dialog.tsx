@@ -15,6 +15,8 @@ import {
 import {Input} from "@/components/ui/input"
 import {Label} from "@/components/ui/label"
 import {Textarea} from "@/components/ui/textarea"
+import {useCreateBd} from "@/hooks/use-resource.tsx";
+import {AxiosError} from "axios";
 
 interface DatabaseAddDialogProps {
     open: boolean
@@ -25,27 +27,59 @@ export function DatabaseAddDialog({open, onOpenChange}: DatabaseAddDialogProps) 
     const [name, setName] = useState("")
     const [description, setDescription] = useState("")
     const [path, setPath] = useState("")
-    const [version, setVersion] = useState("")
-    const [source, setSource] = useState("")
+    const [lastUpdate, setLastUpdate] = useState("")
+    
+    // 错误状态管理
+    const [nameError, setNameError] = useState("")
+    const [pathError, setPathError] = useState("")
+
+    const {mutate: createBd, isPending: pending} = useCreateBd()
+
+    // 清除错误状态
+    const clearErrors = () => {
+        setNameError("")
+        setPathError("")
+    }
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
-        // Here you would implement the actual database addition logic
-        console.log({
-            name,
-            description,
-            path,
-            version,
-            source,
-        })
-        onOpenChange(false)
+        
+        // 清除之前的错误
+        clearErrors()
 
-        // Reset form
-        setName("")
-        setDescription("")
-        setPath("")
-        setVersion("")
-        setSource("")
+        const new_db = {
+            name: name,
+            description: description,
+            path: path,
+            last_update: lastUpdate,
+        }
+        createBd({db: new_db}, {
+            onSuccess: () => {
+                onOpenChange(false)
+                // Reset form
+                setName("")
+                setDescription("")
+                setPath("")
+                setLastUpdate("")
+                clearErrors()
+            },
+            onError: (error) => {
+                if (error instanceof AxiosError && error.response) {
+                    const status = error.response.status
+                    switch (status) {
+                        case 409:
+                            setNameError("数据库名称已存在，请使用其他名称")
+                            break
+                        case 404:
+                            setPathError("文件路径不存在，请检查路径是否正确")
+                            break
+                        default:
+                            console.error("创建数据库失败:", error)
+                            break
+                    }
+                }
+            }
+        })
     }
 
     return (
@@ -58,8 +92,21 @@ export function DatabaseAddDialog({open, onOpenChange}: DatabaseAddDialogProps) 
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <div className="space-y-2">
-                            <Label htmlFor="name">数据库名称 *</Label>
-                            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required/>
+                            <Label htmlFor="name">数据库名称 <span className="text-red-500">*</span></Label>
+                            <Input 
+                                id="name" 
+                                value={name} 
+                                onChange={(e) => {
+                                    setName(e.target.value)
+                                    // 用户输入时清除错误
+                                    if (nameError) setNameError("")
+                                }} 
+                                required
+                                className={nameError ? "border-red-500 focus-visible:ring-red-500" : ""}
+                            />
+                            {nameError && (
+                                <p className="text-sm text-red-500 mt-1">{nameError}</p>
+                            )}
                         </div>
 
                         <div className="space-y-2">
@@ -73,26 +120,41 @@ export function DatabaseAddDialog({open, onOpenChange}: DatabaseAddDialogProps) 
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="path">文件路径 *</Label>
-                            <Input id="path" value={path} onChange={(e) => setPath(e.target.value)} required/>
+                            <Label htmlFor="path">文件路径 <span className="text-red-500">*</span></Label>
+                            <Input 
+                                id="path" 
+                                value={path} 
+                                onChange={(e) => {
+                                    setPath(e.target.value)
+                                    // 用户输入时清除错误
+                                    if (pathError) setPathError("")
+                                }} 
+                                required
+                                className={pathError ? "border-red-500 focus-visible:ring-red-500" : ""}
+                            />
+                            {pathError && (
+                                <p className="text-sm text-red-500 mt-1">{pathError}</p>
+                            )}
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="version">版本</Label>
-                                <Input id="version" value={version} onChange={(e) => setVersion(e.target.value)}/>
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="source">来源</Label>
-                                <Input id="source" value={source} onChange={(e) => setSource(e.target.value)}/>
-                            </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="version">更新时间</Label>
+                            <Input id="version" value={lastUpdate} onChange={(e) => setLastUpdate(e.target.value)}/>
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                                onOpenChange(false)
+                                clearErrors()
+                            }}
+                            disabled={pending}
+                        >
                             取消
                         </Button>
-                        <Button type="submit">添加数据库</Button>
+                        <Button type="submit" disabled={pending}>添加数据库</Button>
                     </DialogFooter>
                 </form>
             </DialogContent>

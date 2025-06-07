@@ -12,21 +12,6 @@ export function RunTables() {
     const {data: runCount = 0} = useRunCount();
     const {data: runs = []} = useRunList(recentOffset);
 
-    // 分页相关
-    const pageSize = 8;
-    const totalPages = Math.ceil(runCount / pageSize);
-    const currentPage = Math.floor(recentOffset / pageSize) + 1;
-
-    const handlePageChange = (page: number) => {
-        setRecentOffset((page - 1) * pageSize);
-    };
-    const handlePrev = () => {
-        if (currentPage > 1) setRecentOffset((currentPage - 2) * pageSize);
-    };
-    const handleNext = () => {
-        if (currentPage < totalPages) setRecentOffset(currentPage * pageSize);
-    };
-
     return (
         <div>
             <Table>
@@ -68,11 +53,10 @@ export function RunTables() {
                 </TableBody>
             </Table>
             <TablePage
-                totalPages={totalPages}
-                currentPage={currentPage}
-                handleNext={handleNext}
-                handlePageChange={handlePageChange}
-                handlePrev={handlePrev}
+                totalItems={runCount}
+                offset={recentOffset}
+                pageSize={8}
+                setOffset={setRecentOffset}
             />
         </div>
     )

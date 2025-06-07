@@ -15,30 +15,19 @@ import {
 import {Input} from "@/components/ui/input"
 import {Label} from "@/components/ui/label"
 import {Textarea} from "@/components/ui/textarea"
-
-interface Database {
-    id: number
-    name: string
-    description: string
-    path: string
-    version: string
-    source: string
-
-    [key: string]: any
-}
+import {BioDb} from "@/types/resource.tsx";
 
 interface DatabaseEditDialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void
-    database: Database
+    database: BioDb
 }
 
 export function DatabaseEditDialog({open, onOpenChange, database}: DatabaseEditDialogProps) {
     const [name, setName] = useState(database.name)
     const [description, setDescription] = useState(database.description)
     const [path, setPath] = useState(database.path)
-    const [version, setVersion] = useState(database.version)
-    const [source, setSource] = useState(database.source)
+    const [lastUpdate, setLastUpdate] = useState(database.last_update)
 
     // Update form when database changes
     useEffect(() => {
@@ -46,8 +35,7 @@ export function DatabaseEditDialog({open, onOpenChange, database}: DatabaseEditD
             setName(database.name)
             setDescription(database.description)
             setPath(database.path)
-            setVersion(database.version)
-            setSource(database.source)
+            setLastUpdate(database.last_update)
         }
     }, [database, open])
 
@@ -56,11 +44,10 @@ export function DatabaseEditDialog({open, onOpenChange, database}: DatabaseEditD
         // Here you would implement the actual database update logic
         console.log({
             id: database.id,
-            name,
-            description,
-            path,
-            version,
-            source,
+            name: name,
+            description: description,
+            path: path,
+            last_update: lastUpdate,
         })
         onOpenChange(false)
     }
@@ -94,15 +81,9 @@ export function DatabaseEditDialog({open, onOpenChange, database}: DatabaseEditD
                             <Input id="edit-path" value={path} onChange={(e) => setPath(e.target.value)} required/>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="edit-version">版本</Label>
-                                <Input id="edit-version" value={version} onChange={(e) => setVersion(e.target.value)}/>
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="edit-source">来源</Label>
-                                <Input id="edit-source" value={source} onChange={(e) => setSource(e.target.value)}/>
-                            </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="version">更新时间</Label>
+                            <Input id="version" value={lastUpdate} onChange={(e) => setLastUpdate(e.target.value)}/>
                         </div>
                     </div>
                     <DialogFooter>

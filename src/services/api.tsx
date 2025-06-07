@@ -6,6 +6,7 @@ import {ToolArgPublic} from "@/types/node.tsx";
 import {SimpleWorkflowInfo, Workflow, WorkflowDefinition} from "@/types/workflow.tsx";
 import {MonitorRecord, SimpleTask, TaskPublic} from "@/types/task.tsx";
 import {RunPublic, Stats} from "@/types/run.tsx";
+import {BioDb, BioDbCreate, BioDbSimple} from "@/types/resource.tsx";
 
 export const api = axios.create({
     baseURL: '/api/v1',
@@ -198,4 +199,23 @@ export const projectApi = {
         const {data} = await api.post(`/projects/${project_id}/unstar`);
         return data;
     },
-}; 
+};
+
+export const resourceApi = {
+    newDb: async (db: BioDbCreate) => {
+        const {data} = await api.post('/bio_dbs', db);
+        return data;
+    },
+    getDBList: async (offset: number) => {
+        const {data} = await api.get<BioDbSimple[]>(`/bio_dbs?offset=${offset}&limit=8`);
+        return data;
+    },
+    getDBCount: async () => {
+        const {data} = await api.get<number>('/bio_dbs/count');
+        return data;
+    },
+    getDB: async (id: number) => {
+        const {data} = await api.get<BioDb>(`/bio_dbs/${id}`)
+        return data;
+    }
+}

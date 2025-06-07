@@ -14,21 +14,6 @@ export function TaskTable() {
     const {data: taskCount = 0} = useTaskCount()
     const {data: tasks = []} = useTaskList(recentOffset)
 
-    // 分页相关
-    const pageSize = 8;
-    const totalPages = Math.ceil(taskCount / pageSize);
-    const currentPage = Math.floor(recentOffset / pageSize) + 1;
-
-    const handlePageChange = (page: number) => {
-        setRecentOffset((page - 1) * pageSize);
-    };
-    const handlePrev = () => {
-        if (currentPage > 1) setRecentOffset((currentPage - 2) * pageSize);
-    };
-    const handleNext = () => {
-        if (currentPage < totalPages) setRecentOffset(currentPage * pageSize);
-    };
-
     return (
         <div>
             <Table>
@@ -65,11 +50,10 @@ export function TaskTable() {
                 </TableBody>
             </Table>
             <TablePage
-                totalPages={totalPages}
-                currentPage={currentPage}
-                handleNext={handleNext}
-                handlePageChange={handlePageChange}
-                handlePrev={handlePrev}
+                totalItems={taskCount}
+                offset={recentOffset}
+                pageSize={8}
+                setOffset={setRecentOffset}
             />
         </div>
     )

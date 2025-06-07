@@ -20,7 +20,7 @@ export function ResourcePage() {
                         <BreadcrumbList>
                             <BreadcrumbItem className="hidden md:block">
                                 <BreadcrumbPage>
-                                    Task
+                                    Resource
                                 </BreadcrumbPage>
                             </BreadcrumbItem>
                         </BreadcrumbList>

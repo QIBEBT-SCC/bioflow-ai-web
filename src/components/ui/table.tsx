@@ -110,13 +110,14 @@ function TableCaption({
     )
 }
 
-function TablePage({totalPages, currentPage, handlePrev, handlePageChange, handleNext}: {
-    totalPages: number,
-    currentPage: number,
-    handlePrev: () => void,
-    handlePageChange: (page: number) => void,
-    handleNext: () => void
+function TablePage({totalItems, offset, pageSize, setOffset}: {
+    totalItems: number,
+    offset: number,
+    pageSize: number,
+    setOffset: (offset: number) => void
 }) {
+    const totalPages = Math.ceil(totalItems / pageSize);
+    const currentPage = Math.floor(offset / pageSize) + 1;
 
     const getPageNumbers = () => {
         if (totalPages <= 5) {
@@ -129,6 +130,16 @@ function TablePage({totalPages, currentPage, handlePrev, handlePageChange, handl
             return [1, 'ellipsis', totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
         }
         return [1, 'ellipsis', currentPage - 1, currentPage, currentPage + 1, 'ellipsis', totalPages];
+    };
+
+    const handlePageChange = (page: number) => {
+        setOffset((page - 1) * pageSize);
+    };
+    const handlePrev = () => {
+        if (currentPage > 1) setOffset((currentPage - 2) * pageSize);
+    };
+    const handleNext = () => {
+        if (currentPage < totalPages) setOffset(currentPage * pageSize);
     };
 
     return (

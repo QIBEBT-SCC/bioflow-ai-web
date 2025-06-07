@@ -15,56 +15,18 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import {DatabaseEditDialog} from "@/components/resource/databases/database-edit-dialog"
+import {useDB} from "@/hooks/use-resource.tsx";
 
-// Mock data for demonstration
-const MOCK_DATABASES = {
-    1: {
-        id: 1,
-        name: "人类基因组参考数据库",
-        description:
-            "GRCh38/hg38 人类基因组参考序列，包含主要染色体和未定位的基因组片段。该数据库由基因组参考联盟（GRC）维护，是人类基因组研究的标准参考。",
-        path: "/data/references/human/GRCh38",
-        size: "3.2 GB",
-        lastUpdated: "2023-01-15",
-        format: "FASTA + GTF",
-        source: "NCBI",
-        version: "GRCh38.p14",
-    },
-    2: {
-        id: 2,
-        name: "小鼠基因组参考数据库",
-        description:
-            "GRCm39/mm39 小鼠基因组参考序列，包含主要染色体和未定位的基因组片段。该数据库由基因组参考联盟（GRC）维护，是小鼠基因组研究的标准参考。",
-        path: "/data/references/mouse/GRCm39",
-        size: "2.8 GB",
-        lastUpdated: "2023-02-20",
-        format: "FASTA + GTF",
-        source: "NCBI",
-        version: "GRCm39.p1",
-    },
-    3: {
-        id: 3,
-        name: "UniProt 蛋白质数据库",
-        description:
-            "UniProt 是一个综合性的、高质量的蛋白质序列和功能信息资源。它包含 Swiss-Prot（手动注释）和 TrEMBL（自动注释）两个部分。",
-        path: "/data/databases/uniprot",
-        size: "98 GB",
-        lastUpdated: "2023-04-05",
-        format: "FASTA + XML",
-        source: "UniProt Consortium",
-        version: "2023_01",
-    },
-}
 
 interface DatabaseDetailProps {
     databaseId: number
 }
 
 export function DatabaseDetail({databaseId}: DatabaseDetailProps) {
+    const {data: database} = useDB(databaseId);
+
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-
-    const database = MOCK_DATABASES[databaseId as keyof typeof MOCK_DATABASES]
 
     if (!database) {
         return (
@@ -83,9 +45,6 @@ export function DatabaseDetail({databaseId}: DatabaseDetailProps) {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h2 className="text-2xl font-bold">{database.name}</h2>
-                    <p className="text-muted-foreground">
-                        版本: {database.version} | 来源: {database.source}
-                    </p>
                 </div>
                 <div className="flex gap-2">
                     <Button variant="outline" onClick={() => setIsEditDialogOpen(true)}>
@@ -106,7 +65,7 @@ export function DatabaseDetail({databaseId}: DatabaseDetailProps) {
                             <dt className="text-sm font-medium text-muted-foreground">描述</dt>
                             <dd className="mt-1 text-sm">{database.description}</dd>
                         </div>
-                        <div>
+                        <div className="col-span-2">
                             <dt className="text-sm font-medium text-muted-foreground">路径</dt>
                             <dd className="mt-1 text-sm font-mono bg-muted p-1 rounded">{database.path}</dd>
                         </div>
@@ -115,12 +74,8 @@ export function DatabaseDetail({databaseId}: DatabaseDetailProps) {
                             <dd className="mt-1 text-sm">{database.size}</dd>
                         </div>
                         <div>
-                            <dt className="text-sm font-medium text-muted-foreground">格式</dt>
-                            <dd className="mt-1 text-sm">{database.format}</dd>
-                        </div>
-                        <div>
                             <dt className="text-sm font-medium text-muted-foreground">最后更新</dt>
-                            <dd className="mt-1 text-sm">{database.lastUpdated}</dd>
+                            <dd className="mt-1 text-sm">{database.last_update}</dd>
                         </div>
                     </dl>
                 </CardContent>
