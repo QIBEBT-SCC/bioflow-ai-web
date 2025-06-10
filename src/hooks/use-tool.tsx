@@ -53,6 +53,8 @@ export function useCreateTool() {
         onSuccess: () => {
             queryClient.invalidateQueries({queryKey: ['allTools']}).then();
             queryClient.invalidateQueries({queryKey: ['groupTools']}).then();
+            queryClient.invalidateQueries({queryKey: ['toolTagList']}).then();
+            queryClient.invalidateQueries({queryKey: ['searchTools']}).then();
         }
     });
 }

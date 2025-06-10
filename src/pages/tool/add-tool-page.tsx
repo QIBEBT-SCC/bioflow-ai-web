@@ -188,6 +188,21 @@ export function AddToolPage() {
             {
                 onSuccess: () => {
                     toast.success("工具创建成功！")
+                    setTool({
+                        name: "",
+                        repository: "",
+                        tag: "",
+                        description: "",
+                        homepage: "",
+                        tool_tag: [],
+                        command_template: "",
+                        dynamic_params: [],
+                        static_params: "",
+                        output_files: [],
+                        mkdir_output: true,
+                        use_temp_dir: false,
+                        help_command: "",
+                    })
                 },
                 onError: (e) => {
                     // 错误处理

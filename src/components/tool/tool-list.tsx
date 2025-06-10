@@ -13,7 +13,7 @@ import {Card, CardContent} from "@/components/ui/card.tsx";
 import {useAllTools} from "@/hooks/use-tool.tsx";
 
 export function ToolList({viewMode}: { viewMode: "list" | "grid" }) {
-    const {data: allTools = [], isLoading, error} = useAllTools();
+    const {data: allTools = []} = useAllTools();
 
     return viewMode === "list" ? (
         <div className="relative w-full overflow-auto">
