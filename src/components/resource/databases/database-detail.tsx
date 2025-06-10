@@ -15,15 +15,18 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import {DatabaseEditDialog} from "@/components/resource/databases/database-edit-dialog"
-import {useDB} from "@/hooks/use-resource.tsx";
+import {useDB, useDeleteDB} from "@/hooks/use-resource.tsx";
+import {toast} from "sonner";
 
 
 interface DatabaseDetailProps {
-    databaseId: number
+    databaseId: number,
+    onDelete: () => void,
 }
 
-export function DatabaseDetail({databaseId}: DatabaseDetailProps) {
+export function DatabaseDetail({databaseId, onDelete}: DatabaseDetailProps) {
     const {data: database} = useDB(databaseId);
+    const {mutate: deleteDB, isPending} = useDeleteDB();
 
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
@@ -35,9 +38,18 @@ export function DatabaseDetail({databaseId}: DatabaseDetailProps) {
     }
 
     const confirmDelete = () => {
-        // Here you would implement the actual deletion logic
-        console.log(`Deleting database: ${databaseId}`)
-        setIsDeleteDialogOpen(false)
+        deleteDB({
+                id: databaseId
+            }, {
+                onSuccess: () => {
+                    setIsDeleteDialogOpen(false)
+                    onDelete()
+                },
+                onError: (error) => {
+                    toast.error(`${error.message}`)
+                }
+            }
+        );
     }
 
     return (
@@ -91,7 +103,11 @@ export function DatabaseDetail({databaseId}: DatabaseDetailProps) {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>取消</AlertDialogCancel>
-                        <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground">
+                        <AlertDialogAction
+                            onClick={confirmDelete}
+                            className="bg-destructive text-destructive-foreground"
+                            disabled={isPending}
+                        >
                             删除
                         </AlertDialogAction>
                     </AlertDialogFooter>

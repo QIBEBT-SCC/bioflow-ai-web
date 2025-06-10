@@ -8,6 +8,7 @@ export function useCreateBd() {
         mutationFn: ({db}: { db: BioDbCreate }) => resourceApi.newDb(db),
         onSuccess: () => {
             queryClient.invalidateQueries({queryKey: ['dbList']}).then();
+            queryClient.invalidateQueries({queryKey: ['db']}).then();
             queryClient.invalidateQueries({queryKey: ['dbCounts']}).then();
         }
     });
@@ -37,12 +38,25 @@ export function useDBCount() {
 
 export function useDB(id: number) {
     const options: UseQueryOptions<BioDb, Error> = {
-        queryKey: ['dbList', id],
+        queryKey: ['db', id],
         queryFn: ({queryKey}) => {
             const [, id] = queryKey as [string, number];
             return resourceApi.getDB(id);
-        }
+        },
+        enabled: !!id
     }
 
     return useQuery(options)
+}
+
+export function useDeleteDB() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({id}: { id: number }) => resourceApi.deleteDB(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({queryKey: ['dbList']}).then();
+            queryClient.invalidateQueries({queryKey: ['db']}).then();
+            queryClient.invalidateQueries({queryKey: ['dbCounts']}).then();
+        }
+    });
 }

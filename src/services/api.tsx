@@ -319,5 +319,9 @@ export const resourceApi = {
     getDB: async (id: number) => {
         const {data} = await api.get<BioDb>(`/bio_dbs/${id}`)
         return data;
+    },
+    deleteDB: async (id: number) => {
+        const {data} = await api.delete(`/bio_dbs/${id}`);
+        return data;
     }
 }

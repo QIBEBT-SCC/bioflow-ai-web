@@ -45,7 +45,7 @@ export function DatabasesManager() {
                 <Card className="lg:col-span-2">
                     <CardContent className="p-4">
                         {selectedDbId !== null ? (
-                            <DatabaseDetail databaseId={selectedDbId}/>
+                            <DatabaseDetail databaseId={selectedDbId} onDelete={()=>{setSelectedDbId(null)}}/>
                         ) : (
                             <div className="flex h-[400px] items-center justify-center text-muted-foreground">
                                 请选择一个数据库查看详情
