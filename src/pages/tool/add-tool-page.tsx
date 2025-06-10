@@ -3,7 +3,7 @@
 import type React from "react"
 
 import {useState} from "react"
-import {ArrowLeft, CirclePlusIcon, HelpCircle, Save} from "lucide-react"
+import {ArrowLeftIcon, CirclePlusIcon, HelpCircleIcon, SaveIcon, SparklesIcon} from "lucide-react"
 import {Button} from "@/components/ui/button"
 import {Input} from "@/components/ui/input"
 import {Textarea} from "@/components/ui/textarea"
@@ -25,16 +25,20 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator
 } from "@/components/ui/breadcrumb.tsx";
-import {type DockerToolCreate, type OutputFile, type ParamDefine, ParamType} from "@/types/tool"
-import {useCreateTool, useToolTagList} from "@/hooks/useTool.tsx";
+import {AIGenProp, type DockerToolCreate, EventType, type OutputFile, type ParamDefine, ParamType, ToolSSEEventData} from "@/types/tool"
+import {useCreateTool, useToolTagList} from "@/hooks/use-tool.tsx";
 import {TagSelector} from "@/components/tag-selector.tsx";
 import {FileCard, ParamCard} from "@/components/tool/tool-setting-card.tsx";
+import {toast} from "sonner";
+import {toolApi} from "@/services/api"
 
 
 export function AddToolPage() {
     const {t} = useTranslation();
     const {mutate: createTool, isPending} = useCreateTool();
     const {data: availableTags = []} = useToolTagList();
+
+    const [isGenerating, setIsGenerating] = useState(false);
 
     // 初始化工具状态
     const [tool, setTool] = useState<DockerToolCreate>({
@@ -116,6 +120,65 @@ export function AddToolPage() {
         setTool({...tool, output_files: updatedFiles})
     }
 
+    // AI生成帮助命令
+    const handleGenerateHelp = async () => {
+        if (!tool.repository || !tool.tag) {
+            toast.warning("请先填写Docker仓库信息");
+            return;
+        }
+
+        if (!tool.help_command) {
+            toast.warning('请先填写帮助指令');
+            return;
+        }
+
+        setIsGenerating(true);
+        const prop: AIGenProp = {
+            name: tool.name,
+            description: tool.description,
+            help_command: tool.help_command,
+            repository: tool.repository,
+            tag: tool.tag
+        }
+
+        toolApi.generateToolConfig(
+            prop,
+            (event: ToolSSEEventData) => {
+                switch (event.event) {
+                    case EventType.LOADING:
+                        toast.info(`${typeof event.data === 'string' ? event.data : '正在加载配置'}`, {duration: Infinity})
+                        break;
+                    case EventType.GENERATING:
+                        toast.info(`${typeof event.data === 'string' ? event.data : '正在生成'}`, {duration: Infinity})
+                        break;
+                    case EventType.SUCCESS:
+                        toast.dismiss();
+                        toast.success('生成完毕')
+                        if (typeof event.data !== 'string') {
+                            setTool({
+                                ...tool,
+                                name: event.data.name,
+                                command_template: event.data.command_template,
+                                description: event.data.description,
+                                dynamic_params: event.data.dynamic_params,
+                                mkdir_output: event.data.mkdir_output,
+                                output_files: event.data.output_files,
+                                static_params: event.data.static_params,
+                                use_temp_dir: event.data.use_temp_dir
+                            })
+                        }
+                        break;
+                    case EventType.ERROR:
+                        setIsGenerating(false);
+                        toast.error(`${typeof event.data === 'string' ? event.data : '生成失败'}`);
+                        break;
+                }
+            }
+        ).then(() => {
+            setIsGenerating(false)
+        });
+    };
+
     // 处理表单提交
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -124,12 +187,12 @@ export function AddToolPage() {
             {tool},
             {
                 onSuccess: () => {
-                    alert("工具创建成功！")
+                    toast.success("工具创建成功！")
                 },
                 onError: (e) => {
                     // 错误处理
                     console.error("提交工具配置时出错:", e)
-                    alert("创建工具时出错，请重试")
+                    toast.error("创建工具时出错，请重试")
                 }
             }
         );
@@ -166,7 +229,7 @@ export function AddToolPage() {
                             to="/tool"
                             className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-2"
                         >
-                            <ArrowLeft className="h-4 w-4 mr-1"/>
+                            <ArrowLeftIcon className="h-4 w-4 mr-1"/>
                             {t("add_tool.back")}
                         </Link>
                         <h1 className="text-2xl font-bold">{t("add_tool.title")}</h1>
@@ -256,7 +319,7 @@ export function AddToolPage() {
                                         </div>
 
                                         <div className="space-y-2">
-                                            <Label htmlFor="help_command">{t("add_tool.homepage")}</Label>
+                                            <Label>{t("add_tool.homepage")}</Label>
                                             <Input
                                                 id="home_page"
                                                 value={tool.homepage}
@@ -266,7 +329,7 @@ export function AddToolPage() {
                                         </div>
 
                                         <div className="space-y-2">
-                                            <Label htmlFor="description">描述</Label>
+                                            <Label>描述</Label>
                                             <Textarea
                                                 id="description"
                                                 value={tool.description}
@@ -286,13 +349,36 @@ export function AddToolPage() {
                                         </div>
 
                                         <div className="space-y-2">
-                                            <Label htmlFor="help_command">帮助命令</Label>
-                                            <Input
-                                                id="help_command"
-                                                value={tool.help_command}
-                                                onChange={(e) => setTool({...tool, help_command: e.target.value})}
-                                                placeholder="例如: fastp --help"
-                                            />
+                                            <Label>帮助命令</Label>
+                                            <div className="flex flex-row justify-between gap-2">
+                                                <Input
+                                                    id="help_command"
+                                                    value={tool.help_command}
+                                                    onChange={(e) => setTool({...tool, help_command: e.target.value})}
+                                                    placeholder="例如: fastp --help"
+                                                />
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="icon"
+                                                    onClick={handleGenerateHelp}
+                                                    disabled={isGenerating}
+                                                    className={`relative transition-all duration-200 hover:scale-105 ${
+                                                        isGenerating
+                                                            ? 'border-2 border-gradient-to-r animate-pulse'
+                                                            : 'border-2'
+                                                    }`}
+                                                    style={{
+                                                        borderImage: isGenerating
+                                                            ? 'linear-gradient(45deg, rgb(59 130 246), rgb(147 51 234), rgb(236 72 153)) 1'
+                                                            : 'linear-gradient(45deg, rgb(59 130 246), rgb(147 51 234), rgb(236 72 153)) 1'
+                                                    }}
+                                                >
+                                                    <SparklesIcon
+                                                        className={`h-4 w-4 ${isGenerating ? 'animate-spin' : ''}`}
+                                                    />
+                                                </Button>
+                                            </div>
                                         </div>
 
                                         <div className="space-y-2">
@@ -301,7 +387,7 @@ export function AddToolPage() {
                                                 <TooltipProvider>
                                                     <Tooltip>
                                                         <TooltipTrigger asChild>
-                                                            <HelpCircle className="h-4 w-4 inline-block ml-1 text-muted-foreground"/>
+                                                            <HelpCircleIcon className="h-4 w-4 inline-block ml-1 text-muted-foreground"/>
                                                         </TooltipTrigger>
                                                         <TooltipContent>
                                                             <p className="max-w-xs">
@@ -447,7 +533,7 @@ export function AddToolPage() {
                                 取消
                             </Button>
                             <Button type="submit" className="bg-green-600 hover:bg-green-700" disabled={isPending}>
-                                <Save className="h-4 w-4 mr-2"/>
+                                <SaveIcon className="h-4 w-4 mr-2"/>
                                 保存工具
                             </Button>
                         </div>

@@ -7,6 +7,8 @@ import {LoginPage} from "@/pages/login-page.tsx";
 import {TooltipProvider} from "@/components/ui/tooltip.tsx";
 import {HomePage} from "@/pages/home-page";
 import {ThemeProvider} from "@/components/theme-provider.tsx";
+import {Toaster} from "@/components/ui/sonner.tsx";
+import {AIToolConfigGeneratorMutation} from "@/components/tool/ai-tool-config-generator-mutation.tsx";
 
 // 懒加载页面组件，确保为默认导出
 const ProjectsPage = React.lazy(() => import("@/pages/project/project-page.tsx").then(m => ({default: m.ProjectsPage})));
@@ -125,6 +127,7 @@ export default function App() {
                 <TooltipProvider>
                     <RouterProvider router={router}/>
                 </TooltipProvider>
+                <Toaster richColors expand={true} position={"top-right"}/>
             </ThemeProvider>
         </QueryClientProvider>
     );

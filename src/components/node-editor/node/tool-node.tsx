@@ -9,7 +9,7 @@ import {Textarea} from "@/components/ui/textarea.tsx";
 import {BaseToolNode} from "@/components/node-editor/node/base-node.tsx";
 import {useEffect, useState} from "react";
 import {useNodeId, useNodesData, useReactFlow} from '@xyflow/react';
-import {useToolArg} from "@/hooks/useTool.tsx";
+import {useToolArg} from "@/hooks/use-tool.tsx";
 
 
 const ToolCard = (

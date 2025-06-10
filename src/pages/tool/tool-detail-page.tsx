@@ -6,7 +6,7 @@ import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/compo
 import {Separator} from "@/components/ui/separator"
 import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs"
 import {ArrowLeft, Code, Copy, ExternalLink, FileText, HardDrive, Info, Layers, Terminal} from "lucide-react"
-import {useTool} from "@/hooks/useTool.tsx";
+import {useTool} from "@/hooks/use-tool.tsx";
 import {Link, useParams} from "react-router-dom";
 import {ParamType} from "@/types/tool.tsx";
 import {SidebarInset, SidebarTrigger} from "@/components/ui/sidebar.tsx";

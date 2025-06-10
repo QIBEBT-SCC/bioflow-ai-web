@@ -103,3 +103,46 @@ export interface ToolInfo4Task {
 
     output_files: OutputFile[]
 }
+
+
+
+
+export interface AIGenProp {
+    name: string;
+    description: string;
+    help_command: string;
+    repository: string;
+    tag?: string;
+}
+
+export enum EventType {
+    LOADING = 'loading',
+    ERROR = 'error',
+    GENERATING = 'generating',
+    SUCCESS = 'success',
+}
+
+export interface ToolSSEEventData {
+    event: EventType;
+    data: string | AIGenTool;
+}
+
+// AI生成的工具配置结果类型
+export interface AIGenTool {
+    /** 工具名称 */
+    name: string;
+    /** 工具功能的简要描述 */
+    description: string;
+    /** 完整的工具指令模板字符串，可以包含dynamic_params、static_params、position_params、log这几个变量 */
+    command_template: string;
+    /** 需要涉及到文件名等要素的变量，包括参数指定的和位置指定的 */
+    dynamic_params: ParamDefine[];
+    /** 与外部文件无关的变量 */
+    static_params: string;
+    /** 软件的期望输出文件 */
+    output_files: OutputFile[];
+    /** 是否创建输出目录 */
+    mkdir_output: boolean;
+    /** 是否使用临时目录 */
+    use_temp_dir: boolean;
+}

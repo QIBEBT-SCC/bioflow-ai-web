@@ -1,7 +1,17 @@
 import axios from 'axios';
 import {isTokenExpired, useAuthStore} from "@/stores/authStore";
 import {Project, ProjectCreateProp, ProjectTag} from "@/types/project.tsx";
-import {DockerToolCreate, SimpleToolInfo, ToolGroup, ToolInfo, ToolTag} from "@/types/tool.tsx";
+import {
+    AIGenProp,
+    AIGenTool,
+    DockerToolCreate,
+    EventType,
+    SimpleToolInfo,
+    ToolGroup,
+    ToolInfo,
+    ToolSSEEventData,
+    ToolTag
+} from "@/types/tool.tsx";
 import {ToolArgPublic} from "@/types/node.tsx";
 import {SimpleWorkflowInfo, Workflow, WorkflowDefinition} from "@/types/workflow.tsx";
 import {MonitorRecord, SimpleTask, TaskPublic} from "@/types/task.tsx";
@@ -153,6 +163,98 @@ export const toolApi = {
         const {data} = await api.get<ToolArgPublic>(`/tools/${uid}/args`);
         return data;
     },
+    // 使用fetch方式处理POST表单数据和身份认证
+    generateToolConfig: async (
+        prop: AIGenProp,
+        onMessage: (event: ToolSSEEventData) => void,
+        onError?: (error: Error) => void,
+        onComplete?: () => void
+    ): Promise<void> => {
+        const token = localStorage.getItem('token');
+
+        try {
+            // 构建FormData
+            const formData = new FormData();
+            formData.append('name', prop.name.trim());
+            formData.append('description', prop.description.trim());
+            formData.append('help_command', prop.help_command.trim());
+            formData.append('repository', prop.repository.trim());
+            formData.append('tag', (prop.tag || 'latest').trim());
+
+            const response = await fetch('/api/v1/tools/ai/config', {
+                method: 'POST',
+                headers: {
+                    'Authorization': token ? `Bearer ${token}` : '',
+                    // 不设置Content-Type，让浏览器自动设置multipart/form-data
+                },
+                body: formData,
+            });
+
+            if (!response.ok) {
+                try {
+                    const errorData = await response.json();
+                    console.error('API Error Details:', errorData);
+                } catch (e) {
+                    console.error('Failed to parse error response:', e);
+                }
+            }
+
+            const reader = response.body?.getReader();
+            if (!reader) {
+                throw new Error('无法读取响应流');
+            }
+
+            const decoder = new TextDecoder();
+            let buffer = '';
+
+            try {
+                while (true) {
+                    const {done, value} = await reader.read();
+
+                    if (done) {
+                        onComplete?.();
+                        break;
+                    }
+
+                    buffer += decoder.decode(value, {stream: true});
+
+                    // 按照SSE格式解析，每个消息以两个换行符分隔
+                    const messages = buffer.split('\n\n');
+                    buffer = messages.pop() || ''; // 保留最后一个可能不完整的消息
+
+                    for (const message of messages) {
+                        if (message.trim() === '') continue;
+
+                        const lines = message.split('\n');
+                        let eventType: EventType = EventType.LOADING;
+                        let data: string | AIGenTool | null = null;
+
+                        for (const line of lines) {
+                            if (line.startsWith('event:')) {
+                                eventType = line.substring(6).trim() as EventType;
+                            } else if (line.startsWith('data:')) {
+                                try {
+                                    data = JSON.parse(line.substring(5).trim());
+                                } catch (e) {
+                                    console.log(e)
+                                    // 如果不是JSON，就作为字符串处理
+                                    data = line.substring(5).trim();
+                                }
+                            }
+                        }
+
+                        if (data !== null) {
+                            onMessage({event: eventType, data});
+                        }
+                    }
+                }
+            } finally {
+                reader.releaseLock();
+            }
+        } catch (error) {
+            onError?.(error as Error);
+        }
+    }
 };
 
 export const projectApi = {

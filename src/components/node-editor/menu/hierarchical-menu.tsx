@@ -3,7 +3,7 @@
 import React, {useState, useRef} from "react"
 import {Search, X, ChevronRight} from "lucide-react"
 import {Skeleton} from "@/components/ui/skeleton.tsx"
-import {useGroupTools, useSearchTools, useToolGroupList} from "@/hooks/useTool.tsx";
+import {useGroupTools, useSearchTools, useToolGroupList} from "@/hooks/use-tool.tsx";
 import {useToolNodeStore} from "@/stores/toolStore.tsx";
 import {type SimpleToolInfo, ToolGroup} from "@/types/tool.tsx";
 import {
