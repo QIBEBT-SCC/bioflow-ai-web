@@ -233,7 +233,7 @@ export function ToolDetailPage() {
                                                 <div
                                                     key={index}
                                                     className={`p-4 rounded-lg border ${
-                                                        param.param_type === ParamType.INPUT
+                                                        param.param_type !== ParamType.OUTPUT
                                                             ? "border-l-4 border-l-blue-500"
                                                             : "border-l-4 border-l-green-500"
                                                     }`}
@@ -241,8 +241,8 @@ export function ToolDetailPage() {
                                                     <div className="flex flex-wrap items-center gap-2 mb-2">
                                                         <h4 className="font-medium">{param.name}</h4>
                                                         <Badge
-                                                            className={param.param_type === ParamType.INPUT ? "bg-blue-500" : "bg-green-500"}>
-                                                            {param.param_type === ParamType.INPUT ? "输入" : "输出"}
+                                                            className={param.param_type !== ParamType.OUTPUT ? "bg-blue-500" : "bg-green-500"}>
+                                                            {param.param_type !== ParamType.OUTPUT ? "输入" : "输出"}
                                                         </Badge>
                                                         {param.is_file && <Badge variant="outline">文件</Badge>}
                                                     </div>
@@ -311,6 +311,10 @@ export function ToolDetailPage() {
                                                             {file.mount_path}
                                                         </code>
                                                     </div>
+                                                </div>
+
+                                                <div className="mt-3">
+                                                    <p className="text-sm text-muted-foreground mb-1">{file.description}</p>
                                                 </div>
                                             </div>
                                         ))}
