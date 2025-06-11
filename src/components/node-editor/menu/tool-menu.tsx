@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/breadcrumb.tsx";
 
 
-interface HierarchicalMenuProps {
+interface ToolMenuProps {
     isOpen: boolean
     onClose: () => void
     onSelectTool: (toolType: string, toolUid: string) => void
@@ -38,7 +38,7 @@ const GroupSkeleton = () => (
     </div>
 )
 
-export const HierarchicalMenu: React.FC<HierarchicalMenuProps> = ({isOpen, onClose, onSelectTool}) => {
+export const ToolMenu: React.FC<ToolMenuProps> = ({isOpen, onClose, onSelectTool}) => {
     const [searchQuery, setSearchQuery] = useState("")
     const isSearchMode = searchQuery.trim() !== '';
 

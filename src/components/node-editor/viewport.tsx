@@ -37,7 +37,7 @@ import type {
 } from "@xyflow/react";
 import {workflowApi} from '@/services/api.tsx';
 import {v7 as uuid7} from 'uuid';
-import {FileInputNode, GlobalInputNode, SequenceInputNode} from "@/components/node-editor/node/input-node.tsx";
+import {DBInputNode, FileInputNode, SequenceInputNode} from "@/components/node-editor/node/input-node.tsx";
 import {LineFigNode} from "@/components/node-editor/node/draw-node.tsx";
 import {CutNode, JsonFilterNode} from "@/components/node-editor/node/data-node.tsx";
 import {NoteNode} from "@/components/node-editor/node/note-node.tsx";
@@ -53,7 +53,7 @@ const nodeTypes = {
     tool: ToolNode,
     fileInput: FileInputNode,
     sequenceInputNode: SequenceInputNode,
-    globalInput: GlobalInputNode,
+    dbInputNode: DBInputNode,
     lineFig: LineFigNode,
     dataFilter: JsonFilterNode,
     dataCut: CutNode,
@@ -103,6 +103,16 @@ function FlowContent() {
                 dragHandle: '.nodeDragable',
                 position: position,
                 data: {tool_uid: toolUid, args: ''},
+                zIndex: 20,
+            }
+            setNodes((nds) => nds.concat(newNode));
+        } else if (toolType === "database") {
+            const newNode = {
+                id: nodeId,
+                type: "dbInputNode",
+                dragHandle: '.nodeDragable',
+                position: position,
+                data: {args: `db:${toolUid}`},
                 zIndex: 20,
             }
             setNodes((nds) => nds.concat(newNode));

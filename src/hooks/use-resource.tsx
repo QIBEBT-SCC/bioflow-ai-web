@@ -60,3 +60,16 @@ export function useDeleteDB() {
         }
     });
 }
+
+export function useSearchDB(name: string) {
+    const options: UseQueryOptions<BioDb[], Error> = {
+        queryKey: ['dbSearch', name],
+        queryFn: ({queryKey}) => {
+            const [, name] = queryKey as [string, string];
+            return resourceApi.searchDB(name);
+        },
+        enabled: !!name
+    }
+
+    return useQuery(options);
+}

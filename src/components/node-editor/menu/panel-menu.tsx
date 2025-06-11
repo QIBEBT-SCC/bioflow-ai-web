@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import {useState, useRef} from "react"
+import {useState, useRef, useEffect} from "react"
 import {
     BarChart,
     DnaIcon,
@@ -11,9 +11,10 @@ import {
     Scissors,
     StickyNote,
     PenToolIcon,
-    ChevronRight,
+    ChevronRight, DatabaseIcon,
 } from "lucide-react"
-import {HierarchicalMenu} from "@/components/node-editor/menu/hierarchical-menu.tsx";
+import {ToolMenu} from "@/components/node-editor/menu/tool-menu.tsx";
+import {DBMenu} from "@/components/node-editor/menu/DBMenu.tsx";
 
 // 菜单数据结构
 const menuData = {
@@ -36,7 +37,7 @@ const menuData = {
         items: [
             {type: "fileInput", label: "文件输入", icon: <FileInput className="h-4 w-4 mr-2"/>},
             {type: "sequenceInputNode", label: "序列输入", icon: <DnaIcon className="h-4 w-4 mr-2"/>},
-            {type: "globalInput", label: "全局输入", icon: <FileInput className="h-4 w-4 mr-2"/>},
+            {type: "database", label: "数据库", icon: <DatabaseIcon className="h-4 w-4 mr-2"/>},
         ],
     },
     visualization: {
@@ -68,13 +69,19 @@ interface PanelMenuProps {
 
 export const PanelMenu: React.FC<PanelMenuProps> = ({isOpen, position, onClose, onSelectTool}) => {
     const [isAnalysisMenuOpen, setIsAnalysisMenuOpen] = useState(false)
+    const [isDBMenuOpen, setIsDBMenuOpen] = useState(false)
     const [activeMenu, setActiveMenu] = useState<string | null>(null)
     const menuRef = useRef<HTMLDivElement>(null)
 
     // 处理点击分析工具
     const handleAnalysisToolClick = () => {
         setIsAnalysisMenuOpen(true)
-        onClose() // 关闭上下文菜单
+        onClose()
+    }
+
+    const handleDBClick = () => {
+        setIsDBMenuOpen(true);
+        onClose();
     }
 
     // 处理菜单项点击
@@ -89,8 +96,12 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({isOpen, position, onClose, 
 
     // 处理子菜单项点击
     const handleSubMenuItemClick = (itemType: string) => {
-        onSelectTool(itemType)
-        onClose() // 关闭上下文菜单
+        if (itemType === "database") {
+            handleDBClick()
+        } else {
+            onSelectTool(itemType)
+            onClose() // 关闭上下文菜单
+        }
     }
 
     // 调整菜单位置，确保不超出视口
@@ -116,7 +127,14 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({isOpen, position, onClose, 
         return {x, y}
     }
 
-    if (!isOpen && !isAnalysisMenuOpen) return null
+    // 当父菜单关闭时，重置所有子菜单状态
+    useEffect(() => {
+        if (!isOpen) {
+            setActiveMenu(null)
+        }
+    }, [isOpen])
+
+    if (!isOpen && !isAnalysisMenuOpen && !isDBMenuOpen) return null
 
     const adjustedPosition = adjustPosition(position)
 
@@ -180,9 +198,16 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({isOpen, position, onClose, 
             )}
 
             {/* 分析工具分层菜单 */}
-            <HierarchicalMenu
+            <ToolMenu
                 isOpen={isAnalysisMenuOpen}
                 onClose={() => setIsAnalysisMenuOpen(false)}
+                onSelectTool={onSelectTool}
+            />
+
+            {/* 数据库选择菜单*/}
+            <DBMenu
+                isOpen={isDBMenuOpen}
+                onOpenChange={setIsDBMenuOpen}
                 onSelectTool={onSelectTool}
             />
         </>

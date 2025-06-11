@@ -180,7 +180,7 @@ export function SequenceInputNode() {
                     placeholder="Enter arguments here..."
                     value={r1}
                     onChange={(e) => {
-                        setArgs(JSON.stringify({ r1: e.target.value, r2 }));
+                        setArgs(JSON.stringify({r1: e.target.value, r2}));
                     }}
                 />
                 <Label className="pb-2 pt-4 font-medium">R2 path:</Label>
@@ -189,7 +189,7 @@ export function SequenceInputNode() {
                     placeholder="Enter arguments here..."
                     value={r2}
                     onChange={(e) => {
-                        setArgs(JSON.stringify({ r1, r2: e.target.value }));
+                        setArgs(JSON.stringify({r1, r2: e.target.value}));
                     }}
                 />
             </CardContent>
@@ -208,7 +208,10 @@ export function SequenceInputNode() {
     )
 }
 
-export function GlobalInputNode() {
+export function DBInputNode() {
+    const nodeId = useNodeId();
+    const nodeData = useNodesData(nodeId ? nodeId : '');
+
     const handles = {
         inputs: [],
         outputs: [
@@ -216,13 +219,43 @@ export function GlobalInputNode() {
         ]
     }
 
+
+    const DBCard = (
+        <Card className="w-[350px] py-0 gap-3 bg-white shadow-lg">
+            <CardHeader
+                className="nodeDragable h-8 py-2 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-t-xl flex flex-row items-center">
+                <CardTitle className="text-white">
+                    BioInfo DB
+                </CardTitle>
+                <Sheet>
+                    <SheetTrigger><Info className="w-3 h-3 text-gray-300"/></SheetTrigger>
+                    <SheetContent>
+                        <SheetHeader>
+                            <SheetTitle>BioInfo DB</SheetTitle>
+                            <SheetDescription>分析软件所使用的生物信息数据库</SheetDescription>
+                        </SheetHeader>
+                    </SheetContent>
+                </Sheet>
+            </CardHeader>
+
+            <CardContent
+                className="p-3"
+                style={{paddingTop: `calc(var(--spacing) * ${(6 * Math.max(handles.inputs.length, handles.outputs.length))})`}}
+            >
+                <Label className="pb-2 font-medium">Database:</Label>
+                <code className="text-muted-foreground text-sm overflow-x-auto max-w-full">{String(nodeData?.data.args)}</code>
+            </CardContent>
+            <CardFooter className="h-4">
+                <div className="absolute bottom-2 right-2 flex space-x-1">
+                    <div className="w-2 h-2 rounded-full bg-teal-400"></div>
+                    <div className="w-2 h-2 rounded-full bg-cyan-400"></div>
+                    <div className="w-2 h-2 rounded-full bg-emerald-400"></div>
+                </div>
+            </CardFooter>
+        </Card>
+    )
+
     return (
-        <BaseToolNode handles={handles} nodeComponent={
-            <FileCard
-                title="Workflow Input"
-                description="load file from local path."
-                topPadding={(6 * Math.max(handles.inputs.length, handles.outputs.length))}
-            />
-        }/>
+        <BaseToolNode handles={handles} nodeComponent={DBCard}/>
     )
 }
