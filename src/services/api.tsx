@@ -146,21 +146,26 @@ export const toolApi = {
         const {data} = await api.post('/tools', tool);
         return data;
     },
-    getToolList: async () => {
-        const {data} = await api.get<SimpleToolInfo[]>('/tools');
+    getToolCount: async () => {
+        const {data} = await api.get<number>('/tools/count');
+        return data;
+    },
+    getToolList: async (offset?: number) => {
+        const url = `/tools?offset=${offset}&limit=10`;
+        const {data} = await api.get<SimpleToolInfo[]>(url);
         return data
     },
     searchToolList: async (name: string, offset?: number) => {
-        const url = `/tools/search?name=${name}${offset !== undefined ? `&offset=${offset}` : ''}&limit=8`;
+        const url = `/tools/search?name=${name}${offset !== undefined ? `&offset=${offset}` : ''}&limit=12`;
         const {data} = await api.get<SimpleToolInfo[]>(url);
         return data;
     },
-    getTool: async (uid: string) => {
-        const {data} = await api.get<ToolInfo>(`/tools/${uid}`);
+    getTool: async (id: string) => {
+        const {data} = await api.get<ToolInfo>(`/tools/${id}`);
         return data;
     },
-    getToolArg: async (uid: string) => {
-        const {data} = await api.get<ToolArgPublic>(`/tools/${uid}/args`);
+    getToolArg: async (id: string) => {
+        const {data} = await api.get<ToolArgPublic>(`/tools/${id}/args`);
         return data;
     },
     // 使用fetch方式处理POST表单数据和身份认证
