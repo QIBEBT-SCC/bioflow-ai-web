@@ -37,9 +37,9 @@ import type {
 } from "@xyflow/react";
 import {workflowApi} from '@/services/api.tsx';
 import {v7 as uuid7} from 'uuid';
-import {DBInputNode, FileInputNode, SequenceInputNode} from "@/components/node-editor/node/input-node.tsx";
+import {DBInputNode, FileInputNode, ReferenceInput, SequenceInputNode} from "@/components/node-editor/node/input-node.tsx";
 import {LineFigNode} from "@/components/node-editor/node/draw-node.tsx";
-import {CutNode, JsonFilterNode} from "@/components/node-editor/node/data-node.tsx";
+import {ConcatNode, CutNode, JsonFilterNode} from "@/components/node-editor/node/data-node.tsx";
 import {NoteNode} from "@/components/node-editor/node/note-node.tsx";
 import {PanelMenu} from "@/components/node-editor/menu/panel-menu.tsx";
 import {ToolNode} from "@/components/node-editor/node/tool-node.tsx";
@@ -54,9 +54,11 @@ const nodeTypes = {
     fileInput: FileInputNode,
     sequenceInputNode: SequenceInputNode,
     dbInputNode: DBInputNode,
+    refInputNode: ReferenceInput,
     lineFig: LineFigNode,
     dataFilter: JsonFilterNode,
     dataCut: CutNode,
+    dataConcat: ConcatNode,
     note: NoteNode,
 }
 
@@ -92,7 +94,7 @@ function FlowContent() {
         setIsMenuOpen(false)
     }
 
-    const onAddNode = (toolType: string, toolUid?: string) => {
+    const onAddNode = (toolType: string, toolId?: string) => {
         const nodeId = uuid7();
         const position = reactFlow.screenToFlowPosition(clickPosition, {snapToGrid: true});
 
@@ -102,7 +104,7 @@ function FlowContent() {
                 type: "tool",
                 dragHandle: '.nodeDragable',
                 position: position,
-                data: {tool_uid: toolUid, args: ''},
+                data: {tool_id: toolId, args: ''},
                 zIndex: 20,
             }
             setNodes((nds) => nds.concat(newNode));
@@ -112,7 +114,7 @@ function FlowContent() {
                 type: "dbInputNode",
                 dragHandle: '.nodeDragable',
                 position: position,
-                data: {args: `db:${toolUid}`},
+                data: {args: `db:${toolId}`},
                 zIndex: 20,
             }
             setNodes((nds) => nds.concat(newNode));

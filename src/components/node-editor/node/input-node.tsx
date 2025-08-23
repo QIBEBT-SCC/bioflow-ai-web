@@ -259,3 +259,64 @@ export function DBInputNode() {
         <BaseToolNode handles={handles} nodeComponent={DBCard}/>
     )
 }
+
+export function ReferenceInput() {
+    const nodeId = useNodeId();
+    const nodeData = useNodesData(nodeId ? nodeId : '');
+
+    const handles = {
+        inputs: [
+            {name: "species_name", description: "species name of the reference gene to be used"},
+            {name: "ncbi_tax_id", description: "NCBI taxonomy ID of the species of the reference gene to be used"}
+        ],
+        outputs: [
+            {name: "genome_fasta", description: "Gene fasta file of the reference genome"},
+            {name: "annotation_gff", description: "GFF annotation file of the reference genome"},
+            {name: "bowtie2_index", description: ""},
+            {name: "bwa_index", description: ""},
+            {name: "hisat2_index", description: ""},
+            {name: "minimap2_index", description: ""},
+            {name: "star_index", description: ""},
+        ]
+    }
+
+
+    const RefCard = (
+        <Card className="w-[350px] py-0 gap-3 bg-white shadow-lg">
+            <CardHeader
+                className="nodeDragable h-8 py-2 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-t-xl flex flex-row items-center">
+                <CardTitle className="text-white">
+                    Reference Genomes
+                </CardTitle>
+                <Sheet>
+                    <SheetTrigger><Info className="w-3 h-3 text-gray-300"/></SheetTrigger>
+                    <SheetContent>
+                        <SheetHeader>
+                            <SheetTitle>Reference Genomes</SheetTitle>
+                            <SheetDescription>参考基因组输入节点</SheetDescription>
+                        </SheetHeader>
+                    </SheetContent>
+                </Sheet>
+            </CardHeader>
+
+            <CardContent
+                className="p-3"
+                style={{paddingTop: `calc(var(--spacing) * ${(6 * Math.max(handles.inputs.length, handles.outputs.length))})`}}
+            >
+                <Label className="pb-2 font-medium">Species:</Label>
+                <code className="text-muted-foreground text-sm overflow-x-auto max-w-full">{String(nodeData?.data.args)}</code>
+            </CardContent>
+            <CardFooter className="h-4">
+                <div className="absolute bottom-2 right-2 flex space-x-1">
+                    <div className="w-2 h-2 rounded-full bg-teal-400"></div>
+                    <div className="w-2 h-2 rounded-full bg-cyan-400"></div>
+                    <div className="w-2 h-2 rounded-full bg-emerald-400"></div>
+                </div>
+            </CardFooter>
+        </Card>
+    )
+
+    return (
+        <BaseToolNode handles={handles} nodeComponent={RefCard}/>
+    )
+}

@@ -89,7 +89,7 @@ export function ToolNode() {
     const nodeId = useNodeId();
     const nodeData = useNodesData(nodeId ? nodeId : '');
     // @ts-expect-error no need
-    const {data: toolData, isLoading} = useToolArg({uid: nodeData.data.tool_uid})
+    const {data: toolData, isLoading} = useToolArg({id: nodeData.data.tool_id})
     const handles = {
         inputs: toolData ? toolData.input_handles : [],
         outputs: toolData ? toolData.output_handles : []

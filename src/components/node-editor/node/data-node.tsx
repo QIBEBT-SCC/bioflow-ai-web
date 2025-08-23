@@ -115,15 +115,21 @@ export function CutNode() {
     )
 }
 
-export function FileListNode() {
+export function ConcatNode() {
     const handles = {
         inputs: [
-            {name: "input_files", description: "files"},
+            {name: "input_values", description: "input values"},
         ],
         outputs: [
-            {name: "file_list", description: "file list"},
+            {name: "file_list", description: "concated value"},
         ]
     }
+
+    const concatValues = [
+        'tab',
+        'space',
+        ','
+    ]
 
     const topPadding = 4 + (6 * Math.max(handles.inputs.length, handles.outputs.length))
 
@@ -133,7 +139,7 @@ export function FileListNode() {
                 <CardHeader
                     className="nodeDragable h-8 py-2 bg-gradient-to-r from-orange-500 to-amber-500 rounded-t-lg flex flex-row items-center">
                     <CardTitle className="text-white">
-                        File List (Space)
+                        Concat values
                     </CardTitle>
                     <TooltipProvider>
                         <Tooltip>
@@ -145,7 +151,19 @@ export function FileListNode() {
                     </TooltipProvider>
                 </CardHeader>
                 <CardContent className="p-3" style={{paddingTop: `calc(var(--spacing) * ${topPadding})`}}>
-                    <Label className="pb-2 font-medium"></Label>
+                    <Label className="pb-2 font-medium">Concat by</Label>
+                    <Select>
+                        <SelectTrigger className="w-[200px] bg-white">
+                            <SelectValue placeholder="Select a fruit"/>
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectGroup>
+                                {concatValues.map((item, index) => (
+                                    <SelectItem value={item} key={index}>{item}</SelectItem>
+                                ))}
+                            </SelectGroup>
+                        </SelectContent>
+                    </Select>
                 </CardContent>
                 <CardFooter className="h-4">
                     <div className="absolute bottom-2 right-2 flex space-x-1">

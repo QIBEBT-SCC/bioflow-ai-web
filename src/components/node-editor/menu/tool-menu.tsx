@@ -84,7 +84,7 @@ export const ToolMenu: React.FC<ToolMenuProps> = ({isOpen, onClose, onSelectTool
 
     // 处理工具选择
     const handleToolSelect = (tool: SimpleToolInfo) => {
-        onSelectTool('tool', tool.uid)
+        onSelectTool('tool', String(tool.id))
         onClose()
     }
 
@@ -215,7 +215,7 @@ export const ToolMenu: React.FC<ToolMenuProps> = ({isOpen, onClose, onSelectTool
                                     <div className="space-y-3">
                                         {searchResults.map((tool) => (
                                             <div
-                                                key={tool.uid}
+                                                key={tool.id}
                                                 className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"
                                                 onClick={() => handleToolSelect(tool)}
                                             >
@@ -252,7 +252,7 @@ export const ToolMenu: React.FC<ToolMenuProps> = ({isOpen, onClose, onSelectTool
                                     <div className="space-y-3">
                                         {tools.map((tool) => (
                                             <div
-                                                key={tool.uid}
+                                                key={tool.id}
                                                 className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"
                                                 onClick={() => handleToolSelect(tool)}
                                             >

@@ -7,6 +7,7 @@ import {
     DnaIcon,
     FileInput,
     Filter,
+    FlipVerticalIcon,
     LineChart,
     Scissors,
     StickyNote,
@@ -29,6 +30,7 @@ const menuData = {
         items: [
             {type: "dataFilter", label: "数据过滤", icon: <Filter className="h-4 w-4 mr-2"/>},
             {type: "dataCut", label: "数据截取", icon: <Scissors className="h-4 w-4 mr-2"/>},
+            {type: "dataConcat", label: "数据拼接", icon: <FlipVerticalIcon className="h-4 w-4 mr-2"/>},
         ],
     },
     io: {
