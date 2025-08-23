@@ -1,5 +1,5 @@
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card.tsx";
-import {OutputFile, ParamDefine, ParamType} from "@/types/tool.tsx";
+import {FileMount, ParamDefine} from "@/types/tool.tsx";
 import {Badge} from "@/components/ui/badge.tsx";
 import {Button} from "@/components/ui/button.tsx";
 import {HelpCircle, Trash2} from "lucide-react";
@@ -173,8 +173,8 @@ export function ParamCard({index, param, remove, update}: {
 
 export function FileCard({index, file, update, remove}: {
     index: number,
-    file: OutputFile,
-    update: (index: number, field: keyof OutputFile, value: string | number | boolean) => void,
+    file: FileMount,
+    update: (index: number, field: keyof FileMount, value: string | number | boolean) => void,
     remove: (index: number) => void
 }) {
     return (

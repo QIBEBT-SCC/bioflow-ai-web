@@ -59,33 +59,45 @@ export function useCreateTool() {
     });
 }
 
-export function useAllTools() {
+export function useToolCount() {
+    const options: UseQueryOptions<number, Error> = {
+        queryKey: ['toolCounts'],
+        queryFn: toolApi.getToolCount,
+    }
+
+    return useQuery(options);
+}
+
+export function useAllTools(offset: number) {
     const options: UseQueryOptions<SimpleToolInfo[], Error> = {
-        queryKey: ['allTools'],
-        queryFn: toolApi.getToolList,
+        queryKey: ['allTools',offset],
+        queryFn: ({queryKey}) => {
+            const [, offset] = queryKey as [string, number];
+            return toolApi.getToolList(offset);
+        }
     };
 
     return useQuery(options);
 }
 
-export function useTool({uid}: { uid: string }) {
+export function useTool({id}: { id: string }) {
     const options: UseQueryOptions<ToolInfo, Error> = {
-        queryKey: ['tool', uid],
+        queryKey: ['tool', id],
         queryFn: ({queryKey}) => {
-            const [, uid] = queryKey as [string, string];
-            return toolApi.getTool(uid);
+            const [, id] = queryKey as [string, string];
+            return toolApi.getTool(id);
         },
     };
 
     return useQuery(options);
 }
 
-export function useToolArg({uid}: { uid: string }) {
+export function useToolArg({id}: { id: string }) {
     const options: UseQueryOptions<ToolArgPublic, Error> = {
-        queryKey: ['toolArg', uid],
+        queryKey: ['toolArg', id],
         queryFn: ({queryKey}) => {
-            const [, uid] = queryKey as [string, string];
-            return toolApi.getToolArg(uid);
+            const [, id] = queryKey as [string, string];
+            return toolApi.getToolArg(id);
         },
     };
 

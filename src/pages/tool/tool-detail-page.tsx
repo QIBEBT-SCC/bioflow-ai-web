@@ -8,7 +8,6 @@ import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs"
 import {ArrowLeft, Code, Copy, ExternalLink, FileText, HardDrive, Info, Layers, Terminal} from "lucide-react"
 import {useTool} from "@/hooks/use-tool.tsx";
 import {Link, useParams} from "react-router-dom";
-import {ParamType} from "@/types/tool.tsx";
 import {SidebarInset, SidebarTrigger} from "@/components/ui/sidebar.tsx";
 import {
     Breadcrumb,
@@ -20,8 +19,8 @@ import {
 } from "@/components/ui/breadcrumb.tsx";
 
 export function ToolDetailPage() {
-    const {toolUid} = useParams();
-    const {data: tool, isLoading} = useTool({uid: toolUid ? toolUid : ''});
+    const {toolId} = useParams();
+    const {data: tool, isLoading} = useTool({id: toolId ? toolId : ''});
 
     // 复制命令到剪贴板
     const copyToClipboard = (text: string) => {
@@ -75,14 +74,14 @@ export function ToolDetailPage() {
                         <div>
                             <div className="flex items-center gap-2">
                                 <h1 className="text-3xl font-bold">{tool.name}</h1>
-                                <Badge className="ml-2">{tool.docker_tag}</Badge>
+                                <Badge className="ml-2">{tool.image.image.tag}</Badge>
                             </div>
-                            <p className="text-muted-foreground mt-1">{tool.docker_repo}</p>
+                            <p className="text-muted-foreground mt-1">{tool.image.image.namespace}</p>
                         </div>
                         <div className="flex gap-2">
                             <Button asChild variant="outline" size="sm">
                                 <a
-                                    href={tool.homepage}
+                                    href={tool.image.homepage}
                                 >
                                     <FileText className="h-4 w-4 mr-2"/>
                                     查看文档
@@ -90,7 +89,7 @@ export function ToolDetailPage() {
                             </Button>
                             <Button asChild variant="outline" size="sm">
                                 <a
-                                    href={`https://hub.docker.com/r/${tool.docker_repo}`}
+                                    href={`https://hub.docker.com/r/${tool.image.image.namespace}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                 >
@@ -126,7 +125,7 @@ export function ToolDetailPage() {
                                 <FileText className="h-4 w-4 mr-2"/>
                                 输出文件
                                 <Badge variant="outline" className="ml-2">
-                                    {tool.output_files.length}
+                                    {tool.file_mounts.length}
                                 </Badge>
                             </TabsTrigger>
                             <TabsTrigger value="command">
@@ -148,12 +147,13 @@ export function ToolDetailPage() {
                                         <h3 className="text-sm font-medium text-muted-foreground">Docker 镜像</h3>
                                         <div className="flex items-center bg-muted/30 p-3 rounded-md">
                                             <HardDrive className="h-5 w-5 mr-3 text-muted-foreground"/>
-                                            <span className="font-medium">{tool.docker_repo}:{tool.docker_tag}</span>
+                                            <span
+                                                className="font-medium">{tool.image.image.registry}/{tool.image.image.namespace}/{tool.image.image.repository}:{tool.image.image.tag}</span>
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
                                                 className="h-8 w-8 ml-2"
-                                                onClick={() => copyToClipboard(`${tool.docker_repo}:${tool.docker_tag}`)}
+                                                onClick={() => copyToClipboard(`${tool.image.image.registry}/${tool.image.image.namespace}/${tool.image.image.repository}:${tool.image.image.tag}`)}
                                             >
                                                 <Copy className="h-4 w-4"/>
                                             </Button>
@@ -182,12 +182,12 @@ export function ToolDetailPage() {
                                         <h3 className="text-sm font-medium text-muted-foreground">帮助命令</h3>
                                         <div className="flex items-center bg-muted/30 p-3 rounded-md">
                                             <Terminal className="h-5 w-5 mr-3 text-muted-foreground"/>
-                                            <code className="text-sm">{tool.help_command}</code>
+                                            <code className="text-sm">{tool.help_doc.help_command}</code>
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
                                                 className="h-8 w-8 ml-2"
-                                                onClick={() => copyToClipboard(tool.help_command)}
+                                                onClick={() => copyToClipboard(tool.help_doc.help_command)}
                                             >
                                                 <Copy className="h-4 w-4"/>
                                             </Button>
@@ -233,35 +233,18 @@ export function ToolDetailPage() {
                                                 <div
                                                     key={index}
                                                     className={`p-4 rounded-lg border ${
-                                                        param.param_type !== ParamType.OUTPUT
+                                                        param.is_position
                                                             ? "border-l-4 border-l-blue-500"
                                                             : "border-l-4 border-l-green-500"
                                                     }`}
                                                 >
-                                                    <div className="flex flex-wrap items-center gap-2 mb-2">
-                                                        <h4 className="font-medium">{param.name}</h4>
-                                                        <Badge
-                                                            className={param.param_type !== ParamType.OUTPUT ? "bg-blue-500" : "bg-green-500"}>
-                                                            {param.param_type !== ParamType.OUTPUT ? "输入" : "输出"}
-                                                        </Badge>
-                                                        {param.is_file && <Badge variant="outline">文件</Badge>}
-                                                    </div>
-
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                                                    <div className="gap-4">
                                                         <div>
-                                                            <p className="text-sm text-muted-foreground mb-1">命令格式</p>
+                                                            <p className="text-sm text-muted-foreground mb-1">{param.description}</p>
                                                             <code className="bg-muted px-2 py-1 rounded text-sm block overflow-x-auto">
                                                                 {param.command}
                                                             </code>
                                                         </div>
-                                                        {param.mount_path && (
-                                                            <div>
-                                                                <p className="text-sm text-muted-foreground mb-1">挂载路径</p>
-                                                                <code className="bg-muted px-2 py-1 rounded text-sm block overflow-x-auto">
-                                                                    {param.mount_path}
-                                                                </code>
-                                                            </div>
-                                                        )}
                                                     </div>
                                                 </div>
                                             ))}
@@ -294,7 +277,7 @@ export function ToolDetailPage() {
                                 </CardHeader>
                                 <CardContent>
                                     <div className="grid grid-cols-1 gap-4">
-                                        {tool.output_files.map((file, index) => (
+                                        {tool.file_mounts.map((file, index) => (
                                             <div key={index} className="p-4 rounded-lg border border-l-4 border-l-green-500">
                                                 <h4 className="font-medium mb-3">{file.name}</h4>
 
