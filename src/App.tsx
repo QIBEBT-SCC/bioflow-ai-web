@@ -8,7 +8,6 @@ import {TooltipProvider} from "@/components/ui/tooltip.tsx";
 import {HomePage} from "@/pages/home-page";
 import {ThemeProvider} from "@/components/theme-provider.tsx";
 import {Toaster} from "@/components/ui/sonner.tsx";
-import {AIToolConfigGeneratorMutation} from "@/components/tool/ai-tool-config-generator-mutation.tsx";
 
 // 懒加载页面组件，确保为默认导出
 const ProjectsPage = React.lazy(() => import("@/pages/project/project-page.tsx").then(m => ({default: m.ProjectsPage})));
@@ -103,7 +102,7 @@ export default function App() {
                     children: [
                         {index: true, element: withSuspense(ToolsPage)},
                         {path: "add", element: withSuspense(AddToolPage)},
-                        {path: ":toolUid", element: withSuspense(ToolDetailPage)},
+                        {path: ":toolId", element: withSuspense(ToolDetailPage)},
                     ]
                 },
                 {
