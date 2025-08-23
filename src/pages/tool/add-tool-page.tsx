@@ -25,7 +25,7 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator
 } from "@/components/ui/breadcrumb.tsx";
-import {AIGenProp, type DockerToolCreate, EventType, type OutputFile, type ParamDefine, ParamType, ToolSSEEventData} from "@/types/tool"
+import {AIGenProp, type DockerToolCreate, EventType, type FileMount, type ParamDefine, ToolSSEEventData} from "@/types/tool"
 import {useCreateTool, useToolTagList} from "@/hooks/use-tool.tsx";
 import {TagSelector} from "@/components/tag-selector.tsx";
 import {FileCard, ParamCard} from "@/components/tool/tool-setting-card.tsx";
@@ -51,25 +51,24 @@ export function AddToolPage() {
         command_template: "",
         dynamic_params: [],
         static_params: "",
-        output_files: [],
+        file_mounts: [],
         mkdir_output: true,
         use_temp_dir: false,
         help_command: "",
     })
 
     // 添加动态参数
-    const addRequiredParam = () => {
+    const addDynamicParam = () => {
         setTool({
             ...tool,
             dynamic_params: [
                 ...tool.dynamic_params,
                 {
-                    name: "",
                     command: "",
                     description: "",
                     is_file: true,
-                    mount_path: "",
-                    param_type: ParamType.INPUT,
+                    is_position: false,
+                    required: true
                 },
             ],
         })
@@ -83,41 +82,42 @@ export function AddToolPage() {
     }
 
     // 删除动态参数
-    const removeRequiredParam = (index: number) => {
+    const removeDynamicParam = (index: number) => {
         const updatedParams = [...tool.dynamic_params]
         updatedParams.splice(index, 1)
         setTool({...tool, dynamic_params: updatedParams})
     }
 
     // 添加输出文件
-    const addOutputFile = () => {
+    const addFileMount = () => {
         setTool({
             ...tool,
-            output_files: [
-                ...tool.output_files,
+            file_mounts: [
+                ...tool.file_mounts,
                 {
                     name: "",
                     file_path: "",
+                    file_type: "INPUT",
                     is_report: false,
                     is_log: false,
-                    mount_path: "/data/output",
+                    mount_path: "/data/container_path",
                 },
             ],
         })
     }
 
     // 更新输出文件
-    const updateOutputFile = (index: number, field: keyof OutputFile, value: string | number | boolean) => {
-        const updatedFiles = [...tool.output_files]
+    const updateFileMount = (index: number, field: keyof FileMount, value: string | number | boolean) => {
+        const updatedFiles = [...tool.file_mounts]
         updatedFiles[index] = {...updatedFiles[index], [field]: value}
-        setTool({...tool, output_files: updatedFiles})
+        setTool({...tool, file_mounts: updatedFiles})
     }
 
     // 删除输出文件
-    const removeOutputFile = (index: number) => {
-        const updatedFiles = [...tool.output_files]
+    const removeFileMount = (index: number) => {
+        const updatedFiles = [...tool.file_mounts]
         updatedFiles.splice(index, 1)
-        setTool({...tool, output_files: updatedFiles})
+        setTool({...tool, file_mounts: updatedFiles})
     }
 
     // AI生成帮助命令
@@ -162,7 +162,7 @@ export function AddToolPage() {
                                 description: event.data.description,
                                 dynamic_params: event.data.dynamic_params,
                                 mkdir_output: event.data.mkdir_output,
-                                output_files: event.data.output_files,
+                                file_mounts: event.data.file_mounts,
                                 static_params: event.data.static_params,
                                 use_temp_dir: event.data.use_temp_dir
                             })
@@ -198,7 +198,7 @@ export function AddToolPage() {
                         command_template: "",
                         dynamic_params: [],
                         static_params: "",
-                        output_files: [],
+                        file_mounts: [],
                         mkdir_output: true,
                         use_temp_dir: false,
                         help_command: "",
@@ -272,9 +272,9 @@ export function AddToolPage() {
                                 </TabsTrigger>
                                 <TabsTrigger value="outputs">
                                     {t("add_tool.file_output")}
-                                    {tool.output_files.length > 0 && (
+                                    {tool.file_mounts.length > 0 && (
                                         <Badge variant="outline" className="ml-2">
-                                            {tool.output_files.length}
+                                            {tool.file_mounts.length}
                                         </Badge>
                                     )}
                                 </TabsTrigger>
@@ -472,14 +472,14 @@ export function AddToolPage() {
                                                             index={index}
                                                             param={param}
                                                             update={updateDynamicParam}
-                                                            remove={removeRequiredParam}
+                                                            remove={removeDynamicParam}
                                                         />
                                                     ))}
                                                 </div>
                                             )}
 
                                             <div className="flex justify-center mt-4">
-                                                <Button type="button" onClick={addRequiredParam} variant="outline" className="w-full">
+                                                <Button type="button" onClick={addDynamicParam} variant="outline" className="w-full">
                                                     <CirclePlusIcon className="h-4 w-4 mr-2"/>
                                                     添加参数
                                                 </Button>
@@ -514,25 +514,25 @@ export function AddToolPage() {
                                             <Label className="text-lg font-semibold">输出文件</Label>
                                         </div>
 
-                                        {tool.output_files.length === 0 ? (
+                                        {tool.file_mounts.length === 0 ? (
                                             <div className="text-center py-6 text-muted-foreground border rounded-md bg-muted/30">
                                                 尚未添加任何输出文件。点击"添加输出文件"按钮开始配置。
                                             </div>
                                         ) : (
                                             <div className="space-y-4">
-                                                {tool.output_files.map((file, index) => (
+                                                {tool.file_mounts.map((file, index) => (
                                                     <FileCard
                                                         index={index}
                                                         file={file}
-                                                        update={updateOutputFile}
-                                                        remove={removeOutputFile}
+                                                        update={updateFileMount}
+                                                        remove={removeFileMount}
                                                     />
                                                 ))}
                                             </div>
                                         )}
 
                                         <div className="flex justify-center mt-4">
-                                            <Button type="button" onClick={addOutputFile} variant="outline" className="w-full">
+                                            <Button type="button" onClick={addFileMount} variant="outline" className="w-full">
                                                 <CirclePlusIcon className="h-4 w-4 mr-2"/>
                                                 添加输出文件
                                             </Button>
