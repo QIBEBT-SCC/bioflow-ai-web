@@ -2,14 +2,10 @@ import axios from 'axios';
 import {isTokenExpired, useAuthStore} from "@/stores/authStore";
 import {Project, ProjectCreateProp, ProjectTag} from "@/types/project.tsx";
 import {
-    AIGenProp,
-    AIGenTool,
     DockerToolCreate,
-    EventType,
     SimpleToolInfo,
     ToolGroup,
     ToolInfo,
-    ToolSSEEventData,
     ToolTag
 } from "@/types/tool.tsx";
 import {ToolArgPublic} from "@/types/node.tsx";
@@ -17,6 +13,7 @@ import {SimpleWorkflowInfo, Workflow, WorkflowDefinition} from "@/types/workflow
 import {MonitorRecord, SimpleTask, TaskPublic} from "@/types/task.tsx";
 import {RunPublic, Stats} from "@/types/run.tsx";
 import {BioDb, BioDbCreate, BioDbSimple} from "@/types/resource.tsx";
+import {ChatSessionPublic} from "@/types/chat.tsx";
 
 export const api = axios.create({
     baseURL: '/api/v1',
@@ -168,98 +165,6 @@ export const toolApi = {
         const {data} = await api.get<ToolArgPublic>(`/tools/${id}/args`);
         return data;
     },
-    // 使用fetch方式处理POST表单数据和身份认证
-    generateToolConfig: async (
-        prop: AIGenProp,
-        onMessage: (event: ToolSSEEventData) => void,
-        onError?: (error: Error) => void,
-        onComplete?: () => void
-    ): Promise<void> => {
-        const token = localStorage.getItem('token');
-
-        try {
-            // 构建FormData
-            const formData = new FormData();
-            formData.append('name', prop.name.trim());
-            formData.append('description', prop.description.trim());
-            formData.append('help_command', prop.help_command.trim());
-            formData.append('repository', prop.repository.trim());
-            formData.append('tag', (prop.tag || 'latest').trim());
-
-            const response = await fetch('/api/v1/tools/ai/config', {
-                method: 'POST',
-                headers: {
-                    'Authorization': token ? `Bearer ${token}` : '',
-                    // 不设置Content-Type，让浏览器自动设置multipart/form-data
-                },
-                body: formData,
-            });
-
-            if (!response.ok) {
-                try {
-                    const errorData = await response.json();
-                    console.error('API Error Details:', errorData);
-                } catch (e) {
-                    console.error('Failed to parse error response:', e);
-                }
-            }
-
-            const reader = response.body?.getReader();
-            if (!reader) {
-                throw new Error('无法读取响应流');
-            }
-
-            const decoder = new TextDecoder();
-            let buffer = '';
-
-            try {
-                while (true) {
-                    const {done, value} = await reader.read();
-
-                    if (done) {
-                        onComplete?.();
-                        break;
-                    }
-
-                    buffer += decoder.decode(value, {stream: true});
-
-                    // 按照SSE格式解析，每个消息以两个换行符分隔
-                    const messages = buffer.split('\n\n');
-                    buffer = messages.pop() || ''; // 保留最后一个可能不完整的消息
-
-                    for (const message of messages) {
-                        if (message.trim() === '') continue;
-
-                        const lines = message.split('\n');
-                        let eventType: EventType = EventType.LOADING;
-                        let data: string | AIGenTool | null = null;
-
-                        for (const line of lines) {
-                            if (line.startsWith('event:')) {
-                                eventType = line.substring(6).trim() as EventType;
-                            } else if (line.startsWith('data:')) {
-                                try {
-                                    data = JSON.parse(line.substring(5).trim());
-                                } catch (e) {
-                                    console.log(e)
-                                    // 如果不是JSON，就作为字符串处理
-                                    data = line.substring(5).trim();
-                                }
-                            }
-                        }
-
-                        if (data !== null) {
-                            onMessage({event: eventType, data});
-                        }
-                    }
-                }
-            } finally {
-                reader.releaseLock();
-            }
-        } catch (error) {
-            onError?.(error as Error);
-        }
-    }
 };
 
 export const projectApi = {
@@ -331,6 +236,42 @@ export const resourceApi = {
     },
     searchDB: async (name: string) => {
         const {data} = await api.get<BioDb[]>(`/bio_dbs/search?name=${name}&offset=0&limit=10`);
+        return data;
+    }
+}
+
+export const chatApi = {
+    // 创建新的聊天会话
+    createSession: async (): Promise<ChatSessionPublic> => {
+        const {data} = await api.post('/chat');
+        return data;
+    },
+
+    // 获取所有聊天历史
+    getSessions: async (offset: number = 0, limit: number = 8): Promise<ChatSessionPublic[]> => {
+        const {data} = await api.get('/chat', {
+            params: {offset, limit}
+        });
+        return data;
+    },
+
+    // 获取指定会话的聊天历史消息
+    getSessionHistory: async (session_id: string) => {
+        const {data} = await api.get(`/chat/${session_id}/history`);
+        return data;
+    },
+
+    // 更新聊天历史描述
+    updateSession: async (session_id: string, description: string): Promise<ChatSessionPublic> => {
+        const {data} = await api.put(`/chat/${session_id}`, null, {
+            params: {description}
+        });
+        return data;
+    },
+
+    // 删除聊天会话
+    deleteSession: async (session_id: string): Promise<{message: string}> => {
+        const {data} = await api.delete(`/chat/${session_id}`);
         return data;
     }
 }
