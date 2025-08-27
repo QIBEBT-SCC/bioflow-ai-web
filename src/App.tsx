@@ -5,9 +5,9 @@ import {isTokenExpired, useAuthStore} from "@/stores/authStore.tsx";
 import {createBrowserRouter, Navigate, RouterProvider} from "react-router-dom";
 import {LoginPage} from "@/pages/login-page.tsx";
 import {TooltipProvider} from "@/components/ui/tooltip.tsx";
-import {HomePage} from "@/pages/home-page";
 import {ThemeProvider} from "@/components/theme-provider.tsx";
 import {Toaster} from "@/components/ui/sonner.tsx";
+import {ChatPage} from "@/pages/chat/chat-page.tsx";
 
 // 懒加载页面组件，确保为默认导出
 const ProjectsPage = React.lazy(() => import("@/pages/project/project-page.tsx").then(m => ({default: m.ProjectsPage})));
@@ -68,7 +68,7 @@ export default function App() {
             path: "/",
             element: <ProtectedRoute><MainLayout/></ProtectedRoute>,
             children: [
-                {path: "home", element: <HomePage/>},
+                {path: "home", element: <ChatPage/>},
                 {
                     path: "project",
                     children: [
@@ -126,7 +126,7 @@ export default function App() {
                 <TooltipProvider>
                     <RouterProvider router={router}/>
                 </TooltipProvider>
-                <Toaster richColors expand={true} position={"top-right"}/>
+                <Toaster richColors expand={true} position={"top-right"} offset={{top: 70, right: 10}}/>
             </ThemeProvider>
         </QueryClientProvider>
     );
