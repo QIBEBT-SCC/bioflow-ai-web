@@ -8,7 +8,7 @@ import {
     BreadcrumbSeparator
 } from "@/components/ui/breadcrumb.tsx";
 import {ScrollArea} from "@/components/ui/scroll-area.tsx";
-import {Bot, ImageIcon, Maximize2, Minimize2, Paperclip, Send, StopCircle} from "lucide-react";
+import {BotIcon, FileIcon, ImageIcon, Maximize2Icon, Minimize2Icon, PaperclipIcon, SendIcon, StopCircleIcon, XIcon} from "lucide-react";
 import React, {useEffect, useRef, useState} from "react";
 import {Textarea} from "@/components/ui/textarea.tsx";
 import {Button} from "@/components/ui/button.tsx";
@@ -48,6 +48,9 @@ export function ChatPage() {
     const [editingHistoryId, setEditingHistoryId] = useState<string | null>(null)
     const [editingDescription, setEditingDescription] = useState("")
     const [showEditDialog, setShowEditDialog] = useState(false)
+
+    // 文件上传相关状态
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -93,19 +96,30 @@ export function ChatPage() {
     }
 
     const handleSendMessage = async () => {
-        if (!inputValue.trim() || isGenerating) return
+        if ((!inputValue.trim() && selectedFiles.length === 0) || isGenerating) return
 
         const currentInput = inputValue.trim()
+        const filesToSend = [...selectedFiles]
+
+        // 清空输入和文件
         setInputValue("")
+        setSelectedFiles([])
+        setShowFileUpload(false)
         setIsGenerating(true)
 
         // 创建用户消息
         const userMessage: Message = {
             id: `user_${Date.now()}`,
             type: "user",
-            content: currentInput,
+            content: currentInput || `上传了 ${filesToSend.length} 个文件`,
             timestamp: new Date(),
             status: "sent",
+            attachments: filesToSend.map(file => ({
+                type: file.type.startsWith("image/") ? "image" : "file",
+                name: file.name,
+                url: URL.createObjectURL(file),
+                size: file.size,
+            })),
         }
 
         addMessage(userMessage)
@@ -133,6 +147,7 @@ export function ChatPage() {
                 {
                     message: currentInput,
                     session_id: sessionId || undefined,
+                    files: filesToSend.length > 0 ? filesToSend : undefined,
                 },
                 {
                     onLoading: (data: SSEEventData) => {
@@ -280,25 +295,7 @@ export function ChatPage() {
     }
 
     const handleFileUpload = (files: File[]) => {
-        files.forEach((file) => {
-            const fileMessage: Message = {
-                id: Date.now().toString() + Math.random(),
-                type: "user",
-                content: `上传了文件: ${file.name}`,
-                timestamp: new Date(),
-                status: "sent",
-                attachments: [
-                    {
-                        type: file.type.startsWith("image/") ? "image" : "file",
-                        name: file.name,
-                        url: URL.createObjectURL(file),
-                        size: file.size,
-                    },
-                ],
-            }
-            addMessage(fileMessage)
-        })
-        setShowFileUpload(false)
+        setSelectedFiles(prev => [...prev, ...files])
     }
 
     const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -375,7 +372,7 @@ export function ChatPage() {
                         {isGenerating && !currentStreamingMessage && (
                             <div className="flex items-start gap-3">
                                 <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center">
-                                    <Bot className="w-4 h-4 text-accent-foreground"/>
+                                    <BotIcon className="w-4 h-4 text-accent-foreground"/>
                                 </div>
                                 <div className="bg-card text-card-foreground border border-border rounded-lg p-4 animate-pulse">
                                     <div className="flex items-center gap-1">
@@ -404,7 +401,49 @@ export function ChatPage() {
                 <div className="max-w-4xl mx-auto">
                     {showFileUpload && (
                         <div className="mb-4">
-                            <FileUpload onFileUpload={handleFileUpload}/>
+                            <FileUpload
+                                onFileUpload={handleFileUpload}
+                                disabled={isGenerating}
+                            />
+                        </div>
+                    )}
+
+                    {/* 显示已选择的文件 */}
+                    {selectedFiles.length > 0 && (
+                        <div className="mb-4">
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="text-sm font-medium">已选择 {selectedFiles.length} 个文件</span>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setSelectedFiles([])}
+                                    disabled={isGenerating}
+                                    className="text-xs"
+                                >
+                                    清空全部
+                                </Button>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                {selectedFiles.map((file, index) => (
+                                    <div key={index} className="flex items-center gap-2 px-3 py-1 bg-muted rounded-lg">
+                                        {file.type.startsWith("image/") ? (
+                                            <ImageIcon className="w-4 h-4 text-blue-500"/>
+                                        ) : (
+                                            <FileIcon className="w-4 h-4 text-gray-500"/>
+                                        )}
+                                        <span className="text-sm truncate max-w-32">{file.name}</span>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => setSelectedFiles(prev => prev.filter((_, i) => i !== index))}
+                                            disabled={isGenerating}
+                                            className="h-4 w-4 p-0"
+                                        >
+                                            <XIcon className="w-3 h-3"/>
+                                        </Button>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     )}
 
@@ -416,7 +455,7 @@ export function ChatPage() {
                                 onChange={(e) => setInputValue(e.target.value)}
                                 onKeyDown={handleKeyPress}
                                 onPaste={handlePaste}
-                                placeholder={isGenerating ? "AI正在生成回复..." : "输入消息... (支持 Shift+Enter 换行，Ctrl+V 粘贴图片)"}
+                                placeholder={isGenerating ? "AI正在生成回复..." : `输入消息... (支持 Shift+Enter 换行，Ctrl+V 粘贴图片)${selectedFiles.length > 0 ? ` • 已选择 ${selectedFiles.length} 个文件` : ""}`}
                                 className={`pr-24 resize-none transition-all duration-200 ${
                                     isInputExpanded ? "min-h-[120px]" : "min-h-[44px]"
                                 }`}
@@ -431,7 +470,7 @@ export function ChatPage() {
                                     className="h-8 w-8 p-0"
                                     title={isInputExpanded ? "收缩输入框" : "展开输入框"}
                                 >
-                                    {isInputExpanded ? <Minimize2 className="w-4 h-4"/> : <Maximize2 className="w-4 h-4"/>}
+                                    {isInputExpanded ? <Minimize2Icon className="w-4 h-4"/> : <Maximize2Icon className="w-4 h-4"/>}
                                 </Button>
                                 <Button
                                     size="sm"
@@ -439,7 +478,7 @@ export function ChatPage() {
                                     onClick={() => setShowFileUpload(!showFileUpload)}
                                     className="h-8 w-8 p-0"
                                 >
-                                    <Paperclip className="w-4 h-4"/>
+                                    <PaperclipIcon className="w-4 h-4"/>
                                 </Button>
                                 <Button size="sm" variant="ghost" onClick={() => inputRef.current?.click()} className="h-8 w-8 p-0">
                                     <ImageIcon className="w-4 h-4"/>
@@ -448,19 +487,19 @@ export function ChatPage() {
                         </div>
                         <Button
                             onClick={isGenerating ? stopGeneration : handleSendMessage}
-                            disabled={!isGenerating && !inputValue.trim()}
+                            disabled={!isGenerating && !inputValue.trim() && selectedFiles.length === 0}
                             className={`px-4 transition-all duration-200 ${isInputExpanded ? "h-[120px] self-stretch" : "h-11"}`}
                             variant={isGenerating ? "destructive" : "default"}
                         >
-                            {isGenerating ? <StopCircle className="w-4 h-4"/> : <Send className="w-4 h-4"/>}
+                            {isGenerating ? <StopCircleIcon className="w-4 h-4"/> : <SendIcon className="w-4 h-4"/>}
                         </Button>
                     </div>
 
                     <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
-              <span>
-                支持 Markdown 格式 • 代码高亮 • Mermaid 图表 •{" "}
-                  {isInputExpanded ? "展开模式" : "点击展开按钮获得更大输入区域"}
-              </span>
+                        {/*<span>*/}
+                        {/*  支持 Markdown 格式 • 代码高亮 • Mermaid 图表 •{" "}*/}
+                        {/*    {isInputExpanded ? "展开模式" : "点击展开按钮获得更大输入区域"}*/}
+                        {/*</span>*/}
                         <span>{inputValue.length}/2000</span>
                     </div>
                 </div>

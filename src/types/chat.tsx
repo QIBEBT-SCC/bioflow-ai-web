@@ -35,6 +35,7 @@ export interface ChatEventHandlers {
 export interface ChatRequest {
     message: string;
     session_id?: string;
+    files?: File[];
 }
 
 // 后端返回的聊天会话

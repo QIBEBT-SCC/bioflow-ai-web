@@ -36,6 +36,13 @@ export class ChatSSEService {
             if (request.session_id) {
                 formData.append('session_id', request.session_id);
             }
+            
+            // 添加文件到FormData
+            if (request.files && request.files.length > 0) {
+                request.files.forEach((file) => {
+                    formData.append('files', file);
+                });
+            }
 
             await fetchEventSource('/api/v1/chat/completions', {
                 method: 'POST',

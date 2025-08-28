@@ -1,17 +1,18 @@
 "use client"
 
-import { useCallback, useState } from "react"
-import { useDropzone } from "react-dropzone"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
-import { Upload, File, ImageIcon, X, CheckCircle } from "lucide-react"
+import {useCallback, useState} from "react"
+import {useDropzone} from "react-dropzone"
+import {Button} from "@/components/ui/button"
+import {Card} from "@/components/ui/card"
+
+import {Upload, File, ImageIcon, X, CheckCircle} from "lucide-react"
 
 interface FileUploadProps {
     onFileUpload: (files: File[]) => void
     maxFiles?: number
     maxSize?: number // in bytes
     acceptedTypes?: string[]
+    disabled?: boolean
 }
 
 export function FileUpload({
@@ -19,8 +20,8 @@ export function FileUpload({
                                maxFiles = 5,
                                maxSize = 10 * 1024 * 1024, // 10MB
                                acceptedTypes = ["image/*", "text/*", ".pdf", ".doc", ".docx"],
+                               disabled = false,
                            }: FileUploadProps) {
-    const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({})
     const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
 
     const onDrop = useCallback(
@@ -35,33 +36,17 @@ export function FileUpload({
 
             if (validFiles.length > 0) {
                 setUploadedFiles((prev) => [...prev, ...validFiles])
-
-                // 模拟上传进度
-                validFiles.forEach((file) => {
-                    const fileId = `${file.name}-${file.size}`
-                    let progress = 0
-                    const interval = setInterval(() => {
-                        progress += Math.random() * 30
-                        if (progress >= 100) {
-                            progress = 100
-                            clearInterval(interval)
-                        }
-                        setUploadProgress((prev) => ({ ...prev, [fileId]: progress }))
-                    }, 200)
-                })
-
-                // 延迟调用回调，模拟上传完成
-                setTimeout(() => {
-                    onFileUpload(validFiles)
-                }, 1500)
+                // 立即调用回调函数，让父组件处理文件上传
+                onFileUpload(validFiles)
             }
         },
         [maxSize, onFileUpload],
     )
 
-    const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    const {getRootProps, getInputProps, isDragActive} = useDropzone({
         onDrop,
         maxFiles,
+        disabled,
         accept: acceptedTypes.reduce(
             (acc, type) => {
                 acc[type] = []
@@ -83,29 +68,40 @@ export function FileUpload({
 
     const getFileIcon = (file: File) => {
         if (file.type.startsWith("image/")) {
-            return <ImageIcon className="w-5 h-5 text-blue-500" />
+            return <ImageIcon className="w-5 h-5 text-blue-500"/>
         }
-        return <File className="w-5 h-5 text-gray-500" />
+        return <File className="w-5 h-5 text-gray-500"/>
     }
 
     return (
         <Card className="p-6">
             <div
                 {...getRootProps()}
-                className={`border-2 border-dashed border-accent/50 rounded-lg p-8 text-center transition-colors hover:border-accent cursor-pointer ${
+                className={`border-2 border-dashed border-accent/50 rounded-lg p-8 text-center transition-colors ${
+                    disabled
+                        ? "opacity-50 cursor-not-allowed"
+                        : "hover:border-accent cursor-pointer"
+                } ${
                     isDragActive ? "border-accent bg-accent/5" : ""
                 }`}
             >
                 <input {...getInputProps()} />
                 <div className="flex flex-col items-center gap-4">
                     <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center">
-                        <Upload className="w-6 h-6 text-accent" />
+                        <Upload className="w-6 h-6 text-accent"/>
                     </div>
                     <div className="text-center">
-                        <p className="text-sm font-medium">{isDragActive ? "释放文件到这里" : "拖拽文件到这里或点击上传"}</p>
+                        <p className="text-sm font-medium">
+                            {disabled
+                                ? "文件上传已禁用"
+                                : isDragActive
+                                    ? "释放文件到这里"
+                                    : "拖拽文件到这里或点击上传"
+                            }
+                        </p>
                         <p className="text-xs text-muted-foreground mt-1">支持图片、文档等格式，最大 {formatFileSize(maxSize)}</p>
                     </div>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" disabled={disabled}>
                         选择文件
                     </Button>
                 </div>
@@ -114,33 +110,30 @@ export function FileUpload({
             {uploadedFiles.length > 0 && (
                 <div className="mt-4 space-y-3">
                     <h4 className="text-sm font-medium">已选择的文件</h4>
-                    {uploadedFiles.map((file, index) => {
-                        const fileId = `${file.name}-${file.size}`
-                        const progress = uploadProgress[fileId] || 0
-                        const isComplete = progress >= 100
-
-                        return (
-                            <div key={index} className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                                {getFileIcon(file)}
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center justify-between">
-                                        <p className="text-sm font-medium truncate">{file.name}</p>
-                                        <Button size="sm" variant="ghost" onClick={() => removeFile(index)} className="h-6 w-6 p-0">
-                                            <X className="w-3 h-3" />
-                                        </Button>
-                                    </div>
-                                    <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
-                                    {!isComplete && <Progress value={progress} className="mt-2 h-1" />}
-                                    {isComplete && (
-                                        <div className="flex items-center gap-1 mt-1">
-                                            <CheckCircle className="w-3 h-3 text-green-500" />
-                                            <span className="text-xs text-green-600">上传完成</span>
-                                        </div>
-                                    )}
+                    {uploadedFiles.map((file, index) => (
+                        <div key={index} className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                            {getFileIcon(file)}
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between">
+                                    <p className="text-sm font-medium truncate">{file.name}</p>
+                                    <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => removeFile(index)}
+                                        className="h-6 w-6 p-0"
+                                        disabled={disabled}
+                                    >
+                                        <X className="w-3 h-3"/>
+                                    </Button>
+                                </div>
+                                <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
+                                <div className="flex items-center gap-1 mt-1">
+                                    <CheckCircle className="w-3 h-3 text-green-500"/>
+                                    <span className="text-xs text-green-600">已选择</span>
                                 </div>
                             </div>
-                        )
-                    })}
+                        </div>
+                    ))}
                 </div>
             )}
         </Card>
