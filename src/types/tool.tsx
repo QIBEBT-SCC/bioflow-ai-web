@@ -7,7 +7,6 @@ export enum ToolType {
 export interface ParamDefine {
     description?: string
     command: string
-    is_file: boolean
     is_position: boolean
     index?: number
     required: boolean
@@ -37,15 +36,15 @@ export interface ToolGroup {
     tool_count: number;
 }
 
-interface ImageConfig {
+export interface ImageConfig {
     registry: string;
     namespace: string;
     repository: string;
     tag: string
 }
 
-interface ToolImage {
-    id?: number;
+export interface ToolImage {
+    uid?: string;
     name: string;
     version: string;
     description: string;
@@ -55,29 +54,29 @@ interface ToolImage {
 }
 
 interface ToolHelpDoc {
-    id?: number;
+    uid?: string;
     help_command: string;
     description?: string;
     content: string;
-    parent_id?: number;
 }
 
 
 // 工具创建接口
 export interface DockerToolCreate {
     name: string
-    repository: string
-    tag: string
+    image_uid: string
     description: string
-    homepage: string
-    tool_tag: ToolTag[]
+    help_doc_uid:string
+
+    group_id:number
+    tags:ToolTag[]
+
     command_template: string
     dynamic_params: ParamDefine[]
     static_params: string
     file_mounts: FileMount[]
     mkdir_output: boolean
     use_temp_dir: boolean
-    help_command: string
 }
 
 export interface SimpleToolInfo {
