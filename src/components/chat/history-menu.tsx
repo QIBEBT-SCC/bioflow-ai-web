@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu.tsx";
 import {Button} from "@/components/ui/button.tsx";
 import {Edit3Icon, HistoryIcon, PlusIcon, Trash2Icon} from "lucide-react";
+import {useState} from "react";
 import {
     AlertDialog, AlertDialogAction, AlertDialogCancel,
     AlertDialogContent,
@@ -31,6 +32,7 @@ interface HistoryMenuProps {
 
 export function HistoryMenu({setEditID, setDescription, setShowEditDialog}: HistoryMenuProps) {
     const {data: chatHistories = []} = useChatHistories();
+    const [isOpen, setIsOpen] = useState(false);
 
     const {
         currentSession,
@@ -115,16 +117,39 @@ export function HistoryMenu({setEditID, setDescription, setShowEditDialog}: Hist
 
     const deleteHistory = async (historyId: string) => {
         try {
+            // 先检查是否是当前会话，如果是，需要先切换到其他会话或清空
+            const isCurrentSession = historyId === currentSession?.uid;
+            
+            if (isCurrentSession) {
+                // 找到一个不同的会话来切换，或者清空状态
+                const otherSession = chatHistories.find(h => h.uid !== historyId);
+                if (otherSession) {
+                    // 先切换到其他会话
+                    setCurrentSession(otherSession);
+                } else {
+                    // 如果没有其他会话，清空当前状态
+                    setCurrentSession(null);
+                }
+                // 清空消息
+                clearMessages();
+            }
+            
             // 使用mutation删除会话
             await deleteSessionMutation.mutateAsync(historyId);
             
-            // 如果删除的是当前会话，清空当前状态
-            if (historyId === currentSession?.uid) {
-                setCurrentSession(null);
-                clearMessages();
-            }
+            // 关闭下拉菜单
+            setIsOpen(false);
+            
         } catch (error) {
             console.error('Failed to delete chat session:', error);
+            // 如果删除失败且之前改变了状态，需要恢复
+            if (historyId === currentSession?.uid) {
+                // 尝试恢复到被删除的会话
+                const targetSession = chatHistories.find(h => h.uid === historyId);
+                if (targetSession) {
+                    setCurrentSession(targetSession);
+                }
+            }
             // 错误处理已在mutation的onError中处理，这里不需要额外处理
         }
     }
@@ -137,7 +162,7 @@ export function HistoryMenu({setEditID, setDescription, setShowEditDialog}: Hist
 
     return (
         <div className="flex items-center gap-2">
-            <DropdownMenu>
+            <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
                 <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm" className="h-8 px-2">
                         <HistoryIcon className="w-4 h-4"/>
@@ -165,9 +190,15 @@ export function HistoryMenu({setEditID, setDescription, setShowEditDialog}: Hist
                                 className={`flex items-center justify-between p-2 cursor-pointer group ${
                                     history.uid === currentSession?.uid ? 'bg-accent' : ''
                                 }`}
-                                onClick={() => switchToHistory(history)}
+                                onSelect={(e) => {
+                                    // 阻止默认的选择行为，只有在点击主要区域时才切换
+                                    e.preventDefault()
+                                }}
                             >
-                                <div className="flex-1 min-w-0">
+                                <div 
+                                    className="flex-1 min-w-0 cursor-pointer"
+                                    onClick={() => switchToHistory(history)}
+                                >
                                     <div className="font-medium text-sm truncate">
                                         {history.description}
                                     </div>
