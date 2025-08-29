@@ -2,7 +2,6 @@
 
 import type React from "react"
 
-import {useState} from "react"
 import {Button} from "@/components/ui/button"
 import {Input} from "@/components/ui/input"
 import {Textarea} from "@/components/ui/textarea"
@@ -10,27 +9,14 @@ import {Label} from "@/components/ui/label"
 import {Card, CardContent} from "@/components/ui/card"
 import {SaveIcon, HelpCircleIcon, ExternalLinkIcon} from 'lucide-react'
 import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip"
-import {ToolImage} from "@/types/tool.tsx";
+import {useCreateImage} from "@/hooks/use-tool.tsx";
+import {useCreateToolStore} from "@/stores/toolStore.tsx";
 
 
-interface CreateImageFormProps {
-    onImageCreated: (image: ToolImage) => void
-}
+export function CreateImageForm() {
+    const {currentImage, setCurrentImage} = useCreateToolStore()
 
-export function CreateImageForm({onImageCreated}: CreateImageFormProps) {
-    const [image, setImage] = useState<ToolImage>({
-        name: "",
-        version: "",
-        description: "",
-        homepage: "",
-        paper_link: "",
-        image: {
-            registry: "docker.io",
-            namespace: "library",
-            repository: "",
-            tag: "latest",
-        },
-    })
+    const createImageMutation = useCreateImage()
 
     // 从镜像字符串解析配置
     const parseImageString = (imageStr: string) => {
@@ -70,10 +56,12 @@ export function CreateImageForm({onImageCreated}: CreateImageFormProps) {
     // 处理镜像字符串输入
     const handleImageStringChange = (imageStr: string) => {
         const parsed = parseImageString(imageStr)
-        if (parsed && image.image) {
-            setImage({
-                ...image,
+        if (parsed && currentImage.image) {
+            setCurrentImage({
+                ...currentImage,
                 image: parsed,
+                name: parsed.repository,
+                version: parsed.tag
             })
         }
     }
@@ -83,11 +71,8 @@ export function CreateImageForm({onImageCreated}: CreateImageFormProps) {
         e.preventDefault()
 
         try {
-            // 这里添加向后端发送数据的逻辑
-            console.log("提交的镜像配置:", image)
-
-            // 暂时直接调用回调
-            onImageCreated({...image})
+            const new_image = await createImageMutation.mutateAsync({image: currentImage})
+            setCurrentImage(new_image)
         } catch (error) {
             console.error("提交镜像配置时出错:", error)
             alert("创建镜像时出错，请重试")
@@ -129,8 +114,8 @@ export function CreateImageForm({onImageCreated}: CreateImageFormProps) {
                             </Label>
                             <Input
                                 id="name"
-                                value={image.name}
-                                onChange={(e) => setImage({...image, name: e.target.value})}
+                                value={currentImage.name}
+                                onChange={(e) => setCurrentImage({...currentImage, name: e.target.value})}
                                 placeholder="例如: FastP"
                                 required
                             />
@@ -141,8 +126,8 @@ export function CreateImageForm({onImageCreated}: CreateImageFormProps) {
                             </Label>
                             <Input
                                 id="version"
-                                value={image.version}
-                                onChange={(e) => setImage({...image, version: e.target.value})}
+                                value={currentImage.version}
+                                onChange={(e) => setCurrentImage({...currentImage, version: e.target.value})}
                                 placeholder="例如: 0.24.0"
                                 required
                             />
@@ -155,8 +140,8 @@ export function CreateImageForm({onImageCreated}: CreateImageFormProps) {
                         </Label>
                         <Textarea
                             id="description"
-                            value={image.description}
-                            onChange={(e) => setImage({...image, description: e.target.value})}
+                            value={currentImage.description}
+                            onChange={(e) => setCurrentImage({...currentImage, description: e.target.value})}
                             placeholder="工具的详细描述，包括主要功能和用途"
                             rows={4}
                             required
@@ -181,18 +166,18 @@ export function CreateImageForm({onImageCreated}: CreateImageFormProps) {
                             <div className="flex">
                                 <Input
                                     id="homepage"
-                                    value={image.homepage}
-                                    onChange={(e) => setImage({...image, homepage: e.target.value})}
+                                    value={currentImage.homepage}
+                                    onChange={(e) => setCurrentImage({...currentImage, homepage: e.target.value})}
                                     placeholder="https://github.com/OpenGene/fastp"
                                     type="url"
                                 />
-                                {image.homepage && (
+                                {currentImage.homepage && (
                                     <Button
                                         type="button"
                                         variant="outline"
                                         size="icon"
                                         className="ml-2 bg-transparent"
-                                        onClick={() => window.open(image.homepage, "_blank")}
+                                        onClick={() => window.open(currentImage.homepage, "_blank")}
                                     >
                                         <ExternalLinkIcon className="h-4 w-4"/>
                                     </Button>
@@ -216,18 +201,18 @@ export function CreateImageForm({onImageCreated}: CreateImageFormProps) {
                             <div className="flex">
                                 <Input
                                     id="paper_link"
-                                    value={image.paper_link}
-                                    onChange={(e) => setImage({...image, paper_link: e.target.value})}
+                                    value={currentImage.paper_link}
+                                    onChange={(e) => setCurrentImage({...currentImage, paper_link: e.target.value})}
                                     placeholder="https://academic.oup.com/bioinformatics/..."
                                     type="url"
                                 />
-                                {image.paper_link && (
+                                {currentImage.paper_link && (
                                     <Button
                                         type="button"
                                         variant="outline"
                                         size="icon"
                                         className="ml-2 bg-transparent"
-                                        onClick={() => window.open(image.paper_link, "_blank")}
+                                        onClick={() => window.open(currentImage.paper_link, "_blank")}
                                     >
                                         <ExternalLinkIcon className="h-4 w-4"/>
                                     </Button>

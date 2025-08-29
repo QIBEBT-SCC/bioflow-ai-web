@@ -17,10 +17,10 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator
 } from "@/components/ui/breadcrumb.tsx";
-import {DockerToolCreate, ToolImage} from "@/types/tool"
 import {ImageSelectionStep} from "@/components/tool/create/image-select-step.tsx";
 import {ToolConfigurationStep} from "@/components/tool/create/tool-config-step.tsx";
 import {CreateConfirmationStep} from "@/components/tool/create/create-confirm-step.tsx";
+import {useCreateToolStore} from "@/stores/toolStore.tsx";
 
 const steps = [
     {id: 1, title: "选择镜像", description: "选择或创建 Docker 镜像"},
@@ -32,21 +32,13 @@ export function AddToolPage() {
     const {t} = useTranslation();
 
     const [currentStep, setCurrentStep] = useState(1)
-    const [selectedImage, setSelectedImage] = useState<ToolImage | null>(null)
-    const [toolConfig, setToolConfig] = useState<DockerToolCreate>({
-        name: "",
-        image_uid: "",
-        description: "",
-        help_doc_uid: "",
-        group_id: 1,
-        tags: [],
-        command_template: "",
-        dynamic_params: [],
-        static_params: "",
-        file_mounts: [],
-        mkdir_output: true,
-        use_temp_dir: false,
-    })
+
+    const {
+        currentImage,
+        toolConfig,
+
+        setToolConfig
+    } = useCreateToolStore()
 
     // 处理下一步
     const handleNext = () => {
@@ -62,22 +54,10 @@ export function AddToolPage() {
         }
     }
 
-    // 处理镜像选择
-    const handleImageSelect = (image: ToolImage) => {
-        setSelectedImage(image)
-        // 自动填充工具配置中的镜像相关信息
-        setToolConfig({
-            ...toolConfig,
-            name: image.name,
-            image_uid: image.uid || "",
-            description: image.description,
-        })
-    }
-
     // 处理工具创建
     const handleCreateTool = async () => {
         try {
-            console.log("创建工具:", {selectedImage, toolConfig})
+            console.log("创建工具:", {currentImage, toolConfig})
             // 这里添加实际的创建逻辑
             alert("工具创建成功！")
             // 可以跳转到工具列表页面
@@ -91,7 +71,7 @@ export function AddToolPage() {
     const canProceed = () => {
         switch (currentStep) {
             case 1:
-                return selectedImage !== null
+                return currentImage !== null
             case 2:
                 return toolConfig.name && toolConfig.command_template
             case 3:
@@ -173,11 +153,11 @@ export function AddToolPage() {
 
                     {/* 步骤内容 */}
                     <div className="mb-8">
-                        {currentStep === 1 && <ImageSelectionStep selectedImage={selectedImage} onImageSelect={handleImageSelect}/>}
+                        {currentStep === 1 && <ImageSelectionStep/>}
                         {currentStep === 2 && (
-                            <ToolConfigurationStep toolConfig={toolConfig} setToolConfig={setToolConfig} selectedImage={selectedImage}/>
+                            <ToolConfigurationStep toolConfig={toolConfig} setToolConfig={setToolConfig} selectedImage={currentImage}/>
                         )}
-                        {currentStep === 3 && <CreateConfirmationStep selectedImage={selectedImage} toolConfig={toolConfig}/>}
+                        {currentStep === 3 && <CreateConfirmationStep selectedImage={currentImage} toolConfig={toolConfig}/>}
                     </div>
 
                     {/* 导航按钮 */}

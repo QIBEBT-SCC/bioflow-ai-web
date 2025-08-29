@@ -1,6 +1,6 @@
-import {toolApi} from '@/services/api';
+import {imageApi, toolApi} from '@/services/api';
 import {useMutation, useQuery, useQueryClient, UseQueryOptions} from "@tanstack/react-query";
-import {type DockerToolCreate, type SimpleToolInfo, type ToolInfo, type ToolTag, type ToolGroup} from "@/types/tool.tsx";
+import {type DockerToolCreate, type SimpleToolInfo, type ToolInfo, type ToolTag, type ToolGroup, ToolImage} from "@/types/tool.tsx";
 import {ToolArgPublic} from "@/types/node.tsx";
 
 export function useToolTagList() {
@@ -29,6 +29,32 @@ export function useGroupTools({parent_id}: { parent_id?: number }) {
             return toolApi.getGroupTools(parent_id);
         },
     };
+
+    return useQuery(options);
+}
+
+export const useCreateImage = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({image}: { image: ToolImage }) => imageApi.createImage(image),
+        onSuccess: () => {
+            queryClient.invalidateQueries({queryKey: ['allTools']}).then();
+            queryClient.invalidateQueries({queryKey: ['groupTools']}).then();
+            queryClient.invalidateQueries({queryKey: ['toolTagList']}).then();
+            queryClient.invalidateQueries({queryKey: ['searchTools']}).then();
+        }
+    });
+}
+
+export const useSearchImages = ({name}: { name: string }) => {
+    const options: UseQueryOptions<ToolImage[], Error> = {
+        queryKey: ['images', name],
+        queryFn: ({queryKey}) => {
+            const [, name] = queryKey as [string, string];
+            return imageApi.searchImages(name);
+        },
+        enabled: !!name,
+    }
 
     return useQuery(options);
 }
@@ -70,7 +96,7 @@ export function useToolCount() {
 
 export function useAllTools(offset: number) {
     const options: UseQueryOptions<SimpleToolInfo[], Error> = {
-        queryKey: ['allTools',offset],
+        queryKey: ['allTools', offset],
         queryFn: ({queryKey}) => {
             const [, offset] = queryKey as [string, number];
             return toolApi.getToolList(offset);

@@ -3,7 +3,7 @@ import {Project, ProjectCreateProp, ProjectTag} from "@/types/project.tsx";
 import {
     DockerToolCreate,
     SimpleToolInfo,
-    ToolGroup,
+    ToolGroup, ToolImage,
     ToolInfo,
     ToolTag
 } from "@/types/tool.tsx";
@@ -217,6 +217,17 @@ export const instanceApi = {
     },
 
 };
+
+export const imageApi = {
+    createImage: async (image: ToolImage) => {
+        return await api.post<ToolImage>('/images', image)
+    },
+    searchImages: async (name: string) => {
+        return await api.get<ToolImage[]>('/images/search', {
+            params: {name: name}
+        });
+    },
+}
 
 export const toolApi = {
     getTagList: async () => {
