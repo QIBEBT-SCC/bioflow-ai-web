@@ -1,4 +1,3 @@
-import axios from 'axios';
 import {isTokenExpired, useAuthStore} from "@/stores/authStore";
 import {Project, ProjectCreateProp, ProjectTag} from "@/types/project.tsx";
 import {
@@ -13,265 +12,328 @@ import {SimpleWorkflowInfo, Workflow, WorkflowDefinition} from "@/types/workflow
 import {MonitorRecord, SimpleTask, TaskPublic} from "@/types/task.tsx";
 import {RunPublic, Stats} from "@/types/run.tsx";
 import {BioDb, BioDbCreate, BioDbSimple} from "@/types/resource.tsx";
-import {ChatSessionPublic} from "@/types/chat.tsx";
+import {ChatSessionPublic, LangchainMessage} from "@/types/chat.tsx";
 
-export const api = axios.create({
-    baseURL: '/api/v1',
-});
+// 基础配置
+const BASE_URL = '/api/v1';
 
-export const apiPublic = axios.create({
-    baseURL: '/api/v1'
-})
+export class ApiError extends Error {
+    constructor(
+        message: string,
+        public status: number,
+        public data?: never
+    ) {
+        super(message);
+        this.name = 'ApiError';
+    }
+}
 
-// 添加认证拦截器
-api.interceptors.request.use((config) => {
+function getAuthHeaders(): HeadersInit {
     const token = localStorage.getItem('token');
+    const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+    };
 
-    // 检查token是否过期
     if (token && !isTokenExpired(token)) {
-        config.headers.Authorization = `Bearer ${token}`;
+        headers['Authorization'] = `Bearer ${token}`;
     } else if (token) {
-        // 如果token存在但已过期，执行登出操作
         useAuthStore.getState().logout();
     }
 
-    return config;
-});
+    return headers;
+}
 
-// 添加响应拦截器
-api.interceptors.response.use(
-    (response) => response,
-    async (error) => {
-        if (error.response?.status === 401) {
-            // 执行登出操作
-            useAuthStore.getState().logout();
-        }
-        return Promise.reject(error);
+// 处理响应
+async function handleResponse<T>(response: Response): Promise<T> {
+    if (response.status === 401) {
+        useAuthStore.getState().logout();
+        throw new ApiError('Unauthorized', 401);
     }
-);
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new ApiError(
+            errorData?.message || `HTTP ${response.status}: ${response.statusText}`,
+            response.status,
+            errorData
+        );
+    }
+
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+        return response.json();
+    }
+
+    return await response.text() as unknown as T;
+}
+
+// 通用请求方法
+async function request<T>(
+    endpoint: string,
+    options: RequestInit = {},
+    needAuth: boolean = true
+): Promise<T> {
+    const url = `${BASE_URL}${endpoint}`;
+    const defaultHeaders = needAuth ? getAuthHeaders() : {'Content-Type': 'application/json'};
+
+    const config: RequestInit = {
+        ...options,
+        headers: {
+            ...defaultHeaders,
+            ...options.headers,
+        },
+    };
+
+    const response = await fetch(url, config);
+    return handleResponse<T>(response);
+}
+
+// API实例对象
+export const api = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    get<T>(url: string, config?: { params?: Record<string, any> }): Promise<T> {
+        const searchParams = config?.params ? new URLSearchParams(config.params).toString() : '';
+        const endpoint = searchParams ? `${url}?${searchParams}` : url;
+        return request<T>(endpoint, {method: 'GET'});
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    post<T>(url: string, data?: any, config?: { params?: Record<string, any>, headers?: Record<string, string> }): Promise<T> {
+        const searchParams = config?.params ? new URLSearchParams(config.params).toString() : '';
+        const endpoint = searchParams ? `${url}?${searchParams}` : url;
+
+        let body: string | undefined;
+        const customHeaders = config?.headers || {};
+
+        // 检查是否为表单数据
+        if (data instanceof URLSearchParams) {
+            body = data.toString();
+        } else if (data) {
+            body = JSON.stringify(data);
+        }
+
+        return request<T>(endpoint, {
+            method: 'POST',
+            body,
+            headers: customHeaders,
+        });
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    put<T>(url: string, data?: any, config?: { params?: Record<string, any> }): Promise<T> {
+        const searchParams = config?.params ? new URLSearchParams(config.params).toString() : '';
+        const endpoint = searchParams ? `${url}?${searchParams}` : url;
+        return request<T>(endpoint, {
+            method: 'PUT',
+            body: data ? JSON.stringify(data) : undefined,
+        });
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    patch<T>(url: string, data?: any): Promise<T> {
+        return request<T>(url, {
+            method: 'PATCH',
+            body: data ? JSON.stringify(data) : undefined,
+        });
+    },
+    delete: function <T>(url: string): Promise<T> {
+        return request<T>(url, {method: 'DELETE'});
+    },
+};
+
+// 公共API实例（不需要认证）
+export const apiPublic = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    get<T>(url: string, config?: { params?: Record<string, any> }): Promise<T> {
+        const searchParams = config?.params ? new URLSearchParams(config.params).toString() : '';
+        const endpoint = searchParams ? `${url}?${searchParams}` : url;
+        return request<T>(endpoint, {method: 'GET'}, false);
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    post<T>(url: string, data?: any): Promise<T> {
+        return request<T>(url, {
+            method: 'POST',
+            body: data ? JSON.stringify(data) : undefined,
+        }, false);
+    },
+};
 
 
 export const workflowApi = {
     getWorkflows: async (offset: number) => {
-        const url = `/workflows?offset=${offset}&limit=8`;
-        const {data} = await api.get<SimpleWorkflowInfo[]>(url);
-        return data;
+        return await api.get<SimpleWorkflowInfo[]>('/workflows', {
+            params: {offset, limit: 8}
+        });
     },
     getWorkflowCount: async () => {
-        const {data} = await api.get<number>('/workflows/count');
-        return data;
+        return await api.get<number>('/workflows/count');
     },
     getWorkflow: async (uid: string) => {
-        const {data} = await api.get<Workflow>(`/workflows/${uid}`);
-        return data;
+        return await api.get<Workflow>(`/workflows/${uid}`);
     },
     saveWorkflow: async (workflow: Workflow) => {
-        const {data} = await api.post('/workflows', workflow);
-        return data;
+        return await api.post('/workflows', workflow);
     },
     updateWorkflow: async (uid: string, workflow: WorkflowDefinition) => {
-        const {data} = await api.patch(`/workflows/${uid}`, workflow);
-        return data;
+        return await api.patch(`/workflows/${uid}`, workflow);
     },
     newRunInstance: async (workflow: WorkflowDefinition, template_name?: string) => {
-        const url = template_name !== undefined ? `/workflows/run?template_name=${template_name}` : '/workflows/run';
-        const {data} = await api.post(url, workflow);
-        return data;
+        const params = template_name !== undefined ? {template_name} : {};
+        return await api.post('/workflows/run', workflow, {params});
     },
 };
 
 export const runInstanceApi = {
     getRunStats: async () => {
-        const {data} = await api.get<Stats>('/runs/stats');
-        return data;
+        return await api.get<Stats>('/runs/stats');
     },
     getRunCount: async () => {
-        const {data} = await api.get<number>('/runs/count');
-        return data;
+        return await api.get<number>('/runs/count');
     },
     getRunList: async (offset: number) => {
-        const {data} = await api.get<RunPublic[]>(`/runs?offset=${offset}&limit=8`);
-        return data;
+        return await api.get<RunPublic[]>('/runs', {
+            params: {offset, limit: 8}
+        });
     }
-}
+};
 
 export const instanceApi = {
     getRecentTasks: async (hour: number) => {
-        const {data} = await api.get<SimpleTask[]>(`/tasks/recent/${hour}`);
-        return data;
+        return await api.get<SimpleTask[]>(`/tasks/recent/${hour}`);
     },
     getTaskCount: async () => {
-        const {data} = await api.get<number>('/tasks/count');
-        return data;
+        return await api.get<number>('/tasks/count');
     },
     getTaskList: async (offset: number) => {
-        const {data} = await api.get<SimpleTask[]>(`/tasks?offset=${offset}&limit=8`);
-        return data;
+        return await api.get<SimpleTask[]>('/tasks', {
+            params: {offset, limit: 8}
+        });
     },
     getTaskInfo: async (uid: string) => {
-        const {data} = await api.get<TaskPublic>(`/tasks/${uid}`);
-        return data;
+        return await api.get<TaskPublic>(`/tasks/${uid}`);
     },
     getTaskLog: async (uid: string) => {
-        const {data} = await api.get<{ content: string }>(`/tasks/${uid}/log`);
-        return data;
+        return await api.get<{ content: string }>(`/tasks/${uid}/log`);
     },
     getTaskMonitor: async (uid: string) => {
-        const {data} = await api.get<MonitorRecord[]>(`/tasks/${uid}/monitor`);
-        return data;
+        return await api.get<MonitorRecord[]>(`/tasks/${uid}/monitor`);
     },
 
-}
+};
 
 export const toolApi = {
     getTagList: async () => {
-        const {data} = await api.get<ToolTag[]>('/tool-tags');
-        return data;
+        return await api.get<ToolTag[]>('/tool-tags');
     },
     getGroupList: async () => {
-        const {data} = await api.get<ToolGroup[]>('/tool-groups');
-        return data;
+        return await api.get<ToolGroup[]>('/tool-groups');
     },
     getGroupTools: async (parent_id?: number) => {
-        const url = parent_id !== undefined
-            ? `/tool-groups/tools?parent_id=${parent_id}`
-            : '/tool-groups/tools';
-        const {data} = await api.get<SimpleToolInfo[]>(url);
-        return data;
+        const params = parent_id !== undefined ? {parent_id} : {};
+        return await api.get<SimpleToolInfo[]>('/tool-groups/tools', {params});
     },
     newTool: async (tool: DockerToolCreate) => {
-        const {data} = await api.post('/tools', tool);
-        return data;
+        return await api.post('/tools', tool);
     },
     getToolCount: async () => {
-        const {data} = await api.get<number>('/tools/count');
-        return data;
+        return await api.get<number>('/tools/count');
     },
     getToolList: async (offset?: number) => {
-        const url = `/tools?offset=${offset}&limit=10`;
-        const {data} = await api.get<SimpleToolInfo[]>(url);
-        return data
+        return await api.get<SimpleToolInfo[]>('/tools', {
+            params: {offset, limit: 10}
+        });
     },
     searchToolList: async (name: string, offset?: number) => {
-        const url = `/tools/search?name=${name}${offset !== undefined ? `&offset=${offset}` : ''}&limit=12`;
-        const {data} = await api.get<SimpleToolInfo[]>(url);
-        return data;
+        const params: Record<string, string | number> = {name, limit: 12};
+        if (offset !== undefined) {
+            params.offset = offset;
+        }
+        return await api.get<SimpleToolInfo[]>('/tools/search', {params});
     },
     getTool: async (id: string) => {
-        const {data} = await api.get<ToolInfo>(`/tools/${id}`);
-        return data;
+        return await api.get<ToolInfo>(`/tools/${id}`);
     },
     getToolArg: async (id: string) => {
-        const {data} = await api.get<ToolArgPublic>(`/tools/${id}/args`);
-        return data;
+        return await api.get<ToolArgPublic>(`/tools/${id}/args`);
     },
 };
 
 export const projectApi = {
     newTag: async (name: string, color: string) => {
-        const {data} = await api.post('/project-tags', {
+        return await api.post('/project-tags', {
             name: name,
             color: color
         });
-        return data;
     },
     getTagList: async () => {
-        const {data} = await api.get<ProjectTag[]>('/project-tags');
-        return data;
+        return await api.get<ProjectTag[]>('/project-tags');
     },
     newProject: async (project: ProjectCreateProp) => {
-        const {data} = await api.post('/projects', project);
-        return data;
+        return await api.post('/projects', project);
     },
     getProjectList: async () => {
-        const {data} = await api.get<Project[]>('/projects');
-        return data;
+        return await api.get<Project[]>('/projects');
     },
     getStarredProjectList: async () => {
-        const {data} = await api.get<Project[]>('/projects/starred');
-        return data;
+        return await api.get<Project[]>('/projects/starred');
     },
     getMyProjectList: async () => {
-        const {data} = await api.get<Project[]>('/projects/my');
-        return data;
+        return await api.get<Project[]>('/projects/my');
     },
     getRecentProject: async () => {
-        const {data} = await api.get<Project>('/projects/recent');
-        return data;
+        return await api.get<Project>('/projects/recent');
     },
     getProject: async (id: string) => {
-        const {data} = await api.get<Project>(`/projects/${id}`);
-        return data;
+        return await api.get<Project>(`/projects/${id}`);
     },
     starProject: async (project_id: string,) => {
-        const {data} = await api.post(`/projects/${project_id}/star`);
-        return data;
+        return await api.post(`/projects/${project_id}/star`);
     },
     unstarProject: async (project_id: string,) => {
-        const {data} = await api.post(`/projects/${project_id}/unstar`);
-        return data;
+        return await api.post(`/projects/${project_id}/unstar`);
     },
 };
 
 export const resourceApi = {
     newDb: async (db: BioDbCreate) => {
-        const {data} = await api.post('/bio_dbs', db);
-        return data;
+        return await api.post('/bio_dbs', db);
     },
     getDBList: async (offset: number) => {
-        const {data} = await api.get<BioDbSimple[]>(`/bio_dbs?offset=${offset}&limit=8`);
-        return data;
+        return await api.get<BioDbSimple[]>('/bio_dbs', {
+            params: {offset, limit: 8}
+        });
     },
     getDBCount: async () => {
-        const {data} = await api.get<number>('/bio_dbs/count');
-        return data;
+        return await api.get<number>('/bio_dbs/count');
     },
     getDB: async (id: number) => {
-        const {data} = await api.get<BioDb>(`/bio_dbs/${id}`)
-        return data;
+        return await api.get<BioDb>(`/bio_dbs/${id}`);
     },
     deleteDB: async (id: number) => {
-        const {data} = await api.delete(`/bio_dbs/${id}`);
-        return data;
+        return await api.delete(`/bio_dbs/${id}`);
     },
     searchDB: async (name: string) => {
-        const {data} = await api.get<BioDb[]>(`/bio_dbs/search?name=${name}&offset=0&limit=10`);
-        return data;
+        return await api.get<BioDb[]>('/bio_dbs/search', {
+            params: {name, offset: 0, limit: 10}
+        });
     }
 }
 
 export const chatApi = {
-    // 创建新的聊天会话
-    createSession: async (): Promise<ChatSessionPublic> => {
-        const {data} = await api.post('/chat');
-        return data;
+    createSession: async () => {
+        return await api.post<ChatSessionPublic>('/chat');
     },
-
-    // 获取所有聊天历史
-    getSessions: async (offset: number = 0, limit: number = 8): Promise<ChatSessionPublic[]> => {
-        const {data} = await api.get('/chat', {
-            params: {offset, limit}
-        });
-        return data;
+    deleteSession: async (session_id: string): Promise<{ message: string }> => {
+        return await api.delete(`/chat/${session_id}`);
     },
-
-    // 获取指定会话的聊天历史消息
-    getSessionHistory: async (session_id: string) => {
-        const {data} = await api.get(`/chat/${session_id}/history`);
-        return data;
-    },
-
-    // 更新聊天历史描述
-    updateSession: async (session_id: string, description: string): Promise<ChatSessionPublic> => {
-        const {data} = await api.put(`/chat/${session_id}`, null, {
+    updateSession: async (session_id: string, description: string) => {
+        return await api.put<ChatSessionPublic>(`/chat/${session_id}`, null, {
             params: {description}
         });
-        return data;
     },
-
-    // 删除聊天会话
-    deleteSession: async (session_id: string): Promise<{message: string}> => {
-        const {data} = await api.delete(`/chat/${session_id}`);
-        return data;
-    }
+    getSessions: async (offset: number = 0, limit: number = 8) => {
+        return await api.get<ChatSessionPublic[]>('/chat', {
+            params: {offset, limit}
+        });
+    },
+    getSessionHistory: async (session_id: string) => {
+        return await api.get<LangchainMessage[]>(`/chat/${session_id}/history`);
+    },
 }

@@ -7,16 +7,14 @@ export const authApi = {
         formData.append('username', username);
         formData.append('password', password);
 
-        const {data} = await api.post<Token>('/auth/token', formData, {
+        return await api.post<Token>('/auth/token', formData, {
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
             },
         });
-        return data;
     },
 
     getCurrentUser: async (): Promise<User> => {
-        const {data} = await api.get<User>('/auth/me');
-        return data;
+        return await api.get<User>('/auth/me');
     },
 };

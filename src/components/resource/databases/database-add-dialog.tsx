@@ -16,7 +16,7 @@ import {Input} from "@/components/ui/input"
 import {Label} from "@/components/ui/label"
 import {Textarea} from "@/components/ui/textarea"
 import {useCreateBd} from "@/hooks/use-resource.tsx";
-import {AxiosError} from "axios";
+import {ApiError} from "@/services/api.tsx";
 
 interface DatabaseAddDialogProps {
     open: boolean
@@ -64,8 +64,8 @@ export function DatabaseAddDialog({open, onOpenChange}: DatabaseAddDialogProps) 
                 clearErrors()
             },
             onError: (error) => {
-                if (error instanceof AxiosError && error.response) {
-                    const status = error.response.status
+                if (error instanceof ApiError) {
+                    const status = error.status
                     switch (status) {
                         case 409:
                             setNameError("数据库名称已存在，请使用其他名称")
@@ -77,6 +77,8 @@ export function DatabaseAddDialog({open, onOpenChange}: DatabaseAddDialogProps) 
                             console.error("创建数据库失败:", error)
                             break
                     }
+                } else {
+                    console.error("创建数据库失败:", error)
                 }
             }
         })
