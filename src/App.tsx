@@ -1,7 +1,7 @@
-import React, {Suspense, useEffect, useState} from "react";
+import React, {Suspense} from "react";
 import {MainLayout} from "@/pages/main-layout.tsx";
 import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
-import {useAuthStore} from "@/stores/authStore.tsx";
+import {isTokenExpired, useAuthStore} from "@/stores/authStore.tsx";
 import {createBrowserRouter, Navigate, RouterProvider} from "react-router-dom";
 import {LoginPage} from "@/pages/login-page.tsx";
 import {TooltipProvider} from "@/components/ui/tooltip.tsx";
@@ -24,7 +24,15 @@ const ResourcePage = React.lazy(() => import("@/pages/resource/resource-page.tsx
 
 // 受保护的路由组件
 const ProtectedRoute = ({children}: { children: React.ReactNode }) => {
-    const {isAuthenticated} = useAuthStore()
+    const token = localStorage.getItem('token')
+    const {isAuthenticated, logout} = useAuthStore()
+
+    React.useEffect(() => {
+        if (token && isTokenExpired(token)) {
+            logout()
+            return
+        }
+    }, [token, logout])
 
     if (!isAuthenticated) {
         return <Navigate to="/login" replace/>
@@ -51,13 +59,6 @@ const queryClient = new QueryClient({
 });
 
 export default function App() {
-    const {loadUser} = useAuthStore()
-
-    useEffect(() => {
-        // 应用启动时加载用户信息，但不阻塞UI
-        loadUser()
-    }, [loadUser])
-
     const router = createBrowserRouter([
         {
             path: "/login",

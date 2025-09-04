@@ -26,14 +26,9 @@ export function LoginForm({
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
-        try {
-            await login(email, password)
-            // 只有登录成功才跳转
-            navigate('/home')
-        } catch (error) {
-            // 登录失败时不跳转，错误信息已经在store中处理
-            console.error('Login failed:', error)
-        }
+        await login(email, password)
+
+        navigate('/home')
     }
 
     return (
