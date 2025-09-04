@@ -32,6 +32,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
                 errorMsg: error instanceof Error ? error.message : '登录失败',
                 isLoading: false
             });
+            throw error;
         }
     },
 
