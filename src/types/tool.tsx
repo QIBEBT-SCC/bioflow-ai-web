@@ -53,23 +53,34 @@ export interface ToolImage {
     image: ImageConfig;
 }
 
-interface ToolHelpDoc {
+export interface ToolHelpDoc {
     uid?: string;
     help_command: string;
     description?: string;
     content: string;
 }
 
+export interface SimpleToolDoc {
+    uid: string;
+    help_command: string;
+}
+
+export interface AiGenRequest {
+    name: string;
+    description: string;
+
+    image_uid: string;
+}
 
 // 工具创建接口
 export interface DockerToolCreate {
     name: string
     image_uid: string
     description: string
-    help_doc_uid:string
+    help_doc_uid: string
 
-    group_id:number
-    tags:ToolTag[]
+    group_id: number
+    tags: ToolTag[]
 
     command_template: string
     dynamic_params: ParamDefine[]

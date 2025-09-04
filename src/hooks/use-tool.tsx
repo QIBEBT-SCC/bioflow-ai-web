@@ -1,6 +1,14 @@
-import {imageApi, toolApi} from '@/services/api';
+import {documentApi, imageApi, toolApi} from '@/services/api';
 import {useMutation, useQuery, useQueryClient, UseQueryOptions} from "@tanstack/react-query";
-import {type DockerToolCreate, type SimpleToolInfo, type ToolInfo, type ToolTag, type ToolGroup, ToolImage} from "@/types/tool.tsx";
+import {
+    type DockerToolCreate,
+    type SimpleToolInfo,
+    type ToolInfo,
+    type ToolTag,
+    type ToolGroup,
+    ToolImage,
+    SimpleToolDoc, ToolHelpDoc
+} from "@/types/tool.tsx";
 import {ToolArgPublic} from "@/types/node.tsx";
 
 export function useToolTagList() {
@@ -54,6 +62,39 @@ export const useSearchImages = ({name}: { name: string }) => {
             return imageApi.searchImages(name);
         },
         enabled: !!name,
+    }
+
+    return useQuery(options);
+}
+
+export const useImageDocuments = ({uid}: { uid: string }) => {
+    const options: UseQueryOptions<SimpleToolDoc[], Error> = {
+        queryKey: ['imageDocs', uid],
+        queryFn: ({queryKey}) => {
+            const [, uid] = queryKey as [string, string];
+            return imageApi.getImageDocs(uid);
+        },
+        enabled: !!uid,
+    }
+
+    return useQuery(options);
+}
+
+export const useRunInImage = () => {
+    return useMutation({
+        mutationFn: ({uid, command}: { uid: string, command: string }) =>
+            imageApi.runInImage(uid, command),
+    });
+}
+
+export const useDocument = ({uid}: { uid: string }) => {
+    const options: UseQueryOptions<ToolHelpDoc, Error> = {
+        queryKey: ['documents', uid],
+        queryFn: ({queryKey}) => {
+            const [, uid] = queryKey as [string, string];
+            return documentApi.getDocument(uid);
+        },
+        enabled: !!uid,
     }
 
     return useQuery(options);

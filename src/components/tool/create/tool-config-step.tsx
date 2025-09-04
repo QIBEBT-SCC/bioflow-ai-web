@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react"
+import {useState, useEffect} from "react"
 
 import {Button} from "@/components/ui/button"
 import {Input} from "@/components/ui/input"
@@ -9,35 +9,45 @@ import {Label} from "@/components/ui/label"
 import {Checkbox} from "@/components/ui/checkbox"
 import {Card, CardContent, CardHeader, CardTitle, CardDescription} from "@/components/ui/card"
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select"
-import {Plus, Trash2, HelpCircle, Tag, Folder} from "lucide-react"
+import {Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList} from "@/components/ui/command"
+import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover"
+import {Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle} from "@/components/ui/dialog"
+import {PlusIcon, Trash2Icon, HelpCircleIcon, FolderIcon, CheckIcon, ChevronsUpDownIcon, EyeIcon} from "lucide-react"
 import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip"
 import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs"
 import {Badge} from "@/components/ui/badge"
-import {DockerToolCreate, FileMount, ParamDefine, ToolGroup, ToolImage, ToolTag} from "@/types/tool.tsx";
+import {FileMount, ParamDefine, ToolTag, DockerToolCreate} from "@/types/tool.tsx";
+import {TagSelector} from "@/components/tag-selector.tsx";
+import {useImageDocuments, useDocument, useRunInImage, useToolGroupList, useToolTagList} from "@/hooks/use-tool.tsx";
+import {useCreateToolStore} from "@/stores/toolStore.tsx";
+import {cn} from "@/lib/utils";
+import {toolConfigSSEService, ToolConfigEventHandlers} from "@/services/sse-api.tsx";
+import {toast} from "sonner";
 
-interface ToolConfigurationStepProps {
-    toolConfig: DockerToolCreate
-    setToolConfig: (config: DockerToolCreate) => void
-    selectedImage: ToolImage | null
-}
+export function ToolConfigurationStep() {
+    const [helpCommand, setHelpCommand] = useState<string>("");
+    const [open, setOpen] = useState(false);
+    const [previewOpen, setPreviewOpen] = useState(false);
+    const [selectedDocUid, setSelectedDocUid] = useState<string>("");
+    const [tags, setTags] = useState<ToolTag[]>([])
+    const [isGenerating, setIsGenerating] = useState(false);
 
-export function ToolConfigurationStep({toolConfig, setToolConfig, selectedImage}: ToolConfigurationStepProps) {
-    // 模拟工具组数据
-    const [toolGroups] = React.useState<ToolGroup[]>([
-        {id: 1, name: "质量控制", parent_id: null, tool_count: 5},
-        {id: 2, name: "序列比对", parent_id: null, tool_count: 8},
-        {id: 3, name: "变异检测", parent_id: null, tool_count: 3},
-        {id: 4, name: "数据预处理", parent_id: 1, tool_count: 2},
-    ])
+    const {currentImage, toolConfig, setToolConfig} = useCreateToolStore()
 
-    // 模拟标签数据
-    const [availableTags] = React.useState<ToolTag[]>([
-        {id: 1, name: "生信工具"},
-        {id: 2, name: "质量控制"},
-        {id: 3, name: "序列分析"},
-        {id: 4, name: "高通量测序"},
-        {id: 5, name: "基因组学"},
-    ])
+    const {data: existDocs = []} = useImageDocuments({uid: currentImage.uid ?? ""})
+    const {data:toolGroups = []} = useToolGroupList()
+    const {data:availableTags = []} = useToolTagList()
+
+    // 同步标签状态
+    useEffect(() => {
+        setTags(toolConfig.tags || []);
+    }, [toolConfig.tags]);
+
+    // 获取现有文档的预览内容
+    const {data: existingDocContent} = useDocument({uid: selectedDocUid})
+
+    // 运行新命令获取预览内容
+    const runInImageMutation = useRunInImage()
 
     // 添加动态参数
     const addDynamicParam = () => {
@@ -107,41 +117,130 @@ export function ToolConfigurationStep({toolConfig, setToolConfig, selectedImage}
         setToolConfig({...toolConfig, file_mounts: updatedFiles})
     }
 
-    // 添加标签
-    const addTag = (tag: ToolTag) => {
-        if (!toolConfig.tags.find((t) => t.id === tag.id)) {
-            setToolConfig({
-                ...toolConfig,
-                tags: [...toolConfig.tags, tag],
-            })
+    // 处理预览命令
+    const handlePreviewCommand = () => {
+        if (!helpCommand) return;
+
+        // 检查是否是现有文档
+        const existingDoc = existDocs.find(doc => doc.help_command === helpCommand);
+
+        if (existingDoc) {
+            // 如果是现有文档，设置uid并获取内容
+            setSelectedDocUid(existingDoc.uid);
+            setPreviewOpen(true);
+        } else {
+            // 如果是新命令，运行命令获取结果
+            if (currentImage?.uid) {
+                runInImageMutation.mutate({
+                    uid: currentImage.uid,
+                    command: helpCommand
+                }, {
+                    onSuccess: () => {
+                        setPreviewOpen(true);
+                    }
+                });
+            }
         }
     }
 
-    // 移除标签
-    const removeTag = (tagId: number) => {
-        setToolConfig({
-            ...toolConfig,
-            tags: toolConfig.tags.filter((t) => t.id !== tagId),
-        })
-    }
+    // 生成工具配置
+    const handleGenerateConfig = async () => {
+        if (!currentImage?.uid) {
+            toast.error("请先选择工具镜像");
+            return;
+        }
+
+        if (!toolConfig.name || !toolConfig.name.trim()) {
+            toast.error("请输入工具名称");
+            return;
+        }
+
+        if (!toolConfig.description || !toolConfig.description.trim()) {
+            toast.error("请输入工具描述");
+            return;
+        }
+
+        setIsGenerating(true);
+
+        try {
+            const eventHandlers: ToolConfigEventHandlers = {
+                onOpen: () => {
+                    toast.info("开始生成工具配置...");
+                },
+                onGenerating: (data: string) => {
+                    toast.info(data);
+                },
+                onSuccess: (configData: DockerToolCreate) => {
+                    console.log('收到AI生成的配置数据:', configData);
+
+                    // 更新工具配置
+                    setToolConfig({
+                        ...toolConfig,
+                        description: configData.description || toolConfig.description,
+                        command_template: configData.command_template || toolConfig.command_template,
+                        dynamic_params: configData.dynamic_params || toolConfig.dynamic_params,
+                        static_params: configData.static_params || toolConfig.static_params,
+                        file_mounts: configData.file_mounts || toolConfig.file_mounts,
+                        mkdir_output: configData.mkdir_output ?? toolConfig.mkdir_output,
+                        use_temp_dir: configData.use_temp_dir ?? toolConfig.use_temp_dir,
+                        group_id: configData.group_id || toolConfig.group_id,
+                        tags: configData.tags && configData.tags.length > 0 ? configData.tags : toolConfig.tags,
+                        help_doc_uid: configData.help_doc_uid || toolConfig.help_doc_uid
+                    });
+
+                    toast.success("工具配置生成完成！");
+                },
+                onError: (data: string) => {
+                    toast.error(`生成失败: ${data}`);
+                },
+                onClose: () => {
+                    // 连接关闭时的处理
+                }
+            };
+
+            await toolConfigSSEService.generateToolConfig({
+                name: toolConfig.name,
+                description: toolConfig.description,
+                image_uid: currentImage.uid,
+            }, eventHandlers);
+
+        } catch (error) {
+            console.error('生成配置失败:', error);
+            if (error instanceof Error) {
+                if (error.message.includes('401')) {
+                    toast.error('认证失败，请重新登录');
+                } else if (error.message.includes('400')) {
+                    toast.error('请求参数错误，请检查输入');
+                } else if (error.message.includes('500')) {
+                    toast.error('服务器内部错误，请稍后重试');
+                } else {
+                    toast.error(`生成配置失败: ${error.message}`);
+                }
+            } else {
+                toast.error('生成配置失败: 未知错误');
+            }
+        } finally {
+            setIsGenerating(false);
+        }
+    };
 
     return (
         <div>
             <div className="mb-6">
                 <h2 className="text-xl font-semibold mb-2">配置工具参数</h2>
                 <p className="text-muted-foreground">设置工具的命令模板、参数和输出文件</p>
-                {selectedImage && (
+                {currentImage && (
                     <div className="mt-3 flex items-center gap-2">
                         <span className="text-sm text-muted-foreground">基于镜像:</span>
-                        <Badge variant="outline">{selectedImage.name}</Badge>
-                        <Badge variant="secondary">{selectedImage.version}</Badge>
+                        <Badge variant="outline">{currentImage.name}</Badge>
+                        <Badge variant="secondary">{currentImage.version}</Badge>
                     </div>
                 )}
             </div>
 
             <div className="space-y-6">
                 <Tabs defaultValue="basic" className="w-full">
-                    <TabsList className="grid w-full grid-cols-4">
+                    <TabsList className="grid w-full grid-cols-3">
                         <TabsTrigger value="basic">
                             基本信息
                             {toolConfig.name && (
@@ -151,7 +250,7 @@ export function ToolConfigurationStep({toolConfig, setToolConfig, selectedImage}
                             )}
                         </TabsTrigger>
                         <TabsTrigger value="params">
-                            动态参数
+                            命令构建
                             {toolConfig.dynamic_params.length > 0 && (
                                 <Badge variant="outline" className="ml-2">
                                     {toolConfig.dynamic_params.length}
@@ -163,14 +262,6 @@ export function ToolConfigurationStep({toolConfig, setToolConfig, selectedImage}
                             {toolConfig.file_mounts.length > 0 && (
                                 <Badge variant="outline" className="ml-2">
                                     {toolConfig.file_mounts.length}
-                                </Badge>
-                            )}
-                        </TabsTrigger>
-                        <TabsTrigger value="meta">
-                            元信息
-                            {toolConfig.tags.length > 0 && (
-                                <Badge variant="outline" className="ml-2">
-                                    {toolConfig.tags.length}
                                 </Badge>
                             )}
                         </TabsTrigger>
@@ -198,7 +289,9 @@ export function ToolConfigurationStep({toolConfig, setToolConfig, selectedImage}
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="description">描述</Label>
+                                    <Label htmlFor="description">
+                                        描述 <span className="text-red-500">*</span>
+                                    </Label>
                                     <Textarea
                                         id="description"
                                         value={toolConfig.description}
@@ -209,38 +302,103 @@ export function ToolConfigurationStep({toolConfig, setToolConfig, selectedImage}
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="command_template">
-                                        命令模板 <span className="text-red-500">*</span>
-                                        <TooltipProvider>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <HelpCircle className="h-4 w-4 inline-block ml-1 text-muted-foreground"/>
-                                                </TooltipTrigger>
-                                                <TooltipContent>
-                                                    <p className="max-w-xs">
-                                                        使用 {"{dynamic_params}"} 和 {"{static_params}"} 作为参数占位符
-                                                    </p>
-                                                </TooltipContent>
-                                            </Tooltip>
-                                        </TooltipProvider>
+                                    <Label htmlFor="help_command">
+                                        帮助命令 <span className="text-red-500">*</span>
                                     </Label>
-                                    <Input
-                                        id="command_template"
-                                        value={toolConfig.command_template}
-                                        onChange={(e) => setToolConfig({...toolConfig, command_template: e.target.value})}
-                                        placeholder="例如: fastp {dynamic_params} {static_params} &> /data/output/fastp.log"
-                                        required
-                                    />
+                                    <div className="flex gap-2">
+                                        <Popover open={open} onOpenChange={setOpen}>
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    variant="outline"
+                                                    role="combobox"
+                                                    aria-expanded={open}
+                                                    className="flex-1 justify-between"
+                                                >
+                                                    {helpCommand || "选择现有文档或输入新命令..."}
+                                                    <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50"/>
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-full p-0">
+                                                <Command>
+                                                    <CommandInput
+                                                        placeholder="搜索或输入新的帮助命令..."
+                                                        value={helpCommand}
+                                                        onValueChange={setHelpCommand}
+                                                    />
+                                                    <CommandList>
+                                                        <CommandEmpty>未找到匹配的命令</CommandEmpty>
+                                                        <CommandGroup>
+                                                            {existDocs.map((doc) => (
+                                                                <CommandItem
+                                                                    key={doc.uid}
+                                                                    value={doc.help_command}
+                                                                    onSelect={(currentValue) => {
+                                                                        setHelpCommand(currentValue === helpCommand ? "" : currentValue)
+                                                                        setOpen(false)
+                                                                    }}
+                                                                >
+                                                                    <CheckIcon
+                                                                        className={cn(
+                                                                            "mr-2 h-4 w-4",
+                                                                            helpCommand === doc.help_command ? "opacity-100" : "opacity-0"
+                                                                        )}
+                                                                    />
+                                                                    {doc.help_command}
+                                                                </CommandItem>
+                                                            ))}
+                                                        </CommandGroup>
+                                                    </CommandList>
+                                                </Command>
+                                            </PopoverContent>
+                                        </Popover>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={handlePreviewCommand}
+                                            disabled={!helpCommand || runInImageMutation.isPending}
+                                            title="预览命令结果"
+                                        >
+                                            <EyeIcon className="h-4 w-4"/>
+                                        </Button>
+                                    </div>
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="static_params">静态参数</Label>
-                                    <Textarea
-                                        id="static_params"
-                                        value={toolConfig.static_params}
-                                        onChange={(e) => setToolConfig({...toolConfig, static_params: e.target.value})}
-                                        placeholder="例如: --thread 8 --html /data/output/fastp.html"
-                                        rows={3}
+                                    <Label htmlFor="group_id">工具分组</Label>
+                                    <Select
+                                        value={toolConfig.group_id.toString()}
+                                        onValueChange={(value) => setToolConfig({...toolConfig, group_id: Number.parseInt(value)})}
+                                    >
+                                        <SelectTrigger id="group_id">
+                                            <SelectValue placeholder="选择工具分组"/>
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {toolGroups.map((group) => (
+                                                <SelectItem key={group.id} value={group.id.toString()}>
+                                                    <div className="flex items-center gap-2">
+                                                        <FolderIcon className="h-4 w-4"/>
+                                                        {group.name}
+                                                        <Badge variant="outline" className="text-xs">
+                                                            {group.tool_count}
+                                                        </Badge>
+                                                    </div>
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label>工具标签</Label>
+                                    <TagSelector
+                                        availableTags={availableTags}
+                                        onChange={(tags) => {
+                                            setTags(tags);
+                                            setToolConfig({...toolConfig, tags: tags});
+                                        }}
+                                        value={tags}
+                                        allowCreate={true}
                                     />
                                 </div>
 
@@ -266,14 +424,39 @@ export function ToolConfigurationStep({toolConfig, setToolConfig, selectedImage}
                         </Card>
                     </TabsContent>
 
-                    {/* 动态参数配置部分 */}
+                    {/* 参数配置部分 */}
                     <TabsContent value="params">
                         <Card>
                             <CardHeader>
-                                <CardTitle>动态参数配置</CardTitle>
-                                <CardDescription>配置工具的动态参数，这些参数可以在运行时指定</CardDescription>
+                                <CardTitle>命令构建</CardTitle>
+                                <CardDescription>配置工具的参数，包括命令模板、动态参数和静态参数三部分</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-6">
+                                <div className="space-y-2">
+                                    <Label htmlFor="command_template">
+                                        命令模板 <span className="text-red-500">*</span>
+                                        <TooltipProvider>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <HelpCircleIcon className="h-4 w-4 inline-block ml-1 text-muted-foreground"/>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    <p className="max-w-xs">
+                                                        使用 {"{dynamic_params}"} 和 {"{static_params}"} 作为参数占位符
+                                                    </p>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
+                                    </Label>
+                                    <Input
+                                        id="command_template"
+                                        value={toolConfig.command_template}
+                                        onChange={(e) => setToolConfig({...toolConfig, command_template: e.target.value})}
+                                        placeholder="例如: fastp {dynamic_params} {static_params} &> /data/output/fastp.log"
+                                        required
+                                    />
+                                </div>
+
                                 <div className="space-y-4">
                                     <div className="flex justify-between items-center">
                                         <Label className="text-lg font-semibold">动态参数</Label>
@@ -286,7 +469,7 @@ export function ToolConfigurationStep({toolConfig, setToolConfig, selectedImage}
                                     ) : (
                                         <div className="space-y-4">
                                             {toolConfig.dynamic_params.map((param, index) => (
-                                                <Card key={index} className="overflow-hidden border-l-4 border-l-primary">
+                                                <Card key={index} className="overflow-hidden border-l-4 border-l-primary pt-0">
                                                     <CardHeader className="py-3 bg-muted/30">
                                                         <div className="flex justify-between items-center">
                                                             <CardTitle className="text-base">
@@ -301,11 +484,11 @@ export function ToolConfigurationStep({toolConfig, setToolConfig, selectedImage}
                                                                 className="text-muted-foreground hover:text-destructive"
                                                                 onClick={() => removeDynamicParam(index)}
                                                             >
-                                                                <Trash2 className="h-4 w-4"/>
+                                                                <Trash2Icon className="h-4 w-4"/>
                                                             </Button>
                                                         </div>
                                                     </CardHeader>
-                                                    <CardContent className="pt-4">
+                                                    <CardContent className="pt-0">
                                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                                             <div className="space-y-2">
                                                                 <Label htmlFor={`param-description-${index}`}>描述</Label>
@@ -325,6 +508,7 @@ export function ToolConfigurationStep({toolConfig, setToolConfig, selectedImage}
                                                                     onChange={(e) =>
                                                                         updateDynamicParam(index, "index", Number.parseInt(e.target.value) || 0)
                                                                     }
+                                                                    disabled={!param.is_position}
                                                                     placeholder="0"
                                                                 />
                                                             </div>
@@ -336,7 +520,7 @@ export function ToolConfigurationStep({toolConfig, setToolConfig, selectedImage}
                                                                 <TooltipProvider>
                                                                     <Tooltip>
                                                                         <TooltipTrigger asChild>
-                                                                            <HelpCircle
+                                                                            <HelpCircleIcon
                                                                                 className="h-4 w-4 inline-block ml-1 text-muted-foreground"/>
                                                                         </TooltipTrigger>
                                                                         <TooltipContent>
@@ -387,10 +571,21 @@ export function ToolConfigurationStep({toolConfig, setToolConfig, selectedImage}
 
                                     <div className="flex justify-center mt-4">
                                         <Button type="button" onClick={addDynamicParam} variant="outline" className="w-full bg-transparent">
-                                            <Plus className="h-4 w-4 mr-2"/>
+                                            <PlusIcon className="h-4 w-4 mr-2"/>
                                             添加动态参数
                                         </Button>
                                     </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="static_params">静态参数</Label>
+                                    <Textarea
+                                        id="static_params"
+                                        value={toolConfig.static_params}
+                                        onChange={(e) => setToolConfig({...toolConfig, static_params: e.target.value})}
+                                        placeholder="例如: --thread 8 --html /data/output/fastp.html"
+                                        rows={3}
+                                    />
                                 </div>
                             </CardContent>
                         </Card>
@@ -417,8 +612,7 @@ export function ToolConfigurationStep({toolConfig, setToolConfig, selectedImage}
                                         {toolConfig.file_mounts.map((file, index) => (
                                             <Card
                                                 key={index}
-                                                className={`overflow-hidden border-l-4 ${
-                                                    file.file_type === "INPUT" ? "border-l-blue-500" : "border-l-green-500"
+                                                className={`overflow-hidden border-l-4 pt-0 ${file.file_type === "INPUT" ? "border-l-blue-500" : "border-l-green-500"
                                                 }`}
                                             >
                                                 <CardHeader className="py-3 bg-muted/30">
@@ -447,11 +641,11 @@ export function ToolConfigurationStep({toolConfig, setToolConfig, selectedImage}
                                                             className="text-muted-foreground hover:text-destructive"
                                                             onClick={() => removeFileMount(index)}
                                                         >
-                                                            <Trash2 className="h-4 w-4"/>
+                                                            <Trash2Icon className="h-4 w-4"/>
                                                         </Button>
                                                     </div>
                                                 </CardHeader>
-                                                <CardContent className="pt-4">
+                                                <CardContent className="pt-0">
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                                         <div className="space-y-2">
                                                             <Label htmlFor={`file-name-${index}`}>
@@ -547,98 +741,84 @@ export function ToolConfigurationStep({toolConfig, setToolConfig, selectedImage}
 
                                 <div className="flex justify-center mt-4">
                                     <Button type="button" onClick={addFileMount} variant="outline" className="w-full bg-transparent">
-                                        <Plus className="h-4 w-4 mr-2"/>
+                                        <PlusIcon className="h-4 w-4 mr-2"/>
                                         添加文件挂载
                                     </Button>
                                 </div>
                             </CardContent>
                         </Card>
                     </TabsContent>
+                </Tabs>
 
-                    {/* 元信息部分 */}
-                    <TabsContent value="meta">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>元信息配置</CardTitle>
-                                <CardDescription>设置工具的分组和标签信息</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-6">
-                                <div className="space-y-2">
-                                    <Label htmlFor="group_id">
-                                        工具分组 <span className="text-red-500">*</span>
-                                    </Label>
-                                    <Select
-                                        value={toolConfig.group_id.toString()}
-                                        onValueChange={(value) => setToolConfig({...toolConfig, group_id: Number.parseInt(value)})}
-                                    >
-                                        <SelectTrigger id="group_id">
-                                            <SelectValue placeholder="选择工具分组"/>
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {toolGroups.map((group) => (
-                                                <SelectItem key={group.id} value={group.id.toString()}>
-                                                    <div className="flex items-center gap-2">
-                                                        <Folder className="h-4 w-4"/>
-                                                        {group.name}
-                                                        <Badge variant="outline" className="text-xs">
-                                                            {group.tool_count}
-                                                        </Badge>
-                                                    </div>
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                {(!!toolConfig.name && !!toolConfig.description) && (
+                    <div className="flex justify-end gap-2 pt-4 border-t">
+                        <Button
+                            onClick={handleGenerateConfig}
+                            disabled={isGenerating}
+                            className="min-w-[120px]"
+                            variant={isGenerating ? "secondary" : "default"}
+                        >
+                            {isGenerating ? (
+                                <>
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
+                                    生成中...
+                                </>
+                            ) : (
+                                "生成配置"
+                            )}
+                        </Button>
+                    </div>
+                )}
+            </div>
+
+            {/* 预览对话框 */}
+            <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+                <DialogContent className="max-w-4xl max-h-[80vh]">
+                    <DialogHeader>
+                        <DialogTitle>命令预览结果</DialogTitle>
+                        <DialogDescription>
+                            命令: {helpCommand}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="mt-4">
+                        {runInImageMutation.isPending ? (
+                            <div className="flex items-center justify-center py-8">
+                                <div className="text-center">
+                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                                    <p className="text-muted-foreground">正在执行命令...</p>
                                 </div>
-
-                                <div className="space-y-2">
-                                    <Label>工具标签</Label>
-                                    <div className="space-y-4">
-                                        {/* 已选择的标签 */}
-                                        {toolConfig.tags.length > 0 && (
-                                            <div>
-                                                <p className="text-sm text-muted-foreground mb-2">已选择的标签:</p>
-                                                <div className="flex flex-wrap gap-2">
-                                                    {toolConfig.tags.map((tag) => (
-                                                        <Badge
-                                                            key={tag.id}
-                                                            variant="default"
-                                                            className="cursor-pointer"
-                                                            onClick={() => removeTag(tag.id)}
-                                                        >
-                                                            {tag.name}
-                                                            <span className="ml-1">×</span>
-                                                        </Badge>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* 可选择的标签 */}
-                                        <div>
-                                            <p className="text-sm text-muted-foreground mb-2">可选择的标签:</p>
-                                            <div className="flex flex-wrap gap-2">
-                                                {availableTags
-                                                    .filter((tag) => !toolConfig.tags.find((t) => t.id === tag.id))
-                                                    .map((tag) => (
-                                                        <Badge
-                                                            key={tag.id}
-                                                            variant="outline"
-                                                            className="cursor-pointer hover:bg-primary hover:text-primary-foreground"
-                                                            onClick={() => addTag(tag)}
-                                                        >
-                                                            <Tag className="h-3 w-3 mr-1"/>
-                                                            {tag.name}
-                                                        </Badge>
-                                                    ))}
-                                            </div>
+                            </div>
+                        ) : runInImageMutation.isError ? (
+                            <div className="p-4 border border-destructive rounded-md bg-destructive/10">
+                                <p className="text-destructive">执行命令时发生错误: {runInImageMutation.error?.message}</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {existingDocContent ? (
+                                    <div>
+                                        <h4 className="font-semibold mb-2">现有文档内容:</h4>
+                                        <div className="bg-muted p-4 rounded-md max-h-96 overflow-y-auto">
+                                            <pre className="whitespace-pre-wrap text-sm">{existingDocContent.content}</pre>
                                         </div>
                                     </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
-                </Tabs>
-            </div>
+                                ) : runInImageMutation.data ? (
+                                    <div>
+                                        <h4 className="font-semibold mb-2">命令执行结果:</h4>
+                                        <div className="bg-muted p-4 rounded-md max-h-96 overflow-y-auto">
+                                            <pre className="whitespace-pre-wrap text-sm">{runInImageMutation.data.result}</pre>
+                                        </div>
+                                    </div>
+                                ) : null}
+                            </div>
+                        )}
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setPreviewOpen(false)}>
+                            关闭
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

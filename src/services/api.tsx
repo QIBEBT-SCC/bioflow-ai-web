@@ -1,9 +1,9 @@
 import {isTokenExpired, useAuthStore} from "@/stores/authStore";
 import {Project, ProjectCreateProp, ProjectTag} from "@/types/project.tsx";
 import {
-    DockerToolCreate,
+    DockerToolCreate, SimpleToolDoc,
     SimpleToolInfo,
-    ToolGroup, ToolImage,
+    ToolGroup, ToolHelpDoc, ToolImage,
     ToolInfo,
     ToolTag
 } from "@/types/tool.tsx";
@@ -227,6 +227,25 @@ export const imageApi = {
             params: {name: name}
         });
     },
+    getImageDocs: async (uid: string) => {
+        return await api.get<SimpleToolDoc[]>(`/images/${uid}/documents`)
+    },
+    runInImage: async (uid: string, command: string) => {
+        const formData = new URLSearchParams();
+        formData.append('command', command);
+
+        return await api.post<{ code: number, result: string }>(`/images/${uid}`, formData, {
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            }
+        });
+    },
+}
+
+export const documentApi = {
+    getDocument: async (uid: string) => {
+        return await api.get<ToolHelpDoc>(`/documents/${uid}`)
+    }
 }
 
 export const toolApi = {
