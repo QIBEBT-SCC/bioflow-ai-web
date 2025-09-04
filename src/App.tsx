@@ -102,7 +102,7 @@ export default function App() {
                     children: [
                         {index: true, element: withSuspense(ToolsPage)},
                         {path: "add", element: withSuspense(AddToolPage)},
-                        {path: ":toolId", element: withSuspense(ToolDetailPage)},
+                        {path: ":toolUid", element: withSuspense(ToolDetailPage)},
                     ]
                 },
                 {

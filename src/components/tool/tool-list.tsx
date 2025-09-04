@@ -45,9 +45,9 @@ export function ToolList({viewMode}: { viewMode: "list" | "grid" }) {
                 </TableHeader>
                 <TableBody>
                     {allTools.map((tool) => (
-                        <TableRow key={tool.id}>
+                        <TableRow key={tool.uid}>
                             <TableCell className="font-medium max-w-30">
-                                <Link to={`/tool/${tool.id}`} className="hover:underline">
+                                <Link to={`/tool/${tool.uid}`} className="hover:underline">
                                     <div className="truncate">{tool.name}</div>
                                 </Link>
                             </TableCell>
@@ -113,10 +113,10 @@ export function ToolList({viewMode}: { viewMode: "list" | "grid" }) {
         <div>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {allTools.map((tool) => (
-                    <Card key={tool.id} className="py-0 gap-0">
+                    <Card key={tool.uid} className="py-0 gap-0">
                         <CardContent className="p-4">
                             <div className="flex justify-between items-start mb-2">
-                                <Link to={`/tool/${tool.id}`} className="font-medium hover:underline">
+                                <Link to={`/tool/${tool.uid}`} className="font-medium hover:underline">
                                     {tool.name}
                                 </Link>
                                 <DropdownMenu>

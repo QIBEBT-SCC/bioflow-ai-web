@@ -91,7 +91,7 @@ export interface DockerToolCreate {
 }
 
 export interface SimpleToolInfo {
-    id: number
+    uid: string
     name: string
     description: string
     tool_type: ToolType

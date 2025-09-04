@@ -19,8 +19,8 @@ import {
 } from "@/components/ui/breadcrumb.tsx";
 
 export function ToolDetailPage() {
-    const {toolId} = useParams();
-    const {data: tool, isLoading} = useTool({id: toolId ? toolId : ''});
+    const {toolUid: toolUid} = useParams();
+    const {data: tool, isLoading} = useTool({id: toolUid ? toolUid : ''});
 
     // 复制命令到剪贴板
     const copyToClipboard = (text: string) => {
@@ -227,7 +227,7 @@ export function ToolDetailPage() {
                                 </CardHeader>
                                 <CardContent className="space-y-6">
                                     <div>
-                                        <h3 className="text-lg font-medium mb-4">必要参数</h3>
+                                        <h3 className="text-lg font-medium mb-4">动态参数</h3>
                                         <div className="grid grid-cols-1 gap-4">
                                             {tool.dynamic_params.map((param, index) => (
                                                 <div
@@ -254,14 +254,14 @@ export function ToolDetailPage() {
                                     <Separator/>
 
                                     <div>
-                                        <h3 className="text-lg font-medium mb-4">可选参数</h3>
+                                        <h3 className="text-lg font-medium mb-4">固定参数</h3>
                                         {tool.static_params ? (
                                             <div className="bg-muted p-4 rounded-lg">
                                                 <code
                                                     className="text-sm block overflow-x-auto whitespace-pre-wrap">{tool.static_params}</code>
                                             </div>
                                         ) : (
-                                            <p className="text-muted-foreground">无可选参数</p>
+                                            <p className="text-muted-foreground">无固定参数</p>
                                         )}
                                     </div>
                                 </CardContent>
@@ -272,13 +272,14 @@ export function ToolDetailPage() {
                         <TabsContent value="outputs">
                             <Card>
                                 <CardHeader>
-                                    <CardTitle>输出文件</CardTitle>
-                                    <CardDescription>工具生成的输出文件配置</CardDescription>
+                                    <CardTitle>文件挂载</CardTitle>
+                                    <CardDescription>工具生成的输入输出文件配置</CardDescription>
                                 </CardHeader>
                                 <CardContent>
                                     <div className="grid grid-cols-1 gap-4">
                                         {tool.file_mounts.map((file, index) => (
-                                            <div key={index} className="p-4 rounded-lg border border-l-4 border-l-green-500">
+                                            <div key={index}
+                                                 className={`p-4 rounded-lg border border-l-4 ${file.file_type === "INPUT" ? "border-l-blue-500" : "border-l-green-500"}`}>
                                                 <h4 className="font-medium mb-3">{file.name}</h4>
 
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
