@@ -9,8 +9,8 @@ import {
 import {Input} from "@/components/ui/input"
 import {Label} from "@/components/ui/label"
 import React, {useState} from "react"
-import {useAuthStore} from "@/stores/authStore"
-import {Link, useNavigate} from "react-router-dom"
+import {useAuth} from "@/hooks/use-auth"
+import {Link} from "react-router-dom"
 import {useTranslation} from "react-i18next";
 
 export function LoginForm({
@@ -19,16 +19,13 @@ export function LoginForm({
                           }: React.ComponentPropsWithoutRef<"div">) {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
-    const {login, isLoading, errorMsg} = useAuthStore()
-    const navigate = useNavigate()
+    const {login, isLoading, errorMsg} = useAuth()
 
-    const { t } = useTranslation();
+    const {t} = useTranslation();
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         await login(email, password)
-
-        navigate('/home')
     }
 
     return (

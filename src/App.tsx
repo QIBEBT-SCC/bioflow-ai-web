@@ -1,13 +1,14 @@
 import React, {Suspense} from "react";
 import {MainLayout} from "@/pages/main-layout.tsx";
 import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
-import {isTokenExpired, useAuthStore} from "@/stores/authStore.tsx";
 import {createBrowserRouter, Navigate, RouterProvider} from "react-router-dom";
 import {LoginPage} from "@/pages/login-page.tsx";
 import {TooltipProvider} from "@/components/ui/tooltip.tsx";
 import {ThemeProvider} from "@/components/theme-provider.tsx";
 import {Toaster} from "@/components/ui/sonner.tsx";
 import {ChatPage} from "@/pages/chat/chat-page.tsx";
+import {AuthProvider, useAuthContext} from "@/components/auth-provider.tsx";
+import {LoadingSpinner} from "@/components/ui/loading-spinner.tsx";
 
 // 懒加载页面组件，确保为默认导出
 const ProjectsPage = React.lazy(() => import("@/pages/project/project-page.tsx").then(m => ({default: m.ProjectsPage})));
@@ -21,30 +22,31 @@ const AddToolPage = React.lazy(() => import("@/pages/tool/add-tool-page.tsx").th
 const ToolDetailPage = React.lazy(() => import("@/pages/tool/tool-detail-page.tsx").then(m => ({default: m.ToolDetailPage})));
 const ResourcePage = React.lazy(() => import("@/pages/resource/resource-page.tsx").then(m => ({default: m.ResourcePage})))
 
-
 // 受保护的路由组件
 const ProtectedRoute = ({children}: { children: React.ReactNode }) => {
-    const token = localStorage.getItem('token')
-    const {isAuthenticated, logout} = useAuthStore()
+    const {isAuthenticated, isInitialized, isLoading} = useAuthContext();
 
-    React.useEffect(() => {
-        if (token && isTokenExpired(token)) {
-            logout()
-            return
-        }
-    }, [token, logout])
+    // 如果还在初始化或加载中，显示加载状态
+    if (!isInitialized || isLoading) {
+        return (
+            <div className="flex min-h-screen items-center justify-center">
+                <LoadingSpinner size="lg" text="正在加载..." />
+            </div>
+        );
+    }
 
     if (!isAuthenticated) {
-        return <Navigate to="/login" replace/>
+        return <Navigate to="/login" replace/>;
     }
-    return <>{children}</>
-}
+    
+    return <>{children}</>;
+};
 
 // 公开路由组件
 const PublicRoute = ({children}: { children: React.ReactNode }) => <>{children}</>;
 
 const withSuspense = (Component: React.LazyExoticComponent<any>) => (
-    <Suspense fallback={<div>加载中...</div>}>
+    <Suspense fallback={<LoadingSpinner size="md" text="加载中..." />}>
         <Component/>
     </Suspense>
 );
@@ -78,7 +80,6 @@ export default function App() {
                 },
                 {
                     path: "editor",
-
                     children: [
                         {index: true, element: withSuspense(FlowWorkspace),},
                         {path: ":workflowUid", element: withSuspense(FlowWorkspace)},
@@ -124,7 +125,9 @@ export default function App() {
         <QueryClientProvider client={queryClient}>
             <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
                 <TooltipProvider>
-                    <RouterProvider router={router}/>
+                    <AuthProvider>
+                        <RouterProvider router={router}/>
+                    </AuthProvider>
                 </TooltipProvider>
                 <Toaster richColors expand={true} position={"top-right"} offset={{top: 70, right: 10}}/>
             </ThemeProvider>
