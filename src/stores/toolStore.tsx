@@ -47,7 +47,7 @@ export const useCreateToolStore = create<CreateToolStore>()(
                     currentImage: image,
                     toolConfig: {
                         ...state.toolConfig,
-                        image_uid: image.uid,
+                        image_uid: image.uid || "",
                         name: image.name
                     },
                 }));

@@ -4,14 +4,13 @@ import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/compo
 import {Badge} from "@/components/ui/badge"
 import {Button} from "@/components/ui/button"
 import {Copy, Globe, FileText, HardDrive, Code, Terminal, Layers, Tag, Folder} from "lucide-react"
-import {DockerToolCreate, ImageConfig, ToolImage} from "@/types/tool.tsx";
+import {ImageConfig} from "@/types/tool.tsx";
+import {useCreateToolStore} from "@/stores/toolStore.tsx";
 
-interface CreateConfirmationStepProps {
-    selectedImage: ToolImage | null
-    toolConfig: DockerToolCreate
-}
 
-export function CreateConfirmationStep({selectedImage, toolConfig}: CreateConfirmationStepProps) {
+export function CreateConfirmationStep() {
+    const {currentImage, toolConfig} = useCreateToolStore()
+
     // 复制命令到剪贴板
     const copyToClipboard = (text: string) => {
         navigator.clipboard
@@ -58,7 +57,7 @@ export function CreateConfirmationStep({selectedImage, toolConfig}: CreateConfir
 
             <div className="space-y-6">
                 {/* 镜像信息 */}
-                {selectedImage && (
+                {currentImage && (
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
@@ -70,41 +69,41 @@ export function CreateConfirmationStep({selectedImage, toolConfig}: CreateConfir
                         <CardContent className="space-y-4">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <h3 className="font-medium">{selectedImage.name}</h3>
+                                    <h3 className="font-medium">{currentImage.name}</h3>
                                     <div className="flex items-center gap-2 mt-1">
-                                        <Badge variant="secondary">{selectedImage.version}</Badge>
+                                        <Badge variant="secondary">{currentImage.version}</Badge>
                                         <Badge variant="outline" className="text-xs font-mono">
-                                            {selectedImage.image.namespace}/{selectedImage.image.repository}
+                                            {currentImage.image.namespace}/{currentImage.image.repository}
                                         </Badge>
                                     </div>
                                 </div>
                                 <div className="flex gap-2">
-                                    {selectedImage.homepage && (
+                                    {currentImage.homepage && (
                                         <Button
                                             variant="ghost"
                                             size="sm"
                                             className="h-8 w-8 p-0"
-                                            onClick={() => window.open(selectedImage.homepage, "_blank")}
+                                            onClick={() => window.open(currentImage.homepage, "_blank")}
                                         >
                                             <Globe className="h-4 w-4"/>
                                         </Button>
                                     )}
-                                    {selectedImage.paper_link && (
+                                    {currentImage.paper_link && (
                                         <Button
                                             variant="ghost"
                                             size="sm"
                                             className="h-8 w-8 p-0"
-                                            onClick={() => window.open(selectedImage.paper_link, "_blank")}
+                                            onClick={() => window.open(currentImage.paper_link, "_blank")}
                                         >
                                             <FileText className="h-4 w-4"/>
                                         </Button>
                                     )}
                                 </div>
                             </div>
-                            <p className="text-sm text-muted-foreground">{selectedImage.description}</p>
+                            <p className="text-sm text-muted-foreground">{currentImage.description}</p>
                             <div className="bg-muted/30 p-3 rounded-md">
                                 <p className="text-xs text-muted-foreground mb-1">Docker 镜像地址</p>
-                                <code className="text-sm">{getImageName(selectedImage.image)}</code>
+                                <code className="text-sm">{getImageName(currentImage.image)}</code>
                             </div>
                         </CardContent>
                     </Card>

@@ -5,7 +5,7 @@ import {useState} from "react"
 import {ArrowLeftIcon, ArrowRightIcon, CheckIcon} from "lucide-react"
 import {Button} from "@/components/ui/button"
 import {Card, CardContent} from "@/components/ui/card"
-import {Link} from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
 import {useTranslation} from "react-i18next";
 import {SidebarInset, SidebarTrigger} from "@/components/ui/sidebar.tsx";
 import {Separator} from "@/components/ui/separator.tsx";
@@ -21,6 +21,8 @@ import {ImageSelectionStep} from "@/components/tool/create/image-select-step.tsx
 import {ToolConfigurationStep} from "@/components/tool/create/tool-config-step.tsx";
 import {CreateConfirmationStep} from "@/components/tool/create/create-confirm-step.tsx";
 import {useCreateToolStore} from "@/stores/toolStore.tsx";
+import {toast} from "sonner";
+import {useCreateTool} from "@/hooks/use-tool.tsx";
 
 const steps = [
     {id: 1, title: "选择镜像", description: "选择或创建 Docker 镜像"},
@@ -33,12 +35,10 @@ export function AddToolPage() {
 
     const [currentStep, setCurrentStep] = useState(1)
 
-    const {
-        currentImage,
-        toolConfig,
+    const {currentImage, toolConfig,} = useCreateToolStore()
+    const {mutate: createTool, isPending: isCreating} = useCreateTool()
 
-        setToolConfig
-    } = useCreateToolStore()
+    const navigate = useNavigate()
 
     // 处理下一步
     const handleNext = () => {
@@ -56,15 +56,18 @@ export function AddToolPage() {
 
     // 处理工具创建
     const handleCreateTool = async () => {
-        try {
-            console.log("创建工具:", {currentImage, toolConfig})
-            // 这里添加实际的创建逻辑
-            alert("工具创建成功！")
-            // 可以跳转到工具列表页面
-        } catch (error) {
-            console.error("创建工具失败:", error)
-            alert("创建工具失败，请重试")
-        }
+        console.log("创建工具:", {currentImage, toolConfig})
+
+        createTool({tool: toolConfig}, {
+            onSuccess: () => {
+                toast.success("工具创建成功！")
+                navigate('/tool')
+            },
+            onError: (error) => {
+                console.error("创建工具失败:", error)
+                toast.error("创建工具失败，请重试")
+            }
+        })
     }
 
     // 检查当前步骤是否可以继续
@@ -154,10 +157,8 @@ export function AddToolPage() {
                     {/* 步骤内容 */}
                     <div className="mb-8">
                         {currentStep === 1 && <ImageSelectionStep/>}
-                        {currentStep === 2 && (
-                            <ToolConfigurationStep toolConfig={toolConfig} setToolConfig={setToolConfig} selectedImage={currentImage}/>
-                        )}
-                        {currentStep === 3 && <CreateConfirmationStep selectedImage={currentImage} toolConfig={toolConfig}/>}
+                        {currentStep === 2 && (<ToolConfigurationStep/>)}
+                        {currentStep === 3 && <CreateConfirmationStep/>}
                     </div>
 
                     {/* 导航按钮 */}
@@ -177,7 +178,7 @@ export function AddToolPage() {
                                 <ArrowRightIcon className="h-4 w-4 ml-2"/>
                             </Button>
                         ) : (
-                            <Button onClick={handleCreateTool} className="bg-green-600 hover:bg-green-700" disabled={!canProceed()}>
+                            <Button onClick={handleCreateTool} className="bg-green-600 hover:bg-green-700" disabled={!canProceed() || isCreating}>
                                 创建工具
                             </Button>
                         )}

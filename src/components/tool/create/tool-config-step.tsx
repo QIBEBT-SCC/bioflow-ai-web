@@ -35,13 +35,24 @@ export function ToolConfigurationStep() {
     const {currentImage, toolConfig, setToolConfig} = useCreateToolStore()
 
     const {data: existDocs = []} = useImageDocuments({uid: currentImage.uid ?? ""})
-    const {data:toolGroups = []} = useToolGroupList()
-    const {data:availableTags = []} = useToolTagList()
+    const {data: toolGroups = []} = useToolGroupList()
+    const {data: availableTags = []} = useToolTagList()
 
     // 同步标签状态
     useEffect(() => {
         setTags(toolConfig.tags || []);
     }, [toolConfig.tags]);
+
+    useEffect(() => {
+        if (toolConfig.help_doc_uid) {
+            const existingDoc = existDocs.find(doc => doc.uid === toolConfig.help_doc_uid);
+            if (existingDoc) {
+                setHelpCommand(existingDoc.help_command);
+            }
+        } else {
+            setHelpCommand("");
+        }
+    }, [toolConfig.help_doc_uid, existDocs])
 
     // 获取现有文档的预览内容
     const {data: existingDocContent} = useDocument({uid: selectedDocUid})
