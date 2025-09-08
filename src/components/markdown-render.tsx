@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useEffect, useRef, useState } from "react"
 
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
 import { oneDark, oneLight } from "react-syntax-highlighter/dist/esm/styles/prism"
@@ -15,11 +15,22 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
     const { theme } = useTheme()
 
     // 初始化 Mermaid
-    useMemo(() => {
+    useEffect(() => {
         mermaid.initialize({
-            startOnLoad: true,
+            startOnLoad: false, // 我们手动控制渲染
             theme: theme === "dark" ? "dark" : "default",
-            // securityLevel: "loose",
+            securityLevel: "loose",
+            fontFamily: "inherit",
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+            },
+            sequence: {
+                useMaxWidth: true,
+            },
+            gantt: {
+                useMaxWidth: true,
+            },
         })
     }, [theme])
 
@@ -94,25 +105,77 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
         })
     }
 
-    const renderMermaid = (code: string, index: number) => {
-        const id = `mermaid-${index}-${Date.now()}`
+    const MermaidDiagram = ({ code, index }: { code: string; index: number }) => {
+        const containerRef = useRef<HTMLDivElement>(null)
+        const [isLoading, setIsLoading] = useState(true)
+        const [error, setError] = useState<string | null>(null)
+        const [retryCount, setRetryCount] = useState(0)
+        const [svgContent, setSvgContent] = useState<string>('')
 
-        setTimeout(() => {
-            const element = document.getElementById(id)
-            if (element) {
-                mermaid
-                    .render(`mermaid-svg-${id}`, code)
-                    .then(({ svg }) => {
-                        element.innerHTML = svg
-                    })
-                    .catch(console.error)
+
+        useEffect(() => {
+            let isMounted = true
+            
+            const renderDiagramSafe = async () => {
+                if (!isMounted) return
+                
+                try {
+                    setIsLoading(true)
+                    setError(null)
+                    setSvgContent('')
+                    
+                    // 生成唯一的ID
+                    const id = `mermaid-${index}-${Date.now()}-${retryCount}`
+                    
+                    // 渲染Mermaid图表
+                    const { svg } = await mermaid.render(id, code)
+                    
+                    if (isMounted) {
+                        setSvgContent(svg)
+                        setIsLoading(false)
+                    }
+                } catch (err) {
+                    if (isMounted) {
+                        console.error('Mermaid rendering error:', err)
+                        setError(err instanceof Error ? err.message : '渲染图表失败')
+                        setIsLoading(false)
+                    }
+                }
             }
-        }, 100)
+            
+            renderDiagramSafe()
+            
+            return () => {
+                isMounted = false
+            }
+        }, [code, index, theme, retryCount])
+
+        const handleRetry = () => {
+            setRetryCount(prev => prev + 1)
+        }
 
         return (
-            <div key={index} className="my-4 p-4 bg-muted rounded-lg overflow-x-auto">
-                <div id={id} className="mermaid-container">
-                    加载图表中...
+            <div className="my-4 p-4 bg-muted rounded-lg overflow-x-auto">
+                <div className="mermaid-container min-h-[100px] flex items-center justify-center">
+                    {isLoading && <span className="text-muted-foreground">加载图表中...</span>}
+                    {error && (
+                        <div className="text-center">
+                            <span className="text-destructive block mb-2">错误: {error}</span>
+                            <button 
+                                onClick={handleRetry}
+                                className="text-sm text-primary hover:underline"
+                            >
+                                重试
+                            </button>
+                        </div>
+                    )}
+                    {svgContent && !isLoading && !error && (
+                        <div 
+                            ref={containerRef}
+                            dangerouslySetInnerHTML={{ __html: svgContent }}
+                            className="w-full"
+                        />
+                    )}
                 </div>
             </div>
         )
@@ -140,7 +203,7 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
                             </div>
                         )
                     case "mermaid":
-                        return renderMermaid(part.content, index)
+                        return <MermaidDiagram key={index} code={part.content} index={index} />
                     case "text":
                         return (
                             <div key={index} className="leading-relaxed">
