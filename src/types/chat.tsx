@@ -3,6 +3,7 @@ export enum SSEEventType {
     LOADING = 'loading',
     GENERATING = 'generating',
     TOOL_CALL = 'tool_call',
+    INTERRUPT = 'interrupt',
     ERROR = 'error',
     SUCCESS = 'success',
 }
@@ -25,6 +26,7 @@ export interface ChatEventHandlers {
     onLoading?: (data: SSEEventData) => void;
     onGenerating?: (data: SSEEventData) => void;
     onToolCall?: (data: SSEEventData) => void;
+    onInterrupt?: (data: SSEEventData) => void;
     onSuccess?: (data: SSEEventData) => void;
     onError?: (data: SSEEventData) => void;
     onOpen?: () => void;

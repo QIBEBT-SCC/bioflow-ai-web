@@ -85,6 +85,9 @@ export class ChatSSEService {
                             case SSEEventType.TOOL_CALL:
                                 handlers.onToolCall?.(data);
                                 break;
+                            case SSEEventType.INTERRUPT:
+                                handlers.onInterrupt?.(data);
+                                break;
                             case SSEEventType.SUCCESS:
                                 handlers.onSuccess?.(data);
                                 break;

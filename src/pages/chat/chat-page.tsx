@@ -209,6 +209,38 @@ export function ChatPage() {
                         }
                     },
 
+                    onInterrupt: (data: SSEEventData) => {
+                        // 处理中断消息，创建带确认框的消息
+                        console.log('Interrupt event:', data)
+
+                        if (data.full_text) {
+                            const interruptMessage: Message = {
+                                id: `interrupt_${Date.now()}`,
+                                type: "ai",
+                                content: data.full_text,
+                                timestamp: new Date(),
+                                status: "sent",
+                                actions: [
+                                    {
+                                        id: "confirm",
+                                        label: "确认",
+                                        type: "confirm",
+                                        pending: false,
+                                    },
+                                    {
+                                        id: "cancel",
+                                        label: "取消",
+                                        type: "cancel",
+                                        pending: false,
+                                    }
+                                ]
+                            }
+                            addMessage(interruptMessage)
+                        } else {
+                            console.warn('No message content found in interrupt data:', data)
+                        }
+                    },
+
                     onSuccess: (data: SSEEventData) => {
                         // 生成完成
                         if (data.id && typeof data.message === 'object' && data.message.content) {
