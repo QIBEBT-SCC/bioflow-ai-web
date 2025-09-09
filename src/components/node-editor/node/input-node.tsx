@@ -1,4 +1,4 @@
-import {Info} from "lucide-react";
+import {InfoIcon} from "lucide-react";
 import {Card, CardContent, CardFooter, CardHeader, CardTitle} from "@/components/ui/card.tsx";
 import {Label} from "@/components/ui/label.tsx";
 import {Input} from "@/components/ui/input.tsx";
@@ -50,7 +50,7 @@ const FileCard = (
                     {title}
                 </CardTitle>
                 <Sheet>
-                    <SheetTrigger><Info className="w-3 h-3 text-gray-300"/></SheetTrigger>
+                    <SheetTrigger><InfoIcon className="w-3 h-3 text-gray-300"/></SheetTrigger>
                     <SheetContent>
                         <SheetHeader>
                             <SheetTitle>{title}</SheetTitle>
@@ -161,7 +161,7 @@ export function SequenceInputNode() {
                     Pair-end Reads Input
                 </CardTitle>
                 <Sheet>
-                    <SheetTrigger><Info className="w-3 h-3 text-gray-300"/></SheetTrigger>
+                    <SheetTrigger><InfoIcon className="w-3 h-3 text-gray-300"/></SheetTrigger>
                     <SheetContent>
                         <SheetHeader>
                             <SheetTitle>Pair-end Reads Input</SheetTitle>
@@ -228,7 +228,7 @@ export function DBInputNode() {
                     BioInfo DB
                 </CardTitle>
                 <Sheet>
-                    <SheetTrigger><Info className="w-3 h-3 text-gray-300"/></SheetTrigger>
+                    <SheetTrigger><InfoIcon className="w-3 h-3 text-gray-300"/></SheetTrigger>
                     <SheetContent>
                         <SheetHeader>
                             <SheetTitle>BioInfo DB</SheetTitle>
@@ -289,7 +289,7 @@ export function ReferenceInput() {
                     Reference Genomes
                 </CardTitle>
                 <Sheet>
-                    <SheetTrigger><Info className="w-3 h-3 text-gray-300"/></SheetTrigger>
+                    <SheetTrigger><InfoIcon className="w-3 h-3 text-gray-300"/></SheetTrigger>
                     <SheetContent>
                         <SheetHeader>
                             <SheetTitle>Reference Genomes</SheetTitle>

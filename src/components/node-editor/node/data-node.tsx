@@ -1,6 +1,6 @@
 import {Card, CardContent, CardFooter, CardHeader, CardTitle} from "@/components/ui/card.tsx";
 import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip.tsx";
-import {Info} from "lucide-react";
+import {InfoIcon} from "lucide-react";
 import {Label} from "@/components/ui/label.tsx";
 import {Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select.tsx";
 import {BaseToolNode} from "@/components/node-editor/node/base-node.tsx";
@@ -29,7 +29,7 @@ export function JsonFilterNode() {
                     </CardTitle>
                     <TooltipProvider>
                         <Tooltip>
-                            <TooltipTrigger><Info className="w-3 h-3 text-gray-300"/></TooltipTrigger>
+                            <TooltipTrigger><InfoIcon className="w-3 h-3 text-gray-300"/></TooltipTrigger>
                             <TooltipContent>
                                 <p>文件路径输出</p>
                             </TooltipContent>
@@ -88,7 +88,7 @@ export function CutNode() {
                     </CardTitle>
                     <TooltipProvider>
                         <Tooltip>
-                            <TooltipTrigger><Info className="w-3 h-3 text-gray-300"/></TooltipTrigger>
+                            <TooltipTrigger><InfoIcon className="w-3 h-3 text-gray-300"/></TooltipTrigger>
                             <TooltipContent>
                                 <p>文件路径输出</p>
                             </TooltipContent>
@@ -143,7 +143,7 @@ export function ConcatNode() {
                     </CardTitle>
                     <TooltipProvider>
                         <Tooltip>
-                            <TooltipTrigger><Info className="w-3 h-3 text-gray-300"/></TooltipTrigger>
+                            <TooltipTrigger><InfoIcon className="w-3 h-3 text-gray-300"/></TooltipTrigger>
                             <TooltipContent>
                                 <p>文件路径输出</p>
                             </TooltipContent>

@@ -4,7 +4,7 @@ import {
     SaveIcon,
     DownloadIcon,
     MenuIcon,
-    CheckCircle2,
+    CheckCircle2Icon,
     UploadIcon,
     SaveAllIcon,
 } from "lucide-react";
@@ -41,6 +41,7 @@ import {DBInputNode, FileInputNode, ReferenceInput, SequenceInputNode} from "@/c
 import {LineFigNode} from "@/components/node-editor/node/draw-node.tsx";
 import {ConcatNode, CutNode, JsonFilterNode} from "@/components/node-editor/node/data-node.tsx";
 import {NoteNode} from "@/components/node-editor/node/note-node.tsx";
+import {RCodeNode, PythonCodeNode} from "@/components/node-editor/node/code-node.tsx";
 import {PanelMenu} from "@/components/node-editor/menu/panel-menu.tsx";
 import {ToolNode} from "@/components/node-editor/node/tool-node.tsx";
 import {LoadWorkflowDialog, SaveWorkflowDialog, MenuButton} from "@/components/node-editor/menu/editor-menu-component";
@@ -51,15 +52,17 @@ import {useQueryClient} from "@tanstack/react-query";
 
 const nodeTypes = {
     tool: ToolNode,
-    fileInput: FileInputNode,
-    sequenceInputNode: SequenceInputNode,
-    dbInputNode: DBInputNode,
-    refInputNode: ReferenceInput,
-    lineFig: LineFigNode,
-    dataFilter: JsonFilterNode,
-    dataCut: CutNode,
-    dataConcat: ConcatNode,
+    resource_file: FileInputNode,
+    resource_sequence: SequenceInputNode,
+    resource_db: DBInputNode,
+    resource_genome: ReferenceInput,
+    processor_filter: JsonFilterNode,
+    processor_cut: CutNode,
+    processor_concat: ConcatNode,
+    code_R: RCodeNode,
+    code_python: PythonCodeNode,
     note: NoteNode,
+    lineFig: LineFigNode,
 }
 
 function FlowContent() {
@@ -238,7 +241,7 @@ function FlowContent() {
                             tooltip={"Run"}
                         />
                         <MenuButton
-                            icon={<CheckCircle2 className="h-4 w-4 text-yellow-400"/>}
+                            icon={<CheckCircle2Icon className="h-4 w-4 text-yellow-400"/>}
                             onClick={() => {
                             }}
                             tooltip={"检查合法性"}

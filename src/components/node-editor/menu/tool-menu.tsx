@@ -1,7 +1,7 @@
 "use client"
 
 import React, {useState, useRef} from "react"
-import {Search, X, ChevronRight} from "lucide-react"
+import {SearchIcon, XIcon, ChevronRightIcon} from "lucide-react"
 import {Skeleton} from "@/components/ui/skeleton.tsx"
 import {useGroupTools, useSearchTools, useToolGroupList} from "@/hooks/use-tool.tsx";
 import {useToolNodeStore} from "@/stores/toolStore.tsx";
@@ -126,14 +126,14 @@ export const ToolMenu: React.FC<ToolMenuProps> = ({isOpen, onClose, onSelectTool
                 <div className="p-4 border-b flex justify-between items-center">
                     <h2 className="text-xl font-semibold">工具菜单</h2>
                     <button onClick={onClose} className="p-1 rounded-full hover:bg-gray-100">
-                        <X className="h-6 w-6"/>
+                        <XIcon className="h-6 w-6"/>
                     </button>
                 </div>
 
                 {/* 搜索框 */}
                 <div className="p-4 border-b">
                     <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5"/>
+                        <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5"/>
                         <input
                             type="text"
                             placeholder="搜索工具..."
@@ -151,7 +151,7 @@ export const ToolMenu: React.FC<ToolMenuProps> = ({isOpen, onClose, onSelectTool
                                     setSearchQuery("")
                                 }}
                             >
-                                <X className="h-4 w-4"/>
+                                <XIcon className="h-4 w-4"/>
                             </button>
                         )}
                     </div>
@@ -171,7 +171,7 @@ export const ToolMenu: React.FC<ToolMenuProps> = ({isOpen, onClose, onSelectTool
                                             onClick={() => handleGroupSelect(group.id)}
                                         >
                                             <span>{group.name}</span>
-                                            <ChevronRight className="h-4 w-4"/>
+                                            <ChevronRightIcon className="h-4 w-4"/>
                                         </button>
                                     ))}
                                 </div>
@@ -188,7 +188,7 @@ export const ToolMenu: React.FC<ToolMenuProps> = ({isOpen, onClose, onSelectTool
                                                     onClick={() => handleGroupSelect(group.id)}
                                                 >
                                                     <span>{group.name}</span>
-                                                    <ChevronRight className="h-4 w-4"/>
+                                                    <ChevronRightIcon className="h-4 w-4"/>
                                                 </button>
                                             ))}
                                     </div>

@@ -11,7 +11,7 @@ import {
     PaginationEllipsis,
 } from "@/components/ui/pagination.tsx"
 import {Input} from "@/components/ui/input.tsx"
-import {File, Search, ChevronLeft, ChevronRight} from "lucide-react"
+import {FileIcon, SearchIcon, ChevronLeftIcon, ChevronRightIcon} from "lucide-react"
 import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip.tsx";
 import {useSaveWorkflow, useWorkflowCount, useWorkflows} from "@/hooks/useWorkflow.tsx";
 import {Label} from "@/components/ui/label.tsx";
@@ -104,7 +104,7 @@ export function LoadWorkflowDialog({icon, tooltip, onClick}: {
 
                 <div className="relative">
                     <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                        <Search className="h-4 w-4 text-muted-foreground"/>
+                        <SearchIcon className="h-4 w-4 text-muted-foreground"/>
                     </div>
                     <Input
                         type="text"
@@ -123,7 +123,7 @@ export function LoadWorkflowDialog({icon, tooltip, onClick}: {
                                 className="flex flex-col items-center justify-center p-2 border rounded-md cursor-pointer hover:bg-accent transition-colors"
                                 onClick={() => handleFileSelect(file.uid)}
                             >
-                                <File className="h-10 w-10 text-muted-foreground mb-2"/>
+                                <FileIcon className="h-10 w-10 text-muted-foreground mb-2"/>
                                 <span className="text-sm text-center truncate w-full" title={file.name}>
                         {file.name}
                       </span>
@@ -142,7 +142,7 @@ export function LoadWorkflowDialog({icon, tooltip, onClick}: {
                                     onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
                                     isActive={currentPage !== 1}
                                 >
-                                    <span className="flex items-center"><ChevronLeft className="h-4 w-4 mr-1"/></span>
+                                    <span className="flex items-center"><ChevronLeftIcon className="h-4 w-4 mr-1"/></span>
                                 </PaginationLink>
                             </PaginationItem>
 
@@ -187,7 +187,7 @@ export function LoadWorkflowDialog({icon, tooltip, onClick}: {
                                     onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
                                     isActive={currentPage !== totalPages}
                                 >
-                                    <span className="flex items-center"><ChevronRight className="h-4 w-4 ml-1"/></span>
+                                    <span className="flex items-center"><ChevronRightIcon className="h-4 w-4 ml-1"/></span>
                                 </PaginationLink>
                             </PaginationItem>
                         </PaginationContent>

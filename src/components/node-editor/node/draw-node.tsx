@@ -1,6 +1,6 @@
 import {Card, CardContent, CardFooter, CardHeader, CardTitle} from "@/components/ui/card.tsx";
 import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip.tsx";
-import {Info} from "lucide-react";
+import {InfoIcon} from "lucide-react";
 import {useEffect, useRef} from "react";
 import * as echarts from "echarts";
 import {BaseResizeableNode} from "@/components/node-editor/node/base-node.tsx";
@@ -83,7 +83,7 @@ export function LineFigNode() {
                     </CardTitle>
                     <TooltipProvider>
                         <Tooltip>
-                            <TooltipTrigger><Info className="w-3 h-3 text-gray-200"/></TooltipTrigger>
+                            <TooltipTrigger><InfoIcon className="w-3 h-3 text-gray-200"/></TooltipTrigger>
                             <TooltipContent>
                                 <p>折线图</p>
                             </TooltipContent>

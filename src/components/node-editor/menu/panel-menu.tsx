@@ -3,16 +3,18 @@
 import type React from "react"
 import {useState, useRef, useEffect} from "react"
 import {
-    BarChart,
+    BarChartIcon,
     DnaIcon,
-    FileInput,
-    Filter,
+    FileInputIcon,
+    FilterIcon,
     FlipVerticalIcon,
-    LineChart,
-    Scissors,
-    StickyNote,
+    LineChartIcon,
+    ScissorsIcon,
+    StickyNoteIcon,
     PenToolIcon,
-    ChevronRight, DatabaseIcon,
+    ChevronRightIcon,
+    DatabaseIcon,
+    CodeIcon,
 } from "lucide-react"
 import {ToolMenu} from "@/components/node-editor/menu/tool-menu.tsx";
 import {DBMenu} from "@/components/node-editor/menu/DBMenu.tsx";
@@ -26,34 +28,43 @@ const menuData = {
     },
     dataProcessing: {
         name: "数据处理",
-        icon: <Filter className="h-4 w-4 mr-2"/>,
+        icon: <FilterIcon className="h-4 w-4 mr-2"/>,
         items: [
-            {type: "dataFilter", label: "数据过滤", icon: <Filter className="h-4 w-4 mr-2"/>},
-            {type: "dataCut", label: "数据截取", icon: <Scissors className="h-4 w-4 mr-2"/>},
-            {type: "dataConcat", label: "数据拼接", icon: <FlipVerticalIcon className="h-4 w-4 mr-2"/>},
+            {type: "processor_filter", label: "数据过滤", icon: <FilterIcon className="h-4 w-4 mr-2"/>},
+            {type: "processor_cut", label: "数据截取", icon: <ScissorsIcon className="h-4 w-4 mr-2"/>},
+            {type: "processor_concat", label: "数据拼接", icon: <FlipVerticalIcon className="h-4 w-4 mr-2"/>},
         ],
     },
     io: {
         name: "输入输出",
-        icon: <FileInput className="h-4 w-4 mr-2"/>,
+        icon: <FileInputIcon className="h-4 w-4 mr-2"/>,
         items: [
-            {type: "fileInput", label: "文件输入", icon: <FileInput className="h-4 w-4 mr-2"/>},
-            {type: "sequenceInputNode", label: "序列输入", icon: <DnaIcon className="h-4 w-4 mr-2"/>},
-            {type: "database", label: "数据库", icon: <DatabaseIcon className="h-4 w-4 mr-2"/>},
+            {type: "resource_file", label: "文件输入", icon: <FileInputIcon className="h-4 w-4 mr-2"/>},
+            {type: "resource_sequence", label: "序列输入", icon: <DnaIcon className="h-4 w-4 mr-2"/>},
+            {type: "resource_db", label: "数据库", icon: <DatabaseIcon className="h-4 w-4 mr-2"/>},
+            {type: "resource_genome", label: "参考基因组", icon: <DatabaseIcon className="h-4 w-4 mr-2"/>},
         ],
     },
     visualization: {
         name: "可视化",
-        icon: <LineChart className="h-4 w-4 mr-2"/>,
+        icon: <LineChartIcon className="h-4 w-4 mr-2"/>,
         items: [
-            {type: "lineFig", label: "折线图", icon: <LineChart className="h-4 w-4 mr-2"/>},
-            {type: "barFig", label: "柱状图", icon: <BarChart className="h-4 w-4 mr-2"/>},
+            {type: "lineFig", label: "折线图", icon: <LineChartIcon className="h-4 w-4 mr-2"/>},
+            {type: "barFig", label: "柱状图", icon: <BarChartIcon className="h-4 w-4 mr-2"/>},
+        ],
+    },
+    programming: {
+        name: "编程",
+        icon: <CodeIcon className="h-4 w-4 mr-2"/>,
+        items: [
+            {type: "code_R", label: "R code", icon: <CodeIcon className="h-4 w-4 mr-2"/>},
+            {type: "code_python", label: "python code", icon: <CodeIcon className="h-4 w-4 mr-2"/>},
         ],
     },
     other: {
         name: "其它",
-        icon: <StickyNote className="h-4 w-4 mr-2"/>,
-        items: [{type: "note", label: "笔记", icon: <StickyNote className="h-4 w-4 mr-2"/>}],
+        icon: <StickyNoteIcon className="h-4 w-4 mr-2"/>,
+        items: [{type: "note", label: "笔记", icon: <StickyNoteIcon className="h-4 w-4 mr-2"/>}],
     },
 }
 
@@ -166,7 +177,7 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({isOpen, position, onClose, 
                                     className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center justify-between"
                                 >
                                     <span className="flex items-center">{menu.icon}{menu.name}</span>
-                                    {menu.items.length > 0 && <ChevronRight className="h-4 w-4"/>}
+                                    {menu.items.length > 0 && <ChevronRightIcon className="h-4 w-4"/>}
                                 </button>
 
                                 {/* 子菜单 - 使用内联样式和条件渲染 */}

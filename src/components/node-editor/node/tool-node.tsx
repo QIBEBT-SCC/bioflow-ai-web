@@ -1,7 +1,7 @@
 "use client"
 
 
-import {Info} from "lucide-react";
+import {InfoIcon} from "lucide-react";
 import {Card, CardContent, CardFooter, CardHeader, CardTitle} from "@/components/ui/card.tsx";
 import {Label} from "@/components/ui/label.tsx";
 import {Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger} from "@/components/ui/sheet.tsx";
@@ -54,7 +54,7 @@ const ToolCard = (
                 className="nodeDragable h-8 py-2 bg-gradient-to-r from-rose-500 to-pink-500 rounded-t-lg flex flex-row items-center">
                 <CardTitle className="text-white">{title}</CardTitle>
                 <Sheet>
-                    <SheetTrigger><Info className="w-3 h-3 text-gray-300"/></SheetTrigger>
+                    <SheetTrigger><InfoIcon className="w-3 h-3 text-gray-300"/></SheetTrigger>
                     <SheetContent>
                         <SheetHeader>
                             <SheetTitle>{title}</SheetTitle>
