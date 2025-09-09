@@ -48,6 +48,9 @@ export function ChatPage() {
     const [editingHistoryId, setEditingHistoryId] = useState<string | null>(null)
     const [editingDescription, setEditingDescription] = useState("")
     const [showEditDialog, setShowEditDialog] = useState(false)
+    
+    // 中断状态管理
+    const [lastMessageWasInterrupt, setLastMessageWasInterrupt] = useState(false)
 
     // 文件上传相关状态
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -148,6 +151,7 @@ export function ChatPage() {
                     message: currentInput,
                     session_id: sessionId || undefined,
                     files: filesToSend.length > 0 ? filesToSend : undefined,
+                    resume: lastMessageWasInterrupt, // 如果上一条消息是interrupt，则resume为true
                 },
                 {
                     onLoading: (data: SSEEventData) => {
@@ -236,6 +240,8 @@ export function ChatPage() {
                                 ]
                             }
                             addMessage(interruptMessage)
+                            // 设置中断状态
+                            setLastMessageWasInterrupt(true)
                         } else {
                             console.warn('No message content found in interrupt data:', data)
                         }
@@ -256,6 +262,7 @@ export function ChatPage() {
 
                         setCurrentStreamingMessage(null)
                         setIsGenerating(false)
+                        setLastMessageWasInterrupt(false) // 重置中断状态
                     },
 
                     onError: (data: SSEEventData) => {
@@ -273,11 +280,13 @@ export function ChatPage() {
                         addMessage(errorMessage)
                         setCurrentStreamingMessage(null)
                         setIsGenerating(false)
+                        setLastMessageWasInterrupt(false) // 重置中断状态
                     },
 
                     onClose: () => {
                         setIsGenerating(false)
                         setCurrentStreamingMessage(null)
+                        setLastMessageWasInterrupt(false) // 重置中断状态
                     },
                 }
             )
@@ -286,11 +295,12 @@ export function ChatPage() {
             toast.error('发送消息失败')
             setIsGenerating(false)
             setCurrentStreamingMessage(null)
+            setLastMessageWasInterrupt(false) // 重置中断状态
         }
     }
 
 
-    const handleActionClick = (messageId: string, actionId: string) => {
+    const handleActionClick = async (messageId: string, actionId: string) => {
         // 更新按钮状态为pending
         const targetMessage = messages.find(msg => msg.id === messageId)
         if (targetMessage?.actions) {
@@ -300,30 +310,124 @@ export function ChatPage() {
             updateMessage(messageId, {actions: updatedActions})
         }
 
-        setTimeout(() => {
-            if (actionId === "confirm") {
-                const systemMessage: Message = {
-                    id: Date.now().toString(),
-                    type: "system",
-                    content: "操作已确认并执行完成",
-                    timestamp: new Date(),
-                    status: "sent",
+        if (actionId === "confirm") {
+            // 点击确认按钮，发送resume=true, message=true的请求
+            try {
+                setIsGenerating(true)
+                
+                let sessionId = currentSession?.uid
+                if (!sessionId) {
+                    try {
+                        const new_session = await createSessionMutation.mutateAsync();
+                        sessionId = new_session.uid
+                        setCurrentSession(new_session);
+                    } catch (error) {
+                        console.error('Failed to create session:', error);
+                        toast.error('创建会话失败，请稍后重试');
+                        setIsGenerating(false);
+                        return;
+                    }
                 }
-                addMessage(systemMessage)
-            } else if (actionId === "cancel") {
-                const systemMessage: Message = {
-                    id: Date.now().toString(),
-                    type: "system",
-                    content: "操作已取消",
-                    timestamp: new Date(),
-                    status: "sent",
-                }
-                addMessage(systemMessage)
-            }
 
-            // 移除操作按钮
-            updateMessage(messageId, {actions: undefined})
-        }, 1500)
+                // 发送确认请求
+                await chatSSEService.sendMessage(
+                    {
+                        message: "", // 确认按钮发送空消息
+                        session_id: sessionId,
+                        resume: true, // 标记为resume请求
+                    },
+                    {
+                        onSuccess: (data: SSEEventData) => {
+                            // 生成完成
+                            if (data.id && typeof data.message === 'object' && data.message.content) {
+                                const aiMessage: Message = {
+                                    id: data.id,
+                                    type: "ai",
+                                    content: data.message.content,
+                                    timestamp: new Date(),
+                                    status: "sent",
+                                }
+                                addMessage(aiMessage)
+                            }
+                            setIsGenerating(false)
+                            setLastMessageWasInterrupt(false) // 重置中断状态
+                        },
+                        onError: (data: SSEEventData) => {
+                            console.error('Chat error:', data)
+                            toast.error(data.error || '发生未知错误')
+                            setIsGenerating(false)
+                        },
+                        onClose: () => {
+                            setIsGenerating(false)
+                        },
+                    }
+                )
+            } catch (error) {
+                console.error('Failed to send confirm message:', error)
+                toast.error('发送确认消息失败')
+                setIsGenerating(false)
+            }
+        } else if (actionId === "cancel") {
+            // 点击取消按钮，发送空消息和resume=false
+            try {
+                setIsGenerating(true)
+                
+                let sessionId = currentSession?.uid
+                if (!sessionId) {
+                    try {
+                        const new_session = await createSessionMutation.mutateAsync();
+                        sessionId = new_session.uid
+                        setCurrentSession(new_session);
+                    } catch (error) {
+                        console.error('Failed to create session:', error);
+                        toast.error('创建会话失败，请稍后重试');
+                        setIsGenerating(false);
+                        return;
+                    }
+                }
+
+                // 发送取消请求
+                await chatSSEService.sendMessage(
+                    {
+                        message: "", // 取消按钮发送空消息
+                        session_id: sessionId,
+                        resume: false, // 标记为取消请求
+                    },
+                    {
+                        onSuccess: (data: SSEEventData) => {
+                            // 生成完成
+                            if (data.id && typeof data.message === 'object' && data.message.content) {
+                                const aiMessage: Message = {
+                                    id: data.id,
+                                    type: "ai",
+                                    content: data.message.content,
+                                    timestamp: new Date(),
+                                    status: "sent",
+                                }
+                                addMessage(aiMessage)
+                            }
+                            setIsGenerating(false)
+                            setLastMessageWasInterrupt(false) // 重置中断状态
+                        },
+                        onError: (data: SSEEventData) => {
+                            console.error('Chat error:', data)
+                            toast.error(data.error || '发生未知错误')
+                            setIsGenerating(false)
+                        },
+                        onClose: () => {
+                            setIsGenerating(false)
+                        },
+                    }
+                )
+            } catch (error) {
+                console.error('Failed to send cancel message:', error)
+                toast.error('发送取消消息失败')
+                setIsGenerating(false)
+            }
+        }
+
+        // 移除操作按钮
+        updateMessage(messageId, {actions: undefined})
     }
 
     const handleFileUpload = (files: File[]) => {

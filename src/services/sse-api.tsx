@@ -34,8 +34,14 @@ export class ChatSSEService {
             // 创建FormData用于表单请求
             const formData = new FormData();
             formData.append('message', request.message);
+            
             if (request.session_id) {
                 formData.append('session_id', request.session_id);
+            }
+            
+            // 添加resume字段
+            if (request.resume !== undefined) {
+                formData.append('resume', request.resume.toString());
             }
 
             // 添加文件到FormData
