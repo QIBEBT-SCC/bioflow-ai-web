@@ -20,31 +20,33 @@ const CodeCard = (
         topPadding: number;
     }) => {
     const nodeId = useNodeId();
-    const nodeData = useNodesData(nodeId ? nodeId : '');
+    // @ts-expect-error no need
+    const nodeData = useNodesData(nodeId);
     const {setNodes} = useReactFlow();
 
-    // 解析节点数据，包含description和code两个字段
-    function parseNodeData(data: any): { description: string, code: string } {
+    // 解析 args 为对象
+    function parseArgs(str: string): { description: string, code: string } {
         try {
-            const parsed = JSON.parse(data?.args || '{}');
-            return {
-                description: parsed.description || '',
-                code: parsed.code || ''
-            };
+            const obj = JSON.parse(str);
+            return {description: obj.description || "", code: obj.code || ""};
         } catch {
-            return {description: '', code: ''};
+            return {description: "", code: ""};
         }
     }
 
-    const [nodeDataState, setNodeDataState] = useState(() => parseNodeData(nodeData));
+    // 初始化 args
+    // @ts-expect-error no need
+    const [args, setArgs] = useState<string>(() => {
+        try {
+            // @ts-expect-error no need
+            JSON.parse(nodeData?.data.args ?? "");
+            return nodeData?.data.args;
+        } catch {
+            return JSON.stringify({description: "", code: ""});
+        }
+    });
 
     useEffect(() => {
-        const parsed = parseNodeData(nodeData);
-        setNodeDataState(parsed);
-    }, [nodeData]);
-
-    const updateNodeData = (newData: { description: string, code: string }) => {
-        setNodeDataState(newData);
         setNodes((nodes) =>
             nodes.map((node) => {
                 if (node.id === nodeId) {
@@ -52,14 +54,16 @@ const CodeCard = (
                         ...node,
                         data: {
                             ...node.data,
-                            args: JSON.stringify(newData),
+                            args: args,
                         },
                     };
                 }
                 return node;
             })
         );
-    };
+    }, [args, nodeId, setNodes]);
+
+    const {description: descriptionValue, code: codeValue} = parseArgs(args);
 
     return (
         <Card className="w-[400px] py-0 gap-0 bg-white shadow-lg">
@@ -83,12 +87,9 @@ const CodeCard = (
                         <Textarea
                             className="w-full h-[80px] text-sm resize-none overflow-y-auto border-gray-200 focus:ring-purple-500 focus:border-purple-500"
                             placeholder="输入代码编写需求，作为AI编程的prompt..."
-                            value={nodeDataState.description}
+                            value={descriptionValue}
                             onChange={(e) => {
-                                updateNodeData({
-                                    ...nodeDataState,
-                                    description: e.target.value
-                                });
+                                setArgs(JSON.stringify({description: e.target.value, code: codeValue}));
                             }}
                         />
                     </div>
@@ -97,12 +98,9 @@ const CodeCard = (
                         <Textarea
                             className="w-full h-[120px] text-sm resize-none overflow-y-auto border-gray-200 focus:ring-purple-500 focus:border-purple-500 font-mono"
                             placeholder="在这里编写或粘贴代码..."
-                            value={nodeDataState.code}
+                            value={codeValue}
                             onChange={(e) => {
-                                updateNodeData({
-                                    ...nodeDataState,
-                                    code: e.target.value
-                                });
+                                setArgs(JSON.stringify({description: descriptionValue, code: e.target.value}));
                             }}
                         />
                     </div>

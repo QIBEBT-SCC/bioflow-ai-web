@@ -277,11 +277,11 @@ export const toolApi = {
         }
         return await api.get<SimpleToolInfo[]>('/tools/search', {params});
     },
-    getTool: async (id: string) => {
-        return await api.get<ToolInfo>(`/tools/${id}`);
+    getTool: async (uid: string) => {
+        return await api.get<ToolInfo>(`/tools/${uid}`);
     },
-    getToolArg: async (id: string) => {
-        return await api.get<ToolArgPublic>(`/tools/${id}/args`);
+    getToolArg: async (uid: string) => {
+        return await api.get<ToolArgPublic>(`/tools/${uid}/args`);
     },
 };
 

@@ -148,24 +148,24 @@ export function useAllTools(offset: number) {
     return useQuery(options);
 }
 
-export function useTool({id}: { id: string }) {
+export function useTool({uid}: { uid: string }) {
     const options: UseQueryOptions<ToolInfo, Error> = {
-        queryKey: ['tool', id],
+        queryKey: ['tool', uid],
         queryFn: ({queryKey}) => {
-            const [, id] = queryKey as [string, string];
-            return toolApi.getTool(id);
+            const [, uid] = queryKey as [string, string];
+            return toolApi.getTool(uid);
         },
     };
 
     return useQuery(options);
 }
 
-export function useToolArg({id}: { id: string }) {
+export function useToolArg({uid}: { uid: string }) {
     const options: UseQueryOptions<ToolArgPublic, Error> = {
-        queryKey: ['toolArg', id],
+        queryKey: ['toolArg', uid],
         queryFn: ({queryKey}) => {
-            const [, id] = queryKey as [string, string];
-            return toolApi.getToolArg(id);
+            const [, uid] = queryKey as [string, string];
+            return toolApi.getToolArg(uid);
         },
     };
 
