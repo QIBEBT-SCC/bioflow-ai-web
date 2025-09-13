@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/breadcrumb.tsx";
 import {ScrollArea} from "@/components/ui/scroll-area.tsx";
 import {BotIcon, FileIcon, ImageIcon, Maximize2Icon, Minimize2Icon, PaperclipIcon, SendIcon, StopCircleIcon, XIcon} from "lucide-react";
-import React, {useEffect, useRef, useState} from "react";
+import React, {useCallback, useEffect, useRef, useState} from "react";
 import {Textarea} from "@/components/ui/textarea.tsx";
 import {Button} from "@/components/ui/button.tsx";
 import {ChatMessage} from "@/components/chat/chat-messages.tsx";
@@ -28,6 +28,7 @@ export function ChatPage() {
         currentSession,
         messages,
         isGenerating,
+        loadingMessage,
 
         // Actions
         setCurrentSession,
@@ -35,6 +36,7 @@ export function ChatPage() {
         updateMessage,
         clearMessages,
         setIsGenerating,
+        setLoadingMessage,
     } = useChatStore();
 
     // 使用react-query hooks获取数据
@@ -43,12 +45,13 @@ export function ChatPage() {
     // 编辑状态（这些保持本地状态，因为是临时的UI状态）
     const [inputValue, setInputValue] = useState("");
     const [currentStreamingMessage, setCurrentStreamingMessage] = useState<Message | null>(null);
+    const [currentStreamingMessageId, setCurrentStreamingMessageId] = useState<string | null>(null);
     const [showFileUpload, setShowFileUpload] = useState(false);
     const [isInputExpanded, setIsInputExpanded] = useState(false);
     const [editingHistoryId, setEditingHistoryId] = useState<string | null>(null)
     const [editingDescription, setEditingDescription] = useState("")
     const [showEditDialog, setShowEditDialog] = useState(false)
-    
+
     // 中断状态管理
     const [lastMessageWasInterrupt, setLastMessageWasInterrupt] = useState(false)
 
@@ -58,14 +61,14 @@ export function ChatPage() {
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const inputRef = useRef<HTMLTextAreaElement>(null)
 
-    const scrollToBottom = () => {
+    const scrollToBottom = useCallback(() => {
         messagesEndRef.current?.scrollIntoView({behavior: "smooth"})
-    }
+    }, [])
 
-    // 滚动到底部
+    // 滚动到底部 - 只在消息内容变化时触发，避免输入区变化时触发
     useEffect(() => {
         scrollToBottom()
-    }, [messages, currentStreamingMessage])
+    }, [messages.length, currentStreamingMessage && 'content' in currentStreamingMessage ? currentStreamingMessage.content : null, scrollToBottom])
 
     // 当没有会话时清空消息
     useEffect(() => {
@@ -84,18 +87,280 @@ export function ChatPage() {
     // 停止生成
     const stopGeneration = () => {
         chatSSEService.abort()
+        
+        // 如果有正在流式生成的消息，先保存到消息列表
+        if (currentStreamingMessage) {
+            addMessage({
+                ...currentStreamingMessage,
+            })
+        }
+        
         setIsGenerating(false)
         setCurrentStreamingMessage(null)
+        setCurrentStreamingMessageId(null)
+        setLoadingMessage(null)
 
         // 添加一个系统消息表示已停止
         const stopMessage: Message = {
             id: `stop_${Date.now()}`,
-            type: "system",
+            type: "info",
             content: "生成已停止",
             timestamp: new Date(),
-            status: "sent",
         }
         addMessage(stopMessage)
+    }
+
+    // 统一的SSE事件处理器
+    const createSSEHandlers = () => ({
+        onLoading: (data: SSEEventData) => {
+            if (data.message) {
+                setLoadingMessage(data.message)
+            }
+        },
+
+        onGenerating: (data: SSEEventData) => {
+            if (data.id && data.full_text !== undefined) {
+                if (data.id !== currentStreamingMessageId) {
+                    // 如果之前有正在生成的消息，先保存到消息列表
+                    if (currentStreamingMessage) {
+                        addMessage({
+                            ...currentStreamingMessage,
+                        })
+                    }
+
+                    setLoadingMessage(null)
+                    setCurrentStreamingMessageId(data.id)
+                    
+                    // 根据thinking字段决定消息类型
+                    if (data.thinking) {
+                        setCurrentStreamingMessage({
+                            id: data.id,
+                            type: "thinking" as const,
+                            content: data.full_text,
+                            timestamp: new Date(),
+                            thinking: true,
+                            loadingMessage: "AI正在思考...",
+                        })
+                    } else {
+                        setCurrentStreamingMessage({
+                            id: data.id,
+                            type: "ai" as const,
+                            content: data.full_text,
+                            timestamp: new Date(),
+                        })
+                    }
+                } else {
+                    // 更新当前流式消息的内容
+                    setCurrentStreamingMessage(prev => {
+                        if (!prev || !('content' in prev)) return prev
+                        
+                        // 如果是思考消息，确保保留thinking属性
+                        if (prev.type === 'thinking') {
+                            return {
+                                ...prev,
+                                content: data.full_text || prev.content,
+                                thinking: true,
+                            }
+                        } else {
+                            return {
+                                ...prev,
+                                content: data.full_text || prev.content
+                            }
+                        }
+                    })
+                }
+            }
+        },
+
+        onToolCall: (data: SSEEventData) => {
+            console.log('Tool call event:', data)
+
+            if (data.id && data.name) {
+                if (data.status === 'calling') {
+                    console.log(`Tool call started: ${data.name} (${data.id})`)
+                    const toolMessage: Message = {
+                        id: data.id,
+                        type: "tool",
+                        name: data.name,
+                        status: "calling",
+                        timestamp: new Date(),
+                    }
+                    addMessage(toolMessage)
+                } else if (data.status === 'completed' || data.status === 'error') {
+                    const isSuccess = data.status === 'completed'
+
+                    console.log(`Tool call ended: ${data.name} (${data.id}) - ${isSuccess ? 'success' : 'error'}`)
+
+                    updateMessage(data.id, {
+                        status: data.status,
+                        result: (data as any).result || undefined,
+                    })
+
+                    if (!isSuccess && data.error) {
+                        console.error(`Tool call failed: ${data.name} - ${data.error}`)
+                    }
+                }
+            }
+        },
+
+        onInterrupt: (data: SSEEventData) => {
+            console.log('Interrupt event:', data)
+
+            // 处理问题类型的中断
+            if (data.confirm) {
+                const interruptMessage: Message = {
+                    id: `interrupt_${Date.now()}`,
+                    type: "interrupt",
+                    content: data.confirm,
+                    timestamp: new Date(),
+                    status: "sent",
+                    action: {
+                        id: "confirm",
+                        label: "确认",
+                        type: "confirm",
+                        pending: false,
+                    }
+                }
+                addMessage(interruptMessage)
+                setLastMessageWasInterrupt(true)
+            }
+            // 处理确认类型的中断（不需要action按钮）
+            else if (data.question) {
+                const interruptMessage: Message = {
+                    id: `interrupt_${Date.now()}`,
+                    type: "interrupt",
+                    content: data.question,
+                    timestamp: new Date(),
+                    status: "sent",
+                }
+                addMessage(interruptMessage)
+                setLastMessageWasInterrupt(true)
+            } else {
+                console.warn('No question or confirm content found in interrupt data:', data)
+            }
+        },
+
+        onSuccess: (data: SSEEventData) => {
+            // 处理链接消息
+            if (data.link) {
+                const linkMessage: Message = {
+                    id: `link_${Date.now()}`,
+                    type: "link",
+                    link: data.link,
+                    title: "跳转到编辑器",
+                    description: "点击打开编辑器页面",
+                    timestamp: new Date(),
+                }
+                addMessage(linkMessage)
+            }
+            // 处理信息消息
+            else if (data.info) {
+                const infoMessage: Message = {
+                    id: `info_${Date.now()}`,
+                    type: "info",
+                    content: data.info,
+                    timestamp: new Date(),
+                }
+                addMessage(infoMessage)
+            }
+            // 处理普通AI消息
+            else if (data.id && typeof data.message === 'object' && (data.message as any).content) {
+                const aiMessage: Message = {
+                    id: data.id,
+                    type: "ai",
+                    content: (data.message as any).content,
+                    timestamp: new Date(),
+                }
+                addMessage(aiMessage)
+            }
+
+            // 如果有正在流式生成的消息，先保存到消息列表
+            if (currentStreamingMessage) {
+                addMessage({
+                    ...currentStreamingMessage,
+                })
+            }
+            
+            setCurrentStreamingMessage(null)
+            setIsGenerating(false)
+            setLastMessageWasInterrupt(false)
+        },
+
+        onError: (data: SSEEventData) => {
+            console.error('Chat error:', data)
+            toast.error(data.error || '发生未知错误')
+
+            // 如果有正在流式生成的消息，先保存到消息列表
+            if (currentStreamingMessage) {
+                addMessage({
+                    ...currentStreamingMessage,
+                })
+            }
+
+            const errorMessage: Message = {
+                id: `error_${Date.now()}`,
+                type: "info",
+                content: `错误: ${data.error || '发生未知错误'}`,
+                timestamp: new Date(),
+            }
+            addMessage(errorMessage)
+            setCurrentStreamingMessage(null)
+            setCurrentStreamingMessageId(null)
+            setLoadingMessage(null)
+            setIsGenerating(false)
+            setLastMessageWasInterrupt(false)
+        },
+
+        onClose: () => {
+            if (currentStreamingMessage) {
+                addMessage({
+                    ...currentStreamingMessage,
+                })
+            }
+            setIsGenerating(false)
+            setCurrentStreamingMessage(null)
+            setCurrentStreamingMessageId(null)
+            setLoadingMessage(null)
+            setLastMessageWasInterrupt(false)
+        },
+    })
+
+    // 统一的发送消息函数
+    const sendMessageToSSE = async (message: string, files: File[] = [], isResume: boolean = false) => {
+        try {
+            let sessionId = currentSession?.uid
+
+            if (!sessionId) {
+                try {
+                    const new_session = await createSessionMutation.mutateAsync();
+                    sessionId = new_session.uid
+                    setCurrentSession(new_session);
+                } catch (error) {
+                    console.error('Failed to create session:', error);
+                    toast.error('创建会话失败，请稍后重试');
+                    setIsGenerating(false);
+                    return;
+                }
+            }
+
+            await chatSSEService.sendMessage(
+                {
+                    message,
+                    session_id: sessionId,
+                    files: files.length > 0 ? files : undefined,
+                    resume: isResume,
+                },
+                createSSEHandlers()
+            )
+        } catch (error) {
+            console.error('Failed to send message:', error)
+            toast.error('发送消息失败')
+            setIsGenerating(false)
+            setCurrentStreamingMessage(null)
+            setCurrentStreamingMessageId(null)
+            setLoadingMessage(null)
+            setLastMessageWasInterrupt(false)
+        }
     }
 
     const handleSendMessage = async () => {
@@ -109,6 +374,9 @@ export function ChatPage() {
         setSelectedFiles([])
         setShowFileUpload(false)
         setIsGenerating(true)
+        setCurrentStreamingMessage(null)
+        setCurrentStreamingMessageId(null)
+        setLoadingMessage(null)
 
         // 创建用户消息
         const userMessage: Message = {
@@ -127,307 +395,32 @@ export function ChatPage() {
 
         addMessage(userMessage)
 
-        try {
-            let sessionId = currentSession?.uid
-
-            // 如果没有当前会话ID，先创建会话
-            if (!sessionId) {
-                try {
-                    const new_session = await createSessionMutation.mutateAsync();
-                    sessionId = new_session.uid
-                    setCurrentSession(new_session);
-                } catch (error) {
-                    // 如果创建会话失败，停止执行并显示错误
-                    console.error('Failed to create session:', error);
-                    toast.error('创建会话失败，请稍后重试');
-                    setIsGenerating(false);
-                    return;
-                }
-            }
-
-            // 发送聊天请求
-            await chatSSEService.sendMessage(
-                {
-                    message: currentInput,
-                    session_id: sessionId || undefined,
-                    files: filesToSend.length > 0 ? filesToSend : undefined,
-                    resume: lastMessageWasInterrupt, // 如果上一条消息是interrupt，则resume为true
-                },
-                {
-                    onLoading: (data: SSEEventData) => {
-                        // 显示加载状态，可以在UI中显示加载动画
-                        console.log('Loading:', data.message)
-                    },
-
-                    onGenerating: (data: SSEEventData) => {
-                        // 处理流式生成
-                        if (data.id && data.full_text !== undefined) {
-                            setCurrentStreamingMessage({
-                                id: data.id,
-                                type: "ai",
-                                content: data.full_text,
-                                timestamp: new Date(),
-                                status: "sending",
-                            })
-                        }
-                    },
-
-                    onToolCall: (data: SSEEventData) => {
-                        // 处理工具调用
-                        console.log('Tool call event:', data)
-
-                        if (data.id && data.tool_name) {
-                            if (data.status === 'begin') {
-                                console.log(`Tool call started: ${data.tool_name} (${data.id})`)
-                                const toolMessage: Message = {
-                                    id: `tool_${data.id}`,
-                                    type: "tool",
-                                    content: "",
-                                    timestamp: new Date(),
-                                    toolCall: {
-                                        name: data.tool_name,
-                                        status: "calling",
-                                    },
-                                }
-                                addMessage(toolMessage)
-                            } else if (data.status === 'end') {
-                                // 更新工具调用状态为完成或错误
-                                const toolId = `tool_${data.id}`
-                                const isSuccess = !data.error
-
-                                console.log(`Tool call ended: ${data.tool_name} (${data.id}) - ${isSuccess ? 'success' : 'error'}`)
-
-                                updateMessage(toolId, {
-                                    toolCall: {
-                                        name: data.tool_name,
-                                        status: isSuccess ? "completed" : "error",
-                                        result: data.result || undefined, // 如果有返回结果，保存它
-                                    }
-                                })
-
-                                // 如果工具调用失败，可以选择显示错误提示
-                                if (!isSuccess && data.error) {
-                                    console.error(`Tool call failed: ${data.tool_name} - ${data.error}`)
-                                }
-                            }
-                        }
-                    },
-
-                    onInterrupt: (data: SSEEventData) => {
-                        // 处理中断消息，创建带确认框的消息
-                        console.log('Interrupt event:', data)
-
-                        if (data.full_text) {
-                            const interruptMessage: Message = {
-                                id: `interrupt_${Date.now()}`,
-                                type: "ai",
-                                content: data.full_text,
-                                timestamp: new Date(),
-                                status: "sent",
-                                actions: [
-                                    {
-                                        id: "confirm",
-                                        label: "确认",
-                                        type: "confirm",
-                                        pending: false,
-                                    },
-                                    {
-                                        id: "cancel",
-                                        label: "取消",
-                                        type: "cancel",
-                                        pending: false,
-                                    }
-                                ]
-                            }
-                            addMessage(interruptMessage)
-                            // 设置中断状态
-                            setLastMessageWasInterrupt(true)
-                        } else {
-                            console.warn('No message content found in interrupt data:', data)
-                        }
-                    },
-
-                    onSuccess: (data: SSEEventData) => {
-                        // 生成完成
-                        if (data.id && typeof data.message === 'object' && data.message.content) {
-                            const aiMessage: Message = {
-                                id: data.id,
-                                type: "ai",
-                                content: data.message.content,
-                                timestamp: new Date(),
-                                status: "sent",
-                            }
-                            addMessage(aiMessage)
-                        }
-
-                        setCurrentStreamingMessage(null)
-                        setIsGenerating(false)
-                        setLastMessageWasInterrupt(false) // 重置中断状态
-                    },
-
-                    onError: (data: SSEEventData) => {
-                        // 处理错误
-                        console.error('Chat error:', data)
-                        toast.error(data.error || '发生未知错误')
-
-                        const errorMessage: Message = {
-                            id: `error_${Date.now()}`,
-                            type: "system",
-                            content: `错误: ${data.error || '发生未知错误'}`,
-                            timestamp: new Date(),
-                            status: "error",
-                        }
-                        addMessage(errorMessage)
-                        setCurrentStreamingMessage(null)
-                        setIsGenerating(false)
-                        setLastMessageWasInterrupt(false) // 重置中断状态
-                    },
-
-                    onClose: () => {
-                        setIsGenerating(false)
-                        setCurrentStreamingMessage(null)
-                        setLastMessageWasInterrupt(false) // 重置中断状态
-                    },
-                }
-            )
-        } catch (error) {
-            console.error('Failed to send message:', error)
-            toast.error('发送消息失败')
-            setIsGenerating(false)
-            setCurrentStreamingMessage(null)
-            setLastMessageWasInterrupt(false) // 重置中断状态
-        }
+        // 发送消息
+        await sendMessageToSSE(currentInput, filesToSend, lastMessageWasInterrupt)
     }
 
 
     const handleActionClick = async (messageId: string, actionId: string) => {
         // 更新按钮状态为pending
         const targetMessage = messages.find(msg => msg.id === messageId)
-        if (targetMessage?.actions) {
-            const updatedActions = targetMessage.actions.map((action) =>
-                action.id === actionId ? {...action, pending: true} : action,
-            )
-            updateMessage(messageId, {actions: updatedActions})
+        if (targetMessage && 'action' in targetMessage && targetMessage.action) {
+            const updatedAction = targetMessage.action.id === actionId 
+                ? {...targetMessage.action, pending: true} 
+                : targetMessage.action
+            updateMessage(messageId, {action: updatedAction})
         }
 
-        if (actionId === "confirm") {
-            // 点击确认按钮，发送resume=true, message=true的请求
-            try {
-                setIsGenerating(true)
-                
-                let sessionId = currentSession?.uid
-                if (!sessionId) {
-                    try {
-                        const new_session = await createSessionMutation.mutateAsync();
-                        sessionId = new_session.uid
-                        setCurrentSession(new_session);
-                    } catch (error) {
-                        console.error('Failed to create session:', error);
-                        toast.error('创建会话失败，请稍后重试');
-                        setIsGenerating(false);
-                        return;
-                    }
-                }
+        // 设置生成状态
+        setIsGenerating(true)
+        setCurrentStreamingMessage(null)
+        setCurrentStreamingMessageId(null)
+        setLoadingMessage(null)
 
-                // 发送确认请求
-                await chatSSEService.sendMessage(
-                    {
-                        message: "", // 确认按钮发送空消息
-                        session_id: sessionId,
-                        resume: true, // 标记为resume请求
-                    },
-                    {
-                        onSuccess: (data: SSEEventData) => {
-                            // 生成完成
-                            if (data.id && typeof data.message === 'object' && data.message.content) {
-                                const aiMessage: Message = {
-                                    id: data.id,
-                                    type: "ai",
-                                    content: data.message.content,
-                                    timestamp: new Date(),
-                                    status: "sent",
-                                }
-                                addMessage(aiMessage)
-                            }
-                            setIsGenerating(false)
-                            setLastMessageWasInterrupt(false) // 重置中断状态
-                        },
-                        onError: (data: SSEEventData) => {
-                            console.error('Chat error:', data)
-                            toast.error(data.error || '发生未知错误')
-                            setIsGenerating(false)
-                        },
-                        onClose: () => {
-                            setIsGenerating(false)
-                        },
-                    }
-                )
-            } catch (error) {
-                console.error('Failed to send confirm message:', error)
-                toast.error('发送确认消息失败')
-                setIsGenerating(false)
-            }
-        } else if (actionId === "cancel") {
-            // 点击取消按钮，发送空消息和resume=false
-            try {
-                setIsGenerating(true)
-                
-                let sessionId = currentSession?.uid
-                if (!sessionId) {
-                    try {
-                        const new_session = await createSessionMutation.mutateAsync();
-                        sessionId = new_session.uid
-                        setCurrentSession(new_session);
-                    } catch (error) {
-                        console.error('Failed to create session:', error);
-                        toast.error('创建会话失败，请稍后重试');
-                        setIsGenerating(false);
-                        return;
-                    }
-                }
-
-                // 发送取消请求
-                await chatSSEService.sendMessage(
-                    {
-                        message: "", // 取消按钮发送空消息
-                        session_id: sessionId,
-                        resume: false, // 标记为取消请求
-                    },
-                    {
-                        onSuccess: (data: SSEEventData) => {
-                            // 生成完成
-                            if (data.id && typeof data.message === 'object' && data.message.content) {
-                                const aiMessage: Message = {
-                                    id: data.id,
-                                    type: "ai",
-                                    content: data.message.content,
-                                    timestamp: new Date(),
-                                    status: "sent",
-                                }
-                                addMessage(aiMessage)
-                            }
-                            setIsGenerating(false)
-                            setLastMessageWasInterrupt(false) // 重置中断状态
-                        },
-                        onError: (data: SSEEventData) => {
-                            console.error('Chat error:', data)
-                            toast.error(data.error || '发生未知错误')
-                            setIsGenerating(false)
-                        },
-                        onClose: () => {
-                            setIsGenerating(false)
-                        },
-                    }
-                )
-            } catch (error) {
-                console.error('Failed to send cancel message:', error)
-                toast.error('发送取消消息失败')
-                setIsGenerating(false)
-            }
-        }
+        // 发送确认请求（resume=true）
+        await sendMessageToSSE("", [], true)
 
         // 移除操作按钮
-        updateMessage(messageId, {actions: undefined})
+        updateMessage(messageId, {action: undefined})
     }
 
     const handleFileUpload = (files: File[]) => {
@@ -504,27 +497,33 @@ export function ChatPage() {
                             />
                         )}
 
-                        {/* 生成中的加载动画 */}
+                        {/* 生成中的加载动画 - 在SSE连接期间持续显示，直到收到generating消息 */}
                         {isGenerating && !currentStreamingMessage && (
                             <div className="flex items-start gap-3">
                                 <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center">
                                     <BotIcon className="w-4 h-4 text-accent-foreground"/>
                                 </div>
                                 <div className="bg-card text-card-foreground border border-border rounded-lg p-4 animate-pulse">
-                                    <div className="flex items-center gap-1">
-                                        <div
-                                            className="w-2 h-2 bg-current rounded-full animate-bounce"
-                                            style={{animationDelay: "0ms"}}
-                                        />
-                                        <div
-                                            className="w-2 h-2 bg-current rounded-full animate-bounce"
-                                            style={{animationDelay: "150ms"}}
-                                        />
-                                        <div
-                                            className="w-2 h-2 bg-current rounded-full animate-bounce"
-                                            style={{animationDelay: "300ms"}}
-                                        />
-                                    </div>
+                                    {loadingMessage ? (
+                                        <div className="text-sm text-muted-foreground">
+                                            {loadingMessage}
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center gap-1">
+                                            <div
+                                                className="w-2 h-2 bg-current rounded-full animate-bounce"
+                                                style={{animationDelay: "0ms"}}
+                                            />
+                                            <div
+                                                className="w-2 h-2 bg-current rounded-full animate-bounce"
+                                                style={{animationDelay: "150ms"}}
+                                            />
+                                            <div
+                                                className="w-2 h-2 bg-current rounded-full animate-bounce"
+                                                style={{animationDelay: "300ms"}}
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         )}
@@ -593,10 +592,14 @@ export function ChatPage() {
                                 onPaste={handlePaste}
                                 placeholder={isGenerating ? "AI正在生成回复..." : `输入消息... (支持 Shift+Enter 换行，Ctrl+V 粘贴图片)${selectedFiles.length > 0 ? ` • 已选择 ${selectedFiles.length} 个文件` : ""}`}
                                 className={`pr-24 resize-none transition-all duration-200 ${
-                                    isInputExpanded ? "min-h-[120px]" : "min-h-[44px]"
+                                    isInputExpanded ? "min-h-[120px] max-h-[120px]" : "min-h-[44px] max-h-[120px]"
                                 }`}
                                 rows={isInputExpanded ? 5 : 1}
                                 disabled={isGenerating}
+                                style={{
+                                    height: isInputExpanded ? '120px' : '44px',
+                                    transition: 'height 0.2s ease-in-out'
+                                }}
                             />
                             <div className="absolute right-2 top-2 flex items-center gap-1">
                                 <Button
@@ -624,7 +627,7 @@ export function ChatPage() {
                         <Button
                             onClick={isGenerating ? stopGeneration : handleSendMessage}
                             disabled={!isGenerating && !inputValue.trim() && selectedFiles.length === 0}
-                            className={`px-4 transition-all duration-200 ${isInputExpanded ? "h-[120px] self-stretch" : "h-11"}`}
+                            className="px-4 h-11 flex-shrink-0"
                             variant={isGenerating ? "destructive" : "default"}
                         >
                             {isGenerating ? <StopCircleIcon className="w-4 h-4"/> : <SendIcon className="w-4 h-4"/>}
@@ -632,10 +635,6 @@ export function ChatPage() {
                     </div>
 
                     <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
-                        {/*<span>*/}
-                        {/*  支持 Markdown 格式 • 代码高亮 • Mermaid 图表 •{" "}*/}
-                        {/*    {isInputExpanded ? "展开模式" : "点击展开按钮获得更大输入区域"}*/}
-                        {/*</span>*/}
                         <span>{inputValue.length}/2000</span>
                     </div>
                 </div>

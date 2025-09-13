@@ -1,7 +1,9 @@
 "use client"
 
-import { useMemo, useEffect, useRef, useState } from "react"
-
+import { useEffect, useRef, useState } from "react"
+import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
+import rehypeHighlight from "rehype-highlight"
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
 import { oneDark, oneLight } from "react-syntax-highlighter/dist/esm/styles/prism"
 import mermaid from "mermaid"
@@ -34,37 +36,26 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
         })
     }, [theme])
 
-    const renderContent = useMemo(() => {
-        // 处理代码块
-        const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g
+    // 处理Mermaid图表
+    const processMermaidContent = (content: string) => {
+        const mermaidRegex = /```mermaid\n([\s\S]*?)```/g
         const parts = []
         let lastIndex = 0
         let match
 
-        while ((match = codeBlockRegex.exec(content)) !== null) {
-            // 添加代码块前的文本
+        while ((match = mermaidRegex.exec(content)) !== null) {
+            // 添加Mermaid图表前的文本
             if (match.index > lastIndex) {
                 parts.push({
-                    type: "text",
+                    type: "markdown",
                     content: content.slice(lastIndex, match.index),
                 })
             }
 
-            const language = match[1] || "text"
-            const code = match[2].trim()
-
-            if (language === "mermaid") {
-                parts.push({
-                    type: "mermaid",
-                    content: code,
-                })
-            } else {
-                parts.push({
-                    type: "code",
-                    language,
-                    content: code,
-                })
-            }
+            parts.push({
+                type: "mermaid",
+                content: match[1].trim(),
+            })
 
             lastIndex = match.index + match[0].length
         }
@@ -72,37 +63,12 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
         // 添加剩余文本
         if (lastIndex < content.length) {
             parts.push({
-                type: "text",
+                type: "markdown",
                 content: content.slice(lastIndex),
             })
         }
 
-        return parts
-    }, [content])
-
-    const renderText = (text: string) => {
-        // 处理内联代码
-        const inlineCodeRegex = /`([^`]+)`/g
-        const parts = text.split(inlineCodeRegex)
-
-        return parts.map((part, index) => {
-            if (index % 2 === 1) {
-                return (
-                    <code key={index} className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">
-                        {part}
-                    </code>
-                )
-            }
-
-            // 处理其他 markdown 语法
-            const processed = part
-                .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-                .replace(/\*(.*?)\*/g, "<em>$1</em>")
-                .replace(/~~(.*?)~~/g, "<del>$1</del>")
-                .replace(/\n/g, "<br />")
-
-            return <span key={index} dangerouslySetInnerHTML={{ __html: processed }} />
-        })
+        return parts.length > 0 ? parts : [{ type: "markdown", content }]
     }
 
     const MermaidDiagram = ({ code, index }: { code: string; index: number }) => {
@@ -181,37 +147,176 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
         )
     }
 
+    const processedContent = processMermaidContent(content)
+
     return (
         <div className="space-y-3">
-            {renderContent.map((part, index) => {
-                switch (part.type) {
-                    case "code":
-                        return (
-                            <div key={index} className="my-4">
-                                <SyntaxHighlighter
-                                    language={part.language}
-                                    style={theme === "dark" ? oneDark : oneLight}
-                                    customStyle={{
-                                        margin: 0,
-                                        borderRadius: "0.5rem",
-                                        fontSize: "0.875rem",
-                                    }}
-                                    showLineNumbers={part.content.split("\n").length > 5}
-                                >
-                                    {part.content}
-                                </SyntaxHighlighter>
-                            </div>
-                        )
-                    case "mermaid":
-                        return <MermaidDiagram key={index} code={part.content} index={index} />
-                    case "text":
-                        return (
-                            <div key={index} className="leading-relaxed">
-                                {renderText(part.content)}
-                            </div>
-                        )
-                    default:
-                        return null
+            {processedContent.map((part, index) => {
+                if (part.type === "mermaid") {
+                    return <MermaidDiagram key={index} code={part.content} index={index} />
+                } else {
+                    return (
+                        <ReactMarkdown
+                            key={index}
+                            remarkPlugins={[remarkGfm]}
+                            rehypePlugins={[rehypeHighlight]}
+                            components={{
+                                // 自定义代码块渲染
+                                code({ node, className, children, ...props }: any) {
+                                    const match = /language-(\w+)/.exec(className || '')
+                                    const language = match ? match[1] : ''
+                                    const isInline = !match
+                                    
+                                    if (!isInline && language) {
+                                        return (
+                                            <div className="my-4">
+                                                <SyntaxHighlighter
+                                                    language={language}
+                                                    style={theme === "dark" ? oneDark : oneLight}
+                                                    customStyle={{
+                                                        margin: 0,
+                                                        borderRadius: "0.5rem",
+                                                        fontSize: "0.875rem",
+                                                    } as any}
+                                                    showLineNumbers={String(children).split("\n").length > 5}
+                                                    {...props}
+                                                >
+                                                    {String(children).replace(/\n$/, '')}
+                                                </SyntaxHighlighter>
+                                            </div>
+                                        )
+                                    }
+                                    
+                                    return (
+                                        <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono" {...props}>
+                                            {children}
+                                        </code>
+                                    )
+                                },
+                                // 自定义链接渲染
+                                a({ href, children, ...props }) {
+                                    return (
+                                        <a
+                                            href={href}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-primary hover:underline"
+                                            {...props}
+                                        >
+                                            {children}
+                                        </a>
+                                    )
+                                },
+                                // 自定义表格渲染
+                                table({ children, ...props }) {
+                                    return (
+                                        <div className="overflow-x-auto my-4">
+                                            <table className="min-w-full border-collapse border border-border" {...props}>
+                                                {children}
+                                            </table>
+                                        </div>
+                                    )
+                                },
+                                th({ children, ...props }) {
+                                    return (
+                                        <th className="border border-border px-3 py-2 bg-muted font-semibold text-left" {...props}>
+                                            {children}
+                                        </th>
+                                    )
+                                },
+                                td({ children, ...props }) {
+                                    return (
+                                        <td className="border border-border px-3 py-2" {...props}>
+                                            {children}
+                                        </td>
+                                    )
+                                },
+                                // 自定义引用渲染
+                                blockquote({ children, ...props }) {
+                                    return (
+                                        <blockquote className="border-l-4 border-muted-foreground/30 pl-4 italic text-muted-foreground my-4" {...props}>
+                                            {children}
+                                        </blockquote>
+                                    )
+                                },
+                                // 自定义列表渲染
+                                ul({ children, ...props }) {
+                                    return (
+                                        <ul className="list-disc list-inside space-y-1 my-4" {...props}>
+                                            {children}
+                                        </ul>
+                                    )
+                                },
+                                ol({ children, ...props }) {
+                                    return (
+                                        <ol className="list-decimal list-inside space-y-1 my-4" {...props}>
+                                            {children}
+                                        </ol>
+                                    )
+                                },
+                                li({ children, ...props }) {
+                                    return (
+                                        <li className="leading-relaxed" {...props}>
+                                            {children}
+                                        </li>
+                                    )
+                                },
+                                // 自定义标题渲染
+                                h1({ children, ...props }) {
+                                    return (
+                                        <h1 className="text-2xl font-bold mt-8 mb-4" {...props}>
+                                            {children}
+                                        </h1>
+                                    )
+                                },
+                                h2({ children, ...props }) {
+                                    return (
+                                        <h2 className="text-xl font-bold mt-6 mb-3" {...props}>
+                                            {children}
+                                        </h2>
+                                    )
+                                },
+                                h3({ children, ...props }) {
+                                    return (
+                                        <h3 className="text-lg font-semibold mt-5 mb-2" {...props}>
+                                            {children}
+                                        </h3>
+                                    )
+                                },
+                                h4({ children, ...props }) {
+                                    return (
+                                        <h4 className="text-base font-semibold mt-4 mb-2" {...props}>
+                                            {children}
+                                        </h4>
+                                    )
+                                },
+                                h5({ children, ...props }) {
+                                    return (
+                                        <h5 className="text-sm font-semibold mt-3 mb-1" {...props}>
+                                            {children}
+                                        </h5>
+                                    )
+                                },
+                                h6({ children, ...props }) {
+                                    return (
+                                        <h6 className="text-xs font-semibold mt-2 mb-1" {...props}>
+                                            {children}
+                                        </h6>
+                                    )
+                                },
+                                // 自定义段落渲染
+                                p({ children, ...props }) {
+                                    return (
+                                        <p className="leading-relaxed mb-3" {...props}>
+                                            {children}
+                                        </p>
+                                    )
+                                },
+                            }}
+                        >
+                            {part.content}
+                        </ReactMarkdown>
+                    )
                 }
             })}
         </div>

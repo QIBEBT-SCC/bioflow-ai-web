@@ -11,12 +11,16 @@ export enum SSEEventType {
 // SSE事件数据
 export interface SSEEventData {
     id?: string;
-    message?: string | { role: string; content: string };
+    message?: string;
     delta?: string;
     full_text?: string;
-    tool_name?: string;
-    status?: 'begin' | 'end';
-    result?: string; // 工具调用的返回结果
+    thinking?: boolean;
+    name?: string;
+    status?: 'calling' | 'completed' | 'error';
+    question?: string;
+    confirm?: string;
+    link?: string;
+    info?: string;
     error?: string;
     detail?: string;
 }
@@ -53,34 +57,79 @@ export interface ChatSessionPublic {
 export interface LangchainMessage {
     type: "human" | "ai" | "system" | "tool";
     content: string;
-    additional_kwargs?: Record<string, any>;
-    response_metadata?: Record<string, any>;
+    additional_kwargs?: Record<string, never>;
+    response_metadata?: Record<string, never>;
     tool_calls?: Array<{
         name: string;
-        args: Record<string, any>;
+        args: Record<string, never>;
         id: string;
     }>;
     id?: string;
 }
 
-// 聊天消息类型
-export interface Message {
+// 消息基类
+interface BaseMessage {
     id: string;
-    type: "user" | "ai" | "system" | "tool";
-    content: string;
     timestamp: Date;
-    status?: "sending" | "sent" | "error";
-    toolCall?: ToolCall;
-    attachments?: Attachment[];
-    actions?: Action[];
 }
 
-// 工具调用
-export interface ToolCall {
+// 普通AI消息类型（无边框，直接显示文本）
+export interface AIMessage extends BaseMessage {
+    type: "ai";
+    content: string;
+    thinking?: false;
+}
+
+// 思考消息类型（折叠显示，小号浅色字体）
+export interface ThinkingMessage extends BaseMessage {
+    type: "thinking";
+    content: string;
+    thinking: true;
+    loadingMessage?: string;
+}
+
+// 中断消息类型（全宽带边框，可显示确认按钮）
+export interface InterruptMessage extends BaseMessage {
+    type: "interrupt";
+    content: string;
+    question?: string;
+    confirm?: string;
+    status?: "sending" | "sent" | "error";
+    action?: Action;
+}
+
+// 用户消息类型
+export interface UserMessage extends BaseMessage {
+    type: "user";
+    content: string;
+    attachments?: Attachment[];
+    status?: "sending" | "sent" | "error";
+}
+
+// 工具消息类型
+export interface ToolMessage extends BaseMessage {
+    type: "tool";
     name: string;
     status: "calling" | "completed" | "error";
     result?: string;
 }
+
+// 链接消息类型（显示跳转卡片）
+export interface LinkMessage extends BaseMessage {
+    type: "link";
+    link: string;
+    title?: string;
+    description?: string;
+}
+
+// 信息消息类型
+export interface InfoMessage extends BaseMessage {
+    type: "info";
+    content: string;
+}
+
+// 综合消息类型
+export type Message = AIMessage | ThinkingMessage | InterruptMessage | UserMessage | ToolMessage | LinkMessage | InfoMessage;
 
 // 附件
 export interface Attachment {
@@ -94,6 +143,6 @@ export interface Attachment {
 export interface Action {
     id: string;
     label: string;
-    type: "confirm" | "cancel" | "execute";
+    type?: "confirm" | "cancel" | "default";
     pending?: boolean;
 }
