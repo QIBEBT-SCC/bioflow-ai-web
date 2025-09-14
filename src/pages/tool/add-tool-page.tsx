@@ -24,14 +24,15 @@ import {useCreateToolStore} from "@/stores/toolStore.tsx";
 import {toast} from "sonner";
 import {useCreateTool} from "@/hooks/use-tool.tsx";
 
-const steps = [
-    {id: 1, title: "选择镜像", description: "选择或创建 Docker 镜像"},
-    {id: 2, title: "配置工具", description: "设置工具参数和命令"},
-    {id: 3, title: "确认创建", description: "确认配置并创建工具"},
+const getSteps = (t: any) => [
+    {id: 1, title: t("tool.add_tool.steps.select_image"), description: t("tool.add_tool.steps.select_image_desc")},
+    {id: 2, title: t("tool.add_tool.steps.config_tool"), description: t("tool.add_tool.steps.config_tool_desc")},
+    {id: 3, title: t("tool.add_tool.steps.confirm_create"), description: t("tool.add_tool.steps.confirm_create_desc")},
 ]
 
 export function AddToolPage() {
     const {t} = useTranslation();
+    const steps = getSteps(t);
 
     const [currentStep, setCurrentStep] = useState(1)
 
@@ -60,12 +61,12 @@ export function AddToolPage() {
 
         createTool({tool: toolConfig}, {
             onSuccess: () => {
-                toast.success("工具创建成功！")
+                toast.success(t("tool.add_tool.messages.create_success"))
                 navigate('/tool')
             },
             onError: (error) => {
                 console.error("创建工具失败:", error)
-                toast.error("创建工具失败，请重试")
+                toast.error(t("tool.add_tool.messages.create_failed"))
             }
         })
     }
@@ -96,13 +97,13 @@ export function AddToolPage() {
                             <BreadcrumbItem className="hidden md:block">
                                 <BreadcrumbLink asChild>
                                     <Link to="/tool">
-                                        Tools
+                                        {t('tool.tools')}
                                     </Link>
                                 </BreadcrumbLink>
                             </BreadcrumbItem>
                             <BreadcrumbSeparator className="hidden md:block"/>
                             <BreadcrumbItem>
-                                <BreadcrumbPage>Add Tool</BreadcrumbPage>
+                                <BreadcrumbPage>{t('tool.add_tool.title')}</BreadcrumbPage>
                             </BreadcrumbItem>
                         </BreadcrumbList>
                     </Breadcrumb>
@@ -165,21 +166,21 @@ export function AddToolPage() {
                     <div className="flex justify-between items-center pt-4 border-t">
                         <Button variant="outline" onClick={handlePrev} disabled={currentStep === 1}>
                             <ArrowLeftIcon className="h-4 w-4 mr-2"/>
-                            上一步
+                            {t('tool.add_tool.navigation.previous')}
                         </Button>
 
                         <div className="text-sm text-muted-foreground">
-                            第 {currentStep} 步，共 {steps.length} 步
+                            {t('tool.add_tool.navigation.step_info', {current: currentStep, total: steps.length})}
                         </div>
 
                         {currentStep < steps.length ? (
                             <Button onClick={handleNext} disabled={!canProceed()}>
-                                下一步
+                                {t('tool.add_tool.navigation.next')}
                                 <ArrowRightIcon className="h-4 w-4 ml-2"/>
                             </Button>
                         ) : (
                             <Button onClick={handleCreateTool} className="bg-green-600 hover:bg-green-700" disabled={!canProceed() || isCreating}>
-                                创建工具
+                                {t('tool.add_tool.navigation.create_tool')}
                             </Button>
                         )}
                     </div>

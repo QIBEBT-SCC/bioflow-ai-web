@@ -10,8 +10,10 @@ import {CreateImageForm} from "./create-image-form"
 import {ImageConfig} from "@/types/tool.tsx";
 import {useCreateToolStore} from "@/stores/toolStore.tsx";
 import {useSearchImages} from "@/hooks/use-tool.tsx";
+import {useTranslation} from "react-i18next";
 
 export function ImageSelectionStep() {
+    const {t} = useTranslation();
     const [searchQuery, setSearchQuery] = useState("")
     const [showCreateForm, setShowCreateForm] = useState(false)
 
@@ -42,10 +44,10 @@ export function ImageSelectionStep() {
             <div>
                 <div className="mb-6">
                     <Button variant="outline" onClick={() => setShowCreateForm(false)} className="mb-4">
-                        ← 返回镜像选择
+                        {t('tool.create.image_select.back_to_selection')}
                     </Button>
-                    <h2 className="text-xl font-semibold">创建新镜像</h2>
-                    <p className="text-muted-foreground">配置一个新的 Docker 镜像</p>
+                    <h2 className="text-xl font-semibold">{t('tool.create.image_select.create_new_image_title')}</h2>
+                    <p className="text-muted-foreground">{t('tool.create.image_select.create_new_image_subtitle')}</p>
                 </div>
                 <CreateImageForm/>
             </div>
@@ -55,8 +57,8 @@ export function ImageSelectionStep() {
     return (
         <div>
             <div className="mb-6">
-                <h2 className="text-xl font-semibold mb-2">选择 Docker 镜像</h2>
-                <p className="text-muted-foreground">选择一个现有的镜像或创建新的镜像配置</p>
+                <h2 className="text-xl font-semibold mb-2">{t('tool.create.image_select.title')}</h2>
+                <p className="text-muted-foreground">{t('tool.create.image_select.subtitle')}</p>
             </div>
 
             {/* 搜索栏 */}
@@ -64,7 +66,7 @@ export function ImageSelectionStep() {
                 <div className="relative flex-1">
                     <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4"/>
                     <Input
-                        placeholder="搜索镜像名称、描述或仓库地址..."
+                        placeholder={t('tool.create.image_select.search_placeholder')}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="pl-10"
@@ -79,12 +81,12 @@ export function ImageSelectionStep() {
                         <CardContent>
                             <div className="text-muted-foreground mb-4">
                                 <SearchIcon className="h-12 w-12 mx-auto mb-4 opacity-50"/>
-                                <p className="text-lg mb-2">未找到匹配的镜像</p>
-                                <p className="text-sm">尝试调整搜索条件，或者创建一个新的镜像配置</p>
+                                <p className="text-lg mb-2">{t('tool.create.image_select.no_results')}</p>
+                                <p className="text-sm">{t('tool.create.image_select.no_results_desc')}</p>
                             </div>
                             <Button onClick={() => setShowCreateForm(true)}>
                                 <PlusIcon className="h-4 w-4 mr-2"/>
-                                创建新镜像
+                                {t('tool.create.image_select.create_new_image')}
                             </Button>
                         </CardContent>
                     </Card>
@@ -117,7 +119,7 @@ export function ImageSelectionStep() {
                                     <CardDescription className="text-sm mb-4 line-clamp-3">{image.description}</CardDescription>
 
                                     <div className="mb-4">
-                                        <p className="text-xs text-muted-foreground mb-1">Docker 镜像</p>
+                                        <p className="text-xs text-muted-foreground mb-1">{t('tool.create.image_select.docker_image')}</p>
                                         <code className="text-xs bg-muted px-2 py-1 rounded block overflow-x-auto">
                                             {getImageName(image.image)}
                                         </code>
@@ -160,7 +162,7 @@ export function ImageSelectionStep() {
                                                 setCurrentImage(image)
                                             }}
                                         >
-                                            {currentImage?.uid === image.uid ? "已选择" : "选择"}
+                                            {currentImage?.uid === image.uid ? t('tool.create.image_select.selected') : t('tool.create.image_select.select')}
                                         </Button>
                                     </div>
                                 </CardContent>

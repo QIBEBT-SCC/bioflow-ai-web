@@ -11,9 +11,11 @@ import {SaveIcon, HelpCircleIcon, ExternalLinkIcon} from 'lucide-react'
 import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip"
 import {useCreateImage} from "@/hooks/use-tool.tsx";
 import {useCreateToolStore} from "@/stores/toolStore.tsx";
+import {useTranslation} from "react-i18next";
 
 
 export function CreateImageForm() {
+    const {t} = useTranslation();
     const {currentImage, setCurrentImage} = useCreateToolStore()
 
     const createImageMutation = useCreateImage()
@@ -86,7 +88,7 @@ export function CreateImageForm() {
                     {/* 快速输入 */}
                     <div className="space-y-2">
                         <Label htmlFor="image_string">
-                            镜像地址（快速输入）
+                            {t('tool.create.image_form.image_address')}
                             <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
@@ -94,7 +96,7 @@ export function CreateImageForm() {
                                     </TooltipTrigger>
                                     <TooltipContent>
                                         <p className="max-w-xs">
-                                            输入完整的镜像地址，系统会自动解析各个字段。 格式：[registry]/[namespace]/repository:tag
+                                            {t('tool.create.image_form.image_address_tooltip')}
                                         </p>
                                     </TooltipContent>
                                 </Tooltip>
@@ -102,7 +104,7 @@ export function CreateImageForm() {
                         </Label>
                         <Input
                             id="image_string"
-                            placeholder="例如: docker.io/staphb/fastp:0.24.0"
+                            placeholder={t('tool.create.image_form.image_address_placeholder')}
                             onChange={(e) => handleImageStringChange(e.target.value)}
                         />
                     </div>
@@ -110,25 +112,25 @@ export function CreateImageForm() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="name">
-                                工具名称 <span className="text-red-500">*</span>
+                                {t('tool.create.image_form.tool_name')} <span className="text-red-500">*</span>
                             </Label>
                             <Input
                                 id="name"
                                 value={currentImage.name}
                                 onChange={(e) => setCurrentImage({...currentImage, name: e.target.value})}
-                                placeholder="例如: FastP"
+                                placeholder={t('tool.create.image_form.tool_name_placeholder')}
                                 required
                             />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="version">
-                                版本 <span className="text-red-500">*</span>
+                                {t('tool.create.image_form.version')} <span className="text-red-500">*</span>
                             </Label>
                             <Input
                                 id="version"
                                 value={currentImage.version}
                                 onChange={(e) => setCurrentImage({...currentImage, version: e.target.value})}
-                                placeholder="例如: 0.24.0"
+                                placeholder={t('tool.create.image_form.version_placeholder')}
                                 required
                             />
                         </div>
@@ -136,13 +138,13 @@ export function CreateImageForm() {
 
                     <div className="space-y-2">
                         <Label htmlFor="description">
-                            描述 <span className="text-red-500">*</span>
+                            {t('tool.create.image_form.description')} <span className="text-red-500">*</span>
                         </Label>
                         <Textarea
                             id="description"
                             value={currentImage.description}
                             onChange={(e) => setCurrentImage({...currentImage, description: e.target.value})}
-                            placeholder="工具的详细描述，包括主要功能和用途"
+                            placeholder={t('tool.create.image_form.description_placeholder')}
                             rows={4}
                             required
                         />
@@ -151,14 +153,14 @@ export function CreateImageForm() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="homepage">
-                                官方主页
+                                {t('tool.create.image_form.homepage')}
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <HelpCircleIcon className="h-4 w-4 inline-block ml-1 text-muted-foreground"/>
                                         </TooltipTrigger>
                                         <TooltipContent>
-                                            <p>工具的官方网站或 GitHub 仓库地址</p>
+                                            <p>{t('tool.create.image_form.homepage_tooltip')}</p>
                                         </TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
@@ -168,7 +170,7 @@ export function CreateImageForm() {
                                     id="homepage"
                                     value={currentImage.homepage}
                                     onChange={(e) => setCurrentImage({...currentImage, homepage: e.target.value})}
-                                    placeholder="https://github.com/OpenGene/fastp"
+                                    placeholder={t('tool.create.image_form.homepage_placeholder')}
                                     type="url"
                                 />
                                 {currentImage.homepage && (
@@ -186,14 +188,14 @@ export function CreateImageForm() {
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="paper_link">
-                                相关论文
+                                {t('tool.create.image_form.paper_link')}
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <HelpCircleIcon className="h-4 w-4 inline-block ml-1 text-muted-foreground"/>
                                         </TooltipTrigger>
                                         <TooltipContent>
-                                            <p>工具相关的学术论文链接</p>
+                                            <p>{t('tool.create.image_form.paper_link_tooltip')}</p>
                                         </TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
@@ -203,7 +205,7 @@ export function CreateImageForm() {
                                     id="paper_link"
                                     value={currentImage.paper_link}
                                     onChange={(e) => setCurrentImage({...currentImage, paper_link: e.target.value})}
-                                    placeholder="https://academic.oup.com/bioinformatics/..."
+                                    placeholder={t('tool.create.image_form.paper_link_placeholder')}
                                     type="url"
                                 />
                                 {currentImage.paper_link && (
@@ -226,7 +228,7 @@ export function CreateImageForm() {
             <div className="flex justify-end gap-2 pt-4 border-t">
                 <Button type="submit" className="bg-green-600 hover:bg-green-700">
                     <SaveIcon className="h-4 w-4 mr-2"/>
-                    创建镜像
+                    {t('tool.create.image_form.create_image')}
                 </Button>
             </div>
         </form>

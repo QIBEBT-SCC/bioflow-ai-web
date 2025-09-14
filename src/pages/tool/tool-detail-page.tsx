@@ -17,17 +17,19 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator
 } from "@/components/ui/breadcrumb.tsx";
+import {useTranslation} from "react-i18next";
 
 export function ToolDetailPage() {
+    const {t} = useTranslation();
     const {toolUid: toolUid} = useParams();
-    const {data: tool, isLoading} = useTool({id: toolUid ? toolUid : ''});
+    const {data: tool, isLoading} = useTool({uid: toolUid ? toolUid : ''});
 
     // 复制命令到剪贴板
     const copyToClipboard = (text: string) => {
         navigator.clipboard
             .writeText(text)
             .then(() => {
-                alert("已复制到剪贴板")
+                alert(t('tool.copy_to_clipboard'))
             })
             .catch((err) => {
                 console.error("复制失败:", err)
@@ -48,7 +50,7 @@ export function ToolDetailPage() {
                             <BreadcrumbItem className="hidden md:block">
                                 <BreadcrumbLink asChild>
                                     <Link to="/tool">
-                                        Tools
+                                        {t('tool.tools')}
                                     </Link>
                                 </BreadcrumbLink>
                             </BreadcrumbItem>
@@ -65,7 +67,7 @@ export function ToolDetailPage() {
                     <div className="mb-6">
                         <Link to="/tool" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-2">
                             <ArrowLeft className="h-4 w-4 mr-1"/>
-                            返回工具列表
+                            {t('tool.back_to_list')}
                         </Link>
                     </div>
 
@@ -84,7 +86,7 @@ export function ToolDetailPage() {
                                     href={tool.image.homepage}
                                 >
                                     <FileText className="h-4 w-4 mr-2"/>
-                                    查看文档
+                                    {t('tool.view_docs')}
                                 </a>
                             </Button>
                             <Button asChild variant="outline" size="sm">
@@ -94,7 +96,7 @@ export function ToolDetailPage() {
                                     rel="noopener noreferrer"
                                 >
                                     <ExternalLink className="h-4 w-4 mr-2"/>
-                                    Docker Hub
+                                    {t('tool.docker_hub')}
                                 </a>
                             </Button>
                         </div>
@@ -112,25 +114,25 @@ export function ToolDetailPage() {
                         <TabsList className="grid w-full grid-cols-4">
                             <TabsTrigger value="overview">
                                 <Info className="h-4 w-4 mr-2"/>
-                                概览
+                                {t('tool.overview')}
                             </TabsTrigger>
                             <TabsTrigger value="params">
                                 <Layers className="h-4 w-4 mr-2"/>
-                                参数
+                                {t('tool.params')}
                                 <Badge variant="outline" className="ml-2">
                                     {tool.dynamic_params.length}
                                 </Badge>
                             </TabsTrigger>
                             <TabsTrigger value="outputs">
                                 <FileText className="h-4 w-4 mr-2"/>
-                                输出文件
+                                {t('tool.outputs')}
                                 <Badge variant="outline" className="ml-2">
                                     {tool.file_mounts.length}
                                 </Badge>
                             </TabsTrigger>
                             <TabsTrigger value="command">
                                 <Terminal className="h-4 w-4 mr-2"/>
-                                命令
+                                {t('tool.command')}
                             </TabsTrigger>
                         </TabsList>
 

@@ -13,6 +13,7 @@ import {Card, CardContent} from "@/components/ui/card.tsx";
 import {useAllTools, useToolCount} from "@/hooks/use-tool.tsx";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TablePage, TableRow} from "@/components/ui/table.tsx";
 import {useState} from "react";
+import {useTranslation} from "react-i18next";
 
 // 根据标签名称获取对应的样式
 function getTagStyle(tagName: string) {
@@ -27,6 +28,7 @@ function getTagStyle(tagName: string) {
 }
 
 export function ToolList({viewMode}: { viewMode: "list" | "grid" }) {
+    const {t} = useTranslation();
     const [recentOffset, setRecentOffset] = useState<number>(0)
     const {data: allTools = []} = useAllTools(recentOffset);
     const {data: toolCounts = 0} = useToolCount();
@@ -36,11 +38,11 @@ export function ToolList({viewMode}: { viewMode: "list" | "grid" }) {
             <Table>
                 <TableHeader className="bg-muted/50">
                     <TableRow>
-                        <TableHead className="h-12 px-4 text-left w-30">工具名称</TableHead>
-                        <TableHead className="h-12 px-4 text-left w-60">Docker 镜像</TableHead>
-                        <TableHead className="h-12 px-4 text-left w-85">描述</TableHead>
-                        <TableHead className="h-12 px-4 text-left w-30">标签</TableHead>
-                        <TableHead className="h-12 px-4 text-center w-5">操作</TableHead>
+                        <TableHead className="h-12 px-4 text-left w-30">{t('tool.tool_name')}</TableHead>
+                        <TableHead className="h-12 px-4 text-left w-60">{t('tool.docker_image')}</TableHead>
+                        <TableHead className="h-12 px-4 text-left w-85">{t('tool.description')}</TableHead>
+                        <TableHead className="h-12 px-4 text-left w-30">{t('tool.tags')}</TableHead>
+                        <TableHead className="h-12 px-4 text-center w-5">{t('tool.actions')}</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -57,7 +59,7 @@ export function ToolList({viewMode}: { viewMode: "list" | "grid" }) {
                                 </div>
                             </TableCell>
                             <TableCell className="max-w-85">
-                                <div className="line-clamp-2 text-sm truncate">{tool.description || "无描述"}</div>
+                                <div className="line-clamp-2 text-sm truncate">{tool.description || t('tool.no_description')}</div>
                             </TableCell>
                             <TableCell className="max-w-30">
                                 <div className="flex flex-row flex-wrap gap-1">
@@ -74,26 +76,26 @@ export function ToolList({viewMode}: { viewMode: "list" | "grid" }) {
                                     <DropdownMenuTrigger asChild>
                                         <Button variant="ghost" size="icon" className="h-8 w-8">
                                             <MoreHorizontal className="h-4 w-4"/>
-                                            <span className="sr-only">更多选项</span>
+                                            <span className="sr-only">{t('tool.more_options')}</span>
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
                                         <DropdownMenuItem>
                                             <Edit className="h-4 w-4 mr-2"/>
-                                            编辑工具
+                                            {t('tool.edit')} {t('tool.tool_name')}
                                         </DropdownMenuItem>
                                         <DropdownMenuItem>
                                             <Copy className="h-4 w-4 mr-2"/>
-                                            复制工具
+                                            {t('tool.copy')} {t('tool.tool_name')}
                                         </DropdownMenuItem>
                                         <DropdownMenuItem>
                                             <Tag className="h-4 w-4 mr-2"/>
-                                            管理分组
+                                            {t('tool.manage_group')}
                                         </DropdownMenuItem>
                                         <DropdownMenuSeparator/>
                                         <DropdownMenuItem className="text-destructive">
                                             <Trash2 className="h-4 w-4 mr-2"/>
-                                            删除工具
+                                            {t('tool.delete')} {t('tool.tool_name')}
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
@@ -128,25 +130,25 @@ export function ToolList({viewMode}: { viewMode: "list" | "grid" }) {
                                     <DropdownMenuContent align="end">
                                         <DropdownMenuItem>
                                             <Edit className="h-4 w-4 mr-2"/>
-                                            编辑工具
+                                            {t('tool.edit')} {t('tool.tool_name')}
                                         </DropdownMenuItem>
                                         <DropdownMenuItem>
                                             <Copy className="h-4 w-4 mr-2"/>
-                                            复制工具
+                                            {t('tool.copy')} {t('tool.tool_name')}
                                         </DropdownMenuItem>
                                         <DropdownMenuItem>
                                             <Tag className="h-4 w-4 mr-2"/>
-                                            管理分组
+                                            {t('tool.manage_group')}
                                         </DropdownMenuItem>
                                         <DropdownMenuSeparator/>
                                         <DropdownMenuItem className="text-destructive">
                                             <Trash2 className="h-4 w-4 mr-2"/>
-                                            删除工具
+                                            {t('tool.delete')} {t('tool.tool_name')}
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             </div>
-                            <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{tool.description || "无描述"}</p>
+                            <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{tool.description || t('tool.no_description')}</p>
                             <div className="flex items-center justify-between text-xs text-muted-foreground">
                             <span>
                                 {tool.image.image.registry}/{tool.image.image.namespace}/{tool.image.image.repository}:{tool.image.image.tag}

@@ -7,6 +7,7 @@ import {
     CreditCard,
     LogOut,
     Sparkles,
+    Globe,
 } from "lucide-react"
 
 import {
@@ -29,10 +30,12 @@ import {
     useSidebar,
 } from "@/components/ui/sidebar"
 import {useAuth} from "@/hooks/use-auth";
+import {useTranslation} from "react-i18next";
 
 export function NavUser() {
     const {isMobile} = useSidebar()
     const {user, logout} = useAuth()
+    const {i18n} = useTranslation()
 
     return (
         <SidebarMenu>
@@ -92,6 +95,10 @@ export function NavUser() {
                             <DropdownMenuItem>
                                 <Bell/>
                                 Notifications
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => i18n.changeLanguage(i18n.language === 'zh' ? 'en' : 'zh')}>
+                                <Globe/>
+                                {i18n.language === 'zh' ? 'English' : '中文'}
                             </DropdownMenuItem>
                         </DropdownMenuGroup>
                         <DropdownMenuSeparator/>

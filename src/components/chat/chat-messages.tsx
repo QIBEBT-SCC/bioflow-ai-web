@@ -23,6 +23,7 @@ import {
 import {MarkdownRenderer} from "@/components/markdown-render.tsx";
 import {Badge} from "@/components/ui/badge.tsx";
 import {Message} from "@/types/chat.tsx";
+import {useTranslation} from "react-i18next";
 
 interface ChatMessageProps {
     message: Message
@@ -30,6 +31,7 @@ interface ChatMessageProps {
 }
 
 export function ChatMessage({message, onActionClick}: ChatMessageProps) {
+    const {t} = useTranslation();
     const [imageError, setImageError] = useState(false)
     const [isToolCollapsed, setIsToolCollapsed] = useState(message.type === "tool" && message.status === "completed")
     const [isThinkingCollapsed, setIsThinkingCollapsed] = useState(true)
@@ -114,7 +116,7 @@ export function ChatMessage({message, onActionClick}: ChatMessageProps) {
                         </div>
                         <div className="flex-1 min-w-0">
                             <h4 className="font-medium text-sm truncate">
-                                {message.title || "跳转到编辑器"}
+                                {message.title || t('chat.jump_to_editor')}
                             </h4>
                             {message.description && (
                                 <p className="text-xs text-muted-foreground truncate">
@@ -123,7 +125,7 @@ export function ChatMessage({message, onActionClick}: ChatMessageProps) {
                             )}
                         </div>
                         <Button size="sm" variant="outline" className="shrink-0">
-                            打开
+                            {t('chat.open')}
                         </Button>
                     </div>
                 </Card>
@@ -145,7 +147,7 @@ export function ChatMessage({message, onActionClick}: ChatMessageProps) {
                             >
                                 <BrainIcon className="w-4 h-4 text-blue-600 dark:text-blue-400"/>
                                 <span className="text-sm text-blue-800 dark:text-blue-200 flex-1">
-                                    {message.loadingMessage || "AI正在思考..."}
+                                    {message.loadingMessage || t('chat.thinking')}
                                 </span>
                                 <ChevronRightIcon className="w-4 h-4 text-blue-600 dark:text-blue-400"/>
                             </div>
@@ -157,7 +159,7 @@ export function ChatMessage({message, onActionClick}: ChatMessageProps) {
                                 >
                                     <BrainIcon className="w-4 h-4 text-blue-600 dark:text-blue-400"/>
                                     <span className="font-medium text-blue-800 dark:text-blue-200 flex-1">
-                                        AI思考过程
+                                        {t('chat.thinking_process')}
                                     </span>
                                     <ChevronDownIcon className="w-4 h-4 text-blue-600 dark:text-blue-400"/>
                                 </div>
@@ -229,7 +231,7 @@ export function ChatMessage({message, onActionClick}: ChatMessageProps) {
                             >
                                 <WrenchIcon className="w-4 h-4 text-orange-600 dark:text-orange-400"/>
                                 <span className="text-sm text-orange-800 dark:text-orange-200 flex-1">
-                                    {message.name} - 已完成
+                                    {t('chat.tool_completed_status', {name: message.name})}
                                 </span>
                                 <CheckCircleIcon className="w-3 h-3 text-green-600"/>
                                 <ChevronRightIcon className="w-4 h-4 text-orange-600 dark:text-orange-400"/>
@@ -242,7 +244,7 @@ export function ChatMessage({message, onActionClick}: ChatMessageProps) {
                                 >
                                     <WrenchIcon className="w-4 h-4 text-orange-600 dark:text-orange-400"/>
                                     <span className="font-medium text-orange-800 dark:text-orange-200 flex-1">
-                                        工具调用: {message.name}
+                                        {t('chat.tool_call', {name: message.name})}
                                     </span>
                                     {message.status === "calling" && (
                                         <Loader2Icon className="w-4 h-4 text-orange-600 animate-spin"/>
@@ -257,14 +259,14 @@ export function ChatMessage({message, onActionClick}: ChatMessageProps) {
                                 </div>
 
                                 <div className="text-sm text-orange-700 dark:text-orange-300">
-                                    {message.status === "calling" && "正在调用工具..."}
-                                    {message.status === "completed" && "工具调用完成"}
-                                    {message.status === "error" && "工具调用失败"}
+                                    {message.status === "calling" && t('chat.tool_calling')}
+                                    {message.status === "completed" && t('chat.tool_completed')}
+                                    {message.status === "error" && t('chat.tool_failed')}
                                 </div>
 
                                 {message.result && message.status === "completed" && (
                                     <div className="mt-3 p-3 bg-white/50 dark:bg-black/20 rounded border border-orange-200 dark:border-orange-700">
-                                        <div className="text-xs text-orange-600 dark:text-orange-400 mb-1">返回结果:</div>
+                                        <div className="text-xs text-orange-600 dark:text-orange-400 mb-1">{t('chat.return_result')}</div>
                                         <div className="text-sm text-foreground">
                                             <MarkdownRenderer content={message.result}/>
                                         </div>

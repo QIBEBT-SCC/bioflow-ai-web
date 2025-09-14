@@ -2,6 +2,7 @@ import {Dialog, DialogContent, DialogHeader, DialogTitle} from "@/components/ui/
 import {Input} from "@/components/ui/input.tsx";
 import {Button} from "@/components/ui/button.tsx";
 import {useUpdateChatHistory} from "@/hooks/use-chat.tsx";
+import {useTranslation} from "react-i18next";
 
 interface EditDialogProps {
     open: boolean,
@@ -13,6 +14,7 @@ interface EditDialogProps {
 }
 
 export function EditDialog({open, onOpenChange, value, onValueChange, id, onIdChange}: EditDialogProps) {
+    const {t} = useTranslation();
     const updateHistoryMutation = useUpdateChatHistory();
 
     const editHistoryDescription = async (historyId: string, newDescription: string) => {
@@ -36,13 +38,13 @@ export function EditDialog({open, onOpenChange, value, onValueChange, id, onIdCh
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>编辑对话描述</DialogTitle>
+                    <DialogTitle>{t('chat.history.edit_description')}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
                     <Input
                         value={value}
                         onChange={(e) => onValueChange(e.target.value)}
-                        placeholder="输入对话描述..."
+                        placeholder={t('chat.history.edit_description_placeholder')}
                         onKeyDown={(e) => {
                             if (e.key === 'Enter' && id) {
                                 editHistoryDescription(id, value).then(resetState)
@@ -54,7 +56,7 @@ export function EditDialog({open, onOpenChange, value, onValueChange, id, onIdCh
                             variant="outline"
                             onClick={() => onOpenChange(false)}
                         >
-                            取消
+                            {t('chat.history.cancel')}
                         </Button>
                         <Button
                             onClick={() => {
@@ -64,7 +66,7 @@ export function EditDialog({open, onOpenChange, value, onValueChange, id, onIdCh
                             }}
                             disabled={!value.trim()}
                         >
-                            保存
+                            {t('chat.history.save')}
                         </Button>
                     </div>
                 </div>

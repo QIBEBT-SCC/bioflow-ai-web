@@ -23,6 +23,7 @@ import {useChatStore} from "@/stores/chatStore.tsx";
 import {toast} from "sonner";
 import {LangchainMessage, Message, ChatSessionPublic} from "@/types/chat.tsx";
 import {chatApi} from "@/services/api.tsx";
+import {useTranslation} from "react-i18next";
 
 interface HistoryMenuProps {
     setEditID: (uid: string) => void,
@@ -31,6 +32,7 @@ interface HistoryMenuProps {
 }
 
 export function HistoryMenu({setEditID, setDescription, setShowEditDialog}: HistoryMenuProps) {
+    const {t} = useTranslation();
     const {data: chatHistories = []} = useChatHistories();
     const [isOpen, setIsOpen] = useState(false);
 
@@ -52,11 +54,11 @@ export function HistoryMenu({setEditID, setDescription, setShowEditDialog}: Hist
             const newSession = await createSessionMutation.mutateAsync();
             setCurrentSession(newSession);
             clearMessages(); // 清空消息，准备新对话
-            toast.success("已创建新对话");
+            toast.success(t('chat.history.new_chat'));
         } catch (error) {
             // 如果失败，显示错误并清空当前会话
             console.error('Failed to create new chat:', error);
-            toast.error("创建新对话失败，请稍后重试");
+            toast.error(t('chat.history.new_chat_failed'));
             setCurrentSession(null);
             clearMessages();
         }
@@ -92,10 +94,10 @@ export function HistoryMenu({setEditID, setDescription, setShowEditDialog}: Hist
             clearMessages()
             convertedMessages.forEach(msg => addMessage(msg))
 
-            toast.success(`已切换到: ${chatHistories.find(h => h.uid === history.uid)?.description || '未知对话'}`)
+            toast.success(t('chat.history.switched_to', {name: chatHistories.find(h => h.uid === history.uid)?.description || '未知对话'}))
         } catch (error) {
             console.error('Failed to load chat history:', error)
-            toast.error('加载历史记录失败')
+            toast.error(t('chat.history.load_history_failed'))
             // 即使加载失败，也要设置session ID，用户可以开始新的对话
             setCurrentSession(history)
         }
@@ -109,10 +111,10 @@ export function HistoryMenu({setEditID, setDescription, setShowEditDialog}: Hist
         const hours = Math.floor(diff / (1000 * 60 * 60))
         const minutes = Math.floor(diff / (1000 * 60))
 
-        if (days > 0) return `${days}天前`
-        if (hours > 0) return `${hours}小时前`
-        if (minutes > 0) return `${minutes}分钟前`
-        return '刚刚'
+        if (days > 0) return t('chat.history.time_ago.days_ago', {count: days})
+        if (hours > 0) return t('chat.history.time_ago.hours_ago', {count: hours})
+        if (minutes > 0) return t('chat.history.time_ago.minutes_ago', {count: minutes})
+        return t('chat.history.time_ago.just_now')
     }
 
     const deleteHistory = async (historyId: string) => {
@@ -170,7 +172,7 @@ export function HistoryMenu({setEditID, setDescription, setShowEditDialog}: Hist
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-80">
                     <div className="flex items-center justify-between p-2">
-                        <span className="font-medium text-sm">对话历史</span>
+                        <span className="font-medium text-sm">{t('chat.history.title')}</span>
                         <Button
                             variant="ghost"
                             size="sm"
@@ -233,18 +235,18 @@ export function HistoryMenu({setEditID, setDescription, setShowEditDialog}: Hist
                                         </AlertDialogTrigger>
                                         <AlertDialogContent>
                                             <AlertDialogHeader>
-                                                <AlertDialogTitle>删除对话</AlertDialogTitle>
+                                                <AlertDialogTitle>{t('chat.history.delete_confirm_title')}</AlertDialogTitle>
                                                 <AlertDialogDescription>
-                                                    确定要删除对话 "{history.description}" 吗？此操作无法撤销。
+                                                    {t('chat.history.delete_confirm_message', {name: history.description})}
                                                 </AlertDialogDescription>
                                             </AlertDialogHeader>
                                             <AlertDialogFooter>
-                                                <AlertDialogCancel>取消</AlertDialogCancel>
+                                                <AlertDialogCancel>{t('chat.history.cancel')}</AlertDialogCancel>
                                                 <AlertDialogAction
                                                     onClick={() => deleteHistory(history.uid)}
                                                     className="bg-destructive hover:bg-destructive/90"
                                                 >
-                                                    删除
+                                                    {t('chat.history.delete')}
                                                 </AlertDialogAction>
                                             </AlertDialogFooter>
                                         </AlertDialogContent>
@@ -256,7 +258,7 @@ export function HistoryMenu({setEditID, setDescription, setShowEditDialog}: Hist
 
                     {chatHistories.length === 0 && (
                         <div className="p-4 text-center text-muted-foreground text-sm">
-                            暂无历史对话
+                            {t('chat.history.no_history')}
                         </div>
                     )}
                 </DropdownMenuContent>

@@ -6,6 +6,7 @@ import {Button} from "@/components/ui/button"
 import {Card} from "@/components/ui/card"
 
 import {Upload, File, ImageIcon, X, CheckCircle} from "lucide-react"
+import {useTranslation} from "react-i18next"
 
 interface FileUploadProps {
     onFileUpload: (files: File[]) => void
@@ -22,6 +23,7 @@ export function FileUpload({
                                acceptedTypes = ["image/*", "text/*", ".pdf", ".doc", ".docx"],
                                disabled = false,
                            }: FileUploadProps) {
+    const {t} = useTranslation();
     const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
 
     const onDrop = useCallback(
@@ -93,23 +95,23 @@ export function FileUpload({
                     <div className="text-center">
                         <p className="text-sm font-medium">
                             {disabled
-                                ? "文件上传已禁用"
+                                ? t('chat.file_upload_disabled')
                                 : isDragActive
-                                    ? "释放文件到这里"
-                                    : "拖拽文件到这里或点击上传"
+                                    ? t('chat.drag_files_here')
+                                    : t('chat.drag_or_click_upload')
                             }
                         </p>
-                        <p className="text-xs text-muted-foreground mt-1">支持图片、文档等格式，最大 {formatFileSize(maxSize)}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{t('chat.supported_formats', {size: formatFileSize(maxSize)})}</p>
                     </div>
                     <Button variant="outline" size="sm" disabled={disabled}>
-                        选择文件
+                        {t('chat.select_files')}
                     </Button>
                 </div>
             </div>
 
             {uploadedFiles.length > 0 && (
                 <div className="mt-4 space-y-3">
-                    <h4 className="text-sm font-medium">已选择的文件</h4>
+                    <h4 className="text-sm font-medium">{t('chat.selected_files', {count: uploadedFiles.length})}</h4>
                     {uploadedFiles.map((file, index) => (
                         <div key={index} className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
                             {getFileIcon(file)}
@@ -129,7 +131,7 @@ export function FileUpload({
                                 <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
                                 <div className="flex items-center gap-1 mt-1">
                                     <CheckCircle className="w-3 h-3 text-green-500"/>
-                                    <span className="text-xs text-green-600">已选择</span>
+                                    <span className="text-xs text-green-600">{t('chat.file_selected')}</span>
                                 </div>
                             </div>
                         </div>

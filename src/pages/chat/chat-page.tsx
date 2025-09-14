@@ -21,8 +21,11 @@ import {useChatStore} from "@/stores/chatStore.tsx";
 import {useCreateSession} from "@/hooks/use-chat.tsx";
 import {HistoryMenu} from "@/components/chat/history-menu.tsx";
 import {EditDialog} from "@/components/chat/edit-dialog.tsx";
+import {useTranslation} from "react-i18next";
 
 export function ChatPage() {
+    const {t} = useTranslation();
+    
     // 使用zustand store管理状态
     const {
         currentSession,
@@ -104,7 +107,7 @@ export function ChatPage() {
         const stopMessage: Message = {
             id: `stop_${Date.now()}`,
             type: "info",
-            content: "生成已停止",
+            content: t('chat.generation_stopped'),
             timestamp: new Date(),
         }
         addMessage(stopMessage)
@@ -139,7 +142,7 @@ export function ChatPage() {
                             content: data.full_text,
                             timestamp: new Date(),
                             thinking: true,
-                            loadingMessage: "AI正在思考...",
+                            loadingMessage: t('chat.thinking'),
                         })
                     } else {
                         setCurrentStreamingMessage({
@@ -216,7 +219,7 @@ export function ChatPage() {
                     status: "sent",
                     action: {
                         id: "confirm",
-                        label: "确认",
+                        label: t('chat.confirm'),
                         type: "confirm",
                         pending: false,
                     }
@@ -247,8 +250,8 @@ export function ChatPage() {
                     id: `link_${Date.now()}`,
                     type: "link",
                     link: data.link,
-                    title: "跳转到编辑器",
-                    description: "点击打开编辑器页面",
+                    title: t('chat.jump_to_editor'),
+                    description: t('chat.click_to_open_editor'),
                     timestamp: new Date(),
                 }
                 addMessage(linkMessage)
@@ -288,7 +291,7 @@ export function ChatPage() {
 
         onError: (data: SSEEventData) => {
             console.error('Chat error:', data)
-            toast.error(data.error || '发生未知错误')
+            toast.error(data.error || t('chat.error_occurred'))
 
             // 如果有正在流式生成的消息，先保存到消息列表
             if (currentStreamingMessage) {
@@ -300,7 +303,7 @@ export function ChatPage() {
             const errorMessage: Message = {
                 id: `error_${Date.now()}`,
                 type: "info",
-                content: `错误: ${data.error || '发生未知错误'}`,
+                content: t('chat.error_prefix', {error: data.error || t('chat.error_occurred')}),
                 timestamp: new Date(),
             }
             addMessage(errorMessage)
@@ -337,7 +340,7 @@ export function ChatPage() {
                     setCurrentSession(new_session);
                 } catch (error) {
                     console.error('Failed to create session:', error);
-                    toast.error('创建会话失败，请稍后重试');
+                    toast.error(t('chat.create_session_failed'));
                     setIsGenerating(false);
                     return;
                 }
@@ -354,7 +357,7 @@ export function ChatPage() {
             )
         } catch (error) {
             console.error('Failed to send message:', error)
-            toast.error('发送消息失败')
+            toast.error(t('chat.send_message_failed'))
             setIsGenerating(false)
             setCurrentStreamingMessage(null)
             setCurrentStreamingMessageId(null)
@@ -382,7 +385,7 @@ export function ChatPage() {
         const userMessage: Message = {
             id: `user_${Date.now()}`,
             type: "user",
-            content: currentInput || `上传了 ${filesToSend.length} 个文件`,
+            content: currentInput || t('chat.uploaded_files', {count: filesToSend.length}),
             timestamp: new Date(),
             status: "sent",
             attachments: filesToSend.map(file => ({
@@ -459,14 +462,14 @@ export function ChatPage() {
                             <BreadcrumbList>
                                 <BreadcrumbItem className="hidden md:block">
                                     <BreadcrumbPage>
-                                        Chat
+                                        {t('chat.title')}
                                     </BreadcrumbPage>
                                 </BreadcrumbItem>
                                 <BreadcrumbSeparator className="hidden md:block"/>
                                 <BreadcrumbItem>
                                     <BreadcrumbPage>
                                         <span
-                                            className="text-sm text-muted-foreground hidden sm:block">{currentSession?.description || "新对话"}</span>
+                                            className="text-sm text-muted-foreground hidden sm:block">{currentSession?.description || t('chat.new_conversation')}</span>
                                     </BreadcrumbPage>
                                 </BreadcrumbItem>
                             </BreadcrumbList>
@@ -547,7 +550,7 @@ export function ChatPage() {
                     {selectedFiles.length > 0 && (
                         <div className="mb-4">
                             <div className="flex items-center justify-between mb-2">
-                                <span className="text-sm font-medium">已选择 {selectedFiles.length} 个文件</span>
+                                <span className="text-sm font-medium">{t('chat.selected_files', {count: selectedFiles.length})}</span>
                                 <Button
                                     variant="ghost"
                                     size="sm"
@@ -555,7 +558,7 @@ export function ChatPage() {
                                     disabled={isGenerating}
                                     className="text-xs"
                                 >
-                                    清空全部
+                                    {t('chat.clear_all')}
                                 </Button>
                             </div>
                             <div className="flex flex-wrap gap-2">
@@ -590,7 +593,7 @@ export function ChatPage() {
                                 onChange={(e) => setInputValue(e.target.value)}
                                 onKeyDown={handleKeyPress}
                                 onPaste={handlePaste}
-                                placeholder={isGenerating ? "AI正在生成回复..." : `输入消息... (支持 Shift+Enter 换行，Ctrl+V 粘贴图片)${selectedFiles.length > 0 ? ` • 已选择 ${selectedFiles.length} 个文件` : ""}`}
+                                placeholder={isGenerating ? t('chat.input_placeholder_generating') : selectedFiles.length > 0 ? t('chat.input_placeholder_with_files', {count: selectedFiles.length}) : t('chat.input_placeholder')}
                                 className={`pr-24 resize-none transition-all duration-200 ${
                                     isInputExpanded ? "min-h-[120px] max-h-[120px]" : "min-h-[44px] max-h-[120px]"
                                 }`}
@@ -607,7 +610,7 @@ export function ChatPage() {
                                     variant="ghost"
                                     onClick={() => setIsInputExpanded(!isInputExpanded)}
                                     className="h-8 w-8 p-0"
-                                    title={isInputExpanded ? "收缩输入框" : "展开输入框"}
+                                    title={isInputExpanded ? t('chat.collapse_input') : t('chat.expand_input')}
                                 >
                                     {isInputExpanded ? <Minimize2Icon className="w-4 h-4"/> : <Maximize2Icon className="w-4 h-4"/>}
                                 </Button>
@@ -635,7 +638,7 @@ export function ChatPage() {
                     </div>
 
                     <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
-                        <span>{inputValue.length}/2000</span>
+                        <span>{t('chat.character_count', {count: inputValue.length})}</span>
                     </div>
                 </div>
             </div>

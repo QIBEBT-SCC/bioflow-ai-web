@@ -6,6 +6,7 @@ import {Collapsible, CollapsibleContent, CollapsibleTrigger} from "@/components/
 import {useState} from "react";
 import {useToolCount, useToolGroupList} from "@/hooks/use-tool.tsx";
 import {ToolGroup} from "@/types/tool.tsx";
+import {useTranslation} from "react-i18next";
 
 // 扩展ToolGroup类型以支持客户端渲染需要的children属性
 interface ToolGroupWithChildren extends ToolGroup {
@@ -13,6 +14,7 @@ interface ToolGroupWithChildren extends ToolGroup {
 }
 
 export function ToolGroupSidebar() {
+    const {t} = useTranslation();
     const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null)
     const [expandedGroups, setExpandedGroups] = useState<Record<number, boolean>>({})
 
@@ -115,7 +117,7 @@ export function ToolGroupSidebar() {
             <Card className="py-0 gap-0">
                 <CardContent className="p-4">
                     <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-md font-medium">工具分组</h2>
+                        <h2 className="text-md font-medium">{t('tool.tool_groups')}</h2>
                         <Button variant="ghost" size="icon" className="h-8 w-8">
                             <FolderPlus className="h-4 w-4"/>
                         </Button>
@@ -128,7 +130,7 @@ export function ToolGroupSidebar() {
                             size="sm"
                             onClick={() => setSelectedGroupId(null)}
                         >
-                            <span>所有工具</span>
+                            <span>{t('tool.all_tools')}</span>
                             <Badge className="ml-auto">{allToolsCount}</Badge>
                         </Button>
 

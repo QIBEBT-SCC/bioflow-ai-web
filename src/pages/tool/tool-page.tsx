@@ -26,8 +26,10 @@ import {SidebarInset, SidebarTrigger} from "@/components/ui/sidebar.tsx";
 import {Separator} from "@/components/ui/separator.tsx";
 import {Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage} from "@/components/ui/breadcrumb.tsx";
 import {ToolGroupSidebar} from "@/components/tool/tool-group-sidebar.tsx";
+import {useTranslation} from "react-i18next";
 
 export function ToolsPage() {
+    const {t} = useTranslation();
     const [viewMode, setViewMode] = useState<"list" | "grid">("list")
     const [searchQuery, setSearchQuery] = useState("")
 
@@ -43,7 +45,7 @@ export function ToolsPage() {
                         <BreadcrumbList>
                             <BreadcrumbItem className="hidden md:block">
                                 <BreadcrumbPage>
-                                    Tools
+                                    {t('tool.tools')}
                                 </BreadcrumbPage>
                             </BreadcrumbItem>
                         </BreadcrumbList>
@@ -54,13 +56,13 @@ export function ToolsPage() {
                 <div className="container mx-auto py-6">
                     {/* 顶部操作栏 */}
                     <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center mb-6">
-                        <h1 className="text-2xl font-bold">工具管理</h1>
+                        <h1 className="text-2xl font-bold">{t('tool.title')}</h1>
                         <div className="flex gap-2 w-full sm:w-auto">
                             <div className="relative flex-1 sm:flex-initial">
                                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground"/>
                                 <Input
                                     type="search"
-                                    placeholder="搜索工具..."
+                                    placeholder={t('tool.search_placeholder')}
                                     className="pl-8 w-full sm:w-[250px]"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -70,7 +72,7 @@ export function ToolsPage() {
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="outline">
                                         <Plus className="h-4 w-4 mr-2"/>
-                                        添加
+                                        {t('tool.add')}
                                         <ChevronDown className="h-4 w-4 ml-2"/>
                                     </Button>
                                 </DropdownMenuTrigger>
@@ -78,17 +80,17 @@ export function ToolsPage() {
                                     <Link to="/tool/add">
                                         <DropdownMenuItem>
                                             <Plus className="h-4 w-4 mr-2"/>
-                                            添加工具
+                                            {t('tool.add')} {t('tool.tool_name')}
                                         </DropdownMenuItem>
                                     </Link>
                                     <DropdownMenuItem>
                                         <FolderPlus className="h-4 w-4 mr-2"/>
-                                        创建分组
+                                        {t('tool.create_group')}
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator/>
                                     <DropdownMenuItem>
                                         <Download className="h-4 w-4 mr-2"/>
-                                        导入工具
+                                        {t('tool.import_tool')}
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
@@ -104,12 +106,12 @@ export function ToolsPage() {
                             {/* 视图切换和筛选 */}
                             <div className="flex justify-between items-center">
                                 <h2 className="text-lg font-medium">
-                                    所有工具
+                                    {t('tool.all_tools')}
                                 </h2>
                                 <div className="flex items-center gap-2">
                                     <Button variant="outline" size="sm">
                                         <Filter className="h-4 w-4 mr-2"/>
-                                        筛选
+                                        {t('tool.filter')}
                                     </Button>
                                     <div className="border rounded-md flex">
                                         <Button
