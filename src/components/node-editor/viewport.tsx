@@ -27,7 +27,8 @@ import {
     BackgroundVariant,
     useReactFlow,
     useNodesState,
-    useEdgesState
+    useEdgesState,
+    type FinalConnectionState
 } from "@xyflow/react";
 import type {
     Node,
@@ -37,8 +38,13 @@ import type {
 } from "@xyflow/react";
 import {workflowApi} from '@/services/api.tsx';
 import {v7 as uuid7} from 'uuid';
-import {DBInputNode, FileInputNode, ReferenceInput, SequenceInputNode} from "@/components/node-editor/node/input-node.tsx";
-import {LineFigNode} from "@/components/node-editor/node/draw-node.tsx";
+import {
+    DBInputNode,
+    FileInputNode,
+    ReferenceInputNode,
+    SequenceInputNode,
+    StringInputNode
+} from "@/components/node-editor/node/input-node.tsx";
 import {ConcatNode, CutNode, JsonFilterNode} from "@/components/node-editor/node/data-node.tsx";
 import {NoteNode} from "@/components/node-editor/node/note-node.tsx";
 import {RCodeNode, PythonCodeNode} from "@/components/node-editor/node/code-node.tsx";
@@ -52,23 +58,24 @@ import {useQueryClient} from "@tanstack/react-query";
 
 const nodeTypes = {
     tool: ToolNode,
+    value_string: StringInputNode,
     resource_file: FileInputNode,
     resource_sequence: SequenceInputNode,
     resource_db: DBInputNode,
-    resource_genome: ReferenceInput,
+    resource_genome: ReferenceInputNode,
     processor_filter: JsonFilterNode,
     processor_cut: CutNode,
     processor_concat: ConcatNode,
     code_R: RCodeNode,
     code_python: PythonCodeNode,
     note: NoteNode,
-    lineFig: LineFigNode,
+    // lineFig: LineFigNode,
 }
 
 function FlowContent() {
     const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
-    const reactFlow = useReactFlow();
+    const {screenToFlowPosition} = useReactFlow();
 
     const queryClient = useQueryClient();
     const {currentWorkflowUid, setCurrentWorkflowUid} = useNodeEditorStore()
@@ -97,42 +104,68 @@ function FlowContent() {
         setIsMenuOpen(false)
     }
 
-    const onAddNode = (toolType: string, toolId?: string) => {
+    const onAddNode = (nodeType: string, resourceId?: string) => {
         const nodeId = uuid7();
-        const position = reactFlow.screenToFlowPosition(clickPosition, {snapToGrid: true});
+        const position = screenToFlowPosition(clickPosition, {snapToGrid: true});
 
-        if (toolType === "tool") {
-            const newNode = {
-                id: nodeId,
-                type: "tool",
-                dragHandle: '.nodeDragable',
-                position: position,
-                data: {tool_id: toolId, args: ''},
-                zIndex: 20,
-            }
-            setNodes((nds) => nds.concat(newNode));
-        } else if (toolType === "database") {
-            const newNode = {
-                id: nodeId,
-                type: "dbInputNode",
-                dragHandle: '.nodeDragable',
-                position: position,
-                data: {args: `db:${toolId}`},
-                zIndex: 20,
-            }
-            setNodes((nds) => nds.concat(newNode));
-        } else {
-            const newNode = {
-                id: nodeId,
-                type: toolType,
-                dragHandle: '.nodeDragable',
-                position: position,
-                data: {args: ''},
-                zIndex: toolType === 'note' ? -10 : 20,
-            }
-            setNodes((nds) => nds.concat(newNode));
-        }
+        const nodeConfig = {
+            tool: {data: {resource_uid: resourceId, args: ''}},
+            resource_db: {data: {resource_uid: resourceId, args: ''}},
+            resource_sequence: {data: {args: {r1: '', r2: ''}}},
+            resource_genome: {data: {args: {requiredIndex: []}}},
+            code_R: {data: {args: {description: '', code: ''}}},
+            code_python: {data: {args: {description: '', code: ''}}},
+        };
+
+        const config = nodeConfig[nodeType as keyof typeof nodeConfig];
+        const newNode = {
+            id: nodeId,
+            type: nodeType,
+            dragHandle: '.nodeDragable',
+            position,
+            data: config?.data ?? {args: ''},
+            zIndex: nodeType === 'note' ? -10 : 20,
+        };
+
+        setNodes((nds) => nds.concat(newNode));
     }
+
+    const onConnectEnd = useCallback(
+        (event: MouseEvent | TouchEvent, connectionState: FinalConnectionState) => {
+            // when a connection is dropped on the pane it's not valid
+            if (!connectionState.isValid) {
+                // we need to remove the wrapper bounds, in order to get the correct position
+                if (connectionState.fromNode && connectionState.fromNode.type === "resource_genome") {
+                    const nodeId = uuid7();
+                    const {clientX, clientY} =
+                        'changedTouches' in event ? event.changedTouches[0] : event;
+                    const position = screenToFlowPosition({
+                        x: clientX - 300,
+                        y: clientY - 20,
+                    });
+
+                    const newNode = {
+                        id: nodeId,
+                        type: "value_string",
+                        dragHandle: '.nodeDragable',
+                        position,
+                        data: {args: ''},
+                        zIndex: 20,
+                    };
+
+                    setNodes((nds) => nds.concat(newNode));
+                    setEdges((eds) => addEdge({
+                        source: nodeId,
+                        sourceHandle: `${nodeId}-out-value`,
+                        target: connectionState.fromNode?.id ?? "",
+                        targetHandle: connectionState.fromHandle?.id ?? ""
+                    }, eds));
+                    console.log(connectionState)
+                }
+            }
+        },
+        [screenToFlowPosition],
+    );
 
     const onLoadWorkflow = (uid: string) => {
         setCurrentWorkflowUid(uid)
@@ -258,6 +291,7 @@ function FlowContent() {
                     onPaneContextMenu={openMenu}
                     onPaneClick={closeMenu}
                     onConnect={onConnect}
+                    onConnectEnd={onConnectEnd}
                     nodeTypes={nodeTypes}
                     defaultEdgeOptions={{animated: true}}
                     fitView

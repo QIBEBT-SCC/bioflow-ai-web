@@ -25,7 +25,7 @@ const DBSkeleton = () => (
     </div>
 )
 
-export const DBMenu: React.FC<DBMenuProps> = ({isOpen, onOpenChange, onSelectTool}) => {
+export const DbMenu: React.FC<DBMenuProps> = ({isOpen, onOpenChange, onSelectTool}) => {
     const [query, setQuery] = useState('');
 
     // 只在有搜索查询时才调用API
@@ -34,7 +34,7 @@ export const DBMenu: React.FC<DBMenuProps> = ({isOpen, onOpenChange, onSelectToo
 
     // 处理数据库选择
     const handleDBSelect = (db: BioDb) => {
-        onSelectTool('database', String(db.name));
+        onSelectTool('resource_db', String(db.id));
         setQuery(''); // 清空搜索
         onOpenChange(false);
     }

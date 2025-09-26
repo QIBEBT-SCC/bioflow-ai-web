@@ -4,6 +4,7 @@ import type React from "react"
 import {useState, useRef, useEffect} from "react"
 import {
     BarChartIcon,
+    CaseSensitiveIcon,
     DnaIcon,
     FileInputIcon,
     FilterIcon,
@@ -17,7 +18,7 @@ import {
     CodeIcon,
 } from "lucide-react"
 import {ToolMenu} from "@/components/node-editor/menu/tool-menu.tsx";
-import {DBMenu} from "@/components/node-editor/menu/DBMenu.tsx";
+import {DbMenu} from "@/components/node-editor/menu/db-menu.tsx";
 
 // 菜单数据结构
 const menuData = {
@@ -39,6 +40,7 @@ const menuData = {
         name: "输入输出",
         icon: <FileInputIcon className="h-4 w-4 mr-2"/>,
         items: [
+            {type: "value_string", label: "文本输入", icon: <CaseSensitiveIcon className="h-4 w-4 mr-2"/>},
             {type: "resource_file", label: "文件输入", icon: <FileInputIcon className="h-4 w-4 mr-2"/>},
             {type: "resource_sequence", label: "序列输入", icon: <DnaIcon className="h-4 w-4 mr-2"/>},
             {type: "resource_db", label: "数据库", icon: <DatabaseIcon className="h-4 w-4 mr-2"/>},
@@ -109,7 +111,7 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({isOpen, position, onClose, 
 
     // 处理子菜单项点击
     const handleSubMenuItemClick = (itemType: string) => {
-        if (itemType === "database") {
+        if (itemType === "resource_db") {
             handleDBClick()
         } else {
             onSelectTool(itemType)
@@ -162,6 +164,7 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({isOpen, position, onClose, 
                         top: `${adjustedPosition.y}px`,
                         minWidth: "180px",
                     }}
+                    onMouseLeave={() => setActiveMenu(null)}
                 >
                     <div className="py-1">
                         {/* 所有菜单项 */}
@@ -170,7 +173,6 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({isOpen, position, onClose, 
                                 key={key}
                                 className="relative menu-item"
                                 onMouseEnter={() => setActiveMenu(key)}
-                                onMouseLeave={() => setActiveMenu(null)}
                             >
                                 <button
                                     onClick={() => handleMenuItemClick(key)}
@@ -187,7 +189,7 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({isOpen, position, onClose, 
                                         style={{
                                             left: "100%",
                                             top: "0",
-                                            marginLeft: "2px",
+                                            marginLeft: "0",
                                             minWidth: "180px",
                                             zIndex: 100,
                                         }}
@@ -218,7 +220,7 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({isOpen, position, onClose, 
             />
 
             {/* 数据库选择菜单*/}
-            <DBMenu
+            <DbMenu
                 isOpen={isDBMenuOpen}
                 onOpenChange={setIsDBMenuOpen}
                 onSelectTool={onSelectTool}

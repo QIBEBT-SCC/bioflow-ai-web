@@ -234,13 +234,13 @@ export function SaveWorkflowDialog({icon, tooltip}: {
 
         console.log(workflow)
         saveWorkflow({workflow: workflow}, {
-            onSuccess: (data: string) => {
+            onSuccess: (data: unknown) => {
                 setOpen(false);
                 setName('');
                 setIsPublic(false);
                 setWorkflowType(WorkflowType.TEMPLATE);
                 resetError();
-                setCurrentWorkflowUid(data)
+                setCurrentWorkflowUid(data as string)
             },
             onError: (error) => {
                 // @ts-expect-error no need
