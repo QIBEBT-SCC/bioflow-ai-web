@@ -1,8 +1,8 @@
-import path from "path"
+import path from "node:path"
 import tailwindcss from "@tailwindcss/vite"
+import react from '@vitejs/plugin-react-swc'
 import Unfonts from 'unplugin-fonts/vite'
 import {defineConfig} from 'vite'
-import react from '@vitejs/plugin-react-swc'
 
 // https://vite.dev/config/
 export default defineConfig({
