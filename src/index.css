@@ -121,6 +121,17 @@
   z-index: 100 !important;
 }
 
+/* 节点选中状态样式 */
+.react-flow__node.selected > div {
+  border-color: rgb(99 102 241); /* indigo-500 */
+  box-shadow: 
+    0 0 0 3px rgb(165 180 252 / 0.3), /* indigo-300 光晕 */
+    0 20px 25px -5px rgb(99 102 241 / 0.15),
+    0 8px 10px -6px rgb(99 102 241 / 0.1);
+  transform: translateY(-1px);
+  transition: all 0.2s ease-in-out;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

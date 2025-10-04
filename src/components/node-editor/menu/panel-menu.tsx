@@ -31,7 +31,7 @@ const menuData = {
         name: "数据处理",
         icon: <FilterIcon className="h-4 w-4 mr-2"/>,
         items: [
-            {type: "processor_filter", label: "数据过滤", icon: <FilterIcon className="h-4 w-4 mr-2"/>},
+            {type: "processor_copy2folder", label: "复制到文件夹", icon: <FilterIcon className="h-4 w-4 mr-2"/>},
             {type: "processor_cut", label: "数据截取", icon: <ScissorsIcon className="h-4 w-4 mr-2"/>},
             {type: "processor_concat", label: "数据拼接", icon: <FlipVerticalIcon className="h-4 w-4 mr-2"/>},
         ],
