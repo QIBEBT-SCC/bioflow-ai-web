@@ -1,9 +1,7 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import { useState, useTransition } from 'react'
-import { toast } from 'sonner'
-import { createDB } from '@/app/actions/resource'
+import type React from 'react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -16,6 +14,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { useCreateDB } from '@/hooks/use-resource'
 
 interface DatabaseAddDialogProps {
   open: boolean
@@ -32,8 +31,8 @@ export function DatabaseAddDialog({
   const [lastUpdate, setLastUpdate] = useState('')
   const [nameError, setNameError] = useState('')
   const [pathError, setPathError] = useState('')
-  const [isPending, startTransition] = useTransition()
-  const router = useRouter()
+
+  const createMutation = useCreateDB()
 
   const clearErrors = () => {
     setNameError('')
@@ -59,14 +58,12 @@ export function DatabaseAddDialog({
       last_update: lastUpdate || new Date().toISOString().split('T')[0],
     }
 
-    startTransition(async () => {
-      try {
-        await createDB(newDb)
-        toast.success('数据库添加成功')
+    createMutation.mutate(newDb, {
+      onSuccess: () => {
         onOpenChange(false)
         resetForm()
-        router.refresh()
-      } catch (error: any) {
+      },
+      onError: (error: Error & { status?: number }) => {
         const status = error.status
         switch (status) {
           case 409:
@@ -76,10 +73,10 @@ export function DatabaseAddDialog({
             setPathError('文件路径不存在，请检查路径是否正确')
             break
           default:
-            toast.error('添加数据库失败: ' + (error.message || '未知错误'))
+            // toast 已在 hook 中处理
             break
         }
-      }
+      },
     })
   }
 
@@ -106,6 +103,7 @@ export function DatabaseAddDialog({
                   if (nameError) setNameError('')
                 }}
                 required
+                disabled={createMutation.isPending}
                 className={
                   nameError ? 'border-red-500 focus-visible:ring-red-500' : ''
                 }
@@ -121,6 +119,7 @@ export function DatabaseAddDialog({
                 id='description'
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
+                disabled={createMutation.isPending}
                 className='min-h-[100px]'
               />
             </div>
@@ -137,6 +136,7 @@ export function DatabaseAddDialog({
                   if (pathError) setPathError('')
                 }}
                 required
+                disabled={createMutation.isPending}
                 className={
                   pathError ? 'border-red-500 focus-visible:ring-red-500' : ''
                 }
@@ -153,6 +153,7 @@ export function DatabaseAddDialog({
                 type='date'
                 value={lastUpdate}
                 onChange={(e) => setLastUpdate(e.target.value)}
+                disabled={createMutation.isPending}
               />
             </div>
           </div>
@@ -164,12 +165,12 @@ export function DatabaseAddDialog({
                 onOpenChange(false)
                 clearErrors()
               }}
-              disabled={isPending}
+              disabled={createMutation.isPending}
             >
               取消
             </Button>
-            <Button type='submit' disabled={isPending}>
-              {isPending ? '添加中...' : '添加数据库'}
+            <Button type='submit' disabled={createMutation.isPending}>
+              {createMutation.isPending ? '添加中...' : '添加数据库'}
             </Button>
           </DialogFooter>
         </form>

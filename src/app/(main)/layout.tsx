@@ -1,5 +1,6 @@
 import type React from 'react'
 import { getCurrentUser } from '@/app/actions/auth'
+import { QueryProvider } from '@/components/providers/query-provider'
 import { AppSidebar } from '@/components/sidebar/app-sidebar'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import { Toaster } from '@/components/ui/sonner'
@@ -13,10 +14,12 @@ export default async function MainLayout({
   const user = await getCurrentUser()
 
   return (
-    <SidebarProvider>
-      <AppSidebar user={user} />
-      <main className='flex-1 overflow-auto'>{children}</main>
-      <Toaster />
-    </SidebarProvider>
+    <QueryProvider>
+      <SidebarProvider>
+        <AppSidebar user={user} />
+        <main className='flex-1 overflow-auto'>{children}</main>
+        <Toaster />
+      </SidebarProvider>
+    </QueryProvider>
   )
 }

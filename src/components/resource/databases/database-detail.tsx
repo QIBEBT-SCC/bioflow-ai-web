@@ -1,10 +1,7 @@
 'use client'
 
 import { Trash2Icon } from 'lucide-react'
-import { useRouter } from 'next/navigation'
-import { useEffect, useState, useTransition } from 'react'
-import { toast } from 'sonner'
-import { deleteDB, getDB } from '@/app/actions/resource'
+import { useState } from 'react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,7 +14,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import type { BioDb } from '@/types/resource'
+import { useDB, useDeleteDB } from '@/hooks/use-resource'
 
 interface DatabaseDetailProps {
   databaseId: number
@@ -25,42 +22,24 @@ interface DatabaseDetailProps {
 }
 
 export function DatabaseDetail({ databaseId, onDelete }: DatabaseDetailProps) {
-  const [database, setDatabase] = useState<BioDb | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [isPending, startTransition] = useTransition()
-  const router = useRouter()
 
-  // 加载数据库详情
-  useEffect(() => {
-    startTransition(async () => {
-      try {
-        const data = await getDB(databaseId)
-        setDatabase(data)
-      } catch (error) {
-        toast.error('加载数据库详情失败')
-        console.log(error)
-      }
-    })
-  }, [databaseId])
+  const { data: database, isLoading } = useDB(databaseId)
+  const deleteMutation = useDeleteDB()
 
   const confirmDelete = () => {
-    startTransition(async () => {
-      try {
-        await deleteDB(databaseId)
-        toast.success('数据库删除成功')
-        setIsDeleteDialogOpen(false)
+    deleteMutation.mutate(databaseId, {
+      onSuccess: () => {
         onDelete()
-        router.refresh()
-      } catch (error: any) {
-        toast.error(`删除失败: ${error.message || '未知错误'}`)
-      }
+      },
     })
+    setIsDeleteDialogOpen(false)
   }
 
-  if (!database && !isPending) {
+  if (isLoading) {
     return (
       <div className='flex h-[400px] items-center justify-center text-muted-foreground'>
-        数据库不存在或已被删除
+        加载中...
       </div>
     )
   }
@@ -68,7 +47,7 @@ export function DatabaseDetail({ databaseId, onDelete }: DatabaseDetailProps) {
   if (!database) {
     return (
       <div className='flex h-[400px] items-center justify-center text-muted-foreground'>
-        加载中...
+        数据库不存在或已被删除
       </div>
     )
   }
@@ -83,10 +62,10 @@ export function DatabaseDetail({ databaseId, onDelete }: DatabaseDetailProps) {
           <Button
             variant='destructive'
             onClick={() => setIsDeleteDialogOpen(true)}
-            disabled={isPending}
+            disabled={deleteMutation.isPending}
           >
             <Trash2Icon className='mr-2 h-4 w-4' />
-            删除
+            {deleteMutation.isPending ? '删除中...' : '删除'}
           </Button>
         </div>
       </div>
@@ -138,13 +117,15 @@ export function DatabaseDetail({ databaseId, onDelete }: DatabaseDetailProps) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isPending}>取消</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleteMutation.isPending}>
+              取消
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
               className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
-              disabled={isPending}
+              disabled={deleteMutation.isPending}
             >
-              {isPending ? '删除中...' : '删除'}
+              {deleteMutation.isPending ? '删除中...' : '删除'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
