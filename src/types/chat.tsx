@@ -9,30 +9,48 @@ export enum SSEEventType {
 }
 
 // SSE事件数据
-export interface SSEEventData {
+interface BaseSSEEventData {
     id?: string;
-    message?: string;
-    delta?: string;
-    full_text?: string;
-    thinking?: boolean;
-    name?: string;
-    status?: 'calling' | 'completed' | 'error';
+}
+
+export interface LoadingEventData extends BaseSSEEventData {
+    message: string;
+}
+
+export interface GeneratingEventData extends BaseSSEEventData {
+    delta: string;
+    full_text: string;
+    thinking: boolean;
+}
+
+export interface ToolCallEventData extends BaseSSEEventData {
+    name: string;
+    status: 'calling' | 'completed' | 'error';
+}
+
+export interface InterruptEventData extends BaseSSEEventData {
     question?: string;
     confirm?: string;
+}
+
+export interface SuccessEventData extends BaseSSEEventData {
     link?: string;
     info?: string;
-    error?: string;
+}
+
+export interface ErrorEventData extends BaseSSEEventData {
+    error: string;
     detail?: string;
 }
 
 // SSE事件处理器接口
 export interface ChatEventHandlers {
-    onLoading?: (data: SSEEventData) => void;
-    onGenerating?: (data: SSEEventData) => void;
-    onToolCall?: (data: SSEEventData) => void;
-    onInterrupt?: (data: SSEEventData) => void;
-    onSuccess?: (data: SSEEventData) => void;
-    onError?: (data: SSEEventData) => void;
+    onLoading?: (data: LoadingEventData) => void;
+    onGenerating?: (data: GeneratingEventData) => void;
+    onToolCall?: (data: ToolCallEventData) => void;
+    onInterrupt?: (data: InterruptEventData) => void;
+    onSuccess?: (data: SuccessEventData) => void;
+    onError?: (data: ErrorEventData) => void;
     onOpen?: () => void;
     onClose?: () => void;
 }
@@ -40,7 +58,7 @@ export interface ChatEventHandlers {
 // 聊天请求类型
 export interface ChatRequest {
     message: string;
-    session_id?: string;
+    session_id: string;
     files?: File[];
     resume: boolean;
 }
@@ -55,6 +73,7 @@ export interface ChatSessionPublic {
 
 // 后端返回的聊天历史消息格式（基于LangChain格式）
 export interface LangchainMessage {
+    id?: string;
     type: "human" | "ai" | "system" | "tool";
     content: string;
     additional_kwargs?: Record<string, never>;
@@ -64,31 +83,24 @@ export interface LangchainMessage {
         args: Record<string, never>;
         id: string;
     }>;
-    id?: string;
 }
 
-// 消息基类
+// 前端消息类型
 interface BaseMessage {
     id: string;
     timestamp: Date;
 }
 
-// 普通AI消息类型（无边框，直接显示文本）
 export interface AIMessage extends BaseMessage {
     type: "ai";
     content: string;
-    thinking?: false;
 }
 
-// 思考消息类型（折叠显示，小号浅色字体）
 export interface ThinkingMessage extends BaseMessage {
     type: "thinking";
     content: string;
-    thinking: true;
-    loadingMessage?: string;
 }
 
-// 中断消息类型（全宽带边框，可显示确认按钮）
 export interface InterruptMessage extends BaseMessage {
     type: "interrupt";
     content: string;
@@ -98,7 +110,6 @@ export interface InterruptMessage extends BaseMessage {
     action?: Action;
 }
 
-// 用户消息类型
 export interface UserMessage extends BaseMessage {
     type: "user";
     content: string;
@@ -106,7 +117,6 @@ export interface UserMessage extends BaseMessage {
     status?: "sending" | "sent" | "error";
 }
 
-// 工具消息类型
 export interface ToolMessage extends BaseMessage {
     type: "tool";
     name: string;
@@ -114,7 +124,6 @@ export interface ToolMessage extends BaseMessage {
     result?: string;
 }
 
-// 链接消息类型（显示跳转卡片）
 export interface LinkMessage extends BaseMessage {
     type: "link";
     link: string;
@@ -122,14 +131,19 @@ export interface LinkMessage extends BaseMessage {
     description?: string;
 }
 
-// 信息消息类型
 export interface InfoMessage extends BaseMessage {
     type: "info";
     content: string;
 }
 
-// 综合消息类型
-export type Message = AIMessage | ThinkingMessage | InterruptMessage | UserMessage | ToolMessage | LinkMessage | InfoMessage;
+export type Message =
+    AIMessage |
+    ThinkingMessage |
+    InterruptMessage |
+    UserMessage |
+    ToolMessage |
+    LinkMessage |
+    InfoMessage;
 
 // 附件
 export interface Attachment {

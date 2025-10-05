@@ -15,7 +15,14 @@ import {Button} from "@/components/ui/button.tsx";
 import {ChatMessage} from "@/components/chat/chat-messages.tsx";
 import {FileUpload} from "@/components/chat/file-upload.tsx";
 import {chatSSEService} from "@/services/sse-api.tsx";
-import {Message, SSEEventData} from "@/types/chat.tsx";
+import {
+    AIMessage,
+    Message,
+    ThinkingMessage,
+    LoadingEventData,
+    GeneratingEventData,
+    ToolCallEventData, InterruptEventData, SuccessEventData, ErrorEventData, InterruptMessage, ToolMessage
+} from "@/types/chat.tsx";
 import {toast} from "sonner";
 import {useChatStore} from "@/stores/chatStore.tsx";
 import {useCreateSession} from "@/hooks/use-chat.tsx";
@@ -25,7 +32,7 @@ import {useTranslation} from "react-i18next";
 
 export function ChatPage() {
     const {t} = useTranslation();
-    
+
     // 使用zustand store管理状态
     const {
         currentSession,
@@ -42,12 +49,11 @@ export function ChatPage() {
         setLoadingMessage,
     } = useChatStore();
 
-    // 使用react-query hooks获取数据
     const createSessionMutation = useCreateSession();
 
-    // 编辑状态（这些保持本地状态，因为是临时的UI状态）
+    // 编辑状态
     const [inputValue, setInputValue] = useState("");
-    const [currentStreamingMessage, setCurrentStreamingMessage] = useState<Message | null>(null);
+    const [currentStreamingMessage, setCurrentStreamingMessage] = useState<AIMessage | ThinkingMessage | null>(null);
     const [currentStreamingMessageId, setCurrentStreamingMessageId] = useState<string | null>(null);
     const [showFileUpload, setShowFileUpload] = useState(false);
     const [isInputExpanded, setIsInputExpanded] = useState(false);
@@ -71,7 +77,7 @@ export function ChatPage() {
     // 滚动到底部 - 只在消息内容变化时触发，避免输入区变化时触发
     useEffect(() => {
         scrollToBottom()
-    }, [messages.length, currentStreamingMessage && 'content' in currentStreamingMessage ? currentStreamingMessage.content : null, scrollToBottom])
+    }, [messages.length, scrollToBottom])
 
     // 当没有会话时清空消息
     useEffect(() => {
@@ -87,21 +93,24 @@ export function ChatPage() {
         }
     }, [])
 
-    // 停止生成
-    const stopGeneration = () => {
-        chatSSEService.abort()
-        
-        // 如果有正在流式生成的消息，先保存到消息列表
+    const clearStreamingState = () => {
         if (currentStreamingMessage) {
+            console.log(currentStreamingMessage)
             addMessage({
                 ...currentStreamingMessage,
             })
         }
-        
+
         setIsGenerating(false)
+        setLoadingMessage(null)
         setCurrentStreamingMessage(null)
         setCurrentStreamingMessageId(null)
-        setLoadingMessage(null)
+    }
+
+    // 停止生成
+    const stopGeneration = () => {
+        chatSSEService.abort()
+        clearStreamingState()
 
         // 添加一个系统消息表示已停止
         const stopMessage: Message = {
@@ -113,15 +122,16 @@ export function ChatPage() {
         addMessage(stopMessage)
     }
 
+
     // 统一的SSE事件处理器
     const createSSEHandlers = () => ({
-        onLoading: (data: SSEEventData) => {
+        onLoading: (data: LoadingEventData) => {
             if (data.message) {
                 setLoadingMessage(data.message)
             }
         },
 
-        onGenerating: (data: SSEEventData) => {
+        onGenerating: (data: GeneratingEventData) => {
             if (data.id && data.full_text !== undefined) {
                 if (data.id !== currentStreamingMessageId) {
                     // 如果之前有正在生成的消息，先保存到消息列表
@@ -131,9 +141,9 @@ export function ChatPage() {
                         })
                     }
 
-                    setLoadingMessage(null)
+                    setLoadingMessage(t('chat.thinking'))
                     setCurrentStreamingMessageId(data.id)
-                    
+
                     // 根据thinking字段决定消息类型
                     if (data.thinking) {
                         setCurrentStreamingMessage({
@@ -141,8 +151,6 @@ export function ChatPage() {
                             type: "thinking" as const,
                             content: data.full_text,
                             timestamp: new Date(),
-                            thinking: true,
-                            loadingMessage: t('chat.thinking'),
                         })
                     } else {
                         setCurrentStreamingMessage({
@@ -156,13 +164,12 @@ export function ChatPage() {
                     // 更新当前流式消息的内容
                     setCurrentStreamingMessage(prev => {
                         if (!prev || !('content' in prev)) return prev
-                        
+
                         // 如果是思考消息，确保保留thinking属性
                         if (prev.type === 'thinking') {
                             return {
                                 ...prev,
                                 content: data.full_text || prev.content,
-                                thinking: true,
                             }
                         } else {
                             return {
@@ -175,13 +182,17 @@ export function ChatPage() {
             }
         },
 
-        onToolCall: (data: SSEEventData) => {
+        onToolCall: (data: ToolCallEventData) => {
             console.log('Tool call event:', data)
+
+            clearStreamingState()
 
             if (data.id && data.name) {
                 if (data.status === 'calling') {
                     console.log(`Tool call started: ${data.name} (${data.id})`)
-                    const toolMessage: Message = {
+                    setLoadingMessage(`Calling tool: ${data.name}`)
+
+                    const toolMessage: ToolMessage = {
                         id: data.id,
                         type: "tool",
                         name: data.name,
@@ -194,24 +205,22 @@ export function ChatPage() {
 
                     console.log(`Tool call ended: ${data.name} (${data.id}) - ${isSuccess ? 'success' : 'error'}`)
 
-                    updateMessage(data.id, {
-                        status: data.status,
-                        result: (data as any).result || undefined,
-                    })
-
-                    if (!isSuccess && data.error) {
-                        console.error(`Tool call failed: ${data.name} - ${data.error}`)
-                    }
+                    updateMessage(
+                        data.id,
+                        {status: data.status,}
+                    )
                 }
             }
         },
 
-        onInterrupt: (data: SSEEventData) => {
+        onInterrupt: (data: InterruptEventData) => {
             console.log('Interrupt event:', data)
+
+            clearStreamingState()
 
             // 处理问题类型的中断
             if (data.confirm) {
-                const interruptMessage: Message = {
+                const interruptMessage: InterruptMessage = {
                     id: `interrupt_${Date.now()}`,
                     type: "interrupt",
                     content: data.confirm,
@@ -243,7 +252,9 @@ export function ChatPage() {
             }
         },
 
-        onSuccess: (data: SSEEventData) => {
+        onSuccess: (data: SuccessEventData) => {
+            clearStreamingState()
+
             // 处理链接消息
             if (data.link) {
                 const linkMessage: Message = {
@@ -266,39 +277,13 @@ export function ChatPage() {
                 }
                 addMessage(infoMessage)
             }
-            // 处理普通AI消息
-            else if (data.id && typeof data.message === 'object' && (data.message as any).content) {
-                const aiMessage: Message = {
-                    id: data.id,
-                    type: "ai",
-                    content: (data.message as any).content,
-                    timestamp: new Date(),
-                }
-                addMessage(aiMessage)
-            }
-
-            // 如果有正在流式生成的消息，先保存到消息列表
-            if (currentStreamingMessage) {
-                addMessage({
-                    ...currentStreamingMessage,
-                })
-            }
-            
-            setCurrentStreamingMessage(null)
-            setIsGenerating(false)
-            setLastMessageWasInterrupt(false)
         },
 
-        onError: (data: SSEEventData) => {
+        onError: (data: ErrorEventData) => {
             console.error('Chat error:', data)
             toast.error(data.error || t('chat.error_occurred'))
 
-            // 如果有正在流式生成的消息，先保存到消息列表
-            if (currentStreamingMessage) {
-                addMessage({
-                    ...currentStreamingMessage,
-                })
-            }
+            clearStreamingState()
 
             const errorMessage: Message = {
                 id: `error_${Date.now()}`,
@@ -307,10 +292,6 @@ export function ChatPage() {
                 timestamp: new Date(),
             }
             addMessage(errorMessage)
-            setCurrentStreamingMessage(null)
-            setCurrentStreamingMessageId(null)
-            setLoadingMessage(null)
-            setIsGenerating(false)
             setLastMessageWasInterrupt(false)
         },
 
@@ -329,7 +310,11 @@ export function ChatPage() {
     })
 
     // 统一的发送消息函数
-    const sendMessageToSSE = async (message: string, files: File[] = [], isResume: boolean = false) => {
+    const sendMessageToSSE = async (
+        message: string,
+        files: File[] = [],
+        isResume: boolean = false
+    ) => {
         try {
             let sessionId = currentSession?.uid
 
@@ -362,6 +347,7 @@ export function ChatPage() {
             setCurrentStreamingMessage(null)
             setCurrentStreamingMessageId(null)
             setLoadingMessage(null)
+        } finally {
             setLastMessageWasInterrupt(false)
         }
     }
@@ -407,8 +393,8 @@ export function ChatPage() {
         // 更新按钮状态为pending
         const targetMessage = messages.find(msg => msg.id === messageId)
         if (targetMessage && 'action' in targetMessage && targetMessage.action) {
-            const updatedAction = targetMessage.action.id === actionId 
-                ? {...targetMessage.action, pending: true} 
+            const updatedAction = targetMessage.action.id === actionId
+                ? {...targetMessage.action, pending: true}
                 : targetMessage.action
             updateMessage(messageId, {action: updatedAction})
         }

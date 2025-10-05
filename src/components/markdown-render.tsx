@@ -8,6 +8,9 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
 import { oneDark, oneLight } from "react-syntax-highlighter/dist/esm/styles/prism"
 import mermaid from "mermaid"
 import { useTheme } from "next-themes"
+import { Button } from "@/components/ui/button"
+import { EyeIcon } from "lucide-react"
+import { MermaidPreviewDialog } from "@/components/chat/mermaid-preview-dialog.tsx"
 
 interface MarkdownRendererProps {
     content: string
@@ -77,6 +80,7 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
         const [error, setError] = useState<string | null>(null)
         const [retryCount, setRetryCount] = useState(0)
         const [svgContent, setSvgContent] = useState<string>('')
+        const [isPreviewOpen, setIsPreviewOpen] = useState(false)
 
 
         useEffect(() => {
@@ -121,29 +125,54 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
         }
 
         return (
-            <div className="my-4 p-4 bg-muted rounded-lg overflow-x-auto">
-                <div className="mermaid-container min-h-[100px] flex items-center justify-center">
-                    {isLoading && <span className="text-muted-foreground">加载图表中...</span>}
-                    {error && (
-                        <div className="text-center">
-                            <span className="text-destructive block mb-2">错误: {error}</span>
-                            <button 
-                                onClick={handleRetry}
-                                className="text-sm text-primary hover:underline"
+            <>
+                <div className="my-4 p-4 bg-muted rounded-lg overflow-x-auto relative group">
+                    {/* 预览按钮 */}
+                    {svgContent && !isLoading && !error && (
+                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
+                            <Button
+                                size="sm"
+                                variant="secondary"
+                                onClick={() => setIsPreviewOpen(true)}
+                                className="h-8 w-8 p-0 shadow-md"
+                                title="预览大图"
                             >
-                                重试
-                            </button>
+                                <EyeIcon className="w-4 h-4" />
+                            </Button>
                         </div>
                     )}
-                    {svgContent && !isLoading && !error && (
-                        <div 
-                            ref={containerRef}
-                            dangerouslySetInnerHTML={{ __html: svgContent }}
-                            className="w-full"
-                        />
-                    )}
+                    
+                    <div className="mermaid-container min-h-[100px] flex items-center justify-center">
+                        {isLoading && <span className="text-muted-foreground">加载图表中...</span>}
+                        {error && (
+                            <div className="text-center">
+                                <span className="text-destructive block mb-2">错误: {error}</span>
+                                <button 
+                                    onClick={handleRetry}
+                                    className="text-sm text-primary hover:underline"
+                                >
+                                    重试
+                                </button>
+                            </div>
+                        )}
+                        {svgContent && !isLoading && !error && (
+                            <div 
+                                ref={containerRef}
+                                dangerouslySetInnerHTML={{ __html: svgContent }}
+                                className="w-full"
+                            />
+                        )}
+                    </div>
                 </div>
-            </div>
+                
+                {/* 预览弹窗 */}
+                <MermaidPreviewDialog
+                    isOpen={isPreviewOpen}
+                    onClose={() => setIsPreviewOpen(false)}
+                    mermaidCode={code}
+                    title={`Mermaid 图表预览 #${index + 1}`}
+                />
+            </>
         )
     }
 
@@ -242,21 +271,21 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
                                 // 自定义列表渲染
                                 ul({ children, ...props }) {
                                     return (
-                                        <ul className="list-disc list-inside space-y-1 my-4" {...props}>
+                                        <ul className="list-disc list-outside space-y-2 my-4 ml-4 marker:text-muted-foreground" {...props}>
                                             {children}
                                         </ul>
                                     )
                                 },
                                 ol({ children, ...props }) {
                                     return (
-                                        <ol className="list-decimal list-inside space-y-1 my-4" {...props}>
+                                        <ol className="list-decimal list-outside space-y-2 my-4 ml-4 marker:text-muted-foreground" {...props}>
                                             {children}
                                         </ol>
                                     )
                                 },
                                 li({ children, ...props }) {
                                     return (
-                                        <li className="leading-relaxed" {...props}>
+                                        <li className="leading-relaxed pl-2 marker:font-normal" {...props}>
                                             {children}
                                         </li>
                                     )

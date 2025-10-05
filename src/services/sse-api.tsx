@@ -1,12 +1,46 @@
 import {fetchEventSource} from '@microsoft/fetch-event-source';
-import {ChatEventHandlers, ChatRequest, SSEEventData, SSEEventType} from "@/types/chat.tsx";
+import {
+    ChatEventHandlers,
+    ChatRequest,
+    SSEEventType,
+    LoadingEventData,
+    GeneratingEventData,
+    ToolCallEventData,
+    InterruptEventData,
+    SuccessEventData,
+    ErrorEventData
+} from "@/types/chat.tsx";
 import {AiGenRequest, DockerToolCreate} from "@/types/tool.tsx";
 
 
 class SSEChatError extends Error {
-    constructor(message: string, public readonly data?: SSEEventData) {
+    constructor(message: string, public readonly data?: ErrorEventData) {
         super(message);
         this.name = 'SSEChatError';
+    }
+}
+
+/**
+ * 类型安全的SSE数据解析函数
+ */
+function parseSSEData(eventType: SSEEventType, rawData: string): LoadingEventData | GeneratingEventData | ToolCallEventData | InterruptEventData | SuccessEventData | ErrorEventData {
+    const data = JSON.parse(rawData);
+
+    switch (eventType) {
+        case SSEEventType.LOADING:
+            return data as LoadingEventData;
+        case SSEEventType.GENERATING:
+            return data as GeneratingEventData;
+        case SSEEventType.TOOL_CALL:
+            return data as ToolCallEventData;
+        case SSEEventType.INTERRUPT:
+            return data as InterruptEventData;
+        case SSEEventType.SUCCESS:
+            return data as SuccessEventData;
+        case SSEEventType.ERROR:
+            return data as ErrorEventData;
+        default:
+            throw new Error(`未知的事件类型: ${eventType}`);
     }
 }
 
@@ -34,17 +68,13 @@ export class ChatSSEService {
             // 创建FormData用于表单请求
             const formData = new FormData();
             formData.append('message', request.message);
-            
-            if (request.session_id) {
-                formData.append('session_id', request.session_id);
-            }
-            
-            // 添加resume字段
+            formData.append('session_id', request.session_id);
+
             if (request.resume !== undefined) {
                 formData.append('resume', request.resume.toString());
             }
 
-            // 添加文件到FormData
+            // 添加文件到
             if (request.files && request.files.length > 0) {
                 request.files.forEach((file) => {
                     formData.append('files', file);
@@ -54,7 +84,7 @@ export class ChatSSEService {
             await fetchEventSource('/api/v1/chat/completions', {
                 method: 'POST',
                 headers: {
-                    // 注意：不要设置Content-Type，让浏览器自动设置multipart/form-data
+                    // 浏览器自动设置multipart/form-data
                     ...(token && {'Authorization': `Bearer ${token}`}),
                 },
                 body: formData,
@@ -79,36 +109,37 @@ export class ChatSSEService {
 
                 onmessage: (event) => {
                     try {
-                        const data: SSEEventData = JSON.parse(event.data);
+                        const eventType = event.event as SSEEventType;
+                        const parsedData = parseSSEData(eventType, event.data);
 
-                        switch (event.event as SSEEventType) {
+                        switch (eventType) {
                             case SSEEventType.LOADING:
-                                handlers.onLoading?.(data);
+                                handlers.onLoading?.(parsedData as LoadingEventData);
                                 break;
                             case SSEEventType.GENERATING:
-                                handlers.onGenerating?.(data);
+                                handlers.onGenerating?.(parsedData as GeneratingEventData);
                                 break;
                             case SSEEventType.TOOL_CALL:
-                                handlers.onToolCall?.(data);
+                                handlers.onToolCall?.(parsedData as ToolCallEventData);
                                 break;
                             case SSEEventType.INTERRUPT:
-                                handlers.onInterrupt?.(data);
+                                handlers.onInterrupt?.(parsedData as InterruptEventData);
                                 break;
                             case SSEEventType.SUCCESS:
-                                handlers.onSuccess?.(data);
+                                handlers.onSuccess?.(parsedData as SuccessEventData);
                                 break;
                             case SSEEventType.ERROR:
-                                handlers.onError?.(data);
+                                handlers.onError?.(parsedData as ErrorEventData);
                                 break;
                             default:
-                                console.warn('Unknown event type:', event.event, data);
+                                console.warn('Unknown event type:', event.event, parsedData);
                         }
                     } catch (error) {
-                        console.error('Failed to parse SSE message:', error, event);
-                        handlers.onError?.({
+                        // 如果解析失败，返回错误数据
+                        return {
                             error: '解析服务器响应失败',
                             detail: error instanceof Error ? error.message : String(error)
-                        });
+                        } as ErrorEventData;
                     }
                 },
 
@@ -130,7 +161,7 @@ export class ChatSSEService {
                     handlers.onError?.({
                         error: errorMessage,
                         detail: error.message
-                    });
+                    } as ErrorEventData);
 
                     throw error;
                 },
@@ -159,13 +190,6 @@ export class ChatSSEService {
             this.abortController.abort();
             this.abortController = null;
         }
-    }
-
-    /**
-     * 检查是否有进行中的请求
-     */
-    isConnected(): boolean {
-        return this.abortController !== null;
     }
 }
 
@@ -305,13 +329,6 @@ export class ToolConfigSSEService {
             this.abortController.abort();
             this.abortController = null;
         }
-    }
-
-    /**
-     * 检查是否有进行中的请求
-     */
-    isConnected(): boolean {
-        return this.abortController !== null;
     }
 }
 
