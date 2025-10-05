@@ -1,19 +1,71 @@
-import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
+'use client'
 
-export default function ToolPage() {
-    return (
-        <div className="flex min-h-screen items-center justify-center p-6">
-            <Card className="w-full max-w-2xl">
-                <CardHeader>
-                    <CardTitle>Resource Page</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-muted-foreground">
-                        Resource page content will be implemented here.
-                    </p>
-                </CardContent>
-            </Card>
+import { useState } from 'react'
+import { DatabasesManager } from '@/components/resource/databases/database-manager'
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbList,
+  BreadcrumbPage,
+} from '@/components/ui/breadcrumb'
+import { Card, CardContent } from '@/components/ui/card'
+import { Separator } from '@/components/ui/separator'
+import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+
+export default function ResourcePage() {
+  const [activeTab, setActiveTab] = useState('databases')
+
+  return (
+    <SidebarInset className='h-screen flex flex-col'>
+      <header className='flex flex-col shrink-0 border-b'>
+        <div className='flex items-center gap-2 px-4 h-12 bg-background'>
+          <SidebarTrigger className='-ml-1' />
+          <Separator orientation='vertical' className='!mr-2 !h-4' />
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem className='hidden md:block'>
+                <BreadcrumbPage>Resource</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
         </div>
-    )
+      </header>
+      <div className='flex-1 overflow-y-auto'>
+        <div className='container mx-auto py-6'>
+          <div className='flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center mb-6'>
+            <div>
+              <h1 className='text-2xl font-bold tracking-tight'>资源管理</h1>
+              <p className='text-muted-foreground'>
+                管理样本数据和生物信息数据库
+              </p>
+            </div>
+          </div>
+          <Tabs
+            defaultValue='databases'
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className='w-full'
+          >
+            <TabsList className='grid w-full max-w-md grid-cols-2'>
+              <TabsTrigger value='samples'>样本数据</TabsTrigger>
+              <TabsTrigger value='databases'>生物信息数据库</TabsTrigger>
+            </TabsList>
+            <TabsContent value='samples'>
+              <Card>
+                <CardContent className='p-6'>
+                  <div className='flex h-[400px] items-center justify-center text-muted-foreground'>
+                    样本数据管理功能开发中...
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            <TabsContent value='databases'>
+              <DatabasesManager />
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
+    </SidebarInset>
+  )
 }
-
