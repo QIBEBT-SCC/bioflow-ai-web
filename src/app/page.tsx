@@ -1,14 +1,6 @@
-import {redirect} from 'next/navigation'
-import {getCurrentUser} from '@/app/actions/auth'
+import { redirect } from 'next/navigation'
 
-export default async function RootPage() {
-    const user = await getCurrentUser()
-
-    // 已登录，重定向到 chat 页面
-    if (user) {
-        redirect('/chat')
-    }
-
-    // 未登录，重定向到登录页（也会被 middleware 处理）
-    redirect('/login')
+export default function RootPage() {
+  // middleware 已经处理了认证逻辑，这里只需要重定向到默认页面
+  redirect('/chat')
 }
