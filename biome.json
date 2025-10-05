@@ -6,7 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "ignoreUnknown": false,
+    "ignoreUnknown": true,
     "includes": [
       "**",
       "!**/node_modules/**/*",
@@ -36,8 +36,12 @@
         }
       },
       "suspicious": {
-        "noExplicitAny": "off"
+        "noExplicitAny": "off",
+        "noUnknownAtRules": "off"
       }
+    },
+    "domains": {
+      "react": "recommended"
     }
   },
   "javascript": {
