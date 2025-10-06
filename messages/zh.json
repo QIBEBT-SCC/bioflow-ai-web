@@ -29,24 +29,6 @@
     "tools": "工具",
     "workflows": "工作流"
   },
-  "common": {
-    "back": "返回",
-    "cancel": "取消",
-    "close": "关闭",
-    "confirm": "确认",
-    "create": "创建",
-    "delete": "删除",
-    "edit": "编辑",
-    "error": "错误",
-    "loading": "加载中...",
-    "next": "下一步",
-    "no": "否",
-    "previous": "上一步",
-    "save": "保存",
-    "search": "搜索",
-    "success": "成功",
-    "yes": "是"
-  },
   "editor": {
     "add_node": "添加节点",
     "check_validity": "检查合法性",

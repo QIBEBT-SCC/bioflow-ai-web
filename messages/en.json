@@ -29,24 +29,6 @@
     "tools": "Tool",
     "workflows": "Workflow"
   },
-  "common": {
-    "back": "Back",
-    "cancel": "Cancel",
-    "close": "Close",
-    "confirm": "Confirm",
-    "create": "Create",
-    "delete": "Delete",
-    "edit": "Edit",
-    "error": "Error",
-    "loading": "Loading...",
-    "next": "Next",
-    "no": "No",
-    "previous": "Previous",
-    "save": "Save",
-    "search": "Search",
-    "success": "Success",
-    "yes": "Yes"
-  },
   "editor": {
     "add_node": "Add Node",
     "check_validity": "Check Validity",

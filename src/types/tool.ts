@@ -32,6 +32,60 @@ export interface ToolImage {
   image: ImageConfig
 }
 
+// 参数定义接口
+export interface ParamDefine {
+  description?: string
+  command: string
+  is_position: boolean
+  index?: number
+  required: boolean
+}
+
+// 输出文件接口
+export interface FileMount {
+  name: string
+  description?: string
+  file_path: string
+  file_type: 'INPUT' | 'OUTPUT'
+  is_report: boolean
+  is_log: boolean
+  mount_path: string
+}
+
+export interface ToolHelpDoc {
+  uid?: string
+  help_command: string
+  description?: string
+  content: string
+}
+
+export interface SimpleToolDoc {
+  uid: string
+  help_command: string
+}
+
+export interface AiGenRequest {
+  name: string
+  description: string
+  image_uid: string
+}
+
+// 工具创建接口
+export interface DockerToolCreate {
+  name: string
+  image_uid: string
+  description: string
+  help_doc_uid: string
+  group_id: number
+  tags: ToolTag[]
+  command_template: string
+  dynamic_params: ParamDefine[]
+  static_params: string
+  file_mounts: FileMount[]
+  mkdir_output: boolean
+  use_temp_dir: boolean
+}
+
 export interface SimpleToolInfo {
   uid: string
   name: string
@@ -40,5 +94,63 @@ export interface SimpleToolInfo {
   group_id?: number
   image: ToolImage
   tags: ToolTag[]
+}
+
+export interface ToolInfo {
+  id: number
+  uid: string
+  name: string
+  description: string
+  tool_type: ToolType
+  group_id?: number
+  command_template: string
+  dynamic_params: ParamDefine[]
+  static_params: string
+  file_mounts: FileMount[]
+  complete_command: string
+  mkdir_output: boolean
+  use_temp_dir: boolean
+  tags: ToolTag[]
+  help_doc: ToolHelpDoc
+  image: ToolImage
+}
+
+export interface ToolInfo4Task {
+  id: number
+  name: string
+  description: string
+  file_mounts: FileMount[]
+}
+
+export interface AIGenProp {
+  name: string
+  description: string
+  help_command: string
+  repository: string
+  tag?: string
+}
+
+export enum EventType {
+  LOADING = 'loading',
+  ERROR = 'error',
+  GENERATING = 'generating',
+  SUCCESS = 'success',
+}
+
+export interface ToolSSEEventData {
+  event: EventType
+  data: string | AIGenTool
+}
+
+// AI生成的工具配置结果类型
+export interface AIGenTool {
+  name: string
+  description: string
+  command_template: string
+  dynamic_params: ParamDefine[]
+  static_params: string
+  file_mounts: FileMount[]
+  mkdir_output: boolean
+  use_temp_dir: boolean
 }
 
