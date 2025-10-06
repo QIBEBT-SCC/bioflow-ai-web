@@ -1,6 +1,10 @@
 'use client'
 
-import { AudioWaveform, Command, GalleryVerticalEnd } from 'lucide-react'
+import {
+  AudioWaveform,
+  Command,
+  GalleryVerticalEnd,
+} from 'lucide-react'
 import type * as React from 'react'
 import { NavMain } from '@/components/sidebar/nav-main'
 import { NavSecond } from '@/components/sidebar/nav-second'
@@ -14,6 +18,7 @@ import {
   SidebarRail,
 } from '@/components/ui/sidebar'
 import type { User } from '@/types/auth'
+import { UserRole } from '@/types/auth'
 
 // This is sample data.
 const data = {
@@ -48,7 +53,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain />
-        <NavSecond />
+        {user && user.role >= UserRole.ADMIN && <NavSecond />}
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={user} />
