@@ -58,9 +58,9 @@ export async function deleteDB(id: number): Promise<void> {
 export async function searchDB(
   name: string,
   offset: number = 0,
-  limit: number = 10,
+  limit: number = 10
 ): Promise<BioDb[]> {
-  return await serverFetch('/bio_dbs/search', {
-    params: { name, offset, limit },
-  })
+  return await serverFetch<BioDb[]>(
+    `/bio_dbs/search?name=${name}&offset=${offset}&limit=${limit}`
+  )
 }

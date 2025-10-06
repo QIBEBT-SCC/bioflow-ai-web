@@ -56,8 +56,8 @@ export const useDB = (id: number) => {
 export const useSearchDB = (name: string, offset: number = 0) => {
   return useQuery({
     queryKey: ['databases', 'search', name, offset],
-    queryFn: () => searchDB(name, offset, 10),
-    enabled: !!name, // 只有有搜索词时才查询
+    queryFn: () => searchDB(name, offset, 10), // 搜索时返回更多结果
+    enabled: !!name && name.trim().length > 0, // 只有有搜索词时才查询
     staleTime: 2 * 60 * 1000, // 搜索结果缓存2分钟
   })
 }
