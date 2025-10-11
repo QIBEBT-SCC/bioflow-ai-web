@@ -135,3 +135,10 @@
   transform: translateY(-1px);
   transition: all 0.2s ease-in-out;
 }
+
+html,
+body,
+#root {
+  height: 100%;
+  overflow: hidden; /* 禁止全局滚动条 */
+}
