@@ -17,11 +17,12 @@ export const ToolNode = memo(function ToolNode() {
   const [args, setArgs] = useState<string>(nodeData?.data.args ?? '')
 
   // 同步外部数据变化到本地state
+  // biome-ignore lint/correctness/useExhaustiveDependencies: no need
   useEffect(() => {
     if (nodeData?.data.args !== undefined && nodeData.data.args !== args) {
       setArgs(nodeData.data.args)
     }
-  }, [nodeData?.data.args, args])
+  }, [nodeData?.data.args])
 
   // 初始化参数：只在工具数据加载完成且当前参数为空时同步默认参数
   useEffect(() => {
