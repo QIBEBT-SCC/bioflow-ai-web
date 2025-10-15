@@ -17,7 +17,7 @@ export default async function MainLayout({
     <QueryProvider>
       <SidebarProvider>
         <AppSidebar user={user} />
-        <main className='flex-1 overflow-auto'>{children}</main>
+        {children}
         <Toaster />
       </SidebarProvider>
     </QueryProvider>

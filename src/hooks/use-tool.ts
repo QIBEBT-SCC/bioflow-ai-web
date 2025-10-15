@@ -15,7 +15,7 @@ import {
   searchTools,
   updateTool,
 } from '@/app/actions/tool'
-import { createImage, getImageDocs, runInImage, searchImages } from '@/app/actions/image'
+import { createImage, getImageDocs, runInImage, searchImages, getImageList, getImageCount } from '@/app/actions/image'
 import { getDocument } from '@/app/actions/document'
 import type { DockerToolCreate, SimpleToolDoc, SimpleToolInfo, ToolGroup, ToolHelpDoc, ToolImage, ToolInfo, ToolTag } from '@/types/tool'
 import type { ToolArgPublic } from '@/types/node'
@@ -180,6 +180,28 @@ export const useSearchImages = (name: string) => {
     queryKey: ['images', name],
     queryFn: () => searchImages(name),
     enabled: !!name,
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
+/**
+ * 获取镜像列表
+ */
+export const useImageList = (offset: number = 0, limit: number = 12) => {
+  return useQuery<ToolImage[]>({
+    queryKey: ['imageList', offset, limit],
+    queryFn: () => getImageList(offset, limit),
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
+/**
+ * 获取镜像总数
+ */
+export const useImageCount = () => {
+  return useQuery<number>({
+    queryKey: ['imageCount'],
+    queryFn: () => getImageCount(),
     staleTime: 5 * 60 * 1000,
   })
 }
