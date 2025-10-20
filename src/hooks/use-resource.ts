@@ -77,9 +77,9 @@ export const useCreateDB = () => {
     onSuccess: () => {
       toast.success('数据库添加成功')
       // 自动刷新列表和总数
-      queryClient.invalidateQueries({queryKey: ['databases', 'list']}).then()
-       queryClient.invalidateQueries({queryKey: ['databases', 'count']}).then()
-     },
+      queryClient.invalidateQueries({ queryKey: ['databases', 'list'] })
+      queryClient.invalidateQueries({ queryKey: ['databases', 'count'] })
+    },
     onError: (error: Error & { status?: number }) => {
       // 错误由组件处理，这里只记录
       console.error('Create database error:', error)
@@ -98,9 +98,9 @@ export const useDeleteDB = () => {
     onSuccess: (_, id) => {
       toast.success('数据库删除成功')
       // 刷新列表和总数
-      queryClient.invalidateQueries({queryKey: ['databases', 'list']}).then()
-       queryClient.invalidateQueries({queryKey: ['databases', 'count']}).then()
-       // 删除详情缓存
+      queryClient.invalidateQueries({ queryKey: ['databases', 'list'] })
+      queryClient.invalidateQueries({ queryKey: ['databases', 'count'] })
+      // 删除详情缓存
       queryClient.removeQueries({ queryKey: ['database', id] })
     },
     onError: (error: Error) => {
