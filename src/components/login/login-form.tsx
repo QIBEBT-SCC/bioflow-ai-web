@@ -1,10 +1,10 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import { signIn } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
 import type React from 'react'
-import { useState, useTransition } from 'react'
-import { loginAction } from '@/app/actions/auth'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -16,7 +16,7 @@ export function LoginForm({
   ...props
 }: React.ComponentPropsWithoutRef<'div'>) {
   const [error, setError] = useState<string>('')
-  const [isPending, startTransition] = useTransition()
+  const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
   const t = useTranslations('Login')
@@ -24,20 +24,31 @@ export function LoginForm({
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError('')
+    setIsLoading(true)
 
     const formData = new FormData(e.currentTarget)
+    const username = formData.get('username') as string
+    const password = formData.get('password') as string
 
-    startTransition(async () => {
-      const result = await loginAction(formData)
+    try {
+      const result = await signIn('credentials', {
+        username,
+        password,
+        redirect: false,
+      })
 
-      if (!result.success) {
-        setError(result.error || t('common.error'))
+      if (result?.error) {
+        setError('Invalid credentials')
       } else {
         // 登录成功，重定向到聊天页
         router.push('/chat')
         router.refresh()
       }
-    })
+    } catch {
+      setError('An error occurred during login')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -58,7 +69,7 @@ export function LoginForm({
                     type='text'
                     placeholder={t('username')}
                     required
-                    disabled={isPending}
+                    disabled={isLoading}
                   />
                 </div>
                 <div className='grid gap-2'>
@@ -76,14 +87,14 @@ export function LoginForm({
                     name='password'
                     type='password'
                     required
-                    disabled={isPending}
+                    disabled={isLoading}
                   />
                 </div>
                 {error && (
                   <div className='text-sm text-destructive'>{error}</div>
                 )}
-                <Button type='submit' className='w-full' disabled={isPending}>
-                  {isPending ? t('logging_in') : t('login')}
+                <Button type='submit' className='w-full' disabled={isLoading}>
+                  {isLoading ? t('logging_in') : t('login')}
                 </Button>
               </div>
               <div className='text-center text-sm'>

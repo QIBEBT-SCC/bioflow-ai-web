@@ -1,4 +1,5 @@
-import { cookies } from 'next/headers'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 
 const FASTAPI_URL = process.env.NEXT_PUBLIC_API_URL
 
@@ -6,7 +7,7 @@ export class ApiError extends Error {
   constructor(
     message: string,
     public status: number,
-    public data?: any,
+    public data?: unknown,
   ) {
     super(message)
     this.name = 'ApiError'
@@ -16,13 +17,15 @@ export class ApiError extends Error {
 /**
  * 服务端 API 调用封装
  * 用于 Server Actions 和 Server Components
+ * 支持 NextAuth session
  */
-export async function serverFetch<T = any>(
+export async function serverFetch<T = unknown>(
   endpoint: string,
-  options?: RequestInit & { params?: Record<string, any> },
+  options?: RequestInit & { params?: Record<string, string> },
 ): Promise<T> {
-  const cookieStore = await cookies()
-  const token = cookieStore.get('token')?.value
+  // 获取 NextAuth session
+  const session = await getServerSession(authOptions)
+  const accessToken = session?.accessToken
 
   // 处理查询参数
   let url = `${FASTAPI_URL}${endpoint}`
@@ -35,14 +38,13 @@ export async function serverFetch<T = any>(
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
+      ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
       ...options?.headers,
     },
   })
 
   // 处理 401 未授权
   if (res.status === 401) {
-    cookieStore.delete('token')
     throw new ApiError('Unauthorized', 401)
   }
 
@@ -56,7 +58,7 @@ export async function serverFetch<T = any>(
   }
 
   const contentType = res.headers.get('content-type')
-  if (contentType && contentType.includes('application/json')) {
+  if (contentType?.includes('application/json')) {
     return res.json()
   }
 
@@ -66,9 +68,9 @@ export async function serverFetch<T = any>(
 /**
  * 公共 API 调用（不需要认证）
  */
-export async function publicFetch<T = any>(
+export async function publicFetch<T = unknown>(
   endpoint: string,
-  options?: RequestInit & { params?: Record<string, any> },
+  options?: RequestInit & { params?: Record<string, string> },
 ): Promise<T> {
   let url = `${FASTAPI_URL}${endpoint}`
   if (options?.params) {

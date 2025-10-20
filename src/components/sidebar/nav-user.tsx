@@ -9,9 +9,10 @@ import {
   LogOut,
   Sparkles,
 } from 'lucide-react'
-import { useRouter } from 'next/navigation'
-import { logoutAction } from '@/app/actions/auth'
-import { LocaleSwitcher } from '@/components/locale-switcher'
+import { signOut } from 'next-auth/react'
+import { useLocale, useTranslations } from 'next-intl'
+import { useTransition } from 'react'
+import { setUserLocale } from '@/app/actions/locale'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   DropdownMenu,
@@ -32,11 +33,9 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar'
-import type { User } from '@/types/auth'
-import { useLocale, useTranslations } from 'next-intl'
 import { type Locale, localeNames, locales } from '@/i18n/config'
-import { setUserLocale } from '@/app/actions/locale'
-import { useTransition } from 'react'
+
+import type { User } from '@/types/auth'
 
 interface NavUserProps {
   user: User | null
@@ -44,8 +43,7 @@ interface NavUserProps {
 
 export function NavUser({ user }: NavUserProps) {
   const { isMobile } = useSidebar()
-  const router = useRouter()
-  const [isPending, startTransition] = useTransition()
+  const [, startTransition] = useTransition()
   const currentLocale = useLocale() as Locale
 
   const t = useTranslations()
@@ -57,8 +55,7 @@ export function NavUser({ user }: NavUserProps) {
   }
 
   const handleLogout = async () => {
-    await logoutAction()
-    router.push('/login')
+    await signOut({ callbackUrl: '/login' })
   }
 
   return (
