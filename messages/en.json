@@ -1,4 +1,8 @@
 {
+  "Chat": {
+    "new_conversation": "New Conversation",
+    "title": "Chat"
+  },
   "Language": {
     "language": "Language"
   },

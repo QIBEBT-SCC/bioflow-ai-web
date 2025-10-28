@@ -9,10 +9,10 @@ import {
   LogOut,
   Sparkles,
 } from 'lucide-react'
-import { signOut } from 'next-auth/react'
 import { useLocale, useTranslations } from 'next-intl'
 import { useTransition } from 'react'
 import { setUserLocale } from '@/app/actions/locale'
+import { clearToken } from '@/lib/api-client'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   DropdownMenu,
@@ -54,8 +54,11 @@ export function NavUser({ user }: NavUserProps) {
     })
   }
 
-  const handleLogout = async () => {
-    await signOut({ callbackUrl: '/login' })
+  const handleLogout = () => {
+    // 清除本地存储的 token
+    clearToken()
+    // 跳转登录
+    window.location.href = '/login'
   }
 
   return (

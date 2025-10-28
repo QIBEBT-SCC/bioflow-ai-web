@@ -1,50 +1,33 @@
 import { NextResponse } from 'next/server'
-import { withAuth } from 'next-auth/middleware'
 
-export default withAuth(
-  function middleware(req) {
-    const { pathname } = req.nextUrl
-    const token = req.nextauth.token
+export function middleware(req: any) {
+  const { pathname } = req.nextUrl
 
-    // 已登录且访问登录页 -> 重定向到聊天页
-    if (token && pathname === '/login') {
-      return NextResponse.redirect(new URL('/chat', req.url))
-    }
+  // 不需要认证的路径
+  const publicPaths = ['/login', '/register']
+  const isPublicPath = publicPaths.some((path) => pathname.startsWith(path))
 
-    // 已登录且访问根路径 -> 重定向到聊天页
-    if (token && pathname === '/') {
-      return NextResponse.redirect(new URL('/chat', req.url))
-    }
+  // 检查 Cookie 中的 access_token
+  const hasToken = Boolean(req.cookies.get('access_token'))
 
+  // 已登录访问登录页或根路径，重定向到 /chat
+  if (hasToken && (pathname === '/login' || pathname === '/')) {
+    return NextResponse.redirect(new URL('/chat', req.url))
+  }
+
+  // 公开路径直接放行
+  if (isPublicPath) {
     return NextResponse.next()
-  },
-  {
-    callbacks: {
-      authorized: ({ token, req }) => {
-        const { pathname } = req.nextUrl
+  }
 
-        // 不需要认证的路径
-        const publicPaths = ['/login', '/register']
-        const isPublicPath = publicPaths.some((path) =>
-          pathname.startsWith(path),
-        )
+  // 受保护路径必须有 token
+  if (!hasToken) {
+    return NextResponse.redirect(new URL('/login', req.url))
+  }
 
-        // 如果是公开路径，允许访问
-        if (isPublicPath) {
-          return true
-        }
-
-        // 其他路径需要认证
-        return !!token
-      },
-    },
-    pages: {
-      signIn: '/login',
-    },
-  },
-)
+  return NextResponse.next()
+}
 
 export const config = {
-  // 匹配所有路径，除了 API routes、静态文件等
   matcher: ['/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)'],
 }

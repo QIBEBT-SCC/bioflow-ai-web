@@ -1,4 +1,8 @@
 {
+  "Chat": {
+    "new_conversation": "新建对话",
+    "title": "对话"
+  },
   "Language": {
     "language": "语言"
   },

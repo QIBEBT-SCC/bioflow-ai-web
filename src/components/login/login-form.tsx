@@ -1,7 +1,6 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { signIn } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
 import type React from 'react'
 import { useState } from 'react'
@@ -10,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
+import { ClientApiError, setToken } from '@/lib/api-client'
 
 export function LoginForm({
   className,
@@ -31,21 +31,47 @@ export function LoginForm({
     const password = formData.get('password') as string
 
     try {
-      const result = await signIn('credentials', {
-        username,
-        password,
-        redirect: false,
+      // 调用 FastAPI 登录接口
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          username,
+          password,
+        }),
       })
 
-      if (result?.error) {
-        setError('Invalid credentials')
-      } else {
-        // 登录成功，重定向到聊天页
+      if (!res.ok) {
+        if (res.status === 401) {
+          setError('用户名或密码错误')
+          return
+        }
+        const data = await res.json().catch(() => null)
+        throw new ClientApiError(
+          data?.detail || `登录失败 (${res.status})`,
+          res.status,
+          data,
+        )
+      }
+
+      // 登录成功：保存 token 到 localStorage
+      const data = await res.json()
+      if (data.access_token) {
+        setToken(data.access_token)
         router.push('/chat')
         router.refresh()
+      } else {
+        setError('登录响应格式错误')
       }
-    } catch {
-      setError('An error occurred during login')
+    } catch (err) {
+      console.error('Login error:', err)
+      if (err instanceof ClientApiError) {
+        setError(err.message)
+      } else {
+        setError('网络错误，请稍后重试')
+      }
     } finally {
       setIsLoading(false)
     }
@@ -107,10 +133,6 @@ export function LoginForm({
           </form>
         </CardContent>
       </Card>
-      {/*<div className="text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 [&_a]:hover:text-primary">*/}
-      {/*  By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}*/}
-      {/*  and <a href="#">Privacy Policy</a>.*/}
-      {/*</div>*/}
     </div>
   )
 }

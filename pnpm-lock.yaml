@@ -11,9 +11,6 @@ importers:
       '@ai-sdk/react':
         specifier: ^2.0.68
         version: 2.0.68(react@19.1.0)(zod@4.1.12)
-      '@microsoft/fetch-event-source':
-        specifier: ^2.0.1
-        version: 2.0.1
       '@radix-ui/react-alert-dialog':
         specifier: ^1.1.15
         version: 1.1.15(@types/react-dom@19.2.0(@types/react@19.2.0))(@types/react@19.2.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -478,9 +475,6 @@ packages:
 
   '@mermaid-js/parser@0.6.2':
     resolution: {integrity: sha512-+PO02uGF6L6Cs0Bw8RpGhikVvMWEysfAyl27qTlroUB8jSWr1lL0Sf6zi78ZxlSnmgSY2AMMKVgghnN9jTtwkQ==}
-
-  '@microsoft/fetch-event-source@2.0.1':
-    resolution: {integrity: sha512-W6CLUJ2eBMw3Rec70qrsEW0jOm/3twwJv21mrmj2yORiaVmVYGS4sSS5yUwvQc1ZlDLYGPnClVWmUUMagKNsfA==}
 
   '@next/env@15.5.4':
     resolution: {integrity: sha512-27SQhYp5QryzIT5uO8hq99C69eLQ7qkzkDPsk3N+GuS2XgOgoYEeOav7Pf8Tn4drECOVDsDg8oj+/DVy8qQL2A==}
@@ -2895,8 +2889,6 @@ snapshots:
   '@mermaid-js/parser@0.6.2':
     dependencies:
       langium: 3.3.1
-
-  '@microsoft/fetch-event-source@2.0.1': {}
 
   '@next/env@15.5.4': {}
 
