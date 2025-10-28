@@ -282,7 +282,7 @@ export default function AddToolPage() {
                   {searchResults.map((image) => (
                     <Card
                       key={image.uid}
-                      className={`cursor-pointer transition-all hover:shadow-md border-2 ${
+                      className={`pt-2 cursor-pointer transition-all hover:shadow-md border-2 ${
                         currentImage?.uid === image.uid
                           ? 'border-primary bg-primary/5'
                           : 'border-border hover:border-primary/50'
