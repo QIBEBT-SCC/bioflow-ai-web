@@ -1,18 +1,18 @@
 'use client'
 
 import {
-  ArrowLeft,
-  Code,
+  BookOpen,
+  Check,
+  Container,
   Copy,
   ExternalLink,
-  FileText,
-  HardDrive,
-  Info,
-  Layers,
+  FileInput,
+  FileOutput,
   Terminal,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
+import { useState } from 'react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -41,8 +41,17 @@ export default function ToolDetailPage() {
   const toolUid = params.uid as string
   const { data: tool, isLoading } = useTool(toolUid)
 
+  const [copiedCommand, setCopiedCommand] = useState(false)
+  const [copiedDocker, setCopiedDocker] = useState(false)
+
+  const inputFiles =
+    tool?.file_mounts.filter((f) => f.file_type === 'INPUT') || []
+  const outputFiles =
+    tool?.file_mounts.filter((f) => f.file_type === 'OUTPUT') || []
+  const dockerImage = `${tool?.image.image.registry || ''}/${tool?.image.image.namespace || ''}/${tool?.image.image.repository || ''}:${tool?.image.image.tag || ''}`
+
   // 复制命令到剪贴板
-  const copyToClipboard = (text: string) => {
+  const copyToClipboard = (text: string, type: 'command' | 'docker') => {
     navigator.clipboard
       .writeText(text)
       .then(() => {
@@ -52,6 +61,13 @@ export default function ToolDetailPage() {
         console.error('复制失败:', err)
         toast.error('复制失败')
       })
+    if (type === 'command') {
+      setCopiedCommand(true)
+      setTimeout(() => setCopiedCommand(false), 2000)
+    } else {
+      setCopiedDocker(true)
+      setTimeout(() => setCopiedDocker(false), 2000)
+    }
   }
 
   if (isLoading) {
@@ -102,326 +118,329 @@ export default function ToolDetailPage() {
         </div>
       </header>
 
-      <div className='flex-1 overflow-y-auto'>
-        <div className='container mx-auto py-6 max-w-4xl'>
-          <div className='mb-6'>
-            <Link
-              href='/tool'
-              className='inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-2'
-            >
-              <ArrowLeft className='h-4 w-4 mr-1' />
-              返回工具列表
-            </Link>
-          </div>
-
+      <main className='flex-1 overflow-y-auto'>
+        <div className='container mx-auto px-6 py-8'>
           {/* 工具标题和基本信息 */}
-          <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4'>
+          <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4'>
             <div>
               <div className='flex items-center gap-2'>
                 <h1 className='text-3xl font-bold'>{tool.name}</h1>
-                <Badge className='ml-2'>{tool.image.image.tag}</Badge>
+                <Badge className='ml-2'>{tool.image.version}</Badge>
               </div>
-              <p className='text-muted-foreground mt-1'>
-                {tool.image.image.namespace}
-              </p>
-            </div>
-            <div className='flex gap-2'>
-              <Button asChild variant='outline' size='sm'>
-                <a
-                  href={tool.image.homepage}
-                  target='_blank'
-                  rel='noopener noreferrer'
-                >
-                  <FileText className='h-4 w-4 mr-2' />
-                  查看文档
-                </a>
-              </Button>
-              <Button asChild variant='outline' size='sm'>
-                <a
-                  href={`https://hub.docker.com/r/${tool.image.image.namespace}`}
-                  target='_blank'
-                  rel='noopener noreferrer'
-                >
-                  <ExternalLink className='h-4 w-4 mr-2' />
-                  Docker Hub
-                </a>
-              </Button>
+              <p className='text-muted-foreground mt-1'>{tool.description}</p>
             </div>
           </div>
 
-          {/* 工具描述 */}
-          <Card className='pt-0 gap-0 mb-6'>
-            <CardContent className='pt-6'>
-              <p>{tool.description}</p>
-            </CardContent>
-          </Card>
-
-          {/* 主要内容区域 */}
-          <Tabs defaultValue='overview' className='w-full'>
-            <TabsList className='grid w-full grid-cols-4'>
-              <TabsTrigger value='overview'>
-                <Info className='h-4 w-4 mr-2' />
-                概览
-              </TabsTrigger>
-              <TabsTrigger value='params'>
-                <Layers className='h-4 w-4 mr-2' />
-                参数
-                <Badge variant='outline' className='ml-2'>
-                  {tool.dynamic_params.length}
-                </Badge>
-              </TabsTrigger>
-              <TabsTrigger value='outputs'>
-                <FileText className='h-4 w-4 mr-2' />
-                输出
-                <Badge variant='outline' className='ml-2'>
-                  {tool.file_mounts.length}
-                </Badge>
-              </TabsTrigger>
-              <TabsTrigger value='command'>
-                <Terminal className='h-4 w-4 mr-2' />
-                命令
-              </TabsTrigger>
-            </TabsList>
-
-            {/* 概览选项卡 */}
-            <TabsContent value='overview'>
+          <div className='grid gap-6 lg:grid-cols-3'>
+            {/* Left Column - Main Content */}
+            <div className='lg:col-span-2 space-y-6'>
+              {/* Command Section */}
               <Card>
                 <CardHeader>
-                  <CardTitle>工具概览</CardTitle>
-                  <CardDescription>Docker 容器和基本配置信息</CardDescription>
+                  <div className='flex items-center gap-2'>
+                    <Terminal className='h-5 w-5 text-primary' />
+                    <CardTitle>Command Template</CardTitle>
+                  </div>
+                  <CardDescription>
+                    Complete command with all parameters
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className='relative'>
+                    <pre className='bg-muted p-4 rounded-lg overflow-x-auto text-sm font-mono'>
+                      <code>{tool.complete_command}</code>
+                    </pre>
+                    <Button
+                      size='sm'
+                      variant='ghost'
+                      className='absolute top-2 right-2'
+                      onClick={() =>
+                        copyToClipboard(tool.complete_command, 'command')
+                      }
+                    >
+                      {copiedCommand ? (
+                        <Check className='h-4 w-4' />
+                      ) : (
+                        <Copy className='h-4 w-4' />
+                      )}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Parameters Tabs */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Parameters</CardTitle>
+                  <CardDescription>
+                    Configure tool execution parameters
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className='space-y-6'>
-                  {/* Docker 镜像信息 */}
-                  <div className='space-y-2'>
-                    <h3 className='text-sm font-medium text-muted-foreground'>
-                      Docker 镜像
-                    </h3>
-                    <div className='flex items-center bg-muted/30 p-3 rounded-md'>
-                      <HardDrive className='h-5 w-5 mr-3 text-muted-foreground' />
-                      <span className='font-medium'>
-                        {tool.image.image.registry}/{tool.image.image.namespace}
-                        /{tool.image.image.repository}:{tool.image.image.tag}
-                      </span>
-                      <Button
-                        variant='ghost'
-                        size='icon'
-                        className='h-8 w-8 ml-2'
-                        onClick={() =>
-                          copyToClipboard(
-                            `${tool.image.image.registry}/${tool.image.image.namespace}/${tool.image.image.repository}:${tool.image.image.tag}`,
-                          )
-                        }
-                      >
-                        <Copy className='h-4 w-4' />
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* 命令模板 */}
-                  <div className='space-y-2'>
-                    <h3 className='text-sm font-medium text-muted-foreground'>
-                      命令模板
-                    </h3>
-                    <div className='flex items-center bg-muted/30 p-3 rounded-md'>
-                      <Code className='h-5 w-5 mr-3 text-muted-foreground' />
-                      <code className='text-sm overflow-x-auto max-w-full'>
-                        {tool.command_template}
-                      </code>
-                      <Button
-                        variant='ghost'
-                        size='icon'
-                        className='h-8 w-8 ml-2 flex-shrink-0'
-                        onClick={() => copyToClipboard(tool.command_template)}
-                      >
-                        <Copy className='h-4 w-4' />
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* 帮助命令 */}
-                  <div className='space-y-2'>
-                    <h3 className='text-sm font-medium text-muted-foreground'>
-                      帮助命令
-                    </h3>
-                    <div className='flex items-center bg-muted/30 p-3 rounded-md'>
-                      <Terminal className='h-5 w-5 mr-3 text-muted-foreground' />
-                      <code className='text-sm'>
-                        {tool.help_doc.help_command}
-                      </code>
-                      <Button
-                        variant='ghost'
-                        size='icon'
-                        className='h-8 w-8 ml-2'
-                        onClick={() =>
-                          copyToClipboard(tool.help_doc.help_command)
-                        }
-                      >
-                        <Copy className='h-4 w-4' />
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* 配置选项 */}
-                  <div className='space-y-2'>
-                    <h3 className='text-sm font-medium text-muted-foreground'>
-                      配置选项
-                    </h3>
-                    <div className='bg-muted/30 p-3 rounded-md'>
-                      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                        <div className='flex items-center'>
-                          <Badge
-                            variant={tool.mkdir_output ? 'default' : 'outline'}
-                            className='mr-3'
-                          >
-                            {tool.mkdir_output ? '是' : '否'}
-                          </Badge>
-                          <span>创建输出目录</span>
+                  <div className='space-y-3'>
+                    <h4 className='text-sm font-semibold'>
+                      Dynamic Parameters
+                    </h4>
+                    <div className='space-y-3'>
+                      {tool.dynamic_params.map((param, index) => (
+                        <div
+                          key={`param-${index}-${param.command}`}
+                          className='border border-border rounded-lg p-4 space-y-2'
+                        >
+                          <code className='text-sm font-mono bg-muted px-2 py-1 rounded'>
+                            {param.command}
+                          </code>
+                          <p className='text-sm text-muted-foreground'>
+                            {param.description}
+                          </p>
                         </div>
-                        <div className='flex items-center'>
-                          <Badge
-                            variant={tool.use_temp_dir ? 'default' : 'outline'}
-                            className='mr-3'
-                          >
-                            {tool.use_temp_dir ? '是' : '否'}
-                          </Badge>
-                          <span>使用临时目录</span>
-                        </div>
-                      </div>
+                      ))}
+                    </div>
+                  </div>
+                  <Separator />
+                  <div className='space-y-3'>
+                    <h4 className='text-sm font-semibold'>Static Parameters</h4>
+                    <div className='border border-border rounded-lg p-4'>
+                      <code className='text-sm font-mono'>
+                        {tool.static_params}
+                      </code>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-            </TabsContent>
 
-            {/* 参数选项卡 */}
-            <TabsContent value='params'>
+              {/* File Mounts */}
               <Card>
                 <CardHeader>
-                  <CardTitle>参数配置</CardTitle>
+                  <CardTitle>File Mounts</CardTitle>
                   <CardDescription>
-                    工具所需的必要参数和可选参数
+                    Input and output file specifications
                   </CardDescription>
                 </CardHeader>
-                <CardContent className='space-y-6'>
-                  <div>
-                    <h3 className='text-lg font-medium mb-4'>动态参数</h3>
-                    <div className='grid grid-cols-1 gap-4'>
-                      {tool.dynamic_params.map((param, index) => (
+                <CardContent>
+                  <Tabs defaultValue='input' className='w-full'>
+                    <TabsList className='grid w-full grid-cols-2'>
+                      <TabsTrigger value='input' className='gap-2'>
+                        <FileInput className='h-4 w-4' />
+                        Input Files ({inputFiles.length})
+                      </TabsTrigger>
+                      <TabsTrigger value='output' className='gap-2'>
+                        <FileOutput className='h-4 w-4' />
+                        Output Files ({outputFiles.length})
+                      </TabsTrigger>
+                    </TabsList>
+                    <TabsContent value='input' className='space-y-3 mt-4'>
+                      {inputFiles.map((file, index) => (
                         <div
-                          key={`param-${index}-${param.command}`}
-                          className={`p-4 rounded-lg border ${param.is_position ? 'border-l-4 border-l-blue-500' : 'border-l-4 border-l-green-500'}`}
+                          key={`file-${index}-${file.name}`}
+                          className='border border-border rounded-lg p-4 space-y-2'
                         >
-                          <div className='gap-4'>
+                          <h4 className='font-semibold text-sm'>{file.name}</h4>
+                          <p className='text-sm text-muted-foreground'>
+                            {file.description}
+                          </p>
+                          <Separator className='my-2' />
+                          <div className='grid grid-cols-2 gap-2 text-xs'>
                             <div>
-                              <p className='text-sm text-muted-foreground mb-1'>
-                                {param.description}
-                              </p>
-                              <code className='bg-muted px-2 py-1 rounded text-sm block overflow-x-auto'>
-                                {param.command}
+                              <span className='text-muted-foreground'>
+                                File Path:
+                              </span>
+                              <code className='ml-2 bg-muted px-1 py-0.5 rounded'>
+                                {file.file_path}
+                              </code>
+                            </div>
+                            <div>
+                              <span className='text-muted-foreground'>
+                                Mount Path:
+                              </span>
+                              <code className='ml-2 bg-muted px-1 py-0.5 rounded'>
+                                {file.mount_path}
                               </code>
                             </div>
                           </div>
                         </div>
                       ))}
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  <div>
-                    <h3 className='text-lg font-medium mb-4'>固定参数</h3>
-                    {tool.static_params ? (
-                      <div className='bg-muted p-4 rounded-lg'>
-                        <code className='text-sm block overflow-x-auto whitespace-pre-wrap'>
-                          {tool.static_params}
-                        </code>
-                      </div>
-                    ) : (
-                      <p className='text-muted-foreground'>无固定参数</p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* 输出文件选项卡 */}
-            <TabsContent value='outputs'>
-              <Card>
-                <CardHeader>
-                  <CardTitle>文件挂载</CardTitle>
-                  <CardDescription>工具生成的输入输出文件配置</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className='grid grid-cols-1 gap-4'>
-                    {tool.file_mounts.map((file, index) => (
-                      <div
-                        key={`file-${index}-${file.name}`}
-                        className={`p-4 rounded-lg border border-l-4 ${file.file_type === 'INPUT' ? 'border-l-blue-500' : 'border-l-green-500'}`}
-                      >
-                        <h4 className='font-medium mb-3'>{file.name}</h4>
-
-                        <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                          <div>
-                            <p className='text-sm text-muted-foreground mb-1'>
-                              文件路径
-                            </p>
-                            <code className='bg-muted px-2 py-1 rounded text-sm block overflow-x-auto'>
-                              {file.file_path}
-                            </code>
+                    </TabsContent>
+                    <TabsContent value='output' className='space-y-3 mt-4'>
+                      {outputFiles.map((file, index) => (
+                        <div
+                          key={`file-${index}-${file.name}`}
+                          className='border border-border rounded-lg p-4 space-y-2'
+                        >
+                          <div className='flex items-center justify-between'>
+                            <h4 className='font-semibold text-sm'>
+                              {file.name}
+                            </h4>
+                            <div className='flex gap-2'>
+                              {file.is_log && (
+                                <Badge variant='secondary' className='text-xs'>
+                                  LOG
+                                </Badge>
+                              )}
+                              {file.is_report && (
+                                <Badge variant='secondary' className='text-xs'>
+                                  REPORT
+                                </Badge>
+                              )}
+                            </div>
                           </div>
-                          <div>
-                            <p className='text-sm text-muted-foreground mb-1'>
-                              挂载路径
-                            </p>
-                            <code className='bg-muted px-2 py-1 rounded text-sm block overflow-x-auto'>
-                              {file.mount_path}
-                            </code>
-                          </div>
-                        </div>
-
-                        <div className='mt-3'>
-                          <p className='text-sm text-muted-foreground mb-1'>
+                          <p className='text-sm text-muted-foreground'>
                             {file.description}
                           </p>
+                          <Separator className='my-2' />
+                          <div className='grid grid-cols-2 gap-2 text-xs'>
+                            <div>
+                              <span className='text-muted-foreground'>
+                                File Path:
+                              </span>
+                              <code className='ml-2 bg-muted px-1 py-0.5 rounded'>
+                                {file.file_path}
+                              </code>
+                            </div>
+                            <div>
+                              <span className='text-muted-foreground'>
+                                Mount Path:
+                              </span>
+                              <code className='ml-2 bg-muted px-1 py-0.5 rounded'>
+                                {file.mount_path}
+                              </code>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </TabsContent>
+                  </Tabs>
                 </CardContent>
               </Card>
-            </TabsContent>
 
-            {/* 命令选项卡 */}
-            <TabsContent value='command'>
+              {/* Help Documentation */}
               <Card>
                 <CardHeader>
-                  <CardTitle>命令示例</CardTitle>
-                  <CardDescription>根据配置生成的命令示例</CardDescription>
+                  <div className='flex items-center gap-2'>
+                    <BookOpen className='h-5 w-5 text-primary' />
+                    <CardTitle>Documentation</CardTitle>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className='space-y-4'>
-                    <div className='bg-black text-white p-4 rounded-lg font-mono text-sm overflow-x-auto'>
-                      <pre className='whitespace-pre-wrap'>
-                        {tool.complete_command}
-                      </pre>
+                    <div>
+                      <h4 className='text-sm font-semibold mb-2'>
+                        Help Command
+                      </h4>
+                      <code className='text-sm bg-muted px-3 py-2 rounded block'>
+                        {tool.help_doc.help_command}
+                      </code>
                     </div>
-                    <div className='flex justify-end'>
-                      <Button
-                        variant='outline'
-                        size='sm'
-                        onClick={() => copyToClipboard(tool.complete_command)}
-                      >
-                        <Copy className='h-4 w-4 mr-2' />
-                        复制命令
-                      </Button>
+                    <Separator />
+                    <div>
+                      <h4 className='text-sm font-semibold mb-2'>
+                        Command Output
+                      </h4>
+                      <pre className='bg-muted p-4 rounded-lg overflow-x-auto overflow-y-auto text-xs font-mono max-h-96'>
+                        <code>{tool.help_doc.content}</code>
+                      </pre>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-            </TabsContent>
-          </Tabs>
+            </div>
+
+            {/* Right Column - Sidebar */}
+            <div className='space-y-6'>
+              {/* Tool Information */}
+              <Card>
+                <CardHeader>
+                  <div className='flex items-center gap-2'>
+                    <Container className='h-5 w-5 text-primary' />
+                    <CardTitle>Tool Information</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className='space-y-4'>
+                  <div>
+                    <h4 className='text-sm font-semibold mb-2'>About</h4>
+                    <p className='text-sm text-muted-foreground leading-relaxed'>
+                      {tool.image.description}
+                    </p>
+                  </div>
+                  <Separator />
+                  <div className='space-y-2 text-sm'>
+                    <div className='flex justify-between'>
+                      <span className='text-muted-foreground'>Version:</span>
+                      <span className='font-semibold'>
+                        {tool.image.version}
+                      </span>
+                    </div>
+                    <div className='flex justify-between'>
+                      <span className='text-muted-foreground'>Tool Type:</span>
+                      <span>{tool.tool_type}</span>
+                    </div>
+                    <div className='flex justify-between'>
+                      <span className='text-muted-foreground'>
+                        Temp Directory:
+                      </span>
+                      <span>{tool.use_temp_dir ? 'Yes' : 'No'}</span>
+                    </div>
+                  </div>
+                  <Separator />
+                  <div>
+                    <h4 className='text-sm font-semibold mb-2'>Docker Image</h4>
+                    <div className='relative'>
+                      <code className='text-xs bg-muted px-3 py-2 rounded block break-all'>
+                        {dockerImage}
+                      </code>
+                      <Button
+                        size='sm'
+                        variant='ghost'
+                        className='absolute top-1 right-1'
+                        onClick={() => copyToClipboard(dockerImage, 'docker')}
+                      >
+                        {copiedDocker ? (
+                          <Check className='h-3 w-3' />
+                        ) : (
+                          <Copy className='h-3 w-3' />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                  <Separator />
+                  <div className='space-y-2'>
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      className='w-full gap-2 bg-transparent'
+                      asChild
+                    >
+                      <a
+                        href={tool.image.homepage}
+                        target='_blank'
+                        rel='noopener noreferrer'
+                      >
+                        <ExternalLink className='h-4 w-4' />
+                        Homepage
+                      </a>
+                    </Button>
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      className='w-full gap-2 bg-transparent'
+                      asChild
+                    >
+                      <a
+                        href={tool.image.paper_link}
+                        target='_blank'
+                        rel='noopener noreferrer'
+                      >
+                        <ExternalLink className='h-4 w-4' />
+                        Publication
+                      </a>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </div>
-      </div>
+      </main>
     </SidebarInset>
   )
 }
