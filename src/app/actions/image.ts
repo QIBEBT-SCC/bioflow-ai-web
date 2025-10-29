@@ -12,6 +12,7 @@ export async function getImageList(
   limit: number = 12,
 ): Promise<ToolImage[]> {
   return await serverFetch<ToolImage[]>('/images', {
+    // @ts-expect-error
     params: { offset, limit },
   })
 }
