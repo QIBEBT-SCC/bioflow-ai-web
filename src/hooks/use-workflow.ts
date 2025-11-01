@@ -9,8 +9,12 @@ import {
   newRunInstance,
   saveWorkflow,
   updateWorkflow,
+  getRuns,
+  getRunCount,
+  getRunStats,
+  getRun,
 } from '@/app/actions/workflow'
-import type { Workflow, WorkflowDefinition } from '@/types/workflow'
+import type { Workflow, WorkflowDefinition, AutoRunPublic, TaskStat } from '@/types/workflow'
 
 // ============================================
 // Query Hooks (数据查询)
@@ -104,6 +108,8 @@ export const useUpdateWorkflow = () => {
  * 创建运行实例
  */
 export const useNewRunInstance = () => {
+  const queryClient = useQueryClient()
+
   return useMutation({
     mutationFn: ({
       workflow,
@@ -114,9 +120,66 @@ export const useNewRunInstance = () => {
     }) => newRunInstance(workflow, template_name),
     onSuccess: () => {
       toast.success('工作流已提交运行')
+      // 刷新运行实例列表
+      queryClient.invalidateQueries({ queryKey: ['runs'] })
+      queryClient.invalidateQueries({ queryKey: ['runCount'] })
+      queryClient.invalidateQueries({ queryKey: ['runStats'] })
     },
     onError: (error: Error) => {
       toast.error(`运行失败: ${error.message || '未知错误'}`)
     },
+  })
+}
+
+// ============================================
+// Run Instance Query Hooks (运行实例查询)
+// ============================================
+
+/**
+ * 获取运行实例列表（分页）
+ */
+export const useRuns = (offset: number = 0, limit: number = 20) => {
+  return useQuery<AutoRunPublic[]>({
+    queryKey: ['runs', offset, limit],
+    queryFn: () => getRuns(offset, limit),
+    staleTime: 30 * 1000, // 30秒缓存，运行状态变化较快
+    refetchInterval: 5000, // 每5秒自动刷新
+  })
+}
+
+/**
+ * 获取运行实例总数
+ */
+export const useRunCount = () => {
+  return useQuery<number>({
+    queryKey: ['runCount'],
+    queryFn: () => getRunCount(),
+    staleTime: 30 * 1000,
+    refetchInterval: 10000, // 每10秒刷新
+  })
+}
+
+/**
+ * 获取运行实例统计信息
+ */
+export const useRunStats = () => {
+  return useQuery<TaskStat>({
+    queryKey: ['runStats'],
+    queryFn: () => getRunStats(),
+    staleTime: 30 * 1000,
+    refetchInterval: 5000, // 每5秒刷新
+  })
+}
+
+/**
+ * 获取单个运行实例详情
+ */
+export const useRun = (uid: string) => {
+  return useQuery<AutoRunPublic>({
+    queryKey: ['run', uid],
+    queryFn: () => getRun(uid),
+    enabled: !!uid,
+    staleTime: 30 * 1000,
+    refetchInterval: 3000, // 每3秒刷新
   })
 }

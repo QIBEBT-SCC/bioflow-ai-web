@@ -6,6 +6,8 @@ import type {
   SimpleWorkflowInfo,
   Workflow,
   WorkflowDefinition,
+  AutoRunPublic,
+  TaskStat,
 } from '@/types/workflow'
 
 /**
@@ -76,4 +78,37 @@ export async function newRunInstance(
     method: 'POST',
     body: JSON.stringify(workflow),
   })
+}
+
+/**
+ * 获取所有运行实例（分页）
+ */
+export async function getRuns(
+  offset: number = 0,
+  limit: number = 20,
+): Promise<AutoRunPublic[]> {
+  return await serverFetch<AutoRunPublic[]>(
+    `/runs?offset=${offset}&limit=${limit}`,
+  )
+}
+
+/**
+ * 获取运行实例总数
+ */
+export async function getRunCount(): Promise<number> {
+  return await serverFetch<number>('/runs/count')
+}
+
+/**
+ * 获取运行实例统计信息
+ */
+export async function getRunStats(): Promise<TaskStat> {
+  return await serverFetch<TaskStat>('/runs/stats')
+}
+
+/**
+ * 获取单个运行实例详情
+ */
+export async function getRun(uid: string): Promise<AutoRunPublic> {
+  return await serverFetch<AutoRunPublic>(`/runs/${uid}`)
 }
