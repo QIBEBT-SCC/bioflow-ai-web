@@ -126,6 +126,14 @@
   z-index: 100;
 }
 
+.react-flow__edge-path {
+  stroke-width: 2;
+}
+
+.react-flow__connection-path{
+    stroke-width: 2;
+}
+
 .react-flow__node.selected > div {
   border-color: rgb(99 102 241); /* indigo-500 */
   box-shadow:
