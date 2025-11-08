@@ -55,7 +55,7 @@ export function DatabaseAddDialog({
       name,
       description: description || undefined,
       path,
-      last_update: lastUpdate || new Date().toISOString().split('T')[0],
+      last_update: lastUpdate || '',
     }
 
     createMutation.mutate(newDb, {
@@ -150,7 +150,6 @@ export function DatabaseAddDialog({
               <Label htmlFor='version'>更新时间</Label>
               <Input
                 id='version'
-                type='date'
                 value={lastUpdate}
                 onChange={(e) => setLastUpdate(e.target.value)}
                 disabled={createMutation.isPending}
