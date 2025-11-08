@@ -1,66 +1,85 @@
-"use client"
+'use client'
 
+import { EditIcon, HomeIcon, NetworkIcon, TvMinimalIcon } from 'lucide-react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { useTranslations } from 'next-intl'
+import { useEffect } from 'react'
 import {
-    SidebarGroup,
-    SidebarMenu,
-    SidebarMenuButton,
-    SidebarMenuItem,
-} from "@/components/ui/sidebar"
-import {Link} from "react-router-dom";
-import {EditIcon, NetworkIcon, HomeIcon, TvMinimalIcon} from "lucide-react";
-import {ProjectOutlined} from "@ant-design/icons";
-import {useSidebarStore} from "@/stores/sidebar-store.tsx";
+  SidebarGroup,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from '@/components/ui/sidebar'
+import { useSidebarStore } from '@/stores/sidebar-store'
 
 const projects = [
-    {
-        name: "Home",
-        url: "/home",
-        icon: HomeIcon,
-    },
-    {
-        name: "Projects",
-        url: "/project",
-        icon: ProjectOutlined,
-    },
-    {
-        name: "Editor",
-        url: "/editor",
-        icon: EditIcon
-    },
-    {
-        name: "Workflows",
-        url: "/workflow",
-        icon: NetworkIcon,
-        icon_rotate: true,
-    },
-    {
-        name: "Tasks",
-        url: "/task",
-        icon: TvMinimalIcon
-    }
+  {
+    name: 'chat',
+    url: '/chat',
+    icon: HomeIcon,
+  },
+  {
+    name: 'projects',
+    url: '/project',
+    icon: HomeIcon,
+  },
+  {
+    name: 'editor',
+    url: '/editor',
+    icon: EditIcon,
+  },
+  {
+    name: 'workflows',
+    url: '/workflow',
+    icon: NetworkIcon,
+    icon_rotate: true,
+  },
+  {
+    name: 'tasks',
+    url: '/task',
+    icon: TvMinimalIcon,
+  },
 ]
 
 export function NavMain() {
-    const {activePage, setActivePage} = useSidebarStore()
+  const { activePage, setActivePage } = useSidebarStore()
+  const pathname = usePathname()
 
-    return (
-        <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-            <SidebarMenu>
-                {projects.map((item) => (
-                    <SidebarMenuItem key={item.name}>
-                        <SidebarMenuButton asChild isActive={item.name === activePage} onClick={() => setActivePage(item.name)}>
-                            <Link to={item.url}>
-                                {(item.icon_rotate) ? (
-                                    <item.icon className="-rotate-90"/>
-                                ) : (
-                                    <item.icon/>
-                                )}
-                                <span>{item.name}</span>
-                            </Link>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                ))}
-            </SidebarMenu>
-        </SidebarGroup>
-    )
+  const t = useTranslations('Sidebar')
+
+  // 根据当前路径自动设置活动页面
+  useEffect(() => {
+    if (pathname) {
+      const currentPage = projects.find((p) => pathname.startsWith(p.url))
+      if (currentPage) {
+        setActivePage(currentPage.name)
+      }
+    }
+  }, [pathname, setActivePage])
+
+  return (
+    <SidebarGroup className='group-data-[collapsible=icon]:hidden'>
+      <SidebarMenu>
+        {projects.map((item) => (
+          <SidebarMenuItem key={item.name}>
+            <SidebarMenuButton
+              asChild
+              isActive={item.name === activePage}
+              onClick={() => setActivePage(item.name)}
+            >
+              <Link href={item.url}>
+                {item.icon_rotate ? (
+                  <item.icon className='-rotate-90' />
+                ) : (
+                  <item.icon />
+                )}
+                <span>{t(item.name)}</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        ))}
+      </SidebarMenu>
+    </SidebarGroup>
+  )
 }
