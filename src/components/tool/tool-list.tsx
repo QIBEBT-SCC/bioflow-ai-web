@@ -1,177 +1,368 @@
-import {Link} from "react-router-dom";
-import {Badge} from "@/components/ui/badge.tsx";
+'use client'
+
+import { Copy, Edit, MoreHorizontal, Tag, Trash2 } from 'lucide-react'
+import Link from 'next/link'
+import { useState } from 'react'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu.tsx";
-import {Button} from "@/components/ui/button.tsx";
-import {Copy, Edit, MoreHorizontal, Tag, Trash2} from "lucide-react";
-import {Card, CardContent} from "@/components/ui/card.tsx";
-import {useAllTools, useToolCount} from "@/hooks/use-tool.tsx";
-import {Table, TableBody, TableCell, TableHead, TableHeader, TablePage, TableRow} from "@/components/ui/table.tsx";
-import {useState} from "react";
-import {useTranslation} from "react-i18next";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { useToolCount, useToolList } from '@/hooks/use-tool'
+import type { SimpleToolInfo } from '@/types/tool'
 
 // 根据标签名称获取对应的样式
 function getTagStyle(tagName: string) {
-    switch (tagName) {
-        case "Default":
-            return "bg-green-50 text-green-600 border-green-200";
-        case "AI Unchecked":
-            return "bg-yellow-50 text-yellow-600 border-yellow-200";
-        default:
-            return "bg-blue-50 text-blue-600 border-blue-200";
-    }
+  switch (tagName) {
+    case 'Default':
+      return 'bg-green-50 text-green-600 border-green-200'
+    case 'AI Unchecked':
+      return 'bg-yellow-50 text-yellow-600 border-yellow-200'
+    default:
+      return 'bg-blue-50 text-blue-600 border-blue-200'
+  }
 }
 
-export function ToolList({viewMode}: { viewMode: "list" | "grid" }) {
-    const {t} = useTranslation();
-    const [recentOffset, setRecentOffset] = useState<number>(0)
-    const {data: allTools = []} = useAllTools(recentOffset);
-    const {data: toolCounts = 0} = useToolCount();
+interface ToolListProps {
+  viewMode: 'list' | 'grid'
+  searchQuery?: string
+  selectedGroupId?: number | null
+}
 
-    return viewMode === "list" ? (
-        <div>
-            <Table>
-                <TableHeader className="bg-muted/50">
-                    <TableRow>
-                        <TableHead className="h-12 px-4 text-left w-30">{t('tool.tool_name')}</TableHead>
-                        <TableHead className="h-12 px-4 text-left w-60">{t('tool.docker_image')}</TableHead>
-                        <TableHead className="h-12 px-4 text-left w-85">{t('tool.description')}</TableHead>
-                        <TableHead className="h-12 px-4 text-left w-30">{t('tool.tags')}</TableHead>
-                        <TableHead className="h-12 px-4 text-center w-5">{t('tool.actions')}</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {allTools.map((tool) => (
-                        <TableRow key={tool.uid}>
-                            <TableCell className="font-medium max-w-30">
-                                <Link to={`/tool/${tool.uid}`} className="hover:underline">
-                                    <div className="truncate">{tool.name}</div>
-                                </Link>
-                            </TableCell>
-                            <TableCell className="text-muted-foreground max-w-60">
-                                <div className="truncate">
-                                    {tool.image.image.registry}/{tool.image.image.namespace}/{tool.image.image.repository}:{tool.image.image.tag}
-                                </div>
-                            </TableCell>
-                            <TableCell className="max-w-85">
-                                <div className="line-clamp-2 text-sm truncate">{tool.description || t('tool.no_description')}</div>
-                            </TableCell>
-                            <TableCell className="max-w-30">
-                                <div className="flex flex-row flex-wrap gap-1">
-                                    {tool.tags.slice(0, 2).map((tag) => (
-                                        <Badge key={tag.id} variant="outline" className={`${getTagStyle(tag.name)} text-xs`}>
-                                            {tag.name}
-                                        </Badge>
-                                    ))}
-                                    {tool.tags.length > 2 && <Badge variant="outline" className="text-xs">+{tool.tags.length - 2}</Badge>}
-                                </div>
-                            </TableCell>
-                            <TableCell className="text-center">
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                                            <MoreHorizontal className="h-4 w-4"/>
-                                            <span className="sr-only">{t('tool.more_options')}</span>
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                        <DropdownMenuItem>
-                                            <Edit className="h-4 w-4 mr-2"/>
-                                            {t('tool.edit')} {t('tool.tool_name')}
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem>
-                                            <Copy className="h-4 w-4 mr-2"/>
-                                            {t('tool.copy')} {t('tool.tool_name')}
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem>
-                                            <Tag className="h-4 w-4 mr-2"/>
-                                            {t('tool.manage_group')}
-                                        </DropdownMenuItem>
-                                        <DropdownMenuSeparator/>
-                                        <DropdownMenuItem className="text-destructive">
-                                            <Trash2 className="h-4 w-4 mr-2"/>
-                                            {t('tool.delete')} {t('tool.tool_name')}
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-            <TablePage
-                totalItems={toolCounts}
-                offset={recentOffset}
-                pageSize={10}
-                setOffset={setRecentOffset}
-            />
+export function ToolList({ viewMode }: ToolListProps) {
+  const [currentPage, setCurrentPage] = useState(1)
+  const pageSize = viewMode === 'list' ? 10 : 12
+  const offset = (currentPage - 1) * pageSize
+
+  const { data: allTools = [], isLoading } = useToolList(offset, pageSize)
+  const { data: toolCounts = 0 } = useToolCount()
+
+  const totalPages = Math.ceil(toolCounts / pageSize)
+
+  // 生成页码数组
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = []
+    const maxVisible = 5
+
+    if (totalPages <= maxVisible) {
+      // 如果总页数少于最大可见数，显示所有页码
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i)
+      }
+    } else {
+      // 否则智能显示部分页码
+      if (currentPage <= 3) {
+        // 当前页在开头
+        for (let i = 1; i <= 4; i++) {
+          pages.push(i)
+        }
+        pages.push('...')
+        pages.push(totalPages)
+      } else if (currentPage >= totalPages - 2) {
+        // 当前页在末尾
+        pages.push(1)
+        pages.push('...')
+        for (let i = totalPages - 3; i <= totalPages; i++) {
+          pages.push(i)
+        }
+      } else {
+        // 当前页在中间
+        pages.push(1)
+        pages.push('...')
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          pages.push(i)
+        }
+        pages.push('...')
+        pages.push(totalPages)
+      }
+    }
+
+    return pages
+  }
+
+  if (isLoading) {
+    return (
+      <div className='flex items-center justify-center py-12'>
+        <div className='text-center'>
+          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2'></div>
+          <p className='text-muted-foreground'>加载中...</p>
         </div>
-    ) : (
-        <div>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {allTools.map((tool) => (
-                    <Card key={tool.uid} className="py-0 gap-0">
-                        <CardContent className="p-4">
-                            <div className="flex justify-between items-start mb-2">
-                                <Link to={`/tool/${tool.uid}`} className="font-medium hover:underline">
-                                    {tool.name}
-                                </Link>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                                            <MoreHorizontal className="h-4 w-4"/>
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                        <DropdownMenuItem>
-                                            <Edit className="h-4 w-4 mr-2"/>
-                                            {t('tool.edit')} {t('tool.tool_name')}
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem>
-                                            <Copy className="h-4 w-4 mr-2"/>
-                                            {t('tool.copy')} {t('tool.tool_name')}
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem>
-                                            <Tag className="h-4 w-4 mr-2"/>
-                                            {t('tool.manage_group')}
-                                        </DropdownMenuItem>
-                                        <DropdownMenuSeparator/>
-                                        <DropdownMenuItem className="text-destructive">
-                                            <Trash2 className="h-4 w-4 mr-2"/>
-                                            {t('tool.delete')} {t('tool.tool_name')}
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            </div>
-                            <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{tool.description || t('tool.no_description')}</p>
-                            <div className="flex items-center justify-between text-xs text-muted-foreground">
-                            <span>
-                                {tool.image.image.registry}/{tool.image.image.namespace}/{tool.image.image.repository}:{tool.image.image.tag}
-                            </span>
-                            </div>
-                            <div className="flex flex-wrap gap-1 mt-3">
-                                {tool.tags.slice(0, 3).map((tag) => (
-                                    <Badge key={tag.id} variant="outline" className={getTagStyle(tag.name)}>
-                                        {tag.name}
-                                    </Badge>
-                                ))}
-                                {tool.tags.length > 3 && <Badge variant="outline">+{tool.tags.length - 3}</Badge>}
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
-            </div>
-            <TablePage
-                totalItems={toolCounts}
-                offset={recentOffset}
-                pageSize={12}
-                setOffset={setRecentOffset}
-            />
-        </div>
+      </div>
     )
+  }
+
+  return viewMode === 'list' ? (
+    <div>
+      <Table>
+        <TableHeader className='bg-muted/50'>
+          <TableRow>
+            <TableHead className='h-12 px-4 text-left w-30'>工具名称</TableHead>
+            <TableHead className='h-12 px-4 text-left w-60'>
+              Docker镜像
+            </TableHead>
+            <TableHead className='h-12 px-4 text-left w-85'>描述</TableHead>
+            <TableHead className='h-12 px-4 text-left w-30'>标签</TableHead>
+            <TableHead className='h-12 px-4 text-center w-5'>操作</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {allTools.map((tool: SimpleToolInfo) => (
+            <TableRow key={tool.uid}>
+              <TableCell className='font-medium max-w-30'>
+                <Link href={`/tool/${tool.uid}`} className='hover:underline'>
+                  <div className='truncate'>{tool.name}</div>
+                </Link>
+              </TableCell>
+              <TableCell className='text-muted-foreground max-w-60'>
+                <div className='truncate'>
+                  {tool.image.image.registry}/{tool.image.image.namespace}/
+                  {tool.image.image.repository}:{tool.image.image.tag}
+                </div>
+              </TableCell>
+              <TableCell className='max-w-85'>
+                <div className='line-clamp-2 text-sm truncate'>
+                  {tool.description || '暂无描述'}
+                </div>
+              </TableCell>
+              <TableCell className='max-w-30'>
+                <div className='flex flex-row flex-wrap gap-1'>
+                  {tool.tags.slice(0, 2).map((tag) => (
+                    <Badge
+                      key={tag.id}
+                      variant='outline'
+                      className={`${getTagStyle(tag.name)} text-xs`}
+                    >
+                      {tag.name}
+                    </Badge>
+                  ))}
+                  {tool.tags.length > 2 && (
+                    <Badge variant='outline' className='text-xs'>
+                      +{tool.tags.length - 2}
+                    </Badge>
+                  )}
+                </div>
+              </TableCell>
+              <TableCell className='text-center'>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant='ghost' size='icon' className='h-8 w-8'>
+                      <MoreHorizontal className='h-4 w-4' />
+                      <span className='sr-only'>更多选项</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align='end'>
+                    <DropdownMenuItem>
+                      <Edit className='h-4 w-4 mr-2' />
+                      编辑工具
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <Copy className='h-4 w-4 mr-2' />
+                      复制工具
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <Tag className='h-4 w-4 mr-2' />
+                      管理分组
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem className='text-destructive'>
+                      <Trash2 className='h-4 w-4 mr-2' />
+                      删除工具
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+
+      {/* 分页 */}
+      <div className='flex items-center justify-between mt-4'>
+        <div className='text-sm text-muted-foreground'>
+          显示 {offset + 1}-{Math.min(offset + pageSize, toolCounts)} 共{' '}
+          {toolCounts} 项
+        </div>
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                className={
+                  currentPage === 1
+                    ? 'pointer-events-none opacity-50'
+                    : 'cursor-pointer'
+                }
+              />
+            </PaginationItem>
+            {getPageNumbers().map((page, index) =>
+              typeof page === 'number' ? (
+                <PaginationItem key={`page-list-${page}`}>
+                  <PaginationLink
+                    onClick={() => setCurrentPage(page)}
+                    isActive={currentPage === page}
+                    className='cursor-pointer'
+                  >
+                    {page}
+                  </PaginationLink>
+                </PaginationItem>
+              ) : (
+                <PaginationItem key={`ellipsis-list-${index}`}>
+                  <PaginationEllipsis />
+                </PaginationItem>
+              ),
+            )}
+            <PaginationItem>
+              <PaginationNext
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                }
+                className={
+                  currentPage === totalPages
+                    ? 'pointer-events-none opacity-50'
+                    : 'cursor-pointer'
+                }
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      </div>
+    </div>
+  ) : (
+    <div>
+      <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
+        {allTools.map((tool: SimpleToolInfo) => (
+          <Card key={tool.uid} className='py-0 gap-0'>
+            <CardContent className='p-4'>
+              <div className='flex justify-between items-start mb-2'>
+                <Link
+                  href={`/tool/${tool.uid}`}
+                  className='font-medium hover:underline'
+                >
+                  {tool.name}
+                </Link>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant='ghost' size='icon' className='h-8 w-8'>
+                      <MoreHorizontal className='h-4 w-4' />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align='end'>
+                    <DropdownMenuItem>
+                      <Edit className='h-4 w-4 mr-2' />
+                      编辑工具
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <Copy className='h-4 w-4 mr-2' />
+                      复制工具
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <Tag className='h-4 w-4 mr-2' />
+                      管理分组
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem className='text-destructive'>
+                      <Trash2 className='h-4 w-4 mr-2' />
+                      删除工具
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+              <p className='text-sm text-muted-foreground mb-3 line-clamp-2'>
+                {tool.description || '暂无描述'}
+              </p>
+              <div className='flex items-center justify-between text-xs text-muted-foreground'>
+                <span className='truncate'>
+                  {tool.image.image.registry}/{tool.image.image.namespace}/
+                  {tool.image.image.repository}:{tool.image.image.tag}
+                </span>
+              </div>
+              <div className='flex flex-wrap gap-1 mt-3'>
+                {tool.tags.slice(0, 3).map((tag) => (
+                  <Badge
+                    key={tag.id}
+                    variant='outline'
+                    className={getTagStyle(tag.name)}
+                  >
+                    {tag.name}
+                  </Badge>
+                ))}
+                {tool.tags.length > 3 && (
+                  <Badge variant='outline'>+{tool.tags.length - 3}</Badge>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* 分页 */}
+      <div className='flex items-center justify-center mt-6'>
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                className={
+                  currentPage === 1
+                    ? 'pointer-events-none opacity-50'
+                    : 'cursor-pointer'
+                }
+              />
+            </PaginationItem>
+            {getPageNumbers().map((page, index) =>
+              typeof page === 'number' ? (
+                <PaginationItem key={`page-grid-${page}`}>
+                  <PaginationLink
+                    onClick={() => setCurrentPage(page)}
+                    isActive={currentPage === page}
+                    className='cursor-pointer'
+                  >
+                    {page}
+                  </PaginationLink>
+                </PaginationItem>
+              ) : (
+                <PaginationItem key={`ellipsis-grid-${index}`}>
+                  <PaginationEllipsis />
+                </PaginationItem>
+              ),
+            )}
+            <PaginationItem>
+              <PaginationNext
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                }
+                className={
+                  currentPage === totalPages
+                    ? 'pointer-events-none opacity-50'
+                    : 'cursor-pointer'
+                }
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      </div>
+    </div>
+  )
 }
