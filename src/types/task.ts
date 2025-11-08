@@ -1,11 +1,7 @@
-import type { Status, UserPublic } from './workflow'
+import type { User } from '@/types/auth'
+import type { Status } from '@/types/run'
 
-export interface RunInfo4Task {
-  uid: string
-  name: string
-}
-
-export interface ToolInfo4Task {
+interface ToolInfo4Task {
   uid: string
   name: string
   description: string
@@ -20,8 +16,11 @@ export interface ToolOutput {
 export interface SimpleTaskPublic {
   uid: string
   name: string
-  owner: UserPublic
-  run_instance: RunInfo4Task
+  owner: User
+  run_instance: {
+    uid: string
+    name: string
+  }
   status: Status
   create_time?: string
   start_time?: string
@@ -29,7 +28,6 @@ export interface SimpleTaskPublic {
 }
 
 export interface TaskPublic extends SimpleTaskPublic {
-  instance_uid: string
   tool: ToolInfo4Task
   commands?: string
   tool_output?: ToolOutput
@@ -45,4 +43,3 @@ export interface MonitorPublic {
   io_out: number
   time: string
 }
-

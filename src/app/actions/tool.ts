@@ -3,7 +3,13 @@
 import { revalidatePath } from 'next/cache'
 import { serverFetch } from '@/lib/api-server'
 import type { ToolArgPublic } from '@/types/node'
-import type { DockerToolCreate, SimpleToolInfo, ToolGroup, ToolInfo, ToolTag } from '@/types/tool'
+import type {
+  DockerToolCreate,
+  SimpleToolInfo,
+  ToolGroup,
+  ToolInfo,
+  ToolTag,
+} from '@/types/tool'
 
 /**
  * 获取tool的参数信息（用于节点编辑器）
@@ -22,20 +28,30 @@ export async function getToolGroupList(): Promise<ToolGroup[]> {
 /**
  * 获取分组下的工具列表
  */
-export async function getGroupTools(parent_id?: number): Promise<SimpleToolInfo[]> {
-  const endpoint = parent_id !== undefined 
-    ? `/tool-groups/tools?parent_id=${parent_id}` 
-    : '/tool-groups/tools'
+export async function getGroupTools(
+  parent_id?: number,
+): Promise<SimpleToolInfo[]> {
+  const endpoint =
+    parent_id !== undefined
+      ? `/tool-groups/tools?parent_id=${parent_id}`
+      : '/tool-groups/tools'
   return await serverFetch<SimpleToolInfo[]>(endpoint)
 }
 
 /**
  * 搜索工具
  */
-export async function searchTools(name: string, offset: number = 0): Promise<SimpleToolInfo[]> {
-  return await serverFetch<SimpleToolInfo[]>(
-    `/tools/search?name=${encodeURIComponent(name)}&offset=${offset}&limit=12`
-  )
+export async function searchTools(
+  name: string,
+  offset: number = 0,
+): Promise<SimpleToolInfo[]> {
+  return await serverFetch<SimpleToolInfo[]>('/tools/search', {
+    params: {
+      name: name,
+      offset: String(offset),
+      limit: '12',
+    },
+  })
 }
 
 /**
@@ -55,8 +71,16 @@ export async function getToolCount(): Promise<number> {
 /**
  * 获取工具列表
  */
-export async function getToolList(offset: number = 0, limit: number = 10): Promise<SimpleToolInfo[]> {
-  return await serverFetch<SimpleToolInfo[]>(`/tools?offset=${offset}&limit=${limit}`)
+export async function getToolList(
+  offset: number = 0,
+  limit: number = 10,
+): Promise<SimpleToolInfo[]> {
+  return await serverFetch<SimpleToolInfo[]>('/tools', {
+    params: {
+      offset: String(offset),
+      limit: String(limit),
+    },
+  })
 }
 
 /**
@@ -72,11 +96,11 @@ export async function getTool(uid: string): Promise<ToolInfo> {
 export async function createTool(tool: DockerToolCreate): Promise<ToolInfo> {
   const response = await serverFetch<ToolInfo>('/tools', {
     method: 'POST',
-    body: JSON.stringify(tool)
+    body: JSON.stringify(tool),
   })
-  
+
   revalidatePath('/tool')
-  
+
   return response
 }
 
@@ -85,24 +109,26 @@ export async function createTool(tool: DockerToolCreate): Promise<ToolInfo> {
  */
 export async function deleteTool(uid: string): Promise<void> {
   await serverFetch(`/tools/${uid}`, {
-    method: 'DELETE'
+    method: 'DELETE',
   })
-  
+
   revalidatePath('/tool')
 }
 
 /**
  * 更新工具
  */
-export async function updateTool(uid: string, tool: Partial<DockerToolCreate>): Promise<ToolInfo> {
+export async function updateTool(
+  uid: string,
+  tool: Partial<DockerToolCreate>,
+): Promise<ToolInfo> {
   const response = await serverFetch<ToolInfo>(`/tools/${uid}`, {
     method: 'PUT',
-    body: JSON.stringify(tool)
+    body: JSON.stringify(tool),
   })
-  
+
   revalidatePath('/tool')
   revalidatePath(`/tool/${uid}`)
-  
+
   return response
 }
-

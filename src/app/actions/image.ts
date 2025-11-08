@@ -12,8 +12,10 @@ export async function getImageList(
   limit: number = 12,
 ): Promise<ToolImage[]> {
   return await serverFetch<ToolImage[]>('/images', {
-    // @ts-expect-error
-    params: { offset, limit },
+    params: {
+      offset: String(offset),
+      limit: String(limit),
+    },
   })
 }
 
@@ -25,9 +27,9 @@ export async function getImageCount(): Promise<number> {
 }
 
 export async function searchImages(name: string): Promise<ToolImage[]> {
-  return await serverFetch<ToolImage[]>(
-    `/images/search?name=${encodeURIComponent(name)}`,
-  )
+  return await serverFetch<ToolImage[]>('/images/search', {
+    params: { name },
+  })
 }
 
 export async function createImage(image: ToolImage): Promise<ToolImage> {

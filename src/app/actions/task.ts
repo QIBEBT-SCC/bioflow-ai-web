@@ -15,9 +15,12 @@ export async function getTasks(
   offset: number = 0,
   limit: number = 20,
 ): Promise<SimpleTaskPublic[]> {
-  return await serverFetch<SimpleTaskPublic[]>(
-    `/tasks?offset=${offset}&limit=${limit}`,
-  )
+  return await serverFetch<SimpleTaskPublic[]>(`/tasks`, {
+    params: {
+      offset: String(offset),
+      limit: String(limit),
+    },
+  })
 }
 
 /**

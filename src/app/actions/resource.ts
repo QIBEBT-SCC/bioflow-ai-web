@@ -12,7 +12,10 @@ export async function getDBList(
   limit: number = 8,
 ): Promise<BioDbSimple[]> {
   return await serverFetch('/bio_dbs', {
-    params: { offset, limit },
+    params: {
+      offset: String(offset),
+      limit: String(limit),
+    },
   })
 }
 
@@ -58,9 +61,13 @@ export async function deleteDB(id: number): Promise<void> {
 export async function searchDB(
   name: string,
   offset: number = 0,
-  limit: number = 10
+  limit: number = 10,
 ): Promise<BioDb[]> {
-  return await serverFetch<BioDb[]>(
-    `/bio_dbs/search?name=${name}&offset=${offset}&limit=${limit}`
-  )
+  return await serverFetch<BioDb[]>('/bio_dbs/search', {
+    params: {
+      name: name,
+      offset: String(offset),
+      limit: String(limit),
+    },
+  })
 }

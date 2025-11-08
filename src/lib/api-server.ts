@@ -25,13 +25,12 @@ export async function serverFetch<T = unknown>(
     url = `${url}?${searchParams}`
   }
 
-  // 从 Cookie 获取 token
   const cookieStore = await cookies()
   const token = cookieStore.get('access_token')?.value
 
   const res = await fetch(url, {
     ...options,
-    credentials: 'include', // 转发所有 Cookie
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -56,35 +55,4 @@ export async function serverFetch<T = unknown>(
     return (await res.json()) as T
   }
   return (await res.text()) as unknown as T
-}
-
-export async function publicFetch<T = unknown>(
-  endpoint: string,
-  options?: RequestInit & { params?: Record<string, string> },
-): Promise<T> {
-  let url = `${FASTAPI_URL}${endpoint}`
-  if (options?.params) {
-    const searchParams = new URLSearchParams(options.params).toString()
-    url = `${url}?${searchParams}`
-  }
-
-  const res = await fetch(url, {
-    ...options,
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(options?.headers ?? {}),
-    },
-  })
-
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => null)
-    throw new ApiError(
-      (errorData as any)?.message || `HTTP ${res.status}: ${res.statusText}`,
-      res.status,
-      errorData,
-    )
-  }
-
-  return (await res.json()) as T
 }

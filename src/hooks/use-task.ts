@@ -2,15 +2,20 @@
 
 import { useQuery } from '@tanstack/react-query'
 import {
-  getTasks,
-  getTaskCount,
   getRecentTasks,
   getTask,
-  getTaskResult,
-  getTaskMonitor,
+  getTaskCount,
   getTaskLog,
+  getTaskMonitor,
+  getTaskResult,
+  getTasks,
 } from '@/app/actions/task'
-import type { SimpleTaskPublic, TaskPublic, MonitorPublic, ToolOutput } from '@/types/task'
+import type {
+  MonitorPublic,
+  SimpleTaskPublic,
+  TaskPublic,
+  ToolOutput,
+} from '@/types/task'
 
 // ============================================
 // Query Hooks (数据查询)
@@ -98,4 +103,3 @@ export const useTaskLog = (uid: string) => {
     staleTime: 5 * 60 * 1000,
   })
 }
-
