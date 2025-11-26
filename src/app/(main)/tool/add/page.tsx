@@ -1,11 +1,11 @@
 'use client'
 
-import { ArrowLeft, ArrowRight, Check, Sparkles } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Check } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { ToolFileCard, ToolParamCard } from '@/components/tool/tool-cards'
+import { ToolConfigForm, type ToolConfigValues } from '@/components/tool/tool-config-form'
 import { Badge } from '@/components/ui/badge'
 import {
   Breadcrumb,
@@ -17,20 +17,9 @@ import {
 } from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Textarea } from '@/components/ui/textarea'
 import {
   useCreateTool,
   useSearchImages,
@@ -104,6 +93,16 @@ export default function AddToolPage() {
       default:
         return false
     }
+  }
+
+  const updateToolConfigField = (
+    field: keyof ToolConfigValues,
+    value: string | number | boolean | ParamDefine[] | FileMount[],
+  ) => {
+    setToolConfig({
+      ...toolConfig,
+      [field]: value as never,
+    })
   }
 
   // 添加动态参数
@@ -322,260 +321,27 @@ export default function AddToolPage() {
                   填写工具的基本信息和参数配置
                 </p>
 
-                {currentImage && (
-                  <div className='mb-4 flex items-center gap-2'>
-                    <span className='text-sm text-muted-foreground'>
-                      基于镜像：
-                    </span>
-                    <Badge variant='outline'>{currentImage.name}</Badge>
-                    <Badge variant='secondary'>{currentImage.version}</Badge>
-                  </div>
-                )}
-
-                <Tabs defaultValue='basic' className='w-full'>
-                  <TabsList className='grid w-full grid-cols-3'>
-                    <TabsTrigger value='basic'>
-                      基本信息
-                      {toolConfig.name && (
-                        <Badge variant='outline' className='ml-2'>
-                          {toolConfig.name}
-                        </Badge>
-                      )}
-                    </TabsTrigger>
-                    <TabsTrigger value='params'>
-                      参数配置
-                      {toolConfig.dynamic_params.length > 0 && (
-                        <Badge variant='outline' className='ml-2'>
-                          {toolConfig.dynamic_params.length}
-                        </Badge>
-                      )}
-                    </TabsTrigger>
-                    <TabsTrigger value='files'>
-                      文件挂载
-                      {toolConfig.file_mounts.length > 0 && (
-                        <Badge variant='outline' className='ml-2'>
-                          {toolConfig.file_mounts.length}
-                        </Badge>
-                      )}
-                    </TabsTrigger>
-                  </TabsList>
-
-                  {/* 基本信息 */}
-                  <TabsContent value='basic'>
-                    <Card>
-                      <CardContent className='space-y-6 pt-6'>
-                        <div className='space-y-2'>
-                          <Label htmlFor='name'>
-                            工具名称 <span className='text-red-500'>*</span>
-                          </Label>
-                          <Input
-                            id='name'
-                            value={toolConfig.name}
-                            onChange={(e) =>
-                              setToolConfig({
-                                ...toolConfig,
-                                name: e.target.value,
-                              })
-                            }
-                            placeholder='输入工具名称'
-                            required
-                          />
-                        </div>
-
-                        <div className='space-y-2'>
-                          <Label htmlFor='description'>
-                            描述 <span className='text-red-500'>*</span>
-                          </Label>
-                          <Textarea
-                            id='description'
-                            value={toolConfig.description}
-                            onChange={(e) =>
-                              setToolConfig({
-                                ...toolConfig,
-                                description: e.target.value,
-                              })
-                            }
-                            placeholder='描述工具的功能'
-                            rows={3}
-                          />
-                        </div>
-
-                        <div className='space-y-2'>
-                          <Label htmlFor='command_template'>
-                            命令模板 <span className='text-red-500'>*</span>
-                          </Label>
-                          <Input
-                            id='command_template'
-                            value={toolConfig.command_template}
-                            onChange={(e) =>
-                              setToolConfig({
-                                ...toolConfig,
-                                command_template: e.target.value,
-                              })
-                            }
-                            placeholder='tool {dynamic_params} {static_params}'
-                            required
-                          />
-                        </div>
-
-                        <div className='space-y-2'>
-                          <Label htmlFor='group_id'>工具分组</Label>
-                          <Select
-                            value={toolConfig.group_id.toString()}
-                            onValueChange={(value) =>
-                              setToolConfig({
-                                ...toolConfig,
-                                group_id: Number.parseInt(value),
-                              })
-                            }
-                          >
-                            <SelectTrigger id='group_id'>
-                              <SelectValue placeholder='选择分组' />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {toolGroups.map((group) => (
-                                <SelectItem
-                                  key={group.id}
-                                  value={group.id.toString()}
-                                >
-                                  {group.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className='flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4'>
-                          <div className='flex items-center space-x-2'>
-                            <Checkbox
-                              id='mkdir_output'
-                              checked={toolConfig.mkdir_output}
-                              onCheckedChange={(checked) =>
-                                setToolConfig({
-                                  ...toolConfig,
-                                  mkdir_output: checked as boolean,
-                                })
-                              }
-                            />
-                            <Label htmlFor='mkdir_output'>创建输出目录</Label>
-                          </div>
-                          <div className='flex items-center space-x-2'>
-                            <Checkbox
-                              id='use_temp_dir'
-                              checked={toolConfig.use_temp_dir}
-                              onCheckedChange={(checked) =>
-                                setToolConfig({
-                                  ...toolConfig,
-                                  use_temp_dir: checked as boolean,
-                                })
-                              }
-                            />
-                            <Label htmlFor='use_temp_dir'>使用临时目录</Label>
-                          </div>
-                        </div>
-
-                        {/* AI生成按钮占位 */}
-                        <div className='flex justify-end pt-4 border-t'>
-                          <Button variant='outline' disabled>
-                            <Sparkles className='h-4 w-4 mr-2' />
-                            AI智能生成配置
-                            <Badge variant='secondary' className='ml-2'>
-                              即将推出
-                            </Badge>
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-
-                  {/* 参数配置 */}
-                  <TabsContent value='params'>
-                    <Card>
-                      <CardContent className='space-y-6 pt-6'>
-                        <div className='space-y-2'>
-                          <Label>动态参数</Label>
-                          {toolConfig.dynamic_params.length === 0 ? (
-                            <div className='text-center py-6 text-muted-foreground border rounded-md bg-muted/30'>
-                              暂无动态参数
-                            </div>
-                          ) : (
-                            <div className='space-y-4'>
-                              {toolConfig.dynamic_params.map((param, index) => (
-                                <ToolParamCard
-                                  key={`param-${index}-${param.command}`}
-                                  param={param}
-                                  index={index}
-                                  onRemove={removeDynamicParam}
-                                  onUpdate={updateDynamicParam}
-                                />
-                              ))}
-                            </div>
-                          )}
-                          <Button
-                            type='button'
-                            onClick={addDynamicParam}
-                            variant='outline'
-                            className='w-full'
-                          >
-                            添加动态参数
-                          </Button>
-                        </div>
-
-                        <div className='space-y-2'>
-                          <Label htmlFor='static_params'>固定参数</Label>
-                          <Textarea
-                            id='static_params'
-                            value={toolConfig.static_params}
-                            onChange={(e) =>
-                              setToolConfig({
-                                ...toolConfig,
-                                static_params: e.target.value,
-                              })
-                            }
-                            placeholder='--threads 4 --output /output'
-                            rows={3}
-                          />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-
-                  {/* 文件挂载 */}
-                  <TabsContent value='files'>
-                    <Card>
-                      <CardContent className='space-y-6 pt-6'>
-                        <div className='space-y-2'>
-                          <Label>文件挂载</Label>
-                          {toolConfig.file_mounts.length === 0 ? (
-                            <div className='text-center py-6 text-muted-foreground border rounded-md bg-muted/30'>
-                              暂无文件挂载
-                            </div>
-                          ) : (
-                            <div className='space-y-4'>
-                              {toolConfig.file_mounts.map((file, index) => (
-                                <ToolFileCard
-                                  key={`file-${index}-${file.name}`}
-                                  file={file}
-                                  index={index}
-                                  onUpdate={updateFileMount}
-                                  onRemove={removeFileMount}
-                                />
-                              ))}
-                            </div>
-                          )}
-                          <Button
-                            type='button'
-                            onClick={addFileMount}
-                            variant='outline'
-                            className='w-full'
-                          >
-                            添加文件挂载
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-                </Tabs>
+                <ToolConfigForm
+                  value={toolConfig}
+                  toolGroups={toolGroups}
+                  onFieldChange={updateToolConfigField}
+                  onAddDynamicParam={addDynamicParam}
+                  onUpdateDynamicParam={updateDynamicParam}
+                  onRemoveDynamicParam={removeDynamicParam}
+                  onAddFileMount={addFileMount}
+                  onUpdateFileMount={updateFileMount}
+                  onRemoveFileMount={removeFileMount}
+                  imageSummary={
+                    currentImage?.name || currentImage?.version
+                      ? {
+                          name: currentImage.name,
+                          version: currentImage.version,
+                        }
+                      : undefined
+                  }
+                  showTabBadges
+                  showAIGeneratePlaceholder
+                />
               </div>
             )}
 

@@ -8,6 +8,7 @@ import {
   ExternalLink,
   FileInput,
   FileOutput,
+  Pencil,
   Terminal,
 } from 'lucide-react'
 import Link from 'next/link'
@@ -129,6 +130,12 @@ export default function ToolDetailPage() {
               </div>
               <p className='text-muted-foreground mt-1'>{tool.description}</p>
             </div>
+            <Link href={`/tool/${tool.uid}/edit`}>
+              <Button variant='outline' className='gap-2'>
+                <Pencil className='h-4 w-4' />
+                编辑工具
+              </Button>
+            </Link>
           </div>
 
           <div className='grid gap-6 lg:grid-cols-3'>
