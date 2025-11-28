@@ -29,8 +29,8 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { RunTables } from '@/components/workflow/run-table'
-import { useRunStats } from '@/hooks/use-workflow'
 import { useWorkflowStore } from '@/stores/workflowStore'
+import {useRunStats} from "@/hooks/use-run";
 
 export default function WorkflowPage() {
   const queryClient = useQueryClient()
