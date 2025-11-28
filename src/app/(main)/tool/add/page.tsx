@@ -389,7 +389,7 @@ export default function AddToolPage() {
                   <Card>
                     <CardContent className='pt-6'>
                       <h3 className='font-semibold mb-4'>配置汇总</h3>
-                      <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
+                      <div className='grid grid-cols-2 md:grid-cols-3 gap-4'>
                         <div className='text-center'>
                           <div className='text-2xl font-bold text-primary'>
                             {toolConfig.dynamic_params.length}
@@ -408,18 +408,13 @@ export default function AddToolPage() {
                         </div>
                         <div className='text-center'>
                           <div className='text-2xl font-bold text-primary'>
-                            {toolConfig.mkdir_output ? '是' : '否'}
+                            {(toolConfig.immutable_static_params || '').length > 0 ||
+                            (toolConfig.modifiable_static_params || '').length > 0
+                              ? '是'
+                              : '否'}
                           </div>
                           <div className='text-sm text-muted-foreground'>
-                            创建输出目录
-                          </div>
-                        </div>
-                        <div className='text-center'>
-                          <div className='text-2xl font-bold text-primary'>
-                            {toolConfig.use_temp_dir ? '是' : '否'}
-                          </div>
-                          <div className='text-sm text-muted-foreground'>
-                            使用临时目录
+                            静态参数
                           </div>
                         </div>
                       </div>

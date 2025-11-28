@@ -48,10 +48,9 @@ export default function EditToolPage() {
           ...param,
           index: param.index ?? idx,
         })),
-        static_params: tool.static_params,
+        immutable_static_params: tool.immutable_static_params ?? null,
+        modifiable_static_params: tool.modifiable_static_params ?? null,
         file_mounts: tool.file_mounts.map((file) => ({ ...file })),
-        mkdir_output: tool.mkdir_output,
-        use_temp_dir: tool.use_temp_dir,
       })
     }
   }, [tool, defaultGroupId])

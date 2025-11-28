@@ -27,10 +27,9 @@ export type ToolConfigValues = Pick<
   | 'group_id'
   | 'command_template'
   | 'dynamic_params'
-  | 'static_params'
+  | 'immutable_static_params'
+  | 'modifiable_static_params'
   | 'file_mounts'
-  | 'mkdir_output'
-  | 'use_temp_dir'
 >
 
 interface ToolConfigFormProps {
@@ -181,29 +180,6 @@ export function ToolConfigForm({
                 </Select>
               </div>
 
-              <div className='flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4'>
-                <div className='flex items-center space-x-2'>
-                  <Checkbox
-                    id='tool-mkdir'
-                    checked={value.mkdir_output}
-                    onCheckedChange={(checked) =>
-                      onFieldChange('mkdir_output', checked as boolean)
-                    }
-                  />
-                  <Label htmlFor='tool-mkdir'>创建输出目录</Label>
-                </div>
-                <div className='flex items-center space-x-2'>
-                  <Checkbox
-                    id='tool-temp'
-                    checked={value.use_temp_dir}
-                    onCheckedChange={(checked) =>
-                      onFieldChange('use_temp_dir', checked as boolean)
-                    }
-                  />
-                  <Label htmlFor='tool-temp'>使用临时目录</Label>
-                </div>
-              </div>
-
               {showAIGeneratePlaceholder && (
                 <div className='flex justify-end pt-4 border-t'>
                   <Button variant='outline' disabled>
@@ -251,15 +227,41 @@ export function ToolConfigForm({
                 </Button>
               </div>
 
-              <div className='space-y-2'>
-                <Label htmlFor='tool-static'>固定参数</Label>
-                <Textarea
-                  id='tool-static'
-                  value={value.static_params}
-                  onChange={(e) => onFieldChange('static_params', e.target.value)}
-                  placeholder='--threads 4 --output /output'
-                  rows={3}
-                />
+              <div className='space-y-4'>
+                <div className='space-y-2'>
+                  <Label htmlFor='tool-immutable-static'>
+                    不可变静态参数
+                    <span className='text-xs text-muted-foreground ml-2'>
+                      (创建后不可修改)
+                    </span>
+                  </Label>
+                  <Textarea
+                    id='tool-immutable-static'
+                    value={value.immutable_static_params || ''}
+                    onChange={(e) =>
+                      onFieldChange('immutable_static_params', e.target.value || null)
+                    }
+                    placeholder='--threads 4 --output /output'
+                    rows={3}
+                  />
+                </div>
+                <div className='space-y-2'>
+                  <Label htmlFor='tool-modifiable-static'>
+                    可修改静态参数
+                    <span className='text-xs text-muted-foreground ml-2'>
+                      (可在编辑时修改)
+                    </span>
+                  </Label>
+                  <Textarea
+                    id='tool-modifiable-static'
+                    value={value.modifiable_static_params || ''}
+                    onChange={(e) =>
+                      onFieldChange('modifiable_static_params', e.target.value || null)
+                    }
+                    placeholder='--verbose --log-level info'
+                    rows={3}
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>

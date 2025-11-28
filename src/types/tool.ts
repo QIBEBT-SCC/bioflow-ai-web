@@ -80,10 +80,9 @@ export interface DockerToolCreate {
   tags: ToolTag[]
   command_template: string
   dynamic_params: ParamDefine[]
-  static_params: string
+  immutable_static_params?: string | null
+  modifiable_static_params?: string | null
   file_mounts: FileMount[]
-  mkdir_output: boolean
-  use_temp_dir: boolean
 }
 
 export interface SimpleToolInfo {
@@ -105,11 +104,10 @@ export interface ToolInfo {
   group_id?: number
   command_template: string
   dynamic_params: ParamDefine[]
-  static_params: string
+  immutable_static_params?: string | null
+  modifiable_static_params?: string | null
   file_mounts: FileMount[]
   complete_command: string
-  mkdir_output: boolean
-  use_temp_dir: boolean
   tags: ToolTag[]
   help_doc: ToolHelpDoc
   image: ToolImage
@@ -148,9 +146,8 @@ export interface AIGenTool {
   description: string
   command_template: string
   dynamic_params: ParamDefine[]
-  static_params: string
+  immutable_static_params?: string | null
+  modifiable_static_params?: string | null
   file_mounts: FileMount[]
-  mkdir_output: boolean
-  use_temp_dir: boolean
 }
 
