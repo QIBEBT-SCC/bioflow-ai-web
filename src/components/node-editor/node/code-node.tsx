@@ -64,7 +64,7 @@ const CodeCard = memo(function CodeCard({ nodeType }: CodeCardProps) {
         <div>
           <Label className='pb-2 font-medium'>Description (AI Prompt):</Label>
           <Textarea
-            className='h-[80px] w-full resize-none overflow-y-auto border-gray-200 text-sm focus-visible:ring-[2px] focus-visible:ring-indigo-500 focus-visible:ring-offset-2'
+            className='h-[80px] w-full resize-none overflow-y-auto border-input text-sm'
             placeholder='输入代码编写需求，作为AI编程的prompt...'
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
@@ -74,7 +74,7 @@ const CodeCard = memo(function CodeCard({ nodeType }: CodeCardProps) {
         <div>
           <Label className='pb-2 font-medium'>Code:</Label>
           <Textarea
-            className='h-[120px] w-full resize-none overflow-y-auto border-gray-200 font-mono text-sm focus:border-purple-500 focus:ring-purple-500'
+            className='h-[120px] w-full resize-none overflow-y-auto border-input font-mono text-sm'
             placeholder='在这里编写或粘贴代码...'
             value={code}
             onChange={(e) => setCode(e.target.value)}

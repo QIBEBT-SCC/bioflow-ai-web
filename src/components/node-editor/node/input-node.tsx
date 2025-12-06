@@ -97,7 +97,7 @@ const StringInputCard = memo(function StringInputCard() {
     <div className='p-3'>
       <Label className='pb-2 font-medium'>Value:</Label>
       <Input
-        className='w-full border-gray-200 focus-visible:ring-[2px] focus-visible:ring-blue-500 focus-visible:ring-offset-2'
+        className='w-full border-input focus-visible:ring-ring'
         placeholder='Enter string value here...'
         value={args}
         onChange={(e) => setArgs(e.target.value)}
@@ -145,7 +145,7 @@ const FileInputCard = memo(() => {
     <div className='p-3'>
       <Label className='pb-2 font-medium'>File:</Label>
       <Input
-        className='w-full border-gray-200 focus-visible:ring-[2px] focus-visible:ring-green-500 focus-visible:ring-offset-2'
+        className='w-full border-input focus-visible:ring-ring'
         placeholder='Enter file path here...'
         value={args}
         onChange={(e) => setArgs(e.target.value)}
@@ -204,7 +204,7 @@ const SequenceInputCard = memo(function SequenceInputCard() {
     <div className='p-3'>
       <Label className='pb-2 font-medium'>R1 path:</Label>
       <Input
-        className='w-full border-gray-200 focus-visible:ring-[2px] focus-visible:ring-green-500 focus-visible:ring-offset-2'
+        className='w-full border-input focus-visible:ring-ring'
         placeholder='Enter arguments here...'
         value={r1}
         onChange={(e) => setR1(e.target.value)}
@@ -213,7 +213,7 @@ const SequenceInputCard = memo(function SequenceInputCard() {
       />
       <Label className='pt-4 pb-2 font-medium'>R2 path:</Label>
       <Input
-        className='w-full border-gray-200 focus-visible:ring-[2px] focus-visible:ring-green-500 focus-visible:ring-offset-2'
+        className='w-full border-input focus-visible:ring-ring'
         placeholder='Enter arguments here...'
         value={r2}
         onChange={(e) => setR2(e.target.value)}

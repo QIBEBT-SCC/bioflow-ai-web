@@ -9,6 +9,7 @@ import React, {
   useCallback,
   useMemo,
 } from 'react'
+import { Button } from '@/components/ui/button'
 import {
   Sheet,
   SheetContent,
@@ -23,7 +24,7 @@ import type { HandleDefine } from '@/types/node'
 // 纯函数定义 - 避免在组件内部重复创建
 const calculateMaxRows = (
   inputs: HandleDefine[],
-  outputs: HandleDefine[]
+  outputs: HandleDefine[],
 ): number => {
   return Math.max(inputs.length, outputs.length)
 }
@@ -40,7 +41,9 @@ interface BaseNodeProps {
     outputs: HandleDefine[]
   }
   color: {
-    gradient: string
+    primary: string
+    border: string
+    bg: string
     indicatorColors: string[]
   }
   nodeComponent: React.ReactNode
@@ -58,7 +61,7 @@ const BaseNode = memo(function BaseNode({
 
   const maxRows = useMemo(
     () => calculateMaxRows(handles.inputs, handles.outputs),
-    [handles.inputs, handles.outputs]
+    [handles.inputs, handles.outputs],
   )
 
   const isConnected = useCallback(
@@ -66,10 +69,10 @@ const BaseNode = memo(function BaseNode({
       return connections.some(
         (connection) =>
           connection.sourceHandle === handleId ||
-          connection.targetHandle === handleId
+          connection.targetHandle === handleId,
       )
     },
-    [connections]
+    [connections],
   )
 
   const handlesElements = useMemo(
@@ -98,17 +101,17 @@ const BaseNode = memo(function BaseNode({
                   type='target'
                   position={Position.Left}
                   className={cn(
-                    '!left-3 h-2.5 w-2.5 rounded-full border-2 border-green-600 shadow-sm transition-all duration-200 hover:scale-110',
-                    isConnected(`${nodeId}-in-${input.name}`)
-                      ? '!bg-green-400'
-                      : '!bg-white'
+                    '!left-3 h-2.5 w-2.5 rounded-full border !border-border !bg-background shadow-xs transition-all duration-200',
+                    'hover:!border-primary/50 hover:!bg-primary/10 hover:!scale-110',
+                    isConnected(`${nodeId}-in-${input.name}`) &&
+                      '!border-teal-500 !bg-teal-100',
                   )}
                   style={{
                     top: `calc(var(--spacing) * ${calculateTopPos(index)})`,
                   }}
                 />
                 <span
-                  className='-translate-y-1/2 absolute left-6 transform truncate text-gray-600 text-xs'
+                  className='absolute left-6 -translate-y-1/2 select-none truncate text-xs text-muted-foreground'
                   style={{
                     top: `calc(var(--spacing) * ${calculateTopPos(index)})`,
                   }}
@@ -122,7 +125,7 @@ const BaseNode = memo(function BaseNode({
             {output && (
               <>
                 <span
-                  className='-translate-y-1/2 absolute right-6 transform truncate text-gray-600 text-xs'
+                  className='absolute right-6 -translate-y-1/2 select-none truncate text-end text-xs text-muted-foreground'
                   style={{
                     top: `calc(var(--spacing) * ${calculateTopPos(index)})`,
                   }}
@@ -134,10 +137,10 @@ const BaseNode = memo(function BaseNode({
                   type='source'
                   position={Position.Right}
                   className={cn(
-                    '!right-3 h-2.5 w-2.5 rounded-full border-2 border-blue-600 shadow-sm transition-all duration-200 hover:scale-110',
-                    isConnected(`${nodeId}-out-${output.name}`)
-                      ? '!bg-blue-400'
-                      : '!bg-white'
+                    '!right-3 h-2.5 w-2.5 rounded-full border border-border !bg-background shadow-xs transition-all duration-200',
+                    'hover:!border-primary/50 hover:!bg-primary/10 hover:!scale-110',
+                    isConnected(`${nodeId}-out-${output.name}`) &&
+                      '!border-indigo-500 !bg-indigo-100',
                   )}
                   style={{
                     top: `calc(var(--spacing) * ${calculateTopPos(index)})`,
@@ -148,14 +151,14 @@ const BaseNode = memo(function BaseNode({
           </div>
         )
       }),
-    [maxRows, handles.inputs, handles.outputs, nodeId, isConnected]
+    [maxRows, handles.inputs, handles.outputs, nodeId, isConnected],
   )
 
   const separatorStyle = useMemo(
     () => ({
       paddingTop: `calc(var(--spacing) * ${6 * maxRows})`,
     }),
-    [maxRows]
+    [maxRows],
   )
 
   const indicators = useMemo(
@@ -163,19 +166,24 @@ const BaseNode = memo(function BaseNode({
       color.indicatorColors.map((colorClass) => (
         <div
           key={colorClass}
-          className={cn('h-2 w-2 rounded-full', colorClass)}
+          className={cn(
+            'h-1.5 w-1.5 rounded-full ring-1 ring-white/50',
+            colorClass,
+          )}
         />
       )),
-    [color.indicatorColors]
+    [color.indicatorColors],
   )
 
   return (
-    <NodeCard>
-      <NodeCardHeader className={color.gradient}>
-        <NodeTitle className='text-white'>{title}</NodeTitle>
+    <NodeCard className={cn('border-t-4', color.border)}>
+      <NodeCardHeader className={cn(color.bg, 'border-b border-border/50')}>
+        <NodeTitle className={color.primary}>{title}</NodeTitle>
         <Sheet>
-          <SheetTrigger>
-            <InfoIcon className='h-3 w-3 text-gray-300' />
+          <SheetTrigger asChild>
+            <Button className='text-muted-foreground/70 transition-colors !bg-transparent hover:text-foreground'>
+              <InfoIcon className='h-3.5 w-3.5' />
+            </Button>
           </SheetTrigger>
           <SheetContent>
             <SheetHeader>
@@ -187,14 +195,16 @@ const BaseNode = memo(function BaseNode({
       </NodeCardHeader>
       <NodeCardContent>
         {handlesElements}
+        {/* 调整分隔线样式 */}
         <div
-          className='border-gray-100 border-b pb-3'
+          className='mb-2 border-b border-border/50 pb-3'
           style={separatorStyle}
         />
 
         {nodeComponent}
       </NodeCardContent>
-      <NodeCardFooter>{indicators}</NodeCardFooter>
+      {/* 调整 footer 位置和样式 */}
+      {indicators.length > 0 && <NodeCardFooter>{indicators}</NodeCardFooter>}
     </NodeCard>
   )
 })
@@ -205,18 +215,17 @@ const NodeCard = memo(
       <div
         ref={ref}
         className={cn(
-          'relative w-[300px] font-sans',
-          'min-h-[150px] rounded-sm border bg-white',
-          'overflow-hidden',
-          'hover:ring-1 hover:ring-blue-100',
-          // 节点选中状态样式
-          '[&.selected]:ring-2 [&.selected]:ring-blue-500',
-          className
+          'relative min-h-[150px] w-[300px] font-sans',
+          'rounded-xl border-x border-b border-border bg-white shadow-sm transition-shadow duration-200',
+          'hover:shadow-md',
+          // 选中样式优化：使用高对比度的中性色 ring + shadow，不改变 border 颜色
+          '[&.selected]:ring-1 [&.selected]:ring-foreground [&.selected]:shadow-lg',
+          className,
         )}
         {...props}
       />
-    )
-  )
+    ),
+  ),
 )
 
 const NodeCardHeader = memo(function NodeCardHeader({
@@ -226,8 +235,9 @@ const NodeCardHeader = memo(function NodeCardHeader({
   return (
     <div
       className={cn(
-        'nodeDragable flex h-8 flex-row items-center gap-1.5 px-3',
-        className
+        // remove duplicate borders/colors here, handled by parent
+        'nodeDragable flex h-8 items-center justify-between px-4',
+        className,
       )}
       {...props}
     />
@@ -238,7 +248,8 @@ const NodeTitle = memo(function NodeTitle({
   className,
   ...props
 }: React.ComponentProps<'div'>) {
-  return <span className={cn('font-medium text-sm', className)} {...props} />
+  // 字体加粗，颜色加深
+  return <span className={cn('font-semibold text-sm', className)} {...props} />
 })
 
 const NodeCardContent = memo(function NodeCardContent({
@@ -254,7 +265,7 @@ const NodeCardFooter = memo(function NodeCardFooter({
 }: React.ComponentProps<'div'>) {
   return (
     <div
-      className={cn('absolute right-2 bottom-2 flex space-x-1', className)}
+      className={cn('absolute right-3 bottom-3 flex gap-1', className)}
       {...props}
     />
   )
@@ -268,4 +279,3 @@ export {
   NodeCardContent,
   NodeCardFooter,
 }
-

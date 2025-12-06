@@ -11,9 +11,12 @@ import { useToolArg } from '@/hooks/use-tool'
 export const ToolNode = memo(function ToolNode() {
   const nodeId = useNodeId() ?? ''
   const { updateNodeData } = useReactFlow()
-  const nodeData = useNodesData<Node<{ resource_uid: string; args: string }, 'tool'>>(nodeId)
+  const nodeData =
+    useNodesData<Node<{ resource_uid: string; args: string }, 'tool'>>(nodeId)
 
-  const { data: toolData, isLoading } = useToolArg(nodeData?.data.resource_uid ?? '')
+  const { data: toolData, isLoading } = useToolArg(
+    nodeData?.data.resource_uid ?? '',
+  )
   const [args, setArgs] = useState<string>(nodeData?.data.args ?? '')
 
   // 同步外部数据变化到本地state
@@ -41,7 +44,7 @@ export const ToolNode = memo(function ToolNode() {
       inputs: toolData?.input_handles || [],
       outputs: toolData?.output_handles || [],
     }),
-    [toolData?.input_handles, toolData?.output_handles]
+    [toolData?.input_handles, toolData?.output_handles],
   )
 
   // 使用 useCallback 缓存 onBlur 回调
@@ -76,7 +79,7 @@ export const ToolNode = memo(function ToolNode() {
             <div>
               <Label className='pb-2 font-medium'>可修改参数:</Label>
               <Textarea
-                className='h-[100px] w-full resize-none overflow-y-auto border-gray-200 text-sm focus-visible:ring-[2px] focus-visible:ring-rose-500 focus-visible:ring-offset-2'
+                className='h-[100px] w-full resize-none overflow-y-auto border-gray-200 text-sm focus-visible:ring focus-visible:ring-rose-400 focus-visible:ring-offset-2'
                 placeholder='Enter arguments here...'
                 value='--'
                 disabled={true}
@@ -101,7 +104,8 @@ export const ToolNode = memo(function ToolNode() {
                 不可变参数:
               </Label>
               <Textarea
-                className='h-[60px] w-full resize-none overflow-y-auto border-gray-200 text-sm bg-muted [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-200 hover:[&::-webkit-scrollbar-thumb]:bg-gray-400 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar]:w-1.5'
+                className='h-[60px] w-full resize-none overflow-y-auto border-gray-200 text-sm bg-muted
+                [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-200 hover:[&::-webkit-scrollbar-thumb]:bg-gray-400 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar]:w-1.5'
                 value={immutableParams}
                 disabled={true}
                 spellCheck={false}
@@ -111,7 +115,9 @@ export const ToolNode = memo(function ToolNode() {
           <div>
             <Label className='pb-2 font-medium'>可修改参数:</Label>
             <Textarea
-              className='h-[100px] w-full resize-none overflow-y-auto border-gray-200 text-sm focus-visible:ring-[2px] focus-visible:ring-rose-500 focus-visible:ring-offset-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-200 hover:[&::-webkit-scrollbar-thumb]:bg-gray-400 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar]:w-1.5'
+              className='h-[100px] w-full resize-none overflow-y-auto border-gray-200 text-sm
+              focus-visible:ring focus-visible:ring-rose-400 focus-visible:ring-offset-2
+              [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-200 hover:[&::-webkit-scrollbar-thumb]:bg-gray-400 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar]:w-1.5'
               placeholder='Enter arguments here...'
               value={args}
               onChange={(e) => setArgs(e.target.value)}
@@ -124,4 +130,3 @@ export const ToolNode = memo(function ToolNode() {
     />
   )
 })
-
