@@ -39,11 +39,8 @@ import {
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
-import {
-  useNewRunInstance,
-  useUpdateWorkflow,
-  useWorkflow,
-} from '@/hooks/use-workflow'
+import { useNewRunInstance } from '@/hooks/use-run'
+import { useUpdateWorkflow, useWorkflow } from '@/hooks/use-workflow'
 import { generateLetterId } from '@/lib/id-generator'
 import { useNodeEditorStore } from '@/stores/nodeviewStore'
 

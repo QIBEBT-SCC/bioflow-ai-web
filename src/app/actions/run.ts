@@ -1,3 +1,5 @@
+'use server'
+
 import { serverFetch } from '@/lib/api-server'
 import type { RunPublic, Statistics } from '@/types/run'
 import type { WorkflowDefinition } from '@/types/workflow'

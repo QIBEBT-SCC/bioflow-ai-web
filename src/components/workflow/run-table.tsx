@@ -31,8 +31,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { useRunCount, useRuns } from '@/hooks/use-workflow'
-import { Status } from '@/types/workflow'
+import {Status} from "@/types/run";
+import {useRunCount, useRuns} from "@/hooks/use-run";
 
 // 状态配置
 const statusConfig = {
@@ -182,7 +182,7 @@ export function RunTables() {
               filteredRuns.map((run) => {
                 const config = statusConfig[run.status]
                 const Icon = config.icon
-                const taskStats = run.task_stats
+                const taskStats = run.task_statistics
                 const progress = taskStats
                   ? ((taskStats.success || 0) / taskStats.total) * 100
                   : 0

@@ -36,10 +36,9 @@ const initialToolConfig: DockerToolCreate = {
   tags: [],
   command_template: '',
   dynamic_params: [],
-  static_params: '',
+  immutable_static_params: null,
+  modifiable_static_params: null,
   file_mounts: [],
-  mkdir_output: true,
-  use_temp_dir: false,
 }
 
 export const useCreateToolStore = create<CreateToolStore>()(
