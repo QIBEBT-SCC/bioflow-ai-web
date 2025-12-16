@@ -9,6 +9,7 @@ import {
   NodeTitle,
 } from '@/components/node-editor/node/base-node'
 import { colorSchemes } from '@/components/node-editor/node/color'
+import { cn } from '@/lib/utils'
 import { Textarea } from '@/components/ui/textarea'
 
 export const NoteNode = memo(function NoteNode() {
@@ -31,13 +32,13 @@ export const NoteNode = memo(function NoteNode() {
   }, [nodeId, args, updateNodeData])
 
   return (
-    <NodeCard className='flex h-[350px] w-[400px] flex-col'>
-      <NodeCardHeader className={colorSchemes.gray.gradient}>
-        <NodeTitle className='text-white'>Note</NodeTitle>
+    <NodeCard className={cn('flex h-[350px] w-[400px] flex-col border-t-4', colorSchemes.gray.border)}>
+      <NodeCardHeader className={cn(colorSchemes.gray.bg, 'border-b border-border/50')}>
+        <NodeTitle className={colorSchemes.gray.primary}>Note</NodeTitle>
       </NodeCardHeader>
       <NodeCardContent className='flex flex-1 flex-col overflow-hidden pb-0'>
         <Textarea
-          className='nowheel h-full w-full resize-none overflow-y-auto rounded-none border-none bg-white p-3 text-gray-700 focus-visible:border-none focus-visible:ring-0 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-200 hover:[&::-webkit-scrollbar-thumb]:bg-gray-400 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar]:w-1.5'
+          className='nowheel h-full w-full resize-none overflow-y-auto rounded-none border-none bg-background p-3 text-sm focus-visible:border-none focus-visible:ring-0 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/40 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar]:w-1.5'
           placeholder='Enter notes here...'
           value={args}
           onChange={(e) => setArgs(e.target.value)}

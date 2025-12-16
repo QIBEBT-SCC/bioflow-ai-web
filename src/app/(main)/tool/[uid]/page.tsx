@@ -8,6 +8,7 @@ import {
   ExternalLink,
   FileInput,
   FileOutput,
+  Pencil,
   Terminal,
 } from 'lucide-react'
 import Link from 'next/link'
@@ -129,6 +130,12 @@ export default function ToolDetailPage() {
               </div>
               <p className='text-muted-foreground mt-1'>{tool.description}</p>
             </div>
+            <Link href={`/tool/${tool.uid}/edit`}>
+              <Button variant='outline' className='gap-2'>
+                <Pencil className='h-4 w-4' />
+                编辑工具
+              </Button>
+            </Link>
           </div>
 
           <div className='grid gap-6 lg:grid-cols-3'>
@@ -200,11 +207,36 @@ export default function ToolDetailPage() {
                   <Separator />
                   <div className='space-y-3'>
                     <h4 className='text-sm font-semibold'>Static Parameters</h4>
-                    <div className='border border-border rounded-lg p-4'>
-                      <code className='text-sm font-mono'>
-                        {tool.static_params}
-                      </code>
-                    </div>
+                    {tool.immutable_static_params && (
+                      <div className='space-y-2'>
+                        <div className='text-xs text-muted-foreground'>
+                          不可变静态参数:
+                        </div>
+                        <div className='border border-border rounded-lg p-4'>
+                          <code className='text-sm font-mono'>
+                            {tool.immutable_static_params}
+                          </code>
+                        </div>
+                      </div>
+                    )}
+                    {tool.modifiable_static_params && (
+                      <div className='space-y-2'>
+                        <div className='text-xs text-muted-foreground'>
+                          可修改静态参数:
+                        </div>
+                        <div className='border border-border rounded-lg p-4'>
+                          <code className='text-sm font-mono'>
+                            {tool.modifiable_static_params}
+                          </code>
+                        </div>
+                      </div>
+                    )}
+                    {!tool.immutable_static_params &&
+                      !tool.modifiable_static_params && (
+                        <div className='border border-border rounded-lg p-4 text-sm text-muted-foreground'>
+                          暂无静态参数
+                        </div>
+                      )}
                   </div>
                 </CardContent>
               </Card>
@@ -373,12 +405,6 @@ export default function ToolDetailPage() {
                     <div className='flex justify-between'>
                       <span className='text-muted-foreground'>Tool Type:</span>
                       <span>{tool.tool_type}</span>
-                    </div>
-                    <div className='flex justify-between'>
-                      <span className='text-muted-foreground'>
-                        Temp Directory:
-                      </span>
-                      <span>{tool.use_temp_dir ? 'Yes' : 'No'}</span>
                     </div>
                   </div>
                   <Separator />
