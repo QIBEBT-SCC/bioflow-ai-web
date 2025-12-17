@@ -3,15 +3,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   createProject,
+  createProjectTag,
   deleteProject,
   getProject,
   getProjects,
+  getProjectTags,
   getRecentProjects,
   starProject,
   unstarProject,
   updateProject,
-  getProjectTags,
-  createProjectTag,
 } from '@/app/actions/project'
 import type {
   ProjectCreateProp,
