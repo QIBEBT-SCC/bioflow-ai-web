@@ -1,7 +1,7 @@
 'use server'
 
 import { serverFetch } from '@/lib/api-server'
-import {
+import type {
   ProjectCreateProp,
   ProjectPublic,
   ProjectTag,
