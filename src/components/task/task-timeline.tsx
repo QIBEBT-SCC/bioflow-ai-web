@@ -7,7 +7,7 @@ import { useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useRecentTasks } from '@/hooks/use-task'
-import { Status } from '@/types/workflow'
+import { Status } from '@/types/run'
 import type { SimpleTaskPublic } from '@/types/task'
 
 // 状态颜色配置
@@ -30,17 +30,19 @@ export function TaskTimeline() {
 
   // 计算时间线数据
   const timelineData = useMemo(() => {
-    if (tasks.length === 0) return { tasks: [], timeLabels: [], minTime: 0, maxTime: 0 }
+    if (tasks.length === 0)
+      return { tasks: [], timeLabels: [], minTime: 0, maxTime: 0 }
 
     // 过滤有开始时间的任务
     const validTasks = tasks.filter((task) => task.start_time)
 
-    if (validTasks.length === 0) return { tasks: [], timeLabels: [], minTime: 0, maxTime: 0 }
+    if (validTasks.length === 0)
+      return { tasks: [], timeLabels: [], minTime: 0, maxTime: 0 }
 
     // 找出时间范围
     const times = validTasks.map((task) => new Date(task.start_time!).getTime())
     const endTimes = validTasks.map((task) =>
-      task.end_time ? new Date(task.end_time).getTime() : Date.now()
+      task.end_time ? new Date(task.end_time).getTime() : Date.now(),
     )
 
     const minTime = Math.min(...times)
@@ -53,7 +55,9 @@ export function TaskTimeline() {
 
     for (const task of validTasks) {
       const startTime = new Date(task.start_time!).getTime()
-      const endTime = task.end_time ? new Date(task.end_time).getTime() : Date.now()
+      const endTime = task.end_time
+        ? new Date(task.end_time).getTime()
+        : Date.now()
 
       const startPercent = ((startTime - minTime) / timeRange) * 100
       const widthPercent = ((endTime - startTime) / timeRange) * 100
@@ -139,7 +143,10 @@ export function TaskTimeline() {
               <div
                 key={i}
                 className='absolute top-0 text-xs text-muted-foreground'
-                style={{ left: `${label.percent}%`, transform: 'translateX(-50%)' }}
+                style={{
+                  left: `${label.percent}%`,
+                  transform: 'translateX(-50%)',
+                }}
               >
                 {label.time}
               </div>
@@ -147,7 +154,10 @@ export function TaskTimeline() {
           </div>
 
           {/* 任务条 */}
-          <div className='relative' style={{ height: `${(maxRow + 1) * rowHeight}px` }}>
+          <div
+            className='relative'
+            style={{ height: `${(maxRow + 1) * rowHeight}px` }}
+          >
             {timelineData.tasks.map((item, index) => {
               const color = statusColors[item.task.status]
               const isRunning = item.task.status === Status.RUNNING
@@ -166,7 +176,9 @@ export function TaskTimeline() {
                 >
                   {/* 任务名称 */}
                   <div className='absolute inset-0 flex items-center px-2 text-xs text-white font-medium overflow-hidden'>
-                    {isRunning && <Loader2 className='h-3 w-3 mr-1 animate-spin flex-shrink-0' />}
+                    {isRunning && (
+                      <Loader2 className='h-3 w-3 mr-1 animate-spin flex-shrink-0' />
+                    )}
                     <span className='truncate'>{item.task.name}</span>
                   </div>
 
@@ -221,4 +233,3 @@ export function TaskTimeline() {
     </Card>
   )
 }
-

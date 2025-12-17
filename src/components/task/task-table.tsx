@@ -30,8 +30,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { useTasks, useTaskCount } from '@/hooks/use-task'
-import { Status } from '@/types/workflow'
+import { useTaskCount, useTasks } from '@/hooks/use-task'
+import { Status } from '@/types/run'
 
 // 状态配置
 const statusConfig = {
@@ -120,7 +120,9 @@ export function TaskTable() {
             </SelectContent>
           </Select>
         </div>
-        <div className='text-sm text-muted-foreground'>共 {taskCount} 个任务</div>
+        <div className='text-sm text-muted-foreground'>
+          共 {taskCount} 个任务
+        </div>
       </div>
 
       {/* 表格 */}
@@ -218,7 +220,9 @@ export function TaskTable() {
                     </TableCell>
 
                     {/* 创建者 */}
-                    <TableCell className='text-sm'>{task.owner.username}</TableCell>
+                    <TableCell className='text-sm'>
+                      {task.owner.username}
+                    </TableCell>
 
                     {/* 创建时间 */}
                     <TableCell className='text-sm'>
@@ -273,4 +277,3 @@ export function TaskTable() {
     </div>
   )
 }
-
