@@ -13,7 +13,7 @@ import {
   TrendingUpIcon,
   UsersIcon,
 } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import {
   Breadcrumb,
@@ -48,7 +48,19 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  useLLMProviders,
+  useLLMSettings,
+  useLLMStatisticsDetails,
+  useLLMStatisticsOverview,
+  useUpdateLLMSetting,
+} from '@/hooks/use-setting'
 import { cn } from '@/lib/utils'
+import type {
+  LLMSettingKey,
+  LLMSettingPublic,
+  LLMStatisticOverview,
+} from '@/types/setting'
 
 interface Model {
   id: string
@@ -56,236 +68,26 @@ interface Model {
   provider_name: string
 }
 
-interface ModelConfig {
-  chat_model: string
-  vision_model: string
-  agent_model: string
-  coding_model: string
-  long_context_model: string
-  high_performance_model: string
-  simple_model: string
-}
-
-interface StatsSummary {
-  total_input_tokens: number
-  total_output_tokens: number
-  total_cache_read: number
-  total_price: string
-  count: number
-}
-
-interface StatsByAgent extends StatsSummary {
-  agent_name: string
-}
-
-interface StatsByModel extends StatsSummary {
-  model_name: string
-}
-
-interface StatsByType extends StatsSummary {
-  setting_key: string
-}
-
-interface StatsByUser extends StatsSummary {
-  user_name: string
-}
-
-interface UsageRecord {
-  id: number
-  agent_name: string
-  model_name: string | null
-  setting_key: string | null
-  input_tokens: number
-  output_tokens: number
-  cache_read: number
-  price: string
-  time: string
-}
-
-interface UsageRecordsResponse {
-  total: number
-  items: UsageRecord[]
+const defaultStats: LLMStatisticOverview = {
+  total: {
+    total_input_tokens: 0,
+    total_output_tokens: 0,
+    total_cache_read: 0,
+    total_price: 0,
+  },
+  by_agent: [],
+  by_model: [],
+  by_type: [],
+  by_user: [],
 }
 
 export default function LLMStatisticPage() {
-  // Mock data for available models
-  const [availableModels] = useState<Model[]>([
-    { id: '1', name: 'gpt-4-turbo', provider_name: 'OpenAI' },
-    { id: '2', name: 'gpt-4o', provider_name: 'OpenAI' },
-    { id: '3', name: 'gpt-4o-mini', provider_name: 'OpenAI' },
-    { id: '4', name: 'claude-3-5-sonnet', provider_name: 'Anthropic' },
-    { id: '5', name: 'claude-3-5-haiku', provider_name: 'Anthropic' },
-    { id: '6', name: 'gemini-1.5-pro', provider_name: 'Google' },
-  ])
+  // Hooks
+  const { data: providers = [] } = useLLMProviders()
+  const { data: settings } = useLLMSettings()
+  const updateSettingMutation = useUpdateLLMSetting()
 
-  // Model configuration
-  const [modelConfig, setModelConfig] = useState<ModelConfig>({
-    chat_model: 'gpt-4o',
-    vision_model: 'gpt-4o',
-    agent_model: 'claude-3-5-sonnet',
-    coding_model: 'gpt-4-turbo',
-    long_context_model: 'claude-3-5-sonnet',
-    high_performance_model: 'gpt-4-turbo',
-    simple_model: 'gpt-4o-mini',
-  })
-
-  const [mockStatsData] = useState({
-    total: {
-      total_input_tokens: 3480036,
-      total_output_tokens: 78425,
-      total_cache_read: 3177088,
-      total_price: '0.397567136',
-    },
-    by_agent: [
-      {
-        total_input_tokens: 43510,
-        total_output_tokens: 9789,
-        total_cache_read: 20736,
-        total_price: '0.17329980',
-        count: 13,
-        agent_name: 'tool_generator',
-      },
-      {
-        total_input_tokens: 3409434,
-        total_output_tokens: 50831,
-        total_cache_read: 3156352,
-        total_price: '0.180589836',
-        count: 304,
-        agent_name: 'test_run',
-      },
-      {
-        total_input_tokens: 11248,
-        total_output_tokens: 7584,
-        total_cache_read: 0,
-        total_price: '0.01811575',
-        count: 14,
-        agent_name: 'search_exist_node',
-      },
-      {
-        total_input_tokens: 10644,
-        total_output_tokens: 2260,
-        total_cache_read: 0,
-        total_price: '0.00718100',
-        count: 15,
-        agent_name: 'select_group',
-      },
-      {
-        total_input_tokens: 4915,
-        total_output_tokens: 7457,
-        total_cache_read: 0,
-        total_price: '0.01614275',
-        count: 6,
-        agent_name: 'check_report',
-      },
-      {
-        total_input_tokens: 285,
-        total_output_tokens: 504,
-        total_cache_read: 0,
-        total_price: '0.0022380',
-        count: 11,
-        agent_name: 'test',
-      },
-    ] as StatsByAgent[],
-    by_model: [
-      {
-        total_input_tokens: 3409434,
-        total_output_tokens: 50831,
-        total_cache_read: 3156352,
-        total_price: '0.180589836',
-        count: 304,
-        model_name: 'deepseek-reasoner',
-      },
-      {
-        total_input_tokens: 40164,
-        total_output_tokens: 5756,
-        total_cache_read: 20736,
-        total_price: '0.11821180',
-        count: 12,
-        model_name: 'openai/gpt-5.2',
-      },
-      {
-        total_input_tokens: 3369,
-        total_output_tokens: 4094,
-        total_cache_read: 0,
-        total_price: '0.055866',
-        count: 2,
-        model_name: 'gemini-3-pro-preview',
-      },
-      {
-        total_input_tokens: 153,
-        total_output_tokens: 403,
-        total_cache_read: 0,
-        total_price: '0.0012855',
-        count: 7,
-        model_name: 'gemini-3-flash-preview',
-      },
-      {
-        total_input_tokens: 560,
-        total_output_tokens: 63,
-        total_cache_read: 0,
-        total_price: '0.0004690',
-        count: 4,
-        model_name: 'google/gemini-3-flash-preview',
-      },
-      {
-        total_input_tokens: 26356,
-        total_output_tokens: 17278,
-        total_cache_read: 0,
-        total_price: '0.04114500',
-        count: 34,
-        model_name: 'openai/gpt-5-mini',
-      },
-    ] as StatsByModel[],
-    by_type: [
-      {
-        total_input_tokens: 4915,
-        total_output_tokens: 7457,
-        total_cache_read: 0,
-        total_price: '0.01614275',
-        count: 6,
-        setting_key: 'simple_model',
-      },
-      {
-        total_input_tokens: 3409434,
-        total_output_tokens: 50831,
-        total_cache_read: 3156352,
-        total_price: '0.180589836',
-        count: 304,
-        setting_key: 'long_context_model',
-      },
-      {
-        total_input_tokens: 22154,
-        total_output_tokens: 10287,
-        total_cache_read: 0,
-        total_price: '0.02675675',
-        count: 39,
-        setting_key: 'agent_model',
-      },
-      {
-        total_input_tokens: 43533,
-        total_output_tokens: 9850,
-        total_cache_read: 20736,
-        total_price: '0.17407780',
-        count: 14,
-        setting_key: 'high_performance_model',
-      },
-    ] as StatsByType[],
-    by_user: [
-      {
-        total_input_tokens: 3480036,
-        total_output_tokens: 78425,
-        total_cache_read: 3177088,
-        total_price: '0.397567136',
-        count: 363,
-        user_name: 'YeYu',
-      },
-    ] as StatsByUser[],
-  })
-
-  const updateModelConfig = (key: keyof ModelConfig, value: string) => {
-    setModelConfig({ ...modelConfig, [key]: value })
-  }
-
+  // Date Range
   const [dateRange, setDateRange] = useState<{
     from: Date | undefined
     to: Date | undefined
@@ -294,7 +96,63 @@ export default function LLMStatisticPage() {
     to: new Date(),
   })
 
-  const modelTypeLabels: Record<keyof ModelConfig, string> = {
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(20)
+
+  // Statistics Data
+  const { data: statsData = defaultStats } = useLLMStatisticsOverview({
+    start_date: dateRange.from?.toISOString(),
+    end_date: dateRange.to?.toISOString(),
+  })
+
+  const { data: usageRecordsRes } = useLLMStatisticsDetails({
+    start_date: dateRange.from?.toISOString(),
+    end_date: dateRange.to?.toISOString(),
+    limit: pageSize,
+    offset: (currentPage - 1) * pageSize,
+  })
+
+  // Derived State
+  const availableModels: Model[] = providers.flatMap((p) =>
+    p.models.map((m) => ({
+      id: m.id.toString(),
+      name: m.name,
+      provider_name: p.name,
+    })),
+  )
+
+  // Model Config State
+  const [localConfig, setLocalConfig] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    if (settings) {
+      const config: Record<string, string> = {}
+      ;(Object.keys(settings) as Array<keyof LLMSettingPublic>).forEach(
+        (key) => {
+          config[key] = settings[key].model_id.toString()
+        },
+      )
+      setLocalConfig(config)
+    }
+  }, [settings])
+
+  const updateModelConfig = (key: string, value: string) => {
+    setLocalConfig((prev) => ({ ...prev, [key]: value }))
+  }
+
+  const handleSaveConfig = async () => {
+    const promises = Object.entries(localConfig).map(([key, modelId]) =>
+      updateSettingMutation.mutateAsync({
+        key: key as LLMSettingKey,
+        model_id: parseInt(modelId),
+      }),
+    )
+    await Promise.all(promises)
+  }
+
+  /* Removed modelTypeLabels definition here to avoid duplication if it's defined below or to be redefined */
+  const modelTypeLabels: Record<string, string> = {
     chat_model: '对话模型',
     vision_model: '视觉模型',
     agent_model: '智能体模型',
@@ -304,239 +162,10 @@ export default function LLMStatisticPage() {
     simple_model: '轻量模型',
   }
 
-  const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(20)
-
-  const [usageRecords] = useState<UsageRecordsResponse>({
-    total: 391,
-    items: [
-      {
-        id: 391,
-        agent_name: 'test_run',
-        model_name: 'deepseek-reasoner',
-        setting_key: 'long_context_model',
-        input_tokens: 11677,
-        output_tokens: 76,
-        cache_read: 11456,
-        price: '0.000414568',
-        time: '2025-12-24T15:32:44.413938',
-      },
-      {
-        id: 390,
-        agent_name: 'test_run',
-        model_name: 'deepseek-reasoner',
-        setting_key: 'long_context_model',
-        input_tokens: 11546,
-        output_tokens: 81,
-        cache_read: 11264,
-        price: '0.000428372',
-        time: '2025-12-24T15:32:40.091006',
-      },
-      {
-        id: 389,
-        agent_name: 'test_run',
-        model_name: 'deepseek-reasoner',
-        setting_key: 'long_context_model',
-        input_tokens: 11335,
-        output_tokens: 187,
-        cache_read: 10944,
-        price: '0.000494452',
-        time: '2025-12-24T15:32:32.943761',
-      },
-      {
-        id: 388,
-        agent_name: 'test_run',
-        model_name: 'deepseek-reasoner',
-        setting_key: 'long_context_model',
-        input_tokens: 11040,
-        output_tokens: 257,
-        cache_read: 10816,
-        price: '0.000473508',
-        time: '2025-12-24T15:32:24.409661',
-      },
-      {
-        id: 387,
-        agent_name: 'test_run',
-        model_name: 'deepseek-reasoner',
-        setting_key: 'long_context_model',
-        input_tokens: 10898,
-        output_tokens: 118,
-        cache_read: 10688,
-        price: '0.000407624',
-        time: '2025-12-24T15:32:13.792710',
-      },
-      {
-        id: 386,
-        agent_name: 'test_run',
-        model_name: 'deepseek-reasoner',
-        setting_key: 'long_context_model',
-        input_tokens: 10748,
-        output_tokens: 104,
-        cache_read: 10432,
-        price: '0.000424256',
-        time: '2025-12-24T15:32:07.543074',
-      },
-      {
-        id: 385,
-        agent_name: 'test_run',
-        model_name: 'deepseek-reasoner',
-        setting_key: 'long_context_model',
-        input_tokens: 10518,
-        output_tokens: 207,
-        cache_read: 10304,
-        price: '0.000435372',
-        time: '2025-12-24T15:32:02.327613',
-      },
-      {
-        id: 384,
-        agent_name: 'test_run',
-        model_name: 'deepseek-reasoner',
-        setting_key: 'long_context_model',
-        input_tokens: 10412,
-        output_tokens: 82,
-        cache_read: 10240,
-        price: '0.00036932',
-        time: '2025-12-24T15:31:53.526006',
-      },
-      {
-        id: 383,
-        agent_name: 'test_run',
-        model_name: 'deepseek-reasoner',
-        setting_key: 'long_context_model',
-        input_tokens: 10308,
-        output_tokens: 80,
-        cache_read: 10112,
-        price: '0.000371616',
-        time: '2025-12-24T15:31:49.107468',
-      },
-      {
-        id: 382,
-        agent_name: 'test_run',
-        model_name: 'deepseek-reasoner',
-        setting_key: 'long_context_model',
-        input_tokens: 10190,
-        output_tokens: 94,
-        cache_read: 9984,
-        price: '0.000376712',
-        time: '2025-12-24T15:31:44.500852',
-      },
-      {
-        id: 381,
-        agent_name: 'test_run',
-        model_name: 'deepseek-reasoner',
-        setting_key: 'long_context_model',
-        input_tokens: 10079,
-        output_tokens: 87,
-        cache_read: 9856,
-        price: '0.000374948',
-        time: '2025-12-24T15:31:39.661068',
-      },
-      {
-        id: 380,
-        agent_name: 'test_run',
-        model_name: 'deepseek-reasoner',
-        setting_key: 'long_context_model',
-        input_tokens: 9904,
-        output_tokens: 151,
-        cache_read: 9152,
-        price: '0.000530236',
-        time: '2025-12-24T15:31:35.420714',
-      },
-      {
-        id: 379,
-        agent_name: 'test_run',
-        model_name: 'deepseek-reasoner',
-        setting_key: 'long_context_model',
-        input_tokens: 9247,
-        output_tokens: 633,
-        cache_read: 8704,
-        price: '0.000661612',
-        time: '2025-12-24T15:31:28.070340',
-      },
-      {
-        id: 378,
-        agent_name: 'test_run',
-        model_name: 'deepseek-reasoner',
-        setting_key: 'long_context_model',
-        input_tokens: 8753,
-        output_tokens: 220,
-        cache_read: 8128,
-        price: '0.000494984',
-        time: '2025-12-24T15:31:02.576480',
-      },
-      {
-        id: 377,
-        agent_name: 'test_run',
-        model_name: 'deepseek-reasoner',
-        setting_key: 'long_context_model',
-        input_tokens: 8219,
-        output_tokens: 217,
-        cache_read: 7616,
-        price: '0.000473228',
-        time: '2025-12-24T15:30:52.448029',
-      },
-      {
-        id: 376,
-        agent_name: 'test_run',
-        model_name: 'deepseek-reasoner',
-        setting_key: 'long_context_model',
-        input_tokens: 7719,
-        output_tokens: 445,
-        cache_read: 7296,
-        price: '0.000509628',
-        time: '2025-12-24T15:30:42.868907',
-      },
-      {
-        id: 375,
-        agent_name: 'test_run',
-        model_name: 'deepseek-reasoner',
-        setting_key: 'long_context_model',
-        input_tokens: 7372,
-        output_tokens: 71,
-        cache_read: 7040,
-        price: '0.0003199',
-        time: '2025-12-24T15:30:25.102887',
-      },
-      {
-        id: 374,
-        agent_name: 'test_run',
-        model_name: 'deepseek-reasoner',
-        setting_key: 'long_context_model',
-        input_tokens: 7125,
-        output_tokens: 68,
-        cache_read: 6656,
-        price: '0.000346248',
-        time: '2025-12-24T15:30:21.397625',
-      },
-      {
-        id: 373,
-        agent_name: 'test_run',
-        model_name: 'deepseek-reasoner',
-        setting_key: 'long_context_model',
-        input_tokens: 6763,
-        output_tokens: 222,
-        cache_read: 6144,
-        price: '0.000438592',
-        time: '2025-12-24T15:30:17.648171',
-      },
-      {
-        id: 372,
-        agent_name: 'test_run',
-        model_name: 'deepseek-reasoner',
-        setting_key: 'long_context_model',
-        input_tokens: 6215,
-        output_tokens: 82,
-        cache_read: 5632,
-        price: '0.000355376',
-        time: '2025-12-24T15:30:06.724169',
-      },
-    ],
-  })
-
-  const totalPages = Math.ceil(usageRecords.total / pageSize)
+  const totalPages = Math.ceil((usageRecordsRes?.total || 0) / pageSize)
   const startIndex = (currentPage - 1) * pageSize
   const endIndex = startIndex + pageSize
-  const currentRecords = usageRecords.items.slice(startIndex, endIndex)
+  const currentRecords = usageRecordsRes?.items || []
 
   return (
     <SidebarInset className='h-screen flex flex-col'>
@@ -587,42 +216,43 @@ export default function LLMStatisticPage() {
               <Card className='border-border bg-card p-6'>
                 <h2 className='text-xl font-semibold mb-6'>模块模型配置</h2>
                 <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-                  {(Object.keys(modelConfig) as Array<keyof ModelConfig>).map(
-                    (key) => (
-                      <div key={key} className='space-y-2'>
-                        <Label htmlFor={key} className='text-sm font-medium'>
-                          {modelTypeLabels[key]}
-                        </Label>
-                        <Select
-                          value={modelConfig[key]}
-                          onValueChange={(value) =>
-                            updateModelConfig(key, value)
-                          }
-                        >
-                          <SelectTrigger id={key} className='bg-background'>
-                            <SelectValue placeholder='选择模型' />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {availableModels.map((model) => (
-                              <SelectItem key={model.id} value={model.name}>
-                                <div className='flex items-center gap-2'>
-                                  <span className='font-mono text-sm'>
-                                    {model.name}
-                                  </span>
-                                  <span className='text-xs text-muted-foreground'>
-                                    ({model.provider_name})
-                                  </span>
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    ),
-                  )}
+                  {Object.keys(modelTypeLabels).map((key) => (
+                    <div key={key} className='space-y-2'>
+                      <Label htmlFor={key} className='text-sm font-medium'>
+                        {modelTypeLabels[key]}
+                      </Label>
+                      <Select
+                        value={localConfig[key]}
+                        onValueChange={(value) => updateModelConfig(key, value)}
+                      >
+                        <SelectTrigger id={key} className='bg-background'>
+                          <SelectValue placeholder='选择模型' />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableModels.map((model) => (
+                            <SelectItem key={model.id} value={model.id}>
+                              <div className='flex items-center gap-2'>
+                                <span className='font-mono text-sm'>
+                                  {model.name}
+                                </span>
+                                <span className='text-xs text-muted-foreground'>
+                                  ({model.provider_name})
+                                </span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  ))}
                 </div>
                 <div className='mt-6 flex justify-end'>
-                  <Button>保存配置</Button>
+                  <Button
+                    onClick={handleSaveConfig}
+                    disabled={updateSettingMutation.isPending}
+                  >
+                    {updateSettingMutation.isPending ? '保存中...' : '保存配置'}
+                  </Button>
                 </div>
               </Card>
 
@@ -630,41 +260,36 @@ export default function LLMStatisticPage() {
               <Card className='border-border bg-card p-6'>
                 <h3 className='text-lg font-semibold mb-4'>当前配置概览</h3>
                 <div className='space-y-3'>
-                  {(Object.keys(modelConfig) as Array<keyof ModelConfig>).map(
-                    (key) => {
-                      const model = availableModels.find(
-                        (m) => m.name === modelConfig[key],
-                      )
-                      return (
-                        <div
-                          key={key}
-                          className='flex items-center justify-between py-2 border-b border-border last:border-0'
-                        >
-                          <div className='space-y-1'>
-                            <p className='text-sm font-medium'>
-                              {modelTypeLabels[key]}
-                            </p>
-                            <p className='text-xs text-muted-foreground'>
-                              {key}
-                            </p>
-                          </div>
-                          <div className='flex items-center gap-2'>
-                            <Badge
-                              variant='secondary'
-                              className='font-mono text-xs'
-                            >
-                              {modelConfig[key]}
-                            </Badge>
-                            {model && (
-                              <Badge variant='outline' className='text-xs'>
-                                {model.provider_name}
-                              </Badge>
-                            )}
-                          </div>
+                  {Object.keys(modelTypeLabels).map((key) => {
+                    const modelId = localConfig[key]
+                    const model = availableModels.find((m) => m.id === modelId)
+                    return (
+                      <div
+                        key={key}
+                        className='flex items-center justify-between py-2 border-b border-border last:border-0'
+                      >
+                        <div className='space-y-1'>
+                          <p className='text-sm font-medium'>
+                            {modelTypeLabels[key]}
+                          </p>
+                          <p className='text-xs text-muted-foreground'>{key}</p>
                         </div>
-                      )
-                    },
-                  )}
+                        <div className='flex items-center gap-2'>
+                          <Badge
+                            variant='secondary'
+                            className='font-mono text-xs'
+                          >
+                            {model?.name || '未配置'}
+                          </Badge>
+                          {model && (
+                            <Badge variant='outline' className='text-xs'>
+                              {model.provider_name}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
               </Card>
             </TabsContent>
@@ -774,7 +399,7 @@ export default function LLMStatisticPage() {
                     <p className='text-sm text-muted-foreground'>总花费</p>
                   </div>
                   <p className='text-3xl font-bold text-primary'>
-                    ${mockStatsData.total.total_price}
+                    ${statsData.total.total_price.toLocaleString()}
                   </p>
                 </Card>
 
@@ -786,7 +411,7 @@ export default function LLMStatisticPage() {
                     <p className='text-sm text-muted-foreground'>输入 Tokens</p>
                   </div>
                   <p className='text-3xl font-bold'>
-                    {mockStatsData.total.total_input_tokens.toLocaleString()}
+                    {statsData.total.total_input_tokens.toLocaleString()}
                   </p>
                 </Card>
 
@@ -798,7 +423,7 @@ export default function LLMStatisticPage() {
                     <p className='text-sm text-muted-foreground'>输出 Tokens</p>
                   </div>
                   <p className='text-3xl font-bold'>
-                    {mockStatsData.total.total_output_tokens.toLocaleString()}
+                    {statsData.total.total_output_tokens.toLocaleString()}
                   </p>
                 </Card>
 
@@ -810,7 +435,7 @@ export default function LLMStatisticPage() {
                     <p className='text-sm text-muted-foreground'>缓存读取</p>
                   </div>
                   <p className='text-3xl font-bold'>
-                    {mockStatsData.total.total_cache_read.toLocaleString()}
+                    {statsData.total.total_cache_read.toLocaleString()}
                   </p>
                 </Card>
               </div>
@@ -839,11 +464,9 @@ export default function LLMStatisticPage() {
 
                   {/* 按模块统计 */}
                   <TabsContent value='by_agent' className='space-y-4'>
-                    {mockStatsData.by_agent.map((stats) => {
+                    {statsData.by_agent.map((stats) => {
                       const percentage =
-                        (Number.parseFloat(stats.total_price) /
-                          Number.parseFloat(mockStatsData.total.total_price)) *
-                        100
+                        (stats.total_price / statsData.total.total_price) * 100
                       return (
                         <div key={stats.agent_name} className='space-y-2'>
                           <div className='flex items-center justify-between'>
@@ -856,7 +479,7 @@ export default function LLMStatisticPage() {
                               </Badge>
                             </div>
                             <div className='text-sm font-semibold'>
-                              ${stats.total_price}
+                              ${stats.total_price.toLocaleString()}
                             </div>
                           </div>
                           <div className='w-full bg-muted rounded-full h-2'>
@@ -892,11 +515,9 @@ export default function LLMStatisticPage() {
 
                   {/* 按模型统计 */}
                   <TabsContent value='by_model' className='space-y-4'>
-                    {mockStatsData.by_model.map((stats) => {
+                    {statsData.by_model.map((stats) => {
                       const percentage =
-                        (Number.parseFloat(stats.total_price) /
-                          Number.parseFloat(mockStatsData.total.total_price)) *
-                        100
+                        (stats.total_price / statsData.total.total_price) * 100
                       return (
                         <div key={stats.model_name} className='space-y-2'>
                           <div className='flex items-center justify-between'>
@@ -912,7 +533,7 @@ export default function LLMStatisticPage() {
                               </Badge>
                             </div>
                             <div className='text-sm font-semibold'>
-                              ${stats.total_price}
+                              ${stats.total_price.toLocaleString()}
                             </div>
                           </div>
                           <div className='w-full bg-muted rounded-full h-2'>
@@ -948,15 +569,12 @@ export default function LLMStatisticPage() {
 
                   {/* 按类型统计 */}
                   <TabsContent value='by_type' className='space-y-4'>
-                    {mockStatsData.by_type.map((stats) => {
+                    {statsData.by_type.map((stats) => {
                       const label =
-                        modelTypeLabels[
-                          stats.setting_key as keyof ModelConfig
-                        ] || stats.setting_key
+                        modelTypeLabels[stats.setting_key as string] ||
+                        stats.setting_key
                       const percentage =
-                        (Number.parseFloat(stats.total_price) /
-                          Number.parseFloat(mockStatsData.total.total_price)) *
-                        100
+                        (stats.total_price / statsData.total.total_price) * 100
                       return (
                         <div key={stats.setting_key} className='space-y-2'>
                           <div className='flex items-center justify-between'>
@@ -972,7 +590,7 @@ export default function LLMStatisticPage() {
                               </Badge>
                             </div>
                             <div className='text-sm font-semibold'>
-                              ${stats.total_price}
+                              ${stats.total_price.toLocaleString()}
                             </div>
                           </div>
                           <div className='w-full bg-muted rounded-full h-2'>
@@ -1008,11 +626,9 @@ export default function LLMStatisticPage() {
 
                   {/* 按用户统计 */}
                   <TabsContent value='by_user' className='space-y-4'>
-                    {mockStatsData.by_user.map((stats) => {
+                    {statsData.by_user.map((stats) => {
                       const percentage =
-                        (Number.parseFloat(stats.total_price) /
-                          Number.parseFloat(mockStatsData.total.total_price)) *
-                        100
+                        (stats.total_price / statsData.total.total_price) * 100
                       return (
                         <div key={stats.user_name} className='space-y-2'>
                           <div className='flex items-center justify-between'>
@@ -1030,7 +646,7 @@ export default function LLMStatisticPage() {
                               </Badge>
                             </div>
                             <div className='text-sm font-semibold'>
-                              ${stats.total_price}
+                              ${stats.total_price.toLocaleString()}
                             </div>
                           </div>
                           <div className='w-full bg-muted rounded-full h-2'>
@@ -1093,7 +709,7 @@ export default function LLMStatisticPage() {
                       </Select>
                     </div>
                     <Badge variant='secondary'>
-                      共 {usageRecords.total} 条记录
+                      共 {usageRecordsRes?.total || 0} 条记录
                     </Badge>
                   </div>
                 </div>
@@ -1102,7 +718,6 @@ export default function LLMStatisticPage() {
                   <Table>
                     <TableHeader>
                       <TableRow className='bg-muted/50'>
-                        <TableHead className='font-semibold'>ID</TableHead>
                         <TableHead className='font-semibold'>模块</TableHead>
                         <TableHead className='font-semibold'>模型</TableHead>
                         <TableHead className='font-semibold'>类型</TableHead>
@@ -1124,9 +739,6 @@ export default function LLMStatisticPage() {
                     <TableBody>
                       {currentRecords.map((record) => (
                         <TableRow key={record.id} className='hover:bg-muted/30'>
-                          <TableCell className='font-mono text-sm'>
-                            {record.id}
-                          </TableCell>
                           <TableCell>
                             <Badge
                               variant='outline'
@@ -1147,7 +759,7 @@ export default function LLMStatisticPage() {
                             {record.setting_key ? (
                               <span className='text-xs text-muted-foreground'>
                                 {modelTypeLabels[
-                                  record.setting_key as keyof ModelConfig
+                                  record.setting_key as string
                                 ] || record.setting_key}
                               </span>
                             ) : (
@@ -1183,8 +795,8 @@ export default function LLMStatisticPage() {
                 <div className='flex items-center justify-between mt-4'>
                   <div className='text-sm text-muted-foreground'>
                     显示第 {startIndex + 1} -{' '}
-                    {Math.min(endIndex, usageRecords.total)} 条，共{' '}
-                    {usageRecords.total} 条
+                    {Math.min(endIndex, usageRecordsRes?.total || 0)} 条，共{' '}
+                    {usageRecordsRes?.total || 0} 条
                   </div>
                   <div className='flex items-center gap-2'>
                     <Button

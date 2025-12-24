@@ -48,155 +48,92 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { Switch } from '@/components/ui/switch'
-
-
-enum ProviderType {
-  OPENAI = 'openai',
-  ANTHROPIC = 'anthropic',
-  GOOGLE = 'google',
-}
-
-interface LLMModel {
-  id: string
-  provider_id: string
-  name: string
-  input_price: string
-  output_price: string
-  cache_read_price: string
-  extra_body: Record<string, any>
-  is_active: boolean
-}
-
-interface LLMProvider {
-  id: string
-  name: string
-  provider_type: ProviderType
-  base_url: string
-  api_key: string
-  use_proxy: boolean
-  is_active: boolean
-  models: LLMModel[]
-  isOpen: boolean
-}
-
-const initialProviders: LLMProvider[] = [
-  {
-    id: '1',
-    name: 'OpenAI',
-    provider_type: ProviderType.OPENAI,
-    base_url: 'https://api.openai.com/v1',
-    api_key: 'sk-proj-...',
-    use_proxy: false,
-    is_active: true,
-    isOpen: true,
-    models: [
-      {
-        id: '1',
-        provider_id: '1',
-        name: 'gpt-4-turbo',
-        input_price: '0.01',
-        output_price: '0.03',
-        cache_read_price: '0.001',
-        extra_body: {},
-        is_active: true,
-      },
-      {
-        id: '1',
-        provider_id: '1',
-        name: 'gpt-3.5-turbo',
-        input_price: '0.0005',
-        output_price: '0.0015',
-        cache_read_price: '0.00005',
-        extra_body: {},
-        is_active: true,
-      },
-    ],
-  },
-  {
-    id: '2',
-    name: 'Anthropic',
-    provider_type: ProviderType.ANTHROPIC,
-    base_url: 'https://api.anthropic.com/v1',
-    api_key: 'sk-ant-...',
-    use_proxy: true,
-    is_active: true,
-    isOpen: false,
-    models: [
-      {
-        id: '3',
-        provider_id: '3',
-        name: 'claude-3-opus',
-        input_price: '0.015',
-        output_price: '0.075',
-        cache_read_price: '0.0015',
-        extra_body: {},
-        is_active: true,
-      },
-    ],
-  },
-]
+import {
+  useCreateLLMModel,
+  useCreateLLMProvider,
+  useDeleteLLMModel,
+  useDeleteLLMProvider,
+  useLLMProviders,
+  useUpdateLLMModel,
+  useUpdateLLMProvider,
+} from '@/hooks/use-setting'
+import type {
+  LLMModelCreate,
+  LLMModelUpdate,
+  LLMProviderCreate,
+  LLMProviderUpdate, ProviderType,
+} from '@/types/setting'
 
 export default function LLMSettingPage() {
-  const [providers, setProviders] = useState<LLMProvider[]>(initialProviders)
-  const [showApiKeys, setShowApiKeys] = useState<Record<string, boolean>>({})
-  const [editingProvider, setEditingProvider] = useState<string | null>(null)
-  const [editingModel, setEditingModel] = useState<string | null>(null)
-  const [providerBackup, setProviderBackup] = useState<LLMProvider | null>(null)
-  const [modelBackup, setModelBackup] = useState<LLMModel | null>(null)
+  const { data: serverProviders = [], isLoading } = useLLMProviders()
+  const createProviderMutation = useCreateLLMProvider()
+  const updateProviderMutation = useUpdateLLMProvider()
+  const deleteProviderMutation = useDeleteLLMProvider()
+  const createModelMutation = useCreateLLMModel()
+  const updateModelMutation = useUpdateLLMModel()
+  const deleteModelMutation = useDeleteLLMModel()
 
-  const [addProviderOpen, setAddProviderOpen] = useState(false)
-  const [addModelProviderId, setAddModelProviderId] = useState<string | null>(
+  // UI State
+  const [openProviderIds, setOpenProviderIds] = useState<
+    Record<number, boolean>
+  >({})
+  const [showApiKeys, setShowApiKeys] = useState<Record<number, boolean>>({})
+
+  // Edit State
+  const [editingProviderId, setEditingProviderId] = useState<number | null>(
     null,
   )
-  const [newProvider, setNewProvider] = useState({
+  const [draftProvider, setDraftProvider] = useState<LLMProviderUpdate | null>(
+    null,
+  )
+
+  const [editingModelId, setEditingModelId] = useState<number | null>(null)
+  const [draftModel, setDraftModel] = useState<LLMModelUpdate | null>(null)
+
+  const [addProviderOpen, setAddProviderOpen] = useState(false)
+  const [addModelProviderId, setAddModelProviderId] = useState<number | null>(
+    null,
+  )
+  const [newProvider, setNewProvider] = useState<LLMProviderCreate>({
     name: '',
-    provider_type: ProviderType.OPENAI,
+    provider_type: 'openai',
     base_url: '',
     api_key: '',
     use_proxy: false,
     is_active: true,
   })
-  const [newModel, setNewModel] = useState({
-    name: '',
-    input_price: '0',
-    output_price: '0',
-    cache_read_price: '0',
-    extra_body: {},
-    is_active: true,
-  })
+  const [newModel, setNewModel] = useState<Omit<LLMModelCreate, 'provider_id'>>(
+    {
+      name: '',
+      input_price: 0,
+      output_price: 0,
+      cache_read_price: 0,
+      extra_body: {},
+      is_active: true,
+    },
+  )
 
-  const toggleProvider = (providerId: string) => {
-    setProviders(
-      providers.map((p) =>
-        p.id === providerId ? { ...p, isOpen: !p.isOpen } : p,
-      ),
-    )
+  const toggleProvider = (providerId: number) => {
+    setOpenProviderIds((prev) => ({
+      ...prev,
+      [providerId]: !prev[providerId],
+    }))
   }
 
-  const toggleApiKeyVisibility = (providerId: string) => {
+  const toggleApiKeyVisibility = (providerId: number) => {
     setShowApiKeys((prev) => ({
       ...prev,
       [providerId]: !prev[providerId],
     }))
   }
 
-  const handleAddProvider = () => {
-    const provider: LLMProvider = {
-      id: Date.now().toString(),
-      name: newProvider.name,
-      provider_type: newProvider.provider_type,
-      base_url: newProvider.base_url,
-      api_key: newProvider.api_key,
-      use_proxy: newProvider.use_proxy,
-      is_active: newProvider.is_active,
-      models: [],
-      isOpen: true,
-    }
-    setProviders([...providers, provider])
+  const handleAddProvider = async () => {
+    if (!newProvider.name) return
+    await createProviderMutation.mutateAsync(newProvider)
     setAddProviderOpen(false)
     setNewProvider({
       name: '',
-      provider_type: ProviderType.OPENAI,
+      provider_type: 'openai',
       base_url: '',
       api_key: '',
       use_proxy: false,
@@ -204,157 +141,143 @@ export default function LLMSettingPage() {
     })
   }
 
-  const deleteProvider = (providerId: string) => {
-    setProviders(providers.filter((p) => p.id !== providerId))
-    if (editingProvider === providerId) {
-      setEditingProvider(null)
-      setProviderBackup(null)
+  const deleteProvider = async (providerId: number) => {
+    await deleteProviderMutation.mutateAsync(providerId)
+    if (editingProviderId === providerId) {
+      setEditingProviderId(null)
+      setDraftProvider(null)
     }
   }
 
-  const handleAddModel = () => {
+  const handleAddModel = async () => {
     if (!addModelProviderId) return
 
-    const model: LLMModel = {
-      id: Date.now().toString(),
+    const modelCreate: LLMModelCreate = {
       provider_id: addModelProviderId,
       name: newModel.name,
-      input_price: newModel.input_price,
-      output_price: newModel.output_price,
-      cache_read_price: newModel.cache_read_price,
+      input_price: Number(newModel.input_price),
+      output_price: Number(newModel.output_price),
+      cache_read_price: Number(newModel.cache_read_price),
       extra_body: newModel.extra_body,
       is_active: newModel.is_active,
     }
 
-    setProviders(
-      providers.map((p) =>
-        p.id === addModelProviderId
-          ? { ...p, models: [...p.models, model] }
-          : p,
-      ),
-    )
+    await createModelMutation.mutateAsync(modelCreate)
     setAddModelProviderId(null)
     setNewModel({
       name: '',
-      input_price: '0',
-      output_price: '0',
-      cache_read_price: '0',
+      input_price: 0,
+      output_price: 0,
+      cache_read_price: 0,
       extra_body: {},
       is_active: true,
     })
   }
 
-  const deleteModel = (providerId: string, modelId: string) => {
-    setProviders(
-      providers.map((p) =>
-        p.id === providerId
-          ? {
-              ...p,
-              models: p.models.filter((m) => m.id !== modelId),
-            }
-          : p,
-      ),
-    )
-    if (editingModel === modelId) {
-      setEditingModel(null)
-      setModelBackup(null)
+  const deleteModel = async (modelId: number) => {
+    await deleteModelMutation.mutateAsync(modelId)
+    if (editingModelId === modelId) {
+      setEditingModelId(null)
+      setDraftModel(null)
     }
   }
 
-  const updateProvider = (
-    providerId: string,
-    field: keyof LLMProvider,
-    value: string | boolean | ProviderType,
-  ) => {
-    setProviders(
-      providers.map((p) =>
-        p.id === providerId ? { ...p, [field]: value } : p,
-      ),
+  // Provider Actions
+  const startEditingProvider = (providerId: number) => {
+    const provider = serverProviders.find(
+      (p) => p.id.toString() === providerId.toString(),
     )
-  }
-
-  const updateModel = (
-    providerId: string,
-    modelId: string,
-    field: keyof LLMModel,
-    value: string | boolean | Record<string, any>,
-  ) => {
-    setProviders(
-      providers.map((p) =>
-        p.id === providerId
-          ? {
-              ...p,
-              models: p.models.map((m) =>
-                m.id === modelId ? { ...m, [field]: value } : m,
-              ),
-            }
-          : p,
-      ),
-    )
-  }
-
-  const startEditingProvider = (providerId: string) => {
-    const provider = providers.find((p) => p.id === providerId)
     if (provider) {
-      setProviderBackup(JSON.parse(JSON.stringify(provider)))
-      setEditingProvider(providerId)
+      setEditingProviderId(providerId)
+      setDraftProvider({
+        name: provider.name,
+        provider_type: provider.provider_type,
+        base_url: provider.base_url,
+        api_key: provider.api_key,
+        use_proxy: provider.use_proxy,
+        is_active: provider.is_active,
+      })
     }
   }
 
-  const saveProvider = () => {
-    setEditingProvider(null)
-    setProviderBackup(null)
+  const saveProvider = async () => {
+    if (editingProviderId && draftProvider) {
+      await updateProviderMutation.mutateAsync({
+        id: editingProviderId,
+        data: draftProvider,
+      })
+      setEditingProviderId(null)
+      setDraftProvider(null)
+    }
   }
 
   const cancelEditProvider = () => {
-    if (providerBackup) {
-      setProviders(
-        providers.map((p) => (p.id === providerBackup.id ? providerBackup : p)),
-      )
-    }
-    setEditingProvider(null)
-    setProviderBackup(null)
+    setEditingProviderId(null)
+    setDraftProvider(null)
   }
 
-  const startEditingModel = (providerId: string, modelId: string) => {
-    const provider = providers.find((p) => p.id === providerId)
+  const toggleProviderActive = async (providerId: string, checked: boolean) => {
+    await updateProviderMutation.mutateAsync({
+      id: parseInt(providerId),
+      data: { is_active: checked },
+    })
+  }
+
+  // Model Actions
+  const startEditingModel = (providerId: number, modelId: number) => {
+    const provider = serverProviders.find((p) => p.id === providerId)
     const model = provider?.models.find((m) => m.id === modelId)
+
     if (model) {
-      setModelBackup(JSON.parse(JSON.stringify(model)))
-      setEditingModel(modelId)
+      setEditingModelId(modelId)
+      setDraftModel({
+        name: model.name,
+        input_price: model.input_price,
+        output_price: model.output_price,
+        cache_read_price: model.cache_read_price,
+        extra_body: model.extra_body,
+        is_active: model.is_active,
+      })
     }
   }
 
-  const saveModel = () => {
-    setEditingModel(null)
-    setModelBackup(null)
-  }
-
-  const cancelEditModel = (providerId: string) => {
-    if (modelBackup) {
-      setProviders(
-        providers.map((p) =>
-          p.id === providerId
-            ? {
-                ...p,
-                models: p.models.map((m) =>
-                  m.id === modelBackup.id ? modelBackup : m,
-                ),
-              }
-            : p,
-        ),
-      )
+  const saveModel = async () => {
+    if (editingModelId && draftModel) {
+      await updateModelMutation.mutateAsync({
+        id: editingModelId,
+        data: draftModel,
+      })
+      setEditingModelId(null)
+      setDraftModel(null)
     }
-    setEditingModel(null)
-    setModelBackup(null)
   }
 
-  const isEditingProvider = (providerId: string) => {
-    return editingProvider === providerId
+  const cancelEditModel = () => {
+    setEditingModelId(null)
+    setDraftModel(null)
   }
 
-  const isEditingModel = (modelId: string) => {
-    return editingModel === modelId
+  const toggleModelActive = async (modelId: number, checked: boolean) => {
+    await updateModelMutation.mutateAsync({
+      id: modelId,
+      data: { is_active: checked },
+    })
+  }
+
+  const updateDraftProvider = (field: keyof LLMProviderUpdate, value: any) => {
+    setDraftProvider((prev) => (prev ? { ...prev, [field]: value } : null))
+  }
+
+  const updateDraftModel = (field: keyof LLMModelUpdate, value: any) => {
+    setDraftModel((prev) => (prev ? { ...prev, [field]: value } : null))
+  }
+
+  const isEditingProvider = (providerId: number) => {
+    return editingProviderId === providerId
+  }
+
+  const isEditingModel = (modelId: number) => {
+    return editingModelId === modelId
   }
   return (
     <SidebarInset className='h-screen flex flex-col'>
@@ -433,15 +356,9 @@ export default function LLMSettingPage() {
                           <SelectValue placeholder='选择类型' />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value={ProviderType.OPENAI}>
-                            OpenAI
-                          </SelectItem>
-                          <SelectItem value={ProviderType.ANTHROPIC}>
-                            Anthropic
-                          </SelectItem>
-                          <SelectItem value={ProviderType.GOOGLE}>
-                            Google
-                          </SelectItem>
+                          <SelectItem value={'openai'}>OpenAI</SelectItem>
+                          <SelectItem value={'anthropic'}>Anthropic</SelectItem>
+                          <SelectItem value={'google'}>Google</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -465,7 +382,7 @@ export default function LLMSettingPage() {
                       <Input
                         id='new-provider-apikey'
                         type='password'
-                        value={newProvider.api_key}
+                        value={newProvider.api_key || ''}
                         onChange={(e) =>
                           setNewProvider({
                             ...newProvider,
@@ -528,10 +445,10 @@ export default function LLMSettingPage() {
             </div>
 
             {/* Providers List */}
-            {providers.map((provider) => (
+            {serverProviders.map((provider) => (
               <Card key={provider.id} className='border-border bg-card'>
                 <Collapsible
-                  open={provider.isOpen}
+                  open={openProviderIds[provider.id]}
                   onOpenChange={() => toggleProvider(provider.id)}
                 >
                   <div className='p-6'>
@@ -544,7 +461,7 @@ export default function LLMSettingPage() {
                             size='sm'
                             className='h-8 w-8 p-0'
                           >
-                            {provider.isOpen ? (
+                            {openProviderIds[provider.id] ? (
                               <ChevronDownIcon className='h-4 w-4' />
                             ) : (
                               <ChevronRightIcon className='h-4 w-4' />
@@ -553,13 +470,9 @@ export default function LLMSettingPage() {
                         </CollapsibleTrigger>
                         {isEditingProvider(provider.id) ? (
                           <Input
-                            value={provider.name}
+                            value={draftProvider?.name || ''}
                             onChange={(e) =>
-                              updateProvider(
-                                provider.id,
-                                'name',
-                                e.target.value,
-                              )
+                              updateDraftProvider('name', e.target.value)
                             }
                             className='max-w-xs font-semibold text-lg bg-background'
                             placeholder='Provider 名称'
@@ -594,7 +507,10 @@ export default function LLMSettingPage() {
                           <Switch
                             checked={provider.is_active}
                             onCheckedChange={(checked) =>
-                              updateProvider(provider.id, 'is_active', checked)
+                              toggleProviderActive(
+                                provider.id.toString(),
+                                checked,
+                              )
                             }
                           />
                         </div>
@@ -653,13 +569,9 @@ export default function LLMSettingPage() {
                                   Provider 类型
                                 </Label>
                                 <Select
-                                  value={provider.provider_type}
+                                  value={draftProvider?.provider_type}
                                   onValueChange={(value) =>
-                                    updateProvider(
-                                      provider.id,
-                                      'provider_type',
-                                      value as ProviderType,
-                                    )
+                                    updateDraftProvider('provider_type', value)
                                   }
                                 >
                                   <SelectTrigger
@@ -669,13 +581,13 @@ export default function LLMSettingPage() {
                                     <SelectValue placeholder='选择类型' />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value={ProviderType.OPENAI}>
+                                    <SelectItem value={'openai'}>
                                       OpenAI
                                     </SelectItem>
-                                    <SelectItem value={ProviderType.ANTHROPIC}>
+                                    <SelectItem value={'anthropic'}>
                                       Anthropic
                                     </SelectItem>
-                                    <SelectItem value={ProviderType.GOOGLE}>
+                                    <SelectItem value={'google'}>
                                       Google
                                     </SelectItem>
                                   </SelectContent>
@@ -687,10 +599,9 @@ export default function LLMSettingPage() {
                                 </Label>
                                 <Input
                                   id={`baseurl-${provider.id}`}
-                                  value={provider.base_url}
+                                  value={draftProvider?.base_url || ''}
                                   onChange={(e) =>
-                                    updateProvider(
-                                      provider.id,
+                                    updateDraftProvider(
                                       'base_url',
                                       e.target.value,
                                     )
@@ -711,10 +622,9 @@ export default function LLMSettingPage() {
                                         ? 'text'
                                         : 'password'
                                     }
-                                    value={provider.api_key}
+                                    value={draftProvider?.api_key || ''}
                                     onChange={(e) =>
-                                      updateProvider(
-                                        provider.id,
+                                      updateDraftProvider(
                                         'api_key',
                                         e.target.value,
                                       )
@@ -751,13 +661,9 @@ export default function LLMSettingPage() {
                               </div>
                               <Switch
                                 id={`proxy-${provider.id}`}
-                                checked={provider.use_proxy}
+                                checked={draftProvider?.use_proxy}
                                 onCheckedChange={(checked) =>
-                                  updateProvider(
-                                    provider.id,
-                                    'use_proxy',
-                                    checked,
-                                  )
+                                  updateDraftProvider('use_proxy', checked)
                                 }
                               />
                             </div>
@@ -772,13 +678,9 @@ export default function LLMSettingPage() {
                               </div>
                               <Switch
                                 id={`active-${provider.id}`}
-                                checked={provider.is_active}
+                                checked={draftProvider?.is_active}
                                 onCheckedChange={(checked) =>
-                                  updateProvider(
-                                    provider.id,
-                                    'is_active',
-                                    checked,
-                                  )
+                                  updateDraftProvider('is_active', checked)
                                 }
                               />
                             </div>
@@ -834,29 +736,30 @@ export default function LLMSettingPage() {
 
                       {/* Models Section */}
                       <div className='pl-11 space-y-4'>
-                        <div className='flex items-center justify-between'>
-                          <h3 className='text-lg font-semibold'>模型配置</h3>
+                        <div className='flex justify-between items-center mb-4'>
+                          <h4 className='text-sm font-medium'>模型列表</h4>
                           <Dialog
                             open={addModelProviderId === provider.id}
-                            onOpenChange={(open) =>
-                              setAddModelProviderId(open ? provider.id : null)
-                            }
+                            onOpenChange={(open) => {
+                              if (!open) setAddModelProviderId(null)
+                              else setAddModelProviderId(provider.id)
+                            }}
                           >
                             <DialogTrigger asChild>
                               <Button
                                 variant='outline'
                                 size='sm'
-                                className='gap-2 bg-transparent'
+                                className='gap-2'
                               >
                                 <PlusIcon className='h-3 w-3' />
                                 添加模型
                               </Button>
                             </DialogTrigger>
-                            <DialogContent className='sm:max-w-[600px]'>
+                            <DialogContent>
                               <DialogHeader>
                                 <DialogTitle>添加新模型</DialogTitle>
                                 <DialogDescription>
-                                  为 {provider.name} 添加新的模型配置
+                                  为 {provider.name} 添加一个新的 LLM 模型
                                 </DialogDescription>
                               </DialogHeader>
                               <div className='space-y-4 py-4'>
@@ -873,63 +776,61 @@ export default function LLMSettingPage() {
                                         name: e.target.value,
                                       })
                                     }
-                                    placeholder='gpt-4-turbo'
-                                    className='font-mono text-sm'
+                                    placeholder='gpt-4, claude-3-opus, etc.'
                                   />
                                 </div>
                                 <div className='grid grid-cols-2 gap-4'>
                                   <div className='space-y-2'>
-                                    <Label htmlFor='new-model-input-price'>
-                                      Input Price ($/1K tokens)
+                                    <Label htmlFor='new-model-input'>
+                                      输入价格 ($/1k tokens)
                                     </Label>
                                     <Input
-                                      id='new-model-input-price'
+                                      id='new-model-input'
                                       type='number'
                                       step='0.0001'
                                       value={newModel.input_price}
                                       onChange={(e) =>
                                         setNewModel({
                                           ...newModel,
-                                          input_price: e.target.value,
+                                          input_price: Number(e.target.value),
                                         })
                                       }
-                                      placeholder='0.01'
                                     />
                                   </div>
                                   <div className='space-y-2'>
-                                    <Label htmlFor='new-model-output-price'>
-                                      Output Price ($/1K tokens)
+                                    <Label htmlFor='new-model-output'>
+                                      输出价格 ($/1k tokens)
                                     </Label>
                                     <Input
-                                      id='new-model-output-price'
+                                      id='new-model-output'
                                       type='number'
                                       step='0.0001'
                                       value={newModel.output_price}
                                       onChange={(e) =>
                                         setNewModel({
                                           ...newModel,
-                                          output_price: e.target.value,
+                                          output_price: Number(e.target.value),
                                         })
                                       }
-                                      placeholder='0.03'
                                     />
                                   </div>
                                   <div className='space-y-2'>
-                                    <Label htmlFor='new-model-cache-read-price'>
-                                      Cache Read Price ($/1K tokens)
+                                    <Label htmlFor='new-model-cache'>
+                                      缓存价格 ($/1k tokens)
                                     </Label>
                                     <Input
-                                      id='new-model-cache-read-price'
+                                      id='new-model-cache'
                                       type='number'
                                       step='0.0001'
                                       value={newModel.cache_read_price}
                                       onChange={(e) =>
                                         setNewModel({
                                           ...newModel,
-                                          cache_read_price: e.target.value,
+                                          cache_read_price: Number(
+                                            e.target.value,
+                                          ),
                                         })
                                       }
-                                      placeholder='0.001'
                                     />
                                   </div>
                                 </div>
@@ -981,33 +882,24 @@ export default function LLMSettingPage() {
                                   <div className='flex items-center gap-3'>
                                     {isEditingModel(model.id) ? (
                                       <Input
-                                        value={model.name}
+                                        value={draftModel?.name || ''}
                                         onChange={(e) =>
-                                          updateModel(
-                                            provider.id,
-                                            model.id,
+                                          updateDraftModel(
                                             'name',
                                             e.target.value,
                                           )
                                         }
-                                        className='font-mono text-sm max-w-xs bg-background'
-                                        placeholder='模型名称'
+                                        className='h-8 w-[180px] font-mono text-sm bg-background'
                                       />
                                     ) : (
-                                      <span className='font-mono text-sm font-medium'>
-                                        {model.name}
-                                      </span>
-                                    )}
-                                    {!model.is_active && (
                                       <Badge
-                                        variant='destructive'
-                                        className='text-xs'
+                                        variant='secondary'
+                                        className='font-mono text-sm'
                                       >
-                                        未激活
+                                        {model.name}
                                       </Badge>
                                     )}
-                                  </div>
-                                  <div className='flex items-center gap-2'>
+
                                     <div className='flex items-center gap-2'>
                                       <span className='text-xs text-muted-foreground'>
                                         激活
@@ -1015,15 +907,12 @@ export default function LLMSettingPage() {
                                       <Switch
                                         checked={model.is_active}
                                         onCheckedChange={(checked) =>
-                                          updateModel(
-                                            provider.id,
-                                            model.id,
-                                            'is_active',
-                                            checked,
-                                          )
+                                          toggleModelActive(model.id, checked)
                                         }
                                       />
                                     </div>
+                                  </div>
+                                  <div className='flex items-center gap-1'>
                                     {isEditingModel(model.id) ? (
                                       <>
                                         <Button
@@ -1033,45 +922,41 @@ export default function LLMSettingPage() {
                                           className='h-8 gap-2 bg-transparent'
                                         >
                                           <SaveIcon className='h-3 w-3' />
-                                          保存
                                         </Button>
                                         <Button
                                           variant='outline'
                                           size='sm'
-                                          onClick={() =>
-                                            cancelEditModel(provider.id)
-                                          }
+                                          onClick={() => cancelEditModel()}
                                           className='h-8 gap-2 bg-transparent'
                                         >
                                           <XIcon className='h-3 w-3' />
-                                          取消
                                         </Button>
                                       </>
                                     ) : (
-                                      <Button
-                                        variant='ghost'
-                                        size='sm'
-                                        onClick={() =>
-                                          startEditingModel(
-                                            provider.id,
-                                            model.id,
-                                          )
-                                        }
-                                        className='h-8'
-                                      >
-                                        <Edit2Icon className='h-3 w-3' />
-                                      </Button>
+                                      <>
+                                        <Button
+                                          variant='ghost'
+                                          size='sm'
+                                          onClick={() =>
+                                            startEditingModel(
+                                              provider.id,
+                                              model.id,
+                                            )
+                                          }
+                                          className='h-8'
+                                        >
+                                          <Edit2Icon className='h-3 w-3' />
+                                        </Button>
+                                        <Button
+                                          variant='ghost'
+                                          size='sm'
+                                          onClick={() => deleteModel(model.id)}
+                                          className='h-8 text-destructive hover:text-destructive'
+                                        >
+                                          <Trash2Icon className='h-3 w-3' />
+                                        </Button>
+                                      </>
                                     )}
-                                    <Button
-                                      variant='ghost'
-                                      size='sm'
-                                      onClick={() =>
-                                        deleteModel(provider.id, model.id)
-                                      }
-                                      className='h-8 text-destructive hover:text-destructive'
-                                    >
-                                      <Trash2Icon className='h-3 w-3' />
-                                    </Button>
                                   </div>
                                 </div>
 
@@ -1084,22 +969,20 @@ export default function LLMSettingPage() {
                                           htmlFor={`input-price-${model.id}`}
                                           className='text-xs'
                                         >
-                                          Input Price
+                                          Input ($/1k)
                                         </Label>
                                         <Input
                                           id={`input-price-${model.id}`}
                                           type='number'
                                           step='0.0001'
-                                          value={model.input_price}
+                                          value={draftModel?.input_price ?? 0}
                                           onChange={(e) =>
-                                            updateModel(
-                                              provider.id,
-                                              model.id,
+                                            updateDraftModel(
                                               'input_price',
-                                              e.target.value,
+                                              Number(e.target.value),
                                             )
                                           }
-                                          className='h-9 text-sm bg-background'
+                                          className='h-8 text-xs bg-background'
                                         />
                                       </div>
                                       <div className='space-y-1'>
@@ -1107,22 +990,20 @@ export default function LLMSettingPage() {
                                           htmlFor={`output-price-${model.id}`}
                                           className='text-xs'
                                         >
-                                          Output Price
+                                          Output ($/1k)
                                         </Label>
                                         <Input
                                           id={`output-price-${model.id}`}
                                           type='number'
                                           step='0.0001'
-                                          value={model.output_price}
+                                          value={draftModel?.output_price ?? 0}
                                           onChange={(e) =>
-                                            updateModel(
-                                              provider.id,
-                                              model.id,
+                                            updateDraftModel(
                                               'output_price',
-                                              e.target.value,
+                                              Number(e.target.value),
                                             )
                                           }
-                                          className='h-9 text-sm bg-background'
+                                          className='h-8 text-xs bg-background'
                                         />
                                       </div>
                                       <div className='space-y-1'>
@@ -1130,49 +1011,42 @@ export default function LLMSettingPage() {
                                           htmlFor={`cache-read-price-${model.id}`}
                                           className='text-xs'
                                         >
-                                          Cache Read Price
+                                          Cache Read ($/1k)
                                         </Label>
                                         <Input
                                           id={`cache-read-price-${model.id}`}
                                           type='number'
                                           step='0.0001'
-                                          value={model.cache_read_price}
+                                          value={
+                                            draftModel?.cache_read_price ?? 0
+                                          }
                                           onChange={(e) =>
-                                            updateModel(
-                                              provider.id,
-                                              model.id,
+                                            updateDraftModel(
                                               'cache_read_price',
-                                              e.target.value,
+                                              Number(e.target.value),
                                             )
                                           }
-                                          className='h-9 text-sm bg-background'
+                                          className='h-8 text-xs bg-background'
                                         />
                                       </div>
-                                    </div>
-                                    <div className='flex items-center justify-between pt-2'>
-                                      <div className='space-y-0.5'>
+                                      <div className='flex items-center gap-2 pt-4'>
                                         <Label
                                           htmlFor={`model-active-${model.id}`}
                                           className='text-xs'
                                         >
-                                          启用模型
+                                          激活
                                         </Label>
-                                        <p className='text-xs text-muted-foreground'>
-                                          是否激活此模型
-                                        </p>
+                                        <Switch
+                                          id={`model-active-${model.id}`}
+                                          checked={draftModel?.is_active}
+                                          onCheckedChange={(checked) =>
+                                            updateDraftModel(
+                                              'is_active',
+                                              checked,
+                                            )
+                                          }
+                                        />
                                       </div>
-                                      <Switch
-                                        id={`model-active-${model.id}`}
-                                        checked={model.is_active}
-                                        onCheckedChange={(checked) =>
-                                          updateModel(
-                                            provider.id,
-                                            model.id,
-                                            'is_active',
-                                            checked,
-                                          )
-                                        }
-                                      />
                                     </div>
                                   </div>
                                 ) : (
@@ -1221,7 +1095,7 @@ export default function LLMSettingPage() {
               </Card>
             ))}
 
-            {providers.length === 0 && (
+            {serverProviders.length === 0 && (
               <Card className='p-12 text-center'>
                 <SettingsIcon className='h-12 w-12 mx-auto mb-4 text-muted-foreground' />
                 <h3 className='text-lg font-semibold mb-2'>

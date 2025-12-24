@@ -42,8 +42,11 @@ const projects = [
   },
   {
     name: 'setting',
-    url: '/setting',
     icon: SettingsIcon,
+    items: [
+      { name: 'llm_statistic', url: '/setting/llm-statistic' },
+      { name: 'llm_setting', url: '/setting/llm-setting' },
+    ],
   },
 ]
 

@@ -1,15 +1,18 @@
 // ==================== LLMProvider Schemas ====================
+export type ProviderType = 'openai' | 'anthropic' | 'google'
+
 export interface LLMProviderCreate {
   name: string
-  base_url: string
+  provider_type: ProviderType
+  base_url?: string
   api_key: string
-  use_proxy: boolean
-  /** Default: true */
+  use_proxy?: boolean
   is_active?: boolean
 }
 
 export interface LLMProviderUpdate {
   name?: string
+  provider_type?: ProviderType
   base_url?: string
   api_key?: string
   use_proxy?: boolean
@@ -19,6 +22,7 @@ export interface LLMProviderUpdate {
 export interface LLMProviderPublic {
   id: number
   name: string
+  provider_type: ProviderType
   base_url?: string
   api_key?: string
   use_proxy: boolean
@@ -27,16 +31,13 @@ export interface LLMProviderPublic {
 }
 
 // ==================== LLMModel Schemas ====================
-
 export interface LLMModelCreate {
   provider_id: number
   name: string
   input_price: number
   output_price: number
   cache_read_price: number
-  /** Default: {} */
   extra_body?: Record<string, any>
-  /** Default: true */
   is_active?: boolean
 }
 
@@ -93,13 +94,11 @@ export interface LLMSettingUpdate {
 }
 
 // ==================== LLMStatistic Schemas ====================
-
 export interface LLMStatisticSummary {
   total_input_tokens: number
   total_output_tokens: number
   total_cache_read: number
-  /** Decimal mapped to number. Use string if backend serializes Decimal as string. */
-  total_price: number
+  total_price: number // Decimal 转为 number
 }
 
 export interface LLMStatisticByAgent extends LLMStatisticSummary {
@@ -122,7 +121,6 @@ export interface LLMStatisticByUser extends LLMStatisticSummary {
   user_name: string
 }
 
-/** LLM 使用统计概览，包含总体统计和各维度分组 */
 export interface LLMStatisticOverview {
   total: LLMStatisticSummary
   by_agent: LLMStatisticByAgent[]
@@ -139,13 +137,10 @@ export interface LLMStatisticDetail {
   input_tokens: number
   output_tokens: number
   cache_read: number
-  /** Decimal mapped to number */
   price: number
-  /** ISO 8601 Date String */
-  time: string
+  time: string // 后端 datetime 转 ISO 字符串
 }
 
-/** LLM 使用详细记录响应 */
 export interface LLMStatisticDetailsResponse {
   total: number
   items: LLMStatisticDetail[]
