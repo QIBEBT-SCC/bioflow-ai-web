@@ -7,6 +7,7 @@ import {
   WrenchIcon,
 } from 'lucide-react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import {
   Collapsible,
   CollapsibleContent,
@@ -24,7 +25,6 @@ import {
   SidebarMenuSubItem,
 } from '@/components/ui/sidebar'
 import { useSidebarStore } from '@/stores/sidebar-store'
-import { useTranslations } from 'next-intl'
 
 const projects = [
   {
