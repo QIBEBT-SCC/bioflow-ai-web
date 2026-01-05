@@ -1,8 +1,14 @@
 'use client'
 
-import { Copy, Edit, MoreHorizontal, Tag, Trash2 } from 'lucide-react'
+import {
+  CopyIcon,
+  EditIcon,
+  MoreHorizontalIcon,
+  TagIcon,
+  Trash2Icon,
+} from 'lucide-react'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -30,7 +36,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { useToolCount, useToolList } from '@/hooks/use-tool'
+import {
+  useGroupTools,
+  useSearchTools,
+  useToolCount,
+  useToolList,
+} from '@/hooks/use-tool'
 import type { SimpleToolInfo } from '@/types/tool'
 
 // 根据标签名称获取对应的样式
@@ -51,15 +62,65 @@ interface ToolListProps {
   selectedGroupId?: number | null
 }
 
-export function ToolList({ viewMode }: ToolListProps) {
+export function ToolList({
+  viewMode,
+  searchQuery = '',
+  selectedGroupId = null,
+}: ToolListProps) {
   const [currentPage, setCurrentPage] = useState(1)
   const pageSize = viewMode === 'list' ? 10 : 12
   const offset = (currentPage - 1) * pageSize
 
-  const { data: allTools = [], isLoading } = useToolList(offset, pageSize)
+  // 根据搜索条件和分组选择，决定使用哪个 hook
+  const isSearching = searchQuery.trim() !== ''
+  const isFiltering = selectedGroupId !== null && !isSearching // 搜索优先级高于分组
+
+  // 搜索工具（服务端分页）
+  const { data: searchResults = [], isLoading: isSearchLoading } =
+    useSearchTools(searchQuery.trim(), offset)
+
+  // 分组工具（无服务端分页，需要客户端处理）
+  const { data: allGroupTools = [], isLoading: isLoadingGroup } = useGroupTools(
+    isFiltering ? (selectedGroupId ?? undefined) : undefined,
+  )
+
+  // 所有工具（服务端分页）
+  const { data: allToolsList = [], isLoading: isLoadingAll } = useToolList(
+    !isSearching && !isFiltering ? offset : 0,
+    !isSearching && !isFiltering ? pageSize : 10,
+  )
   const { data: toolCounts = 0 } = useToolCount()
 
-  const totalPages = Math.ceil(toolCounts / pageSize)
+  // 对分组工具进行客户端分页
+  const paginatedGroupTools = isFiltering
+    ? allGroupTools.slice(offset, offset + pageSize)
+    : []
+
+  // 根据条件决定使用哪个数据源
+  const allTools = isSearching
+    ? searchResults
+    : isFiltering
+      ? paginatedGroupTools
+      : allToolsList
+
+  const isLoading = isSearching
+    ? isSearchLoading
+    : isFiltering
+      ? isLoadingGroup
+      : isLoadingAll
+
+  // 计算总页数
+  const totalPages = isSearching
+    ? Math.ceil((searchResults.length || 1) / pageSize) // 搜索结果可能需要更多信息来计算总数
+    : isFiltering
+      ? Math.ceil(allGroupTools.length / pageSize)
+      : Math.ceil(toolCounts / pageSize)
+
+  // 当搜索查询或分组选择变化时，重置到第一页
+  // biome-ignore lint/correctness/useExhaustiveDependencies: 当搜索或分组变化时需要重置页码
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, selectedGroupId])
 
   // 生成页码数组
   const getPageNumbers = () => {
@@ -168,26 +229,26 @@ export function ToolList({ viewMode }: ToolListProps) {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant='ghost' size='icon' className='h-8 w-8'>
-                      <MoreHorizontal className='h-4 w-4' />
+                      <MoreHorizontalIcon className='h-4 w-4' />
                       <span className='sr-only'>更多选项</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align='end'>
                     <DropdownMenuItem>
-                      <Edit className='h-4 w-4 mr-2' />
+                      <EditIcon className='h-4 w-4 mr-2' />
                       编辑工具
                     </DropdownMenuItem>
                     <DropdownMenuItem>
-                      <Copy className='h-4 w-4 mr-2' />
+                      <CopyIcon className='h-4 w-4 mr-2' />
                       复制工具
                     </DropdownMenuItem>
                     <DropdownMenuItem>
-                      <Tag className='h-4 w-4 mr-2' />
+                      <TagIcon className='h-4 w-4 mr-2' />
                       管理分组
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem className='text-destructive'>
-                      <Trash2 className='h-4 w-4 mr-2' />
+                      <Trash2Icon className='h-4 w-4 mr-2' />
                       删除工具
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -228,6 +289,7 @@ export function ToolList({ viewMode }: ToolListProps) {
                   </PaginationLink>
                 </PaginationItem>
               ) : (
+                // biome-ignore lint/suspicious/noArrayIndexKey: no need
                 <PaginationItem key={`ellipsis-list-${index}`}>
                   <PaginationEllipsis />
                 </PaginationItem>
@@ -265,25 +327,25 @@ export function ToolList({ viewMode }: ToolListProps) {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant='ghost' size='icon' className='h-8 w-8'>
-                      <MoreHorizontal className='h-4 w-4' />
+                      <MoreHorizontalIcon className='h-4 w-4' />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align='end'>
                     <DropdownMenuItem>
-                      <Edit className='h-4 w-4 mr-2' />
+                      <EditIcon className='h-4 w-4 mr-2' />
                       编辑工具
                     </DropdownMenuItem>
                     <DropdownMenuItem>
-                      <Copy className='h-4 w-4 mr-2' />
+                      <CopyIcon className='h-4 w-4 mr-2' />
                       复制工具
                     </DropdownMenuItem>
                     <DropdownMenuItem>
-                      <Tag className='h-4 w-4 mr-2' />
+                      <TagIcon className='h-4 w-4 mr-2' />
                       管理分组
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem className='text-destructive'>
-                      <Trash2 className='h-4 w-4 mr-2' />
+                      <Trash2Icon className='h-4 w-4 mr-2' />
                       删除工具
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -343,6 +405,7 @@ export function ToolList({ viewMode }: ToolListProps) {
                   </PaginationLink>
                 </PaginationItem>
               ) : (
+                // biome-ignore lint/suspicious/noArrayIndexKey: no need
                 <PaginationItem key={`ellipsis-grid-${index}`}>
                   <PaginationEllipsis />
                 </PaginationItem>
