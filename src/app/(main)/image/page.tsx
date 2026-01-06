@@ -1,8 +1,16 @@
 'use client'
 
-import { ExternalLink, FileText, Package, Plus, Search, X } from 'lucide-react'
+import {
+  ExternalLinkIcon,
+  FileTextIcon,
+  PackageIcon,
+  PlusIcon,
+  SearchIcon,
+  XIcon,
+} from 'lucide-react'
 import type React from 'react'
 import { useMemo, useState } from 'react'
+import { CreateImageDialog } from '@/components/image/create-image-dialog'
 import { Badge } from '@/components/ui/badge'
 import {
   Breadcrumb,
@@ -111,6 +119,7 @@ export default function ImagePage() {
                   Docker Image Registry
                 </h1>
               </div>
+              {/*<CreateImageDialog />*/}
             </div>
             <p className='text-lg text-muted-foreground text-pretty'>
               Browse and discover containerized tools and frameworks for your
@@ -119,27 +128,27 @@ export default function ImagePage() {
           </div>
 
           {/* Search Bar */}
-            <div className='mb-8'>
-              <div className='relative max-w-2xl'>
-              <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground' />
+          <div className='mb-8'>
+            <div className='relative max-w-2xl'>
+              <SearchIcon className='absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground' />
               <Input
                 type='text'
                 placeholder='Search images by name, description, or version...'
                 value={searchQuery}
                 onChange={(e) => handleSearchChange(e.target.value)}
-                  className='pl-10 pr-10 h-12 text-base'
+                className='pl-10 pr-10 h-12 text-base'
               />
-                {searchQuery && (
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    className='absolute right-1.5 top-1/2 -translate-y-1/2 h-8 w-8'
-                    aria-label='Clear search'
-                    onClick={() => handleSearchChange('')}
-                  >
-                    <X className='h-4 w-4 text-muted-foreground' />
-                  </Button>
-                )}
+              {searchQuery && (
+                <Button
+                  variant='ghost'
+                  size='icon'
+                  className='absolute right-1.5 top-1/2 -translate-y-1/2 h-8 w-8'
+                  aria-label='Clear search'
+                  onClick={() => handleSearchChange('')}
+                >
+                  <XIcon className='h-4 w-4 text-muted-foreground' />
+                </Button>
+              )}
             </div>
           </div>
 
@@ -153,11 +162,11 @@ export default function ImagePage() {
             </div>
           )}
 
-            {error ? (
+          {error ? (
             <Empty className='border'>
               <EmptyHeader>
                 <EmptyMedia>
-                  <Package className='h-12 w-12' />
+                  <PackageIcon className='h-12 w-12' />
                 </EmptyMedia>
                 <EmptyTitle>加载失败</EmptyTitle>
                 <EmptyDescription>
@@ -165,9 +174,12 @@ export default function ImagePage() {
                 </EmptyDescription>
               </EmptyHeader>
               <EmptyContent>
-                  <Button variant='outline' onClick={() => setCurrentPage((p) => p)}>
-                    重试
-                  </Button>
+                <Button
+                  variant='outline'
+                  onClick={() => setCurrentPage((p) => p)}
+                >
+                  重试
+                </Button>
               </EmptyContent>
             </Empty>
           ) : loading ? (
@@ -176,22 +188,28 @@ export default function ImagePage() {
                 <Card key={k} className='h-48 animate-pulse' />
               ))}
             </div>
-            ) : filteredImages.length === 0 ? (
+          ) : filteredImages.length === 0 ? (
             <Empty className='border'>
               <EmptyHeader>
                 <EmptyMedia>
-                  <Package className='h-12 w-12' />
+                  <PackageIcon className='h-12 w-12' />
                 </EmptyMedia>
                 <EmptyTitle>No Docker Images Found</EmptyTitle>
                 <EmptyDescription>
-                    {"You haven't added any Docker images yet. Get started by creating your first image."}
+                  {
+                    "You haven't added any Docker images yet. Get started by creating your first image."
+                  }
                 </EmptyDescription>
               </EmptyHeader>
               <EmptyContent>
-                  <Button>
-                    <Plus />
-                    Create First Image
-                  </Button>
+                <CreateImageDialog
+                  trigger={
+                    <Button>
+                      <PlusIcon className='h-4 w-4 mr-2' />
+                      Create First Image
+                    </Button>
+                  }
+                />
               </EmptyContent>
             </Empty>
           ) : (
@@ -206,7 +224,7 @@ export default function ImagePage() {
                     <CardHeader>
                       <div className='flex items-start justify-between gap-2 mb-2'>
                         <div className='flex items-center gap-2 min-w-0'>
-                          <Package className='h-5 w-5 text-primary shrink-0' />
+                          <PackageIcon className='h-5 w-5 text-primary shrink-0' />
                           <CardTitle className='text-lg truncate'>
                             {image.name}
                           </CardTitle>
@@ -250,7 +268,7 @@ export default function ImagePage() {
                               rel='noopener noreferrer'
                               className='flex items-center justify-center gap-1.5'
                             >
-                              <ExternalLink className='h-3.5 w-3.5' />
+                              <ExternalLinkIcon className='h-3.5 w-3.5' />
                               <span>Homepage</span>
                             </a>
                           </Button>
@@ -268,7 +286,7 @@ export default function ImagePage() {
                               rel='noopener noreferrer'
                               className='flex items-center justify-center gap-1.5'
                             >
-                              <FileText className='h-3.5 w-3.5' />
+                              <FileTextIcon className='h-3.5 w-3.5' />
                               <span>Paper</span>
                             </a>
                           </Button>
