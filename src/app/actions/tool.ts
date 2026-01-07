@@ -123,7 +123,7 @@ export async function updateTool(
   tool: Partial<DockerToolCreate>,
 ): Promise<ToolInfo> {
   const response = await serverFetch<ToolInfo>(`/tools/${uid}`, {
-    method: 'PUT',
+    method: 'PATCH',
     body: JSON.stringify(tool),
   })
 

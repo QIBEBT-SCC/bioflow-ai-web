@@ -2,6 +2,15 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { getDocument } from '@/app/actions/document'
+import {
+  createImage,
+  getImageCount,
+  getImageDocs,
+  getImageList,
+  runInImage,
+  searchImages,
+} from '@/app/actions/image'
 import {
   createTool,
   deleteTool,
@@ -15,10 +24,17 @@ import {
   searchTools,
   updateTool,
 } from '@/app/actions/tool'
-import { createImage, getImageDocs, runInImage, searchImages, getImageList, getImageCount } from '@/app/actions/image'
-import { getDocument } from '@/app/actions/document'
-import type { DockerToolCreate, SimpleToolDoc, SimpleToolInfo, ToolGroup, ToolHelpDoc, ToolImage, ToolInfo, ToolTag } from '@/types/tool'
 import type { ToolArgPublic } from '@/types/node'
+import type {
+  DockerToolCreate,
+  SimpleToolDoc,
+  SimpleToolInfo,
+  ToolGroup,
+  ToolHelpDoc,
+  ToolImage,
+  ToolInfo,
+  ToolTag,
+} from '@/types/tool'
 
 /**
  * 获取工具参数（用于节点编辑器）
@@ -159,7 +175,13 @@ export const useUpdateTool = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ uid, tool }: { uid: string; tool: Partial<DockerToolCreate> }) => updateTool(uid, tool),
+    mutationFn: ({
+      uid,
+      tool,
+    }: {
+      uid: string
+      tool: Partial<DockerToolCreate>
+    }) => updateTool(uid, tool),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['tool', variables.uid] })
       queryClient.invalidateQueries({ queryKey: ['toolList'] })
@@ -216,6 +238,8 @@ export const useCreateImage = () => {
     mutationFn: (image: ToolImage) => createImage(image),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['images'] })
+      queryClient.invalidateQueries({ queryKey: ['imageList'] })
+      queryClient.invalidateQueries({ queryKey: ['imageCount'] })
       toast.success('镜像创建成功')
     },
     onError: (error: Error) => {
@@ -241,7 +265,8 @@ export const useImageDocuments = (uid: string) => {
  */
 export const useRunInImage = () => {
   return useMutation({
-    mutationFn: ({ uid, command }: { uid: string; command: string }) => runInImage(uid, command),
+    mutationFn: ({ uid, command }: { uid: string; command: string }) =>
+      runInImage(uid, command),
   })
 }
 
