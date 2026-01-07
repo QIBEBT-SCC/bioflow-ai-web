@@ -10,11 +10,12 @@ import {
   useReactFlow,
   type XYPosition,
 } from '@xyflow/react'
-import { MenuIcon, PlayIcon, SaveIcon } from 'lucide-react'
+import { PlayIcon, SaveIcon } from 'lucide-react'
 import type React from 'react'
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { useShallow } from 'zustand/react/shallow'
+import { LoadWorkflowDialog } from '@/components/node-editor/load-workflow-dialog'
 import { PanelMenu } from '@/components/node-editor/menu/panel-menu'
 import { SaveAsDialog } from '@/components/node-editor/save-as-dialog'
 import {
@@ -186,10 +187,7 @@ function FlowContent() {
         {/* 工具栏 */}
         <div className='flex h-12 items-center border-t bg-muted/30 px-3'>
           <div className='flex items-center gap-1'>
-            <Button variant='ghost' size='sm'>
-              <MenuIcon className='h-4 w-4 mr-2' />
-              菜单
-            </Button>
+            <LoadWorkflowDialog />
 
             <Button
               variant='ghost'
