@@ -16,6 +16,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { useShallow } from 'zustand/react/shallow'
 import { PanelMenu } from '@/components/node-editor/menu/panel-menu'
+import { SaveAsDialog } from '@/components/node-editor/save-as-dialog'
 import {
   PythonCodeNode,
   RCodeNode,
@@ -199,6 +200,11 @@ function FlowContent() {
               <SaveIcon className='h-4 w-4 mr-2' />
               {updateWorkflowMutation.isPending ? '保存中...' : '保存'}
             </Button>
+
+            <SaveAsDialog
+              currentWorkflowName={workflowData?.name}
+              disabled={nodes.length === 0}
+            />
 
             <Separator orientation='vertical' className='!h-8 mx-2' />
 
