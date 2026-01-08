@@ -22,7 +22,7 @@ import {
   PythonCodeNode,
   RCodeNode,
 } from '@/components/node-editor/node/code-node'
-import { Copy2FolderNode } from '@/components/node-editor/node/data-node'
+import {Copy2FolderNode, GlobalMarkerNode} from '@/components/node-editor/node/data-node'
 import {
   DBInputNode,
   FileInputNode,
@@ -49,13 +49,13 @@ import { useNodeEditorStore } from '@/stores/nodeviewStore'
 // 注册节点类型
 const nodeTypes = {
   tool: ToolNode,
-  value_string: StringInputNode,
+  resource_value_string: StringInputNode,
   resource_file: FileInputNode,
   resource_sequence: SequenceInputNode,
   resource_db: DBInputNode,
   resource_genome: ReferenceInputNode,
   processor_copy2folder: Copy2FolderNode,
-  // processor_cut: CutNode,
+  global_mark: GlobalMarkerNode,
   // processor_concat: ConcatNode,
   code_R: RCodeNode,
   code_python: PythonCodeNode,
