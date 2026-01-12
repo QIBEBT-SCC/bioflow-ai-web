@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
-import type { ToolGroup } from '@/types/tool'
+import type { ToolGroup, ToolTag } from '@/types/tool'
 import type { FileMount, ParamDefine, DockerToolCreate } from '@/types/tool'
 
 export type ToolConfigValues = Pick<
@@ -30,19 +30,23 @@ export type ToolConfigValues = Pick<
   | 'immutable_static_params'
   | 'modifiable_static_params'
   | 'file_mounts'
+  | 'tags'
 >
 
 interface ToolConfigFormProps {
   value: ToolConfigValues
   toolGroups: ToolGroup[]
+  availableTags?: ToolTag[]
   onFieldChange: (
     field: keyof ToolConfigValues,
     value:
       | string
       | number
       | boolean
+      | null
       | ParamDefine[]
-      | FileMount[],
+      | FileMount[]
+      | ToolTag[],
   ) => void
   onAddDynamicParam: () => void
   onUpdateDynamicParam: (
@@ -70,6 +74,7 @@ interface ToolConfigFormProps {
 export function ToolConfigForm({
   value,
   toolGroups,
+  availableTags = [],
   onFieldChange,
   onAddDynamicParam,
   onUpdateDynamicParam,
@@ -179,6 +184,52 @@ export function ToolConfigForm({
                   </SelectContent>
                 </Select>
               </div>
+
+              {availableTags.length > 0 && (
+                <div className='space-y-2'>
+                  <Label>工具标签</Label>
+                  <div className='flex flex-wrap gap-3 p-3 border rounded-md bg-muted/30'>
+                    {availableTags.map((tag) => {
+                      const isSelected = value.tags.some((t) => t.id === tag.id)
+                      const getTagStyle = (tagName: string) => {
+                        switch (tagName) {
+                          case 'AI Checked':
+                            return 'bg-green-50 text-green-600 border-green-200'
+                          case 'AI Unchecked':
+                            return 'bg-yellow-50 text-yellow-600 border-yellow-200'
+                          default:
+                            return 'bg-blue-50 text-blue-600 border-blue-200'
+                        }
+                      }
+                      return (
+                        <div key={tag.id} className='flex items-center space-x-2'>
+                          <Checkbox
+                            id={`tag-${tag.id}`}
+                            checked={isSelected}
+                            onCheckedChange={(checked) => {
+                              const newTags = checked
+                                ? [...value.tags, tag]
+                                : value.tags.filter((t) => t.id !== tag.id)
+                              onFieldChange('tags', newTags)
+                            }}
+                          />
+                          <Label
+                            htmlFor={`tag-${tag.id}`}
+                            className='cursor-pointer'
+                          >
+                            <Badge
+                              variant='outline'
+                              className={`${getTagStyle(tag.name)} text-xs`}
+                            >
+                              {tag.name}
+                            </Badge>
+                          </Label>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
 
               {showAIGeneratePlaceholder && (
                 <div className='flex justify-end pt-4 border-t'>

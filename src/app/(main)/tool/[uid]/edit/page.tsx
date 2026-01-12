@@ -19,9 +19,10 @@ import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import {
   useTool,
   useToolGroupList,
+  useToolTagList,
   useUpdateTool,
 } from '@/hooks/use-tool'
-import type { FileMount, ParamDefine } from '@/types/tool'
+import type { FileMount, ParamDefine, ToolTag } from '@/types/tool'
 
 export default function EditToolPage() {
   const params = useParams()
@@ -29,6 +30,7 @@ export default function EditToolPage() {
   const toolUid = params.uid as string
   const { data: tool, isLoading } = useTool(toolUid)
   const { data: toolGroups = [] } = useToolGroupList()
+  const { data: availableTags = [] } = useToolTagList()
   const { mutate: updateTool, isPending: isUpdating } = useUpdateTool()
 
   const [formState, setFormState] = useState<ToolConfigValues | null>(null)
@@ -51,18 +53,21 @@ export default function EditToolPage() {
         immutable_static_params: tool.immutable_static_params ?? null,
         modifiable_static_params: tool.modifiable_static_params ?? null,
         file_mounts: tool.file_mounts.map((file) => ({ ...file })),
+        tags: tool.tags || [],
       })
     }
   }, [tool, defaultGroupId])
 
   const updateFormField = (
-    field: keyof EditableToolForm,
+    field: keyof ToolConfigValues,
     value:
       | string
       | number
       | boolean
+      | null
       | ParamDefine[]
-      | FileMount[],
+      | FileMount[]
+      | ToolTag[],
   ) => {
     setFormState((prev) => {
       if (!prev) return prev
@@ -246,6 +251,7 @@ export default function EditToolPage() {
           <ToolConfigForm
             value={formState}
             toolGroups={toolGroups}
+            availableTags={availableTags}
             onFieldChange={updateFormField}
             onAddDynamicParam={addDynamicParam}
             onUpdateDynamicParam={updateDynamicParam}

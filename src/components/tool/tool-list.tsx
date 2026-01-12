@@ -47,7 +47,7 @@ import type { SimpleToolInfo } from '@/types/tool'
 // 根据标签名称获取对应的样式
 function getTagStyle(tagName: string) {
   switch (tagName) {
-    case 'Default':
+    case 'AI Checked':
       return 'bg-green-50 text-green-600 border-green-200'
     case 'AI Unchecked':
       return 'bg-yellow-50 text-yellow-600 border-yellow-200'
