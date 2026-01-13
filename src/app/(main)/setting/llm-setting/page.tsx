@@ -446,7 +446,7 @@ export default function LLMSettingPage() {
 
             {/* Providers List */}
             {serverProviders.map((provider) => (
-              <Card key={provider.id} className='border-border bg-card'>
+              <Card key={provider.id} className='border-border bg-card py-0'>
                 <Collapsible
                   open={openProviderIds[provider.id]}
                   onOpenChange={() => toggleProvider(provider.id)}
@@ -493,9 +493,9 @@ export default function LLMSettingPage() {
                             使用代理
                           </Badge>
                         )}
-                        {!provider.is_active && (
-                          <Badge variant='destructive' className='ml-1'>
-                            未激活
+                        {provider.is_active && (
+                          <Badge variant='destructive' className='ml-1 bg-green-500 text-white'>
+                            激活
                           </Badge>
                         )}
                       </div>
