@@ -32,6 +32,18 @@ export interface ToolImage {
   image: ImageConfig
 }
 
+export interface ToolImagePublic {
+  uid: string
+  name: string
+  version: string
+  description: string
+  homepage: string
+  paper_link: string
+  image: ImageConfig
+
+  tools: SimpleToolInfo[]
+}
+
 // 参数定义接口
 export interface ParamDefine {
   description?: string
@@ -150,4 +162,3 @@ export interface AIGenTool {
   modifiable_static_params?: string | null
   file_mounts: FileMount[]
 }
-

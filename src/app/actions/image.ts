@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { serverFetch } from '@/lib/api-server'
-import type { SimpleToolDoc, SimpleToolInfo, ToolImage } from '@/types/tool'
+import type { ToolImage, ToolImagePublic } from '@/types/tool'
 
 /**
  * 获取镜像列表
@@ -52,8 +52,8 @@ export async function createImage(image: ToolImage): Promise<ToolImage> {
  * 更新镜像
  */
 export async function updateImage(
-    uid: string,
-    image: Partial<ToolImage>,
+  uid: string,
+  image: Partial<ToolImage>,
 ): Promise<ToolImage> {
   const response = await serverFetch<ToolImage>(`/images/${uid}`, {
     method: 'PATCH',
@@ -66,12 +66,11 @@ export async function updateImage(
   return response
 }
 
-export async function getImageDocs(uid: string): Promise<SimpleToolDoc[]> {
-  return await serverFetch<SimpleToolDoc[]>(`/images/${uid}/documents`)
-}
-
-export async function getImageTools(uid: string): Promise<SimpleToolInfo[]> {
-  return await serverFetch<SimpleToolInfo[]>(`/images/${uid}/tools`)
+/**
+ * 获取镜像详情
+ */
+export async function getImage(uid: string): Promise<ToolImagePublic> {
+  return await serverFetch<ToolImagePublic>(`/images/${uid}`)
 }
 
 export async function runInImage(

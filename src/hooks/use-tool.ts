@@ -5,10 +5,9 @@ import { toast } from 'sonner'
 import { getDocument } from '@/app/actions/document'
 import {
   createImage,
+  getImage,
   getImageCount,
-  getImageDocs,
   getImageList,
-  getImageTools,
   runInImage,
   searchImages,
   updateImage,
@@ -29,11 +28,11 @@ import {
 import type { ToolArgPublic } from '@/types/node'
 import type {
   DockerToolCreate,
-  SimpleToolDoc,
   SimpleToolInfo,
   ToolGroup,
   ToolHelpDoc,
   ToolImage,
+  ToolImagePublic,
   ToolInfo,
   ToolTag,
 } from '@/types/tool'
@@ -231,6 +230,18 @@ export const useImageCount = () => {
 }
 
 /**
+ * 获取镜像详情
+ */
+export const useImage = (uid: string) => {
+  return useQuery<ToolImagePublic>({
+    queryKey: ['image', uid],
+    queryFn: () => getImage(uid),
+    enabled: !!uid,
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
+/**
  * 创建镜像
  */
 export const useCreateImage = () => {
@@ -251,7 +262,7 @@ export const useCreateImage = () => {
 }
 
 /**
- * 更新工具
+ * 更新镜像
  */
 export const useUpdateImage = () => {
   const queryClient = useQueryClient()
@@ -268,30 +279,6 @@ export const useUpdateImage = () => {
     onError: (error: Error) => {
       toast.error(`镜像更新失败: ${error.message}`)
     },
-  })
-}
-
-/**
- * 获取镜像工具列表
- */
-export const useImageTools = (uid: string) => {
-  return useQuery<SimpleToolInfo[]>({
-    queryKey: ['imageTools', uid],
-    queryFn: () => getImageTools(uid),
-    enabled: !!uid,
-    staleTime: 10 * 60 * 1000,
-  })
-}
-
-/**
- * 获取镜像文档列表
- */
-export const useImageDocuments = (uid: string) => {
-  return useQuery<SimpleToolDoc[]>({
-    queryKey: ['imageDocs', uid],
-    queryFn: () => getImageDocs(uid),
-    enabled: !!uid,
-    staleTime: 10 * 60 * 1000,
   })
 }
 

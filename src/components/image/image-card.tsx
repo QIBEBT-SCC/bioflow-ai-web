@@ -3,6 +3,7 @@ import {
   FileTextIcon,
   PackageIcon,
 } from 'lucide-react'
+import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -33,16 +34,18 @@ interface ImageCardProps {
 
 export function ImageCard({ image }: ImageCardProps) {
   return (
-    <Card
-      key={image.uid || `${image.name}-${image.version}`}
-      className='flex flex-col hover:shadow-lg transition-shadow'
-    >
+    <Card className='flex flex-col h-full hover:shadow-lg transition-shadow relative'>
       <CardHeader>
         <div className='flex items-start justify-between gap-2 mb-2'>
           <div className='flex items-center gap-2 min-w-0'>
             <PackageIcon className='h-5 w-5 text-primary shrink-0' />
             <CardTitle className='text-lg truncate'>
-              {image.name}
+              <Link 
+                href={`/image/${image.uid}`}
+                className='after:absolute after:inset-0'
+              >
+                {image.name}
+              </Link>
             </CardTitle>
           </div>
         </div>
@@ -68,7 +71,7 @@ export function ImageCard({ image }: ImageCardProps) {
         </div>
 
         {/* Links */}
-        <div className='flex flex-wrap gap-2 mt-auto'>
+        <div className='flex flex-wrap gap-2 mt-auto relative z-10'>
           {image.homepage && (
             <Button
               variant='outline'
