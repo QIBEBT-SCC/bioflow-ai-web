@@ -8,8 +8,10 @@ import {
   getImageCount,
   getImageDocs,
   getImageList,
+  getImageTools,
   runInImage,
   searchImages,
+  updateImage,
 } from '@/app/actions/image'
 import {
   createTool,
@@ -245,6 +247,39 @@ export const useCreateImage = () => {
     onError: (error: Error) => {
       toast.error(`镜像创建失败: ${error.message}`)
     },
+  })
+}
+
+/**
+ * 更新工具
+ */
+export const useUpdateImage = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ uid, image }: { uid: string; image: Partial<ToolImage> }) =>
+      updateImage(uid, image),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['images', variables.uid] })
+      queryClient.invalidateQueries({ queryKey: ['imageList'] })
+      queryClient.invalidateQueries({ queryKey: ['imageCount'] })
+      toast.success('镜像更新成功')
+    },
+    onError: (error: Error) => {
+      toast.error(`镜像更新失败: ${error.message}`)
+    },
+  })
+}
+
+/**
+ * 获取镜像工具列表
+ */
+export const useImageTools = (uid: string) => {
+  return useQuery<SimpleToolInfo[]>({
+    queryKey: ['imageTools', uid],
+    queryFn: () => getImageTools(uid),
+    enabled: !!uid,
+    staleTime: 10 * 60 * 1000,
   })
 }
 
