@@ -55,7 +55,7 @@ export function NavSecond() {
   const t = useTranslations('Sidebar')
 
   return (
-    <SidebarGroup className='group-data-[collapsible=icon]:hidden'>
+    <SidebarGroup>
       <SidebarGroupLabel>{t('admin')}</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
