@@ -3,18 +3,19 @@
 import {
   AlertCircle,
   CheckCircle2,
+  DownloadIcon,
   FileBarChart,
   FileText,
   Filter,
   FlaskConical,
   Loader2,
   MoreHorizontal,
-  Plus,
+  PlusIcon,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { ProjectDetailCard } from '@/components/project/project-detail-card'
-import { ProjectResourcesList } from '@/components/project/project-resource-list'
+import { SampleList } from '@/components/sample/sample-list'
 import { Badge } from '@/components/ui/badge'
 import {
   Breadcrumb,
@@ -250,7 +251,7 @@ export default function ProjectDetailPage() {
                   筛选
                 </Button>
                 <Button size='sm'>
-                  <Plus className='h-4 w-4 mr-2' />
+                  <PlusIcon className='h-4 w-4 mr-2' />
                   新工作流
                 </Button>
               </div>
@@ -384,8 +385,8 @@ export default function ProjectDetailPage() {
             <div className='flex justify-between items-center mb-4'>
               <h2 className='text-lg font-medium'>分析报告</h2>
               <Button size='sm'>
-                <Plus className='h-4 w-4 mr-2' />
-                新报告
+                <DownloadIcon className='h-4 w-4 mr-2' />
+                下载报告
               </Button>
             </div>
 
@@ -457,7 +458,7 @@ export default function ProjectDetailPage() {
 
           {/* 文件标签页内容 */}
           <TabsContent value='files' className='mt-6'>
-            <ProjectResourcesList />
+            <SampleList projectId={Number(projectId)} />
           </TabsContent>
         </Tabs>
       </div>

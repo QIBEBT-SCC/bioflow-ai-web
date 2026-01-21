@@ -4,12 +4,8 @@ import {
   CheckCircle2,
   Clock,
   Database,
-  Download,
   FlaskConical,
   Loader2,
-  Play,
-  Settings,
-  Share2,
   Star,
 } from 'lucide-react'
 import Link from 'next/link'
@@ -19,12 +15,14 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { useProject } from '@/hooks/use-project'
+import { useSampleCount } from '@/hooks/use-sample'
 import { colorClassMap } from '@/types/color'
 
 export function ProjectDetailCard() {
   const params = useParams()
   const projectId = params.id as string
   const { data: project, isLoading } = useProject(projectId)
+  const { data: sampleCount } = useSampleCount(projectId)
 
   if (isLoading) return null
   if (!project) return null
@@ -67,25 +65,6 @@ export function ProjectDetailCard() {
             ))}
           </div>
         </div>
-
-        <div className='flex flex-wrap gap-2'>
-          <Button>
-            <Play className='h-4 w-4 mr-2' />
-            运行工作流
-          </Button>
-          <Button variant='outline'>
-            <Download className='h-4 w-4 mr-2' />
-            导出
-          </Button>
-          <Button variant='outline'>
-            <Share2 className='h-4 w-4 mr-2' />
-            分享
-          </Button>
-          <Button variant='outline'>
-            <Settings className='h-4 w-4 mr-2' />
-            设置
-          </Button>
-        </div>
       </div>
 
       {/* 项目信息卡片 */}
@@ -98,7 +77,7 @@ export function ProjectDetailCard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className='text-2xl font-bold'>{20}</p>
+            <p className='text-2xl font-bold'>{sampleCount}</p>
           </CardContent>
         </Card>
         <Card>
