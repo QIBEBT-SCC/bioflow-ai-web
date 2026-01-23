@@ -10,7 +10,7 @@ import {
   RefreshCw,
   XCircle,
 } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -38,7 +38,21 @@ export default function WorkflowPage() {
   const { refreshInterval, setRefreshInterval } = useWorkflowStore()
   const [lastRefreshTime, setLastRefreshTime] = useState(new Date())
 
-  const { data: runStats } = useRunStats()
+  // 计算 refetchInterval 的毫秒数
+  const refetchIntervalMs = useMemo(() => {
+    if (refreshInterval === 'off') return false
+    
+    const intervalMap = {
+      '10s': 10000,
+      '30s': 30000,
+      '1m': 60000,
+      '5m': 300000,
+    } as const
+    
+    return intervalMap[refreshInterval as keyof typeof intervalMap] || false
+  }, [refreshInterval])
+
+  const { data: runStats } = useRunStats(refetchIntervalMs)
 
   // Force refresh function
   const handleForceRefresh = useCallback(() => {
@@ -48,25 +62,12 @@ export default function WorkflowPage() {
     queryClient.invalidateQueries({ queryKey: ['runCount'] }).then()
   }, [queryClient])
 
-  // Auto refresh effect
+  // 当 refetchInterval 变化时更新最后刷新时间
   useEffect(() => {
-    if (refreshInterval === 'off') return
-
-    const intervalMs = {
-      '10s': 10000,
-      '30s': 30000,
-      '1m': 60000,
-      '5m': 300000,
-    }[refreshInterval]
-
-    if (!intervalMs) return
-
-    const interval = setInterval(() => {
-      handleForceRefresh()
-    }, intervalMs)
-
-    return () => clearInterval(interval)
-  }, [refreshInterval, handleForceRefresh])
+    if (refetchIntervalMs !== false) {
+      setLastRefreshTime(new Date())
+    }
+  }, [refetchIntervalMs])
 
   return (
     <SidebarInset className='h-screen flex flex-col'>
@@ -204,7 +205,7 @@ export default function WorkflowPage() {
                 运行实例列表
               </h2>
             </div>
-            <RunTables />
+            <RunTables refetchInterval={refetchIntervalMs} />
           </div>
         </div>
       </main>
