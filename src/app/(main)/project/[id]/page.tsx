@@ -1,22 +1,17 @@
 'use client'
 
 import {
-  AlertCircle,
-  CheckCircle2,
   DownloadIcon,
   FileBarChart,
   FileText,
-  Filter,
   FlaskConical,
-  Loader2,
   MoreHorizontal,
-  PlusIcon,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { ProjectDetailCard } from '@/components/project/project-detail-card'
+import { ProjectWorkflowList } from '@/components/project-workflow/project-workflow-list'
 import { SampleList } from '@/components/sample/sample-list'
-import { Badge } from '@/components/ui/badge'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -32,7 +27,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -243,141 +237,7 @@ export default function ProjectDetailPage() {
 
           {/* 工作流标签页内容 */}
           <TabsContent value='workflows' className='mt-6'>
-            <div className='flex justify-between items-center mb-4'>
-              <h2 className='text-lg font-medium'>分析工作流</h2>
-              <div className='flex gap-2'>
-                <Button variant='outline' size='sm'>
-                  <Filter className='h-4 w-4 mr-2' />
-                  筛选
-                </Button>
-                <Button size='sm'>
-                  <PlusIcon className='h-4 w-4 mr-2' />
-                  新工作流
-                </Button>
-              </div>
-            </div>
-
-            <div className='rounded-md border'>
-              <div className='relative w-full overflow-auto'>
-                <table className='w-full caption-bottom text-sm'>
-                  <thead className='bg-muted/50'>
-                    <tr className='border-b'>
-                      <th className='h-12 px-4 text-left align-middle font-medium'>
-                        工作流名称
-                      </th>
-                      <th className='h-12 px-4 text-left align-middle font-medium'>
-                        状态
-                      </th>
-                      <th className='h-12 px-4 text-left align-middle font-medium'>
-                        进度
-                      </th>
-                      <th className='h-12 px-4 text-left align-middle font-medium hidden md:table-cell'>
-                        开始时间
-                      </th>
-                      <th className='h-12 px-4 text-left align-middle font-medium hidden md:table-cell'>
-                        持续时间
-                      </th>
-                      <th className='h-12 px-4 text-left align-middle font-medium'>
-                        样本数
-                      </th>
-                      <th className='h-12 px-4 text-left align-middle font-medium'>
-                        准确率
-                      </th>
-                      <th className='h-12 px-4 text-right align-middle font-medium'>
-                        操作
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {tempProject.workflows.map((workflow) => (
-                      <tr
-                        key={workflow.id}
-                        className='border-b hover:bg-muted/50 transition-colors'
-                      >
-                        <td className='p-4 font-medium'>
-                          <Link
-                            href={`/projects/${tempProject.id}/workflows/${workflow.id}`}
-                            className='hover:underline'
-                          >
-                            {workflow.name}
-                          </Link>
-                        </td>
-                        <td className='p-4'>
-                          {workflow.status === 'completed' && (
-                            <Badge
-                              variant='outline'
-                              className='bg-green-50 text-green-600 border-green-200 flex items-center'
-                            >
-                              <CheckCircle2 className='h-3 w-3 mr-1' />
-                              已完成
-                            </Badge>
-                          )}
-                          {workflow.status === 'in_progress' && (
-                            <Badge
-                              variant='outline'
-                              className='bg-blue-50 text-blue-600 border-blue-200 flex items-center'
-                            >
-                              <Loader2 className='h-3 w-3 mr-1 animate-spin' />
-                              进行中
-                            </Badge>
-                          )}
-                          {workflow.status === 'failed' && (
-                            <Badge
-                              variant='outline'
-                              className='bg-red-50 text-red-600 border-red-200 flex items-center'
-                            >
-                              <AlertCircle className='h-3 w-3 mr-1' />
-                              失败
-                            </Badge>
-                          )}
-                        </td>
-                        <td className='p-4'>
-                          <div className='flex items-center gap-2'>
-                            <Progress
-                              value={workflow.progress}
-                              className='h-2 w-24'
-                            />
-                            <span className='text-xs text-muted-foreground'>
-                              {workflow.progress}%
-                            </span>
-                          </div>
-                        </td>
-                        <td className='p-4 text-muted-foreground hidden md:table-cell'>
-                          {workflow.startTime}
-                        </td>
-                        <td className='p-4 text-muted-foreground hidden md:table-cell'>
-                          {workflow.duration}
-                        </td>
-                        <td className='p-4 text-muted-foreground'>
-                          {workflow.samples}
-                        </td>
-                        <td className='p-4 text-muted-foreground'>
-                          {workflow.accuracy}
-                        </td>
-                        <td className='p-4 text-right'>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant='ghost' size='icon'>
-                                <MoreHorizontal className='h-4 w-4' />
-                                <span className='sr-only'>更多选项</span>
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align='end'>
-                              <DropdownMenuItem>查看详情</DropdownMenuItem>
-                              <DropdownMenuItem>重新运行</DropdownMenuItem>
-                              <DropdownMenuItem>创建报告</DropdownMenuItem>
-                              <DropdownMenuItem className='text-destructive'>
-                                删除
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            <ProjectWorkflowList projectId={projectId} />
           </TabsContent>
 
           {/* 报告标签页内容 */}
