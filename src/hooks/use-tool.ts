@@ -28,6 +28,7 @@ import {
 import type { ToolArgPublic } from '@/types/node'
 import type {
   DockerToolCreate,
+  DockerToolUpdate,
   SimpleToolInfo,
   ToolGroup,
   ToolHelpDoc,
@@ -181,7 +182,7 @@ export const useUpdateTool = () => {
       tool,
     }: {
       uid: string
-      tool: Partial<DockerToolCreate>
+      tool: Partial<DockerToolUpdate>
     }) => updateTool(uid, tool),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['tool', variables.uid] })
@@ -289,17 +290,5 @@ export const useRunInImage = () => {
   return useMutation({
     mutationFn: ({ uid, command }: { uid: string; command: string }) =>
       runInImage(uid, command),
-  })
-}
-
-/**
- * 获取文档内容
- */
-export const useDocument = (uid: string) => {
-  return useQuery<ToolHelpDoc>({
-    queryKey: ['document', uid],
-    queryFn: () => getDocument(uid),
-    enabled: !!uid,
-    staleTime: 10 * 60 * 1000,
   })
 }

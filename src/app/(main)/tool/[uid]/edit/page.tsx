@@ -22,7 +22,7 @@ import {
   useToolTagList,
   useUpdateTool,
 } from '@/hooks/use-tool'
-import type { FileMount, ParamDefine, ToolTag } from '@/types/tool'
+import type { DockerToolCreate, FileMount, ParamDefine, ToolTag } from '@/types/tool'
 
 export default function EditToolPage() {
   const params = useParams()
@@ -43,7 +43,9 @@ export default function EditToolPage() {
     if (tool) {
       setFormState({
         name: tool.name,
+        image_uid: tool.image.uid || '',
         description: tool.description,
+        help_command: tool.help_doc.help_command,
         group_id: defaultGroupId,
         command_template: tool.command_template,
         dynamic_params: tool.dynamic_params.map((param, idx) => ({
@@ -183,8 +185,17 @@ export default function EditToolPage() {
 
   const handleSaveChanges = () => {
     if (!tool || !formState || !canSave) return
+    
+    // 将 ToolConfigValues 转换为 DockerToolCreate
+    const requestData: Partial<DockerToolCreate> = {
+      ...formState,
+      tag_ids: formState.tags.map((tag) => tag.id),
+      immutable_static_params: formState.immutable_static_params ?? '',
+      modifiable_static_params: formState.modifiable_static_params ?? '',
+    }
+    
     updateTool(
-      { uid: tool.uid, tool: formState },
+      { uid: tool.uid, tool: requestData },
       {
         onSuccess: () => {
           router.push(`/tool/${tool.uid}`)
@@ -220,7 +231,7 @@ export default function EditToolPage() {
               <BreadcrumbSeparator className='hidden md:block' />
               <BreadcrumbItem className='hidden md:block'>
                 <BreadcrumbLink asChild>
-                  <Link href={`/tool/${tool.uid}`}>{tool.name}</Link>
+                  <Link href={`/tool/${tool?.uid}`}>{tool?.name}</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator className='hidden md:block' />
@@ -236,7 +247,7 @@ export default function EditToolPage() {
         <div className='container mx-auto py-6 max-w-4xl'>
           <div className='mb-6'>
             <Link
-              href={`/tool/${tool.uid}`}
+              href={`/tool/${tool?.uid}`}
               className='inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-2'
             >
               <ArrowLeft className='h-4 w-4 mr-1' />
@@ -260,8 +271,8 @@ export default function EditToolPage() {
             onUpdateFileMount={updateFileMount}
             onRemoveFileMount={removeFileMount}
             imageSummary={{
-              name: tool.image.name,
-              version: tool.image.version,
+              name: tool?.image.name,
+              version: tool?.image.version,
             }}
           />
 
@@ -269,7 +280,7 @@ export default function EditToolPage() {
             <Button
               variant='outline'
               className='mr-3'
-              onClick={() => router.push(`/tool/${tool.uid}`)}
+              onClick={() => router.push(`/tool/${tool?.uid}`)}
               disabled={isUpdating}
             >
               取消

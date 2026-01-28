@@ -94,6 +94,8 @@ export async function getTool(uid: string): Promise<ToolInfo> {
  * 创建工具
  */
 export async function createTool(tool: DockerToolCreate): Promise<ToolInfo> {
+  console.log('createTool - JSON.stringify 后:', JSON.stringify(tool))
+  
   const response = await serverFetch<ToolInfo>('/tools', {
     method: 'POST',
     body: JSON.stringify(tool),

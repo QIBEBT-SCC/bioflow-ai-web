@@ -1,6 +1,16 @@
 'use client'
 
-import { Sparkles } from 'lucide-react'
+import { Loader2, Play, Sparkles } from 'lucide-react'
+import { useState } from 'react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { useRunInImage } from '@/hooks/use-tool'
 import { ToolFileCard, ToolParamCard } from '@/components/tool/tool-cards'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -17,21 +27,22 @@ import {
 } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
-import type { ToolGroup, ToolTag } from '@/types/tool'
-import type { FileMount, ParamDefine, DockerToolCreate } from '@/types/tool'
-
-export type ToolConfigValues = Pick<
+import type {
   DockerToolCreate,
-  | 'name'
-  | 'description'
-  | 'group_id'
-  | 'command_template'
-  | 'dynamic_params'
-  | 'immutable_static_params'
-  | 'modifiable_static_params'
-  | 'file_mounts'
-  | 'tags'
->
+  FileMount,
+  ParamDefine,
+  ToolGroup,
+  ToolTag,
+} from '@/types/tool'
+
+export type ToolConfigValues = Omit<
+  DockerToolCreate,
+  'tag_ids' | 'immutable_static_params' | 'modifiable_static_params'
+> & {
+  tags: ToolTag[] // UI 层面使用完整的 ToolTag 对象
+  immutable_static_params: string | null // UI 层面允许 null
+  modifiable_static_params: string | null // UI 层面允许 null
+}
 
 interface ToolConfigFormProps {
   value: ToolConfigValues
@@ -66,6 +77,7 @@ interface ToolConfigFormProps {
     name?: string
     version?: string
   }
+  imageUid?: string
   showTabBadges?: boolean
   showAIGeneratePlaceholder?: boolean
   initialTab?: 'basic' | 'params' | 'files'
@@ -83,16 +95,72 @@ export function ToolConfigForm({
   onUpdateFileMount,
   onRemoveFileMount,
   imageSummary,
+  imageUid,
   showTabBadges = false,
   showAIGeneratePlaceholder = false,
   initialTab = 'basic',
 }: ToolConfigFormProps) {
+  const [showHelpResult, setShowHelpResult] = useState(false)
+  const [helpCommandResult, setHelpCommandResult] = useState('')
+  const { mutate: runInImage, isPending: isRunning } = useRunInImage()
+
   const tabBadge = (content?: string | number) =>
     showTabBadges && content ? (
       <Badge variant='outline' className='ml-2'>
         {content}
       </Badge>
     ) : null
+
+  // 处理分组变化,自动更新对应的标签
+  const handleGroupChange = (groupId: number) => {
+    // 先更新 group_id
+    onFieldChange('group_id', groupId)
+
+    // 找到选中的分组
+    const selectedGroup = toolGroups.find((g) => g.id === groupId)
+    if (!selectedGroup) return
+
+    // 找到所有分组对应的标签(用于移除)
+    const groupTagIds = toolGroups
+      .map((g) => availableTags.find((t) => t.name === g.name)?.id)
+      .filter((id): id is number => id !== undefined)
+
+    // 移除所有分组相关的标签
+    const tagsWithoutGroupTags = value.tags.filter(
+      (tag) => !groupTagIds.includes(tag.id),
+    )
+
+    // 找到与新分组同名的标签
+    const matchingTag = availableTags.find(
+      (tag) => tag.name === selectedGroup.name,
+    )
+
+    // 如果找到匹配的标签,添加它
+    const newTags = matchingTag
+      ? [...tagsWithoutGroupTags, matchingTag]
+      : tagsWithoutGroupTags
+
+    // 更新 tags
+    onFieldChange('tags', newTags)
+  }
+
+  // 测试 help_command
+  const handleTestHelpCommand = () => {
+    if (!imageUid || !value.help_command) return
+    runInImage(
+      { uid: imageUid, command: value.help_command },
+      {
+        onSuccess: (data) => {
+          setHelpCommandResult(data.result)
+          setShowHelpResult(true)
+        },
+        onError: (error) => {
+          setHelpCommandResult(`错误: ${error.message}`)
+          setShowHelpResult(true)
+        },
+      },
+    )
+  }
 
   return (
     <div>
@@ -167,10 +235,44 @@ export function ToolConfigForm({
               </div>
 
               <div className='space-y-2'>
+                <Label htmlFor='tool-help-command'>
+                  帮助命令 <span className='text-red-500'>*</span>
+                </Label>
+                <div className='flex gap-2'>
+                  <Input
+                    id='tool-help-command'
+                    value={value.help_command}
+                    onChange={(e) =>
+                      onFieldChange('help_command', e.target.value)
+                    }
+                    placeholder='--help 或 -h'
+                    required
+                    className='flex-1'
+                  />
+                  {imageUid && (
+                    <Button
+                      type='button'
+                      variant='outline'
+                      size='icon'
+                      onClick={handleTestHelpCommand}
+                      disabled={!value.help_command || isRunning}
+                      title={isRunning ? '执行中...' : '测试帮助命令'}
+                    >
+                      {isRunning ? (
+                        <Loader2 className='h-4 w-4 animate-spin' />
+                      ) : (
+                        <Play className='h-4 w-4' />
+                      )}
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              <div className='space-y-2'>
                 <Label htmlFor='tool-group'>工具分组</Label>
                 <Select
                   value={value.group_id?.toString() || ''}
-                  onValueChange={(val) => onFieldChange('group_id', Number(val))}
+                  onValueChange={(val) => handleGroupChange(Number(val))}
                 >
                   <SelectTrigger id='tool-group'>
                     <SelectValue placeholder='选择分组' />
@@ -202,7 +304,10 @@ export function ToolConfigForm({
                         }
                       }
                       return (
-                        <div key={tag.id} className='flex items-center space-x-2'>
+                        <div
+                          key={tag.id}
+                          className='flex items-center space-x-2'
+                        >
                           <Checkbox
                             id={`tag-${tag.id}`}
                             checked={isSelected}
@@ -259,7 +364,7 @@ export function ToolConfigForm({
                   <div className='space-y-4'>
                     {value.dynamic_params.map((param, index) => (
                       <ToolParamCard
-                        key={`param-${index}-${param.command}`}
+                        key={`param-${index}`}
                         param={param}
                         index={index}
                         onRemove={onRemoveDynamicParam}
@@ -290,7 +395,10 @@ export function ToolConfigForm({
                     id='tool-immutable-static'
                     value={value.immutable_static_params || ''}
                     onChange={(e) =>
-                      onFieldChange('immutable_static_params', e.target.value || null)
+                      onFieldChange(
+                        'immutable_static_params',
+                        e.target.value || null,
+                      )
                     }
                     placeholder='--threads 4 --output /output'
                     rows={3}
@@ -307,7 +415,10 @@ export function ToolConfigForm({
                     id='tool-modifiable-static'
                     value={value.modifiable_static_params || ''}
                     onChange={(e) =>
-                      onFieldChange('modifiable_static_params', e.target.value || null)
+                      onFieldChange(
+                        'modifiable_static_params',
+                        e.target.value || null,
+                      )
                     }
                     placeholder='--verbose --log-level info'
                     rows={3}
@@ -331,7 +442,7 @@ export function ToolConfigForm({
                   <div className='space-y-4'>
                     {value.file_mounts.map((file, index) => (
                       <ToolFileCard
-                        key={`file-${index}-${file.name}`}
+                        key={`file-${index}`}
                         file={file}
                         index={index}
                         onUpdate={onUpdateFileMount}
@@ -353,6 +464,22 @@ export function ToolConfigForm({
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* 帮助命令测试结果对话框 */}
+      <Dialog open={showHelpResult} onOpenChange={setShowHelpResult}>
+        <DialogContent className='sm:!max-w-5xl'>
+          <DialogHeader>
+            <DialogTitle>帮助命令执行结果</DialogTitle>
+            <DialogDescription asChild>
+              <ScrollArea className='h-[500px] w-full rounded-md border bg-muted/30'>
+                <pre className='p-4 text-sm leading-relaxed whitespace-pre-wrap font-mono text-foreground'>
+                  {helpCommandResult}
+                </pre>
+              </ScrollArea>
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
