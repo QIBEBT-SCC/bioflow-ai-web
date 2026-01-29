@@ -1,7 +1,11 @@
 import 'server-only'
 import { cookies } from 'next/headers'
 
-const FASTAPI_URL = process.env.NEXT_PUBLIC_API_URL ?? ''
+const FASTAPI_URL = process.env.BACKEND_API_URL ?? ''
+
+if (!FASTAPI_URL) {
+  console.error('[API Server] BACKEND_API_URL is not set!')
+}
 
 export class ApiError extends Error {
   public status: number
