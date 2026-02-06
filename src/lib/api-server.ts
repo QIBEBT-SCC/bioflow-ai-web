@@ -32,12 +32,16 @@ export async function serverFetch<T = unknown>(
   const cookieStore = await cookies()
   const token = cookieStore.get('access_token')?.value
 
+  if (!token) {
+    throw new ApiError('Unauthorized', 401)
+  }
+
   const res = await fetch(url, {
     ...options,
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      Authorization: `Bearer ${token}`,
       ...(options?.headers ?? {}),
     },
   })
