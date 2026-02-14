@@ -1,6 +1,7 @@
 'use client'
 
 import {
+  Clock,
   DownloadIcon,
   FileBarChart,
   FileText,
@@ -10,6 +11,7 @@ import {
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { ProjectDetailCard } from '@/components/project/project-detail-card'
+import { ProjectRunHistory } from '@/components/project-workflow/project-run-history'
 import { ProjectWorkflowList } from '@/components/project-workflow/project-workflow-list'
 import { SampleList } from '@/components/sample/sample-list'
 import {
@@ -220,7 +222,7 @@ export default function ProjectDetailPage() {
 
         {/* 项目内容标签页 */}
         <Tabs defaultValue='files' className='w-full'>
-          <TabsList className='grid grid-cols-3 md:w-auto md:inline-flex'>
+          <TabsList className='grid grid-cols-4 md:w-auto md:inline-flex'>
             <TabsTrigger value='files' className='flex items-center'>
               <FileText className='h-4 w-4 mr-2' />
               文件
@@ -228,6 +230,10 @@ export default function ProjectDetailPage() {
             <TabsTrigger value='workflows' className='flex items-center'>
               <FlaskConical className='h-4 w-4 mr-2' />
               工作流
+            </TabsTrigger>
+            <TabsTrigger value='runs' className='flex items-center'>
+              <Clock className='h-4 w-4 mr-2' />
+              运行历史
             </TabsTrigger>
             <TabsTrigger value='reports' className='flex items-center'>
               <FileBarChart className='h-4 w-4 mr-2' />
@@ -238,6 +244,11 @@ export default function ProjectDetailPage() {
           {/* 工作流标签页内容 */}
           <TabsContent value='workflows' className='mt-6'>
             <ProjectWorkflowList projectId={projectId} />
+          </TabsContent>
+
+          {/* 运行历史标签页内容 */}
+          <TabsContent value='runs' className='mt-6'>
+            <ProjectRunHistory projectId={projectId} />
           </TabsContent>
 
           {/* 报告标签页内容 */}
@@ -318,7 +329,7 @@ export default function ProjectDetailPage() {
 
           {/* 文件标签页内容 */}
           <TabsContent value='files' className='mt-6'>
-            <SampleList projectId={Number(projectId)} />
+            <SampleList projectId={projectId} />
           </TabsContent>
         </Tabs>
       </div>

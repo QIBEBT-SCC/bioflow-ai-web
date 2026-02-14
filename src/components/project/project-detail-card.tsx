@@ -90,7 +90,8 @@ export function ProjectDetailCard() {
           <CardContent>
             <div className='flex items-center justify-between mb-1'>
               <p className='text-2xl font-bold'>
-                {project.completedWorkflows}/{project.totalWorkflows}
+                {4}/{10}
+                {/*{project.completedWorkflows}/{project.totalWorkflows}*/}
               </p>
               <div className='flex items-center gap-2'>
                 <Badge
@@ -98,27 +99,31 @@ export function ProjectDetailCard() {
                   className='bg-green-50 text-green-600 border-green-200 flex items-center'
                 >
                   <CheckCircle2 className='h-3 w-3 mr-1' />
-                  {project.completedWorkflows}
+                  {4}
+                  {/*{project.completedWorkflows}*/}
                 </Badge>
                 <Badge
                   variant='outline'
                   className='bg-blue-50 text-blue-600 border-blue-200 flex items-center'
                 >
                   <Loader2 className='h-3 w-3 mr-1 animate-spin' />
-                  {project.inProgressWorkflows}
+                  {1}
+                  {/*{project.inProgressWorkflows}*/}
                 </Badge>
                 <Badge
                   variant='outline'
                   className='bg-red-50 text-red-600 border-red-200 flex items-center'
                 >
                   <AlertCircle className='h-3 w-3 mr-1' />
-                  {project.failedWorkflows}
+                  {/*{project.failedWorkflows}*/}
+                  {1}
                 </Badge>
               </div>
             </div>
             <Progress
               value={
-                (project.completedWorkflows / project.totalWorkflows) * 100
+                // (project.completedWorkflows / project.totalWorkflows) * 100
+                (2 / 10) * 100
               }
               className='h-2'
             />
