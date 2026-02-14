@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowLeft, Loader2 } from 'lucide-react'
+import { ArrowLeft, Loader2, RefreshCw } from 'lucide-react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
@@ -17,11 +17,13 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import {
+  useRefreshDocument,
   useTool,
   useToolGroupList,
+  useToolTagList,
   useUpdateTool,
 } from '@/hooks/use-tool'
-import type { FileMount, ParamDefine } from '@/types/tool'
+import type { DockerToolCreate, FileMount, ParamDefine, ToolTag } from '@/types/tool'
 
 export default function EditToolPage() {
   const params = useParams()
@@ -29,7 +31,9 @@ export default function EditToolPage() {
   const toolUid = params.uid as string
   const { data: tool, isLoading } = useTool(toolUid)
   const { data: toolGroups = [] } = useToolGroupList()
+  const { data: availableTags = [] } = useToolTagList()
   const { mutate: updateTool, isPending: isUpdating } = useUpdateTool()
+  const { mutate: refreshDoc, isPending: isRefreshing } = useRefreshDocument()
 
   const [formState, setFormState] = useState<ToolConfigValues | null>(null)
 
@@ -41,7 +45,9 @@ export default function EditToolPage() {
     if (tool) {
       setFormState({
         name: tool.name,
+        image_uid: tool.image.uid || '',
         description: tool.description,
+        help_command: tool.help_doc.help_command,
         group_id: defaultGroupId,
         command_template: tool.command_template,
         dynamic_params: tool.dynamic_params.map((param, idx) => ({
@@ -51,18 +57,21 @@ export default function EditToolPage() {
         immutable_static_params: tool.immutable_static_params ?? null,
         modifiable_static_params: tool.modifiable_static_params ?? null,
         file_mounts: tool.file_mounts.map((file) => ({ ...file })),
+        tags: tool.tags || [],
       })
     }
   }, [tool, defaultGroupId])
 
   const updateFormField = (
-    field: keyof EditableToolForm,
+    field: keyof ToolConfigValues,
     value:
       | string
       | number
       | boolean
+      | null
       | ParamDefine[]
-      | FileMount[],
+      | FileMount[]
+      | ToolTag[],
   ) => {
     setFormState((prev) => {
       if (!prev) return prev
@@ -178,8 +187,17 @@ export default function EditToolPage() {
 
   const handleSaveChanges = () => {
     if (!tool || !formState || !canSave) return
+    
+    // 将 ToolConfigValues 转换为 DockerToolCreate
+    const requestData: Partial<DockerToolCreate> = {
+      ...formState,
+      tag_ids: formState.tags.map((tag) => tag.id),
+      immutable_static_params: formState.immutable_static_params ?? '',
+      modifiable_static_params: formState.modifiable_static_params ?? '',
+    }
+    
     updateTool(
-      { uid: tool.uid, tool: formState },
+      { uid: tool.uid, tool: requestData },
       {
         onSuccess: () => {
           router.push(`/tool/${tool.uid}`)
@@ -215,7 +233,7 @@ export default function EditToolPage() {
               <BreadcrumbSeparator className='hidden md:block' />
               <BreadcrumbItem className='hidden md:block'>
                 <BreadcrumbLink asChild>
-                  <Link href={`/tool/${tool.uid}`}>{tool.name}</Link>
+                  <Link href={`/tool/${tool?.uid}`}>{tool?.name}</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator className='hidden md:block' />
@@ -231,7 +249,7 @@ export default function EditToolPage() {
         <div className='container mx-auto py-6 max-w-4xl'>
           <div className='mb-6'>
             <Link
-              href={`/tool/${tool.uid}`}
+              href={`/tool/${tool?.uid}`}
               className='inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-2'
             >
               <ArrowLeft className='h-4 w-4 mr-1' />
@@ -246,6 +264,7 @@ export default function EditToolPage() {
           <ToolConfigForm
             value={formState}
             toolGroups={toolGroups}
+            availableTags={availableTags}
             onFieldChange={updateFormField}
             onAddDynamicParam={addDynamicParam}
             onUpdateDynamicParam={updateDynamicParam}
@@ -254,23 +273,42 @@ export default function EditToolPage() {
             onUpdateFileMount={updateFileMount}
             onRemoveFileMount={removeFileMount}
             imageSummary={{
-              name: tool.image.name,
-              version: tool.image.version,
+              name: tool?.image.name,
+              version: tool?.image.version,
             }}
+            imageUid={tool?.image.uid}
           />
 
-          <div className='flex justify-end pt-4 border-t'>
+          <div className='flex justify-between pt-4 border-t'>
             <Button
               variant='outline'
-              className='mr-3'
-              onClick={() => router.push(`/tool/${tool.uid}`)}
-              disabled={isUpdating}
+              onClick={() => tool?.help_doc.uid && refreshDoc(tool.help_doc.uid)}
+              disabled={!tool?.help_doc.uid || isRefreshing}
             >
-              取消
+              {isRefreshing ? (
+                <>
+                  <Loader2 className='h-4 w-4 mr-2 animate-spin' />
+                  刷新中...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className='h-4 w-4 mr-2' />
+                  刷新文档
+                </>
+              )}
             </Button>
-            <Button onClick={handleSaveChanges} disabled={!canSave || isUpdating}>
-              {isUpdating ? '保存中...' : '保存修改'}
-            </Button>
+            <div className='flex gap-3'>
+              <Button
+                variant='outline'
+                onClick={() => router.push(`/tool/${tool?.uid}`)}
+                disabled={isUpdating}
+              >
+                取消
+              </Button>
+              <Button onClick={handleSaveChanges} disabled={!canSave || isUpdating}>
+                {isUpdating ? '保存中...' : '保存修改'}
+              </Button>
+            </div>
           </div>
         </div>
       </div>

@@ -73,6 +73,17 @@ export function ToolGroupSidebar({
     return rootGroups
   }
 
+  // 递归计算分组的总工具数（包括所有子分组）
+  const calculateTotalToolCount = (group: ToolGroupWithChildren): number => {
+    let total = group.tool_count || 0
+    if (group.children && group.children.length > 0) {
+      group.children.forEach((child) => {
+        total += calculateTotalToolCount(child)
+      })
+    }
+    return total
+  }
+
   // 构建分组树
   const groupTree = buildGroupTree(toolGroups)
 
@@ -95,14 +106,16 @@ export function ToolGroupSidebar({
                   onClick={() => onSelectGroup(group.id)}
                 >
                   {isGroupExpanded(group.id) ? (
-                    <FolderOpen className='h-4 w-4 mr-2' />
+                    <FolderOpen className='h-4 w-4 mr-2 shrink-0' />
                   ) : (
-                    <Folder className='h-4 w-4 mr-2' />
+                    <Folder className='h-4 w-4 mr-2 shrink-0' />
                   )}
-                  <span>{group.name}</span>
-                  <Badge className='ml-auto'>{group.tool_count}</Badge>
+                  <span className='flex-1 truncate'>{group.name}</span>
+                  <Badge className='ml-2 shrink-0'>
+                    {calculateTotalToolCount(group)}
+                  </Badge>
                   <ChevronRight
-                    className={`h-4 w-4 ml-2 transition-transform ${
+                    className={`h-4 w-4 ml-2 shrink-0 transition-transform ${
                       isGroupExpanded(group.id) ? 'rotate-90' : ''
                     }`}
                   />
@@ -119,9 +132,11 @@ export function ToolGroupSidebar({
               size='sm'
               onClick={() => onSelectGroup(group.id)}
             >
-              <Folder className='h-4 w-4 mr-2' />
-              <span>{group.name}</span>
-              <Badge className='ml-auto'>{group.tool_count}</Badge>
+              <Folder className='h-4 w-4 mr-2 shrink-0' />
+              <span className='flex-1 truncate'>{group.name}</span>
+              <Badge className='ml-2 shrink-0'>
+                {calculateTotalToolCount(group)}
+              </Badge>
             </Button>
           )}
         </div>
@@ -147,8 +162,8 @@ export function ToolGroupSidebar({
               size='sm'
               onClick={() => onSelectGroup(null)}
             >
-              <span>所有工具</span>
-              <Badge className='ml-auto'>{allToolsCount}</Badge>
+              <span className='flex-1 truncate'>所有工具</span>
+              <Badge className='ml-2 shrink-0'>{allToolsCount}</Badge>
             </Button>
 
             {renderGroupTree(groupTree)}

@@ -1,6 +1,6 @@
 'use client'
 
-import { EditIcon, HomeIcon, NetworkIcon, TvMinimalIcon } from 'lucide-react'
+import { Bot,EditIcon, HomeIcon, NetworkIcon, TvMinimalIcon } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
@@ -17,7 +17,7 @@ const projects = [
   {
     name: 'chat',
     url: '/chat',
-    icon: HomeIcon,
+    icon: Bot,
   },
   {
     name: 'projects',
@@ -59,7 +59,7 @@ export function NavMain() {
   }, [pathname, setActivePage])
 
   return (
-    <SidebarGroup className='group-data-[collapsible=icon]:hidden'>
+    <SidebarGroup>
       <SidebarMenu>
         {projects.map((item) => (
           <SidebarMenuItem key={item.name}>
@@ -67,6 +67,7 @@ export function NavMain() {
               asChild
               isActive={item.name === activePage}
               onClick={() => setActivePage(item.name)}
+              tooltip={item.name}
             >
               <Link href={item.url}>
                 {item.icon_rotate ? (

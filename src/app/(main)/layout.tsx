@@ -6,14 +6,14 @@ import { QueryProvider } from '@/components/providers/query-provider'
 import { AppSidebar } from '@/components/sidebar/app-sidebar'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import { Toaster } from '@/components/ui/sonner'
-import { useAuth } from '@/hooks/use-auth'
+import { useAuth } from '@/hooks/use-auth-query'
 
 function MainContent({ children }: { children: React.ReactNode }) {
   const { user } = useAuth()
 
   return (
     <>
-      <AppSidebar user={user} />
+      <AppSidebar user={user ?? null} />
       {children}
     </>
   )

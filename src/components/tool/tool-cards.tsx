@@ -23,12 +23,11 @@ export function ToolParamCard({
   onUpdate: (index: number, field: keyof ParamDefine, value: string | number | boolean) => void
 }) {
   return (
-    <Card key={index} className='overflow-hidden border-l-4 border-l-primary pt-0'>
+    <Card className='overflow-hidden border-l-4 border-l-primary pt-0'>
       <CardHeader className='py-3 bg-muted/30'>
         <div className='flex justify-between items-center'>
           <CardTitle className='text-base'>
             参数 {index + 1}
-            {param.required && <Badge className='ml-2 bg-red-500'>必填</Badge>}
             {param.is_position && <Badge className='ml-2 bg-blue-500'>位置参数</Badge>}
           </CardTitle>
           <Button type='button' variant='ghost' size='icon' className='text-muted-foreground hover:text-destructive' onClick={() => onRemove(index)}>
@@ -85,10 +84,6 @@ export function ToolParamCard({
 
         <div className='flex gap-4'>
           <div className='flex items-center space-x-2'>
-            <Checkbox id={`param-required-${index}`} checked={param.required} onCheckedChange={(checked) => onUpdate(index, 'required', checked as boolean)} />
-            <Label htmlFor={`param-required-${index}`}>必填参数</Label>
-          </div>
-          <div className='flex items-center space-x-2'>
             <Checkbox id={`param-position-${index}`} checked={param.is_position} onCheckedChange={(checked) => onUpdate(index, 'is_position', checked as boolean)} />
             <Label htmlFor={`param-position-${index}`}>位置参数</Label>
           </div>
@@ -110,7 +105,7 @@ export function ToolFileCard({
   onUpdate: (index: number, field: keyof FileMount, value: string | boolean) => void
 }) {
   return (
-    <Card key={index} className={`overflow-hidden border-l-4 pt-0 ${file.file_type === 'INPUT' ? 'border-l-blue-500' : 'border-l-green-500'}`}>
+    <Card className={`overflow-hidden border-l-4 pt-0 ${file.file_type === 'INPUT' ? 'border-l-blue-500' : 'border-l-green-500'}`}>
       <CardHeader className='py-3 bg-muted/30'>
         <div className='flex justify-between items-center'>
           <CardTitle className='text-base'>

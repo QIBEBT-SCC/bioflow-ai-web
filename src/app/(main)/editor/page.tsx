@@ -10,17 +10,19 @@ import {
   useReactFlow,
   type XYPosition,
 } from '@xyflow/react'
-import { MenuIcon, PlayIcon, SaveIcon } from 'lucide-react'
+import { PlayIcon, SaveIcon } from 'lucide-react'
 import type React from 'react'
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { useShallow } from 'zustand/react/shallow'
+import { LoadWorkflowDialog } from '@/components/node-editor/load-workflow-dialog'
 import { PanelMenu } from '@/components/node-editor/menu/panel-menu'
+import { SaveAsDialog } from '@/components/node-editor/save-as-dialog'
 import {
   PythonCodeNode,
   RCodeNode,
 } from '@/components/node-editor/node/code-node'
-import { Copy2FolderNode } from '@/components/node-editor/node/data-node'
+import {Copy2FolderNode, GlobalMarkerNode} from '@/components/node-editor/node/data-node'
 import {
   DBInputNode,
   FileInputNode,
@@ -53,7 +55,7 @@ const nodeTypes = {
   resource_db: DBInputNode,
   resource_genome: ReferenceInputNode,
   processor_copy2folder: Copy2FolderNode,
-  // processor_cut: CutNode,
+  global_mark: GlobalMarkerNode,
   // processor_concat: ConcatNode,
   code_R: RCodeNode,
   code_python: PythonCodeNode,
@@ -185,10 +187,7 @@ function FlowContent() {
         {/* 工具栏 */}
         <div className='flex h-12 items-center border-t bg-muted/30 px-3'>
           <div className='flex items-center gap-1'>
-            <Button variant='ghost' size='sm'>
-              <MenuIcon className='h-4 w-4 mr-2' />
-              菜单
-            </Button>
+            <LoadWorkflowDialog />
 
             <Button
               variant='ghost'
@@ -199,6 +198,11 @@ function FlowContent() {
               <SaveIcon className='h-4 w-4 mr-2' />
               {updateWorkflowMutation.isPending ? '保存中...' : '保存'}
             </Button>
+
+            <SaveAsDialog
+              currentWorkflowName={workflowData?.name}
+              disabled={nodes.length === 0}
+            />
 
             <Separator orientation='vertical' className='!h-8 mx-2' />
 

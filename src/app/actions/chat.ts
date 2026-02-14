@@ -1,61 +1,73 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import type { UIMessage } from 'ai'
 import { serverFetch } from '@/lib/api-server'
-import type { ChatSessionCreate, ChatSessionPublic } from '@/types/chat'
+import type { ChatSessionPublic, PaginatedChatResponse } from '@/types/chat'
 
 /**
  * 获取聊天会话列表
  */
 export async function getChatSessions(
   offset: number = 0,
-  limit: number = 8,
-): Promise<ChatSessionPublic[]> {
-  return await serverFetch<ChatSessionPublic[]>('/chat', {
-      params: { offset: String(offset), limit: String(limit) },
+  limit: number = 12,
+): Promise<PaginatedChatResponse> {
+  return await serverFetch<PaginatedChatResponse>('/chat', {
+    params: {
+      offset: String(offset),
+      limit: String(limit),
+    },
   })
 }
 
 /**
- * 创建新的聊天会话
+ * 获取聊天会话信息
  */
-export async function createChatSession(
-  data: ChatSessionCreate = {},
+export async function getChatSession(
+  sessionId: string,
 ): Promise<ChatSessionPublic> {
-  const response = await serverFetch<ChatSessionPublic>('/chat', {
-    method: 'POST',
-    body: JSON.stringify(data),
-  })
-
-  revalidatePath('/chat')
-
-  return response
+  return await serverFetch<ChatSessionPublic>(`/chat/${sessionId}`)
 }
 
 /**
- * 更新聊天会话描述
+ * 新建会话
+ */
+export async function createChatSession(): Promise<ChatSessionPublic> {
+  return await serverFetch<ChatSessionPublic>('/chat', {
+    method: 'POST',
+  })
+}
+
+/**
+ * 删除会话
+ */
+export async function deleteChatSession(
+  sessionId: string,
+): Promise<{ message: string }> {
+  return await serverFetch<{ message: string }>(`/chat/${sessionId}`, {
+    method: 'DELETE',
+  })
+}
+
+/**
+ * 更新会话信息
  */
 export async function updateChatSession(
   sessionId: string,
   description: string,
 ): Promise<ChatSessionPublic> {
-  const response = await serverFetch<ChatSessionPublic>(`/chat/${sessionId}`, {
+  return await serverFetch<ChatSessionPublic>(`/chat/${sessionId}`, {
     method: 'PUT',
-    body: JSON.stringify({ description }),
+    params: {
+      description,
+    },
   })
-
-  revalidatePath('/chat')
-
-  return response
 }
 
 /**
- * 删除聊天会话
+ * 获取聊天会话对话历史
  */
-export async function deleteChatSession(sessionId: string): Promise<void> {
-  await serverFetch(`/chat/${sessionId}`, {
-    method: 'DELETE',
-  })
-
-  revalidatePath('/chat')
+export async function getChatSessionHistory(
+  sessionId: string,
+): Promise<UIMessage[]> {
+  return await serverFetch<UIMessage[]>(`/chat/${sessionId}/history`)
 }

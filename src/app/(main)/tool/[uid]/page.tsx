@@ -407,6 +407,37 @@ export default function ToolDetailPage() {
                       <span>{tool.tool_type}</span>
                     </div>
                   </div>
+                  {tool.tags && tool.tags.length > 0 && (
+                    <>
+                      <Separator />
+                      <div>
+                        <h4 className='text-sm font-semibold mb-2'>标签</h4>
+                        <div className='flex flex-wrap gap-1.5'>
+                          {tool.tags.map((tag) => {
+                            const getTagStyle = (tagName: string) => {
+                              switch (tagName) {
+                                case 'AI Checked':
+                                  return 'bg-green-50 text-green-600 border-green-200'
+                                case 'AI Unchecked':
+                                  return 'bg-yellow-50 text-yellow-600 border-yellow-200'
+                                default:
+                                  return 'bg-blue-50 text-blue-600 border-blue-200'
+                              }
+                            }
+                            return (
+                              <Badge
+                                key={tag.id}
+                                variant='outline'
+                                className={`${getTagStyle(tag.name)} text-xs`}
+                              >
+                                {tag.name}
+                              </Badge>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    </>
+                  )}
                   <Separator />
                   <div>
                     <h4 className='text-sm font-semibold mb-2'>Docker Image</h4>

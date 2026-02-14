@@ -1,3 +1,5 @@
+import Cookies from "js-cookie";
+
 const FASTAPI_URL = process.env.NEXT_PUBLIC_API_URL
 
 export class ClientApiError extends Error {
@@ -19,16 +21,22 @@ export function getToken(): string | null {
 
 export function setToken(token: string): void {
   if (typeof window === 'undefined') return
+
   localStorage.setItem('access_token', token)
-  // 同时设置 Cookie 供服务端使用
-  document.cookie = `access_token=${token}; path=/; max-age=${7 * 24 * 60 * 60}`
+  Cookies.set('access_token', token, {
+    expires: 7,
+    path: '/',
+    // 生产环境下建议开启 Secure 属性
+    secure: window.location.protocol === 'https:',
+    sameSite: 'lax',
+  });
 }
 
 export function clearToken(): void {
   if (typeof window === 'undefined') return
   localStorage.removeItem('access_token')
   // 清除 Cookie
-  document.cookie = 'access_token=; path=/; max-age=0'
+  Cookies.remove('access_token', { path: '/' });
 }
 
 export async function clientFetch<T = unknown>(

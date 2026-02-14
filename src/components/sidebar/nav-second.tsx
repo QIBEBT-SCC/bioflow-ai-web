@@ -7,6 +7,7 @@ import {
   WrenchIcon,
 } from 'lucide-react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import {
   Collapsible,
   CollapsibleContent,
@@ -24,7 +25,6 @@ import {
   SidebarMenuSubItem,
 } from '@/components/ui/sidebar'
 import { useSidebarStore } from '@/stores/sidebar-store'
-import { useTranslations } from 'next-intl'
 
 const projects = [
   {
@@ -42,8 +42,11 @@ const projects = [
   },
   {
     name: 'setting',
-    url: '/setting',
     icon: SettingsIcon,
+    items: [
+      { name: 'llm_statistic', url: '/setting/llm-statistic' },
+      { name: 'llm_setting', url: '/setting/llm-setting' },
+    ],
   },
 ]
 
@@ -52,7 +55,7 @@ export function NavSecond() {
   const t = useTranslations('Sidebar')
 
   return (
-    <SidebarGroup className='group-data-[collapsible=icon]:hidden'>
+    <SidebarGroup>
       <SidebarGroupLabel>{t('admin')}</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
