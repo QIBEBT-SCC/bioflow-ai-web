@@ -49,7 +49,7 @@ import { useNodeEditorStore } from '@/stores/nodeviewStore'
 // 注册节点类型
 const nodeTypes = {
   tool: ToolNode,
-  resource_value_string: StringInputNode,
+  value_string: StringInputNode,
   resource_file: FileInputNode,
   resource_sequence: SequenceInputNode,
   resource_db: DBInputNode,

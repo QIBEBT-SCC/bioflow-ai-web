@@ -72,6 +72,10 @@ const REFERENCE_INPUT_HANDLES = {
       name: 'annotation_gff',
       description: 'GFF annotation file of the reference genome',
     },
+    {
+      name: 'annotation_gtf',
+      description: 'GTF annotation file of the reference genome',
+    },
     { name: 'bowtie2_index', description: '' },
     { name: 'bwa_index', description: '' },
     { name: 'hisat2_index', description: '' },
