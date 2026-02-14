@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { getDocument } from '@/app/actions/document'
+import { getDocument, refreshDocument } from '@/app/actions/document'
 import {
   createImage,
   getImage,
@@ -290,5 +290,23 @@ export const useRunInImage = () => {
   return useMutation({
     mutationFn: ({ uid, command }: { uid: string; command: string }) =>
       runInImage(uid, command),
+  })
+}
+
+/**
+ * 刷新文档
+ */
+export const useRefreshDocument = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (uid: string) => refreshDocument(uid),
+    onSuccess: (_data, uid) => {
+      queryClient.invalidateQueries({ queryKey: ['tool', uid] })
+      toast.success('文档刷新成功')
+    },
+    onError: (error: Error) => {
+      toast.error(`文档刷新失败: ${error.message}`)
+    },
   })
 }

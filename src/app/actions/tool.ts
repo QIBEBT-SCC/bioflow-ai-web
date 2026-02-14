@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { serverFetch } from '@/lib/api-server'
 import type { ToolArgPublic } from '@/types/node'
 import type {
-  DockerToolCreate,
+  DockerToolCreate, DockerToolUpdate,
   SimpleToolInfo,
   ToolGroup,
   ToolInfo,
@@ -122,7 +122,7 @@ export async function deleteTool(uid: string): Promise<void> {
  */
 export async function updateTool(
   uid: string,
-  tool: Partial<DockerToolCreate>,
+  tool: Partial<DockerToolUpdate>,
 ): Promise<ToolInfo> {
   const response = await serverFetch<ToolInfo>(`/tools/${uid}`, {
     method: 'PATCH',

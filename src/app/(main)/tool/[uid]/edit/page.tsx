@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowLeft, Loader2 } from 'lucide-react'
+import { ArrowLeft, Loader2, RefreshCw } from 'lucide-react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import {
+  useRefreshDocument,
   useTool,
   useToolGroupList,
   useToolTagList,
@@ -32,6 +33,7 @@ export default function EditToolPage() {
   const { data: toolGroups = [] } = useToolGroupList()
   const { data: availableTags = [] } = useToolTagList()
   const { mutate: updateTool, isPending: isUpdating } = useUpdateTool()
+  const { mutate: refreshDoc, isPending: isRefreshing } = useRefreshDocument()
 
   const [formState, setFormState] = useState<ToolConfigValues | null>(null)
 
@@ -274,20 +276,39 @@ export default function EditToolPage() {
               name: tool?.image.name,
               version: tool?.image.version,
             }}
+            imageUid={tool?.image.uid}
           />
 
-          <div className='flex justify-end pt-4 border-t'>
+          <div className='flex justify-between pt-4 border-t'>
             <Button
               variant='outline'
-              className='mr-3'
-              onClick={() => router.push(`/tool/${tool?.uid}`)}
-              disabled={isUpdating}
+              onClick={() => tool?.help_doc.uid && refreshDoc(tool.help_doc.uid)}
+              disabled={!tool?.help_doc.uid || isRefreshing}
             >
-              取消
+              {isRefreshing ? (
+                <>
+                  <Loader2 className='h-4 w-4 mr-2 animate-spin' />
+                  刷新中...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className='h-4 w-4 mr-2' />
+                  刷新文档
+                </>
+              )}
             </Button>
-            <Button onClick={handleSaveChanges} disabled={!canSave || isUpdating}>
-              {isUpdating ? '保存中...' : '保存修改'}
-            </Button>
+            <div className='flex gap-3'>
+              <Button
+                variant='outline'
+                onClick={() => router.push(`/tool/${tool?.uid}`)}
+                disabled={isUpdating}
+              >
+                取消
+              </Button>
+              <Button onClick={handleSaveChanges} disabled={!canSave || isUpdating}>
+                {isUpdating ? '保存中...' : '保存修改'}
+              </Button>
+            </div>
           </div>
         </div>
       </div>

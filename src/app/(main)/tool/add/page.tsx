@@ -343,6 +343,7 @@ export default function AddToolPage() {
                   onAddFileMount={addFileMount}
                   onUpdateFileMount={updateFileMount}
                   onRemoveFileMount={removeFileMount}
+                  imageUid={currentImage?.uid}
                   imageSummary={
                     currentImage?.name || currentImage?.version
                       ? {
