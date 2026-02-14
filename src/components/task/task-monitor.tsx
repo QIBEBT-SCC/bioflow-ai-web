@@ -28,13 +28,20 @@ interface TaskMonitorProps {
   taskUid: string
 }
 
-// 格式化字节数
-function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 B'
+// 格式化字节大小,自动选择合适的单位
+function formatBytes(bytes: number, decimals = 2): { value: number; unit: string } {
+  if (bytes === 0) return { value: 0, unit: 'B' }
+
   const k = 1024
+  const dm = decimals < 0 ? 0 : decimals
   const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
+
   const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return `${(bytes / k ** i).toFixed(2)} ${sizes[i]}`
+
+  return {
+    value: Number.parseFloat((bytes / k ** i).toFixed(dm)),
+    unit: sizes[i],
+  }
 }
 
 export function TaskMonitor({ taskUid }: TaskMonitorProps) {
@@ -87,11 +94,11 @@ export function TaskMonitor({ taskUid }: TaskMonitorProps) {
   const chartData = useMemo(() => {
     return monitors.map((m) => ({
       time: format(new Date(m.time), 'HH:mm:ss', { locale: zhCN }),
-      cpu: Number(m.cpu_usage.toFixed(1)),
-      memory: Number(m.mem_usage.toFixed(1)),
-      memUsed: m.mem_used / (1024 * 1024 * 1024), // 转换为GB
-      ioIn: m.io_in / (1024 * 1024), // 转换为MB
-      ioOut: m.io_out / (1024 * 1024), // 转换为MB
+      cpu: Number(m.cpu_usage.toFixed(2)),
+      memory: Number(m.mem_usage.toFixed(2)),
+      memUsed: m.mem_used / 1024, // GB
+      ioIn: m.io_in, // MB
+      ioOut: m.io_out, // MB
     }))
   }, [monitors])
 
@@ -133,10 +140,10 @@ export function TaskMonitor({ taskUid }: TaskMonitorProps) {
           </CardHeader>
           <CardContent>
             <div className='text-3xl font-bold text-blue-600 dark:text-blue-400'>
-              {stats.avgCpu.toFixed(1)}%
+              {stats.avgCpu.toFixed(2)}%
             </div>
             <p className='text-xs text-blue-600/70 dark:text-blue-400/70 mt-1'>
-              峰值: {stats.maxCpu.toFixed(1)}%
+              峰值: {stats.maxCpu.toFixed(2)}%
             </p>
           </CardContent>
         </Card>
@@ -151,10 +158,10 @@ export function TaskMonitor({ taskUid }: TaskMonitorProps) {
           </CardHeader>
           <CardContent>
             <div className='text-3xl font-bold text-purple-600 dark:text-purple-400'>
-              {stats.avgMem.toFixed(1)}%
+              {stats.avgMem.toFixed(2)}%
             </div>
             <p className='text-xs text-purple-600/70 dark:text-purple-400/70 mt-1'>
-              峰值: {stats.maxMem.toFixed(1)}%
+              峰值: {stats.maxMem.toFixed(2)}%
             </p>
           </CardContent>
         </Card>
@@ -169,10 +176,10 @@ export function TaskMonitor({ taskUid }: TaskMonitorProps) {
           </CardHeader>
           <CardContent>
             <div className='text-3xl font-bold text-green-600 dark:text-green-400'>
-              {formatBytes(stats.avgMemUsed)}
+              {(stats.avgMemUsed / 1024).toFixed(2)} GB
             </div>
             <p className='text-xs text-green-600/70 dark:text-green-400/70 mt-1'>
-              峰值: {formatBytes(stats.maxMemUsed)}
+              峰值: {(stats.maxMemUsed / 1024).toFixed(2)} GB
             </p>
           </CardContent>
         </Card>
@@ -192,7 +199,10 @@ export function TaskMonitor({ taskUid }: TaskMonitorProps) {
                   输入:
                 </span>
                 <span className='font-medium'>
-                  {formatBytes(stats.avgIoIn)}
+                  {(() => {
+                    const formatted = formatBytes(stats.avgIoIn * 1024 * 1024)
+                    return `${formatted.value} ${formatted.unit}`
+                  })()}
                 </span>
               </div>
               <div className='flex justify-between'>
@@ -200,7 +210,10 @@ export function TaskMonitor({ taskUid }: TaskMonitorProps) {
                   输出:
                 </span>
                 <span className='font-medium'>
-                  {formatBytes(stats.avgIoOut)}
+                  {(() => {
+                    const formatted = formatBytes(stats.avgIoOut * 1024 * 1024)
+                    return `${formatted.value} ${formatted.unit}`
+                  })()}
                 </span>
               </div>
             </div>
@@ -333,7 +346,7 @@ export function TaskMonitor({ taskUid }: TaskMonitorProps) {
               <YAxis
                 className='text-xs'
                 tick={{ fill: 'currentColor' }}
-                label={{ value: 'IO (MB)', angle: -90, position: 'insideLeft' }}
+                label={{ value: 'IO', angle: -90, position: 'insideLeft' }}
               />
               <Tooltip
                 contentStyle={{
@@ -341,7 +354,10 @@ export function TaskMonitor({ taskUid }: TaskMonitorProps) {
                   border: '1px solid hsl(var(--border))',
                   borderRadius: '6px',
                 }}
-                formatter={(value: number) => `${value.toFixed(2)} MB`}
+                formatter={(value: number) => {
+                  const formatted = formatBytes(value * 1024 * 1024)
+                  return `${formatted.value} ${formatted.unit}`
+                }}
               />
               <Legend />
               <Area

@@ -1,9 +1,12 @@
 import type { User } from '@/types/auth'
 
-export interface ProjectTag {
-  id?: number
+export interface ProjectTagProp {
   name: string
   color: string
+}
+
+export interface ProjectTag extends ProjectTagProp {
+  id: number
 }
 
 export interface TagWithCount extends ProjectTag {

@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 
 interface CodeCardProps {
-  nodeType: 'code_R' | 'code_python'
+  nodeType: 'code_R' | 'code_python' | 'code_bash'
 }
 
 const CodeCard = memo(function CodeCard({ nodeType }: CodeCardProps) {
@@ -130,4 +130,18 @@ const PythonCodeNode = memo(function PythonCodeNode() {
   )
 })
 
-export { RCodeNode, PythonCodeNode }
+const BashCodeNode = memo(function PythonCodeNode() {
+  const nodeComponent = useMemo(() => <CodeCard nodeType='code_bash' />, [])
+
+  return (
+    <BaseNode
+      title='Bash Code'
+      description='AI编程节点，用于编写和执行代码。包含描述区域（AI prompt）和代码区域。'
+      color={colorSchemes.purple}
+      handles={CODE_HANDLES}
+      nodeComponent={nodeComponent}
+    />
+  )
+})
+
+export { RCodeNode, PythonCodeNode, BashCodeNode }

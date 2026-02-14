@@ -2,14 +2,19 @@
 
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
-import type { DockerToolCreate, ToolImage } from '@/types/tool'
+import type { ToolImage } from '@/types/tool'
+import type { ToolConfigValues } from '@/components/tool/tool-config-form'
 
 interface CreateToolStore {
   currentImage: ToolImage
-  toolConfig: DockerToolCreate
+  toolConfig: ToolConfigValues
 
   setCurrentImage: (image: ToolImage) => void
-  setToolConfig: (toolConfig: DockerToolCreate) => void
+  setToolConfig: (toolConfig: ToolConfigValues) => void
+  updateToolConfigField: <K extends keyof ToolConfigValues>(
+    field: K,
+    value: ToolConfigValues[K],
+  ) => void
   resetStore: () => void
 }
 
@@ -27,11 +32,11 @@ const initialImage: ToolImage = {
   },
 }
 
-const initialToolConfig: DockerToolCreate = {
+const initialToolConfig: ToolConfigValues = {
   name: '',
   image_uid: '',
   description: '',
-  help_doc_uid: '',
+  help_command: '',
   group_id: 1,
   tags: [],
   command_template: '',
@@ -57,8 +62,16 @@ export const useCreateToolStore = create<CreateToolStore>()(
           },
         }))
       },
-      setToolConfig: (toolConfig: DockerToolCreate) => {
+      setToolConfig: (toolConfig: ToolConfigValues) => {
         set({ toolConfig })
+      },
+      updateToolConfigField: (field, value) => {
+        set((state) => ({
+          toolConfig: {
+            ...state.toolConfig,
+            [field]: value,
+          },
+        }))
       },
       resetStore: () => {
         set({ currentImage: initialImage, toolConfig: initialToolConfig })

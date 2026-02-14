@@ -1,9 +1,10 @@
 'use client'
 
+import { Loader2Icon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import type React from 'react'
-import { useEffect, useState } from 'react'
-import { clientFetch, getToken } from '@/lib/api-client'
+import { useEffect } from 'react'
+import { useAuth } from '@/hooks/use-auth-query'
 
 interface AuthGuardProps {
   children: React.ReactNode
@@ -11,38 +12,27 @@ interface AuthGuardProps {
 
 export function AuthGuard({ children }: AuthGuardProps) {
   const router = useRouter()
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
+  const { user, loading } = useAuth()
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const token = getToken()
-      if (!token) {
-        router.push('/login')
-        return
-      }
-
-      try {
-        // 验证 token 有效性
-        await clientFetch('/auth/me')
-        setIsAuthenticated(true)
-      } catch (error) {
-        // Token 无效，清除并跳转登录
-        console.error('Auth check failed:', error)
-        router.push('/login')
-      } finally {
-        setIsLoading(false)
-      }
+    // 仅在加载完成且无用户时跳转
+    if (!loading && !user) {
+      router.push('/login')
     }
+  }, [loading, user, router])
 
-    checkAuth()
-  }, [router])
-
-  if (isLoading) {
-    return <div>Loading...</div>
+  if (loading) {
+    return (
+      <div className='flex h-screen items-center justify-center'>
+        <div className='flex flex-col items-center gap-4'>
+          <Loader2Icon className='h-8 w-8 animate-spin text-primary' />
+          <p className='text-sm text-muted-foreground'>验证身份中...</p>
+        </div>
+      </div>
+    )
   }
 
-  if (!isAuthenticated) {
+  if (!user) {
     return null
   }
 

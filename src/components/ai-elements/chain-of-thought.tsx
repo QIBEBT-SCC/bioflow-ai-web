@@ -14,7 +14,7 @@ import {
   DotIcon,
   type LucideIcon,
 } from "lucide-react";
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { createContext, memo, useContext, useMemo } from "react";
 
 type ChainOfThoughtContextValue = {
@@ -110,8 +110,8 @@ export const ChainOfThoughtHeader = memo(
 
 export type ChainOfThoughtStepProps = ComponentProps<"div"> & {
   icon?: LucideIcon;
-  label: string;
-  description?: string;
+  label: ReactNode;
+  description?: ReactNode;
   status?: "complete" | "active" | "pending";
 };
 
@@ -145,7 +145,7 @@ export const ChainOfThoughtStep = memo(
           <Icon className="size-4" />
           <div className="-mx-px absolute top-7 bottom-0 left-1/2 w-px bg-border" />
         </div>
-        <div className="flex-1 space-y-2">
+        <div className="flex-1 space-y-2 overflow-hidden">
           <div>{label}</div>
           {description && (
             <div className="text-muted-foreground text-xs">{description}</div>
@@ -161,7 +161,10 @@ export type ChainOfThoughtSearchResultsProps = ComponentProps<"div">;
 
 export const ChainOfThoughtSearchResults = memo(
   ({ className, ...props }: ChainOfThoughtSearchResultsProps) => (
-    <div className={cn("flex items-center gap-2", className)} {...props} />
+    <div
+      className={cn("flex flex-wrap items-center gap-2", className)}
+      {...props}
+    />
   )
 );
 

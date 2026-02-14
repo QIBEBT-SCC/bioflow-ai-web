@@ -90,13 +90,13 @@ function calculateDuration(startTime?: string, endTime?: string) {
   return `${hours}h ${mins}m`
 }
 
-export function RunTables() {
+export function RunTables({ refetchInterval }: { refetchInterval?: number | false }) {
   const [page, setPage] = useState(0)
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const limit = 10
 
-  const { data: runCount = 0 } = useRunCount()
-  const { data: runs = [], isLoading } = useRuns(page * limit, limit)
+  const { data: runCount = 0 } = useRunCount(refetchInterval)
+  const { data: runs = [], isLoading } = useRuns(page * limit, limit, refetchInterval)
 
   // 过滤运行实例
   const filteredRuns = runs.filter((run) => {

@@ -29,6 +29,13 @@ const FILE_INPUT_HANDLES = {
   ] as HandleDefine[],
 }
 
+const GLOBAL_FILE_HANDLES = {
+  inputs: [] as HandleDefine[],
+  outputs: [
+    { name: 'folder_path', description: 'output file' },
+  ] as HandleDefine[],
+}
+
 const SEQUENCE_INPUT_HANDLES = {
   inputs: [] as HandleDefine[],
   outputs: [
@@ -65,6 +72,10 @@ const REFERENCE_INPUT_HANDLES = {
       name: 'annotation_gff',
       description: 'GFF annotation file of the reference genome',
     },
+    {
+      name: 'annotation_gtf',
+      description: 'GTF annotation file of the reference genome',
+    },
     { name: 'bowtie2_index', description: '' },
     { name: 'bwa_index', description: '' },
     { name: 'hisat2_index', description: '' },
@@ -76,7 +87,7 @@ const REFERENCE_INPUT_HANDLES = {
 // 将 input 内容提取为单独的组件
 const StringInputCard = memo(function StringInputCard() {
   const nodeId = useNodeId() ?? ''
-  const nodeData = useNodesData<Node<{ args: string }, 'value_string'>>(nodeId)
+  const nodeData = useNodesData<Node<{ args: string }, 'resource_value_string'>>(nodeId)
   const { updateNodeData } = useReactFlow()
 
   const [args, setArgs] = useState<string>(nodeData?.data.args ?? '')
@@ -262,7 +273,7 @@ const DBInputNode = memo(function DBInputNode() {
 
   return (
     <BaseNode
-      title='BioInfo DB'
+      title='Biological Database'
       description='分析软件所使用的生物信息数据库'
       handles={DB_INPUT_HANDLES}
       color={colorSchemes.green}
@@ -315,10 +326,59 @@ const ReferenceInputNode = memo(function ReferenceInputNode() {
   )
 })
 
+const GlobalFileCard = memo(() => {
+  const nodeId = useNodeId() ?? ''
+  const nodeData = useNodesData<Node<{ args: string }, 'resource_global_file'>>(nodeId)
+  const { updateNodeData } = useReactFlow()
+
+  const [args, setArgs] = useState<string>(nodeData?.data.args ?? '')
+
+  // 同步外部数据变化
+  // biome-ignore lint/correctness/useExhaustiveDependencies: no need
+  useEffect(() => {
+    if (nodeData?.data.args !== undefined && nodeData.data.args !== args) {
+      setArgs(nodeData.data.args)
+    }
+  }, [nodeData?.data.args])
+
+  const handleBlur = useCallback(() => {
+    updateNodeData(nodeId, { args: args })
+  }, [nodeId, args, updateNodeData])
+
+  return (
+    <div className='p-3'>
+      <Label className='pb-2 font-medium'>File:</Label>
+      <Input
+        className='w-full border-input focus-visible:ring-ring'
+        placeholder='Enter file path here...'
+        value={args}
+        onChange={(e) => setArgs(e.target.value)}
+        onBlur={handleBlur}
+        spellCheck={false}
+      />
+    </div>
+  )
+})
+
+const GlobalFileNode = memo(function FileInputNode() {
+  const nodeComponent = useMemo(() => <GlobalFileCard />, [])
+
+  return (
+    <BaseNode
+      title='Global File Input'
+      description='load file from local path.'
+      handles={FILE_INPUT_HANDLES}
+      color={colorSchemes.green}
+      nodeComponent={nodeComponent}
+    />
+  )
+})
+
 export {
   StringInputNode,
   FileInputNode,
   SequenceInputNode,
   DBInputNode,
   ReferenceInputNode,
+  GlobalFileNode,
 }

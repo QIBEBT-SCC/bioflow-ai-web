@@ -1,7 +1,11 @@
 import 'server-only'
 import { cookies } from 'next/headers'
 
-const FASTAPI_URL = process.env.NEXT_PUBLIC_API_URL ?? ''
+const FASTAPI_URL = process.env.BACKEND_API_URL ?? ''
+
+if (!FASTAPI_URL) {
+  console.error('[API Server] BACKEND_API_URL is not set!')
+}
 
 export class ApiError extends Error {
   public status: number
@@ -28,12 +32,16 @@ export async function serverFetch<T = unknown>(
   const cookieStore = await cookies()
   const token = cookieStore.get('access_token')?.value
 
+  if (!token) {
+    throw new ApiError('Unauthorized', 401)
+  }
+
   const res = await fetch(url, {
     ...options,
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      Authorization: `Bearer ${token}`,
       ...(options?.headers ?? {}),
     },
   })

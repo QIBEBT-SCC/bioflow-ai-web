@@ -2,6 +2,16 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { getDocument, refreshDocument } from '@/app/actions/document'
+import {
+  createImage,
+  getImage,
+  getImageCount,
+  getImageList,
+  runInImage,
+  searchImages,
+  updateImage,
+} from '@/app/actions/image'
 import {
   createTool,
   deleteTool,
@@ -15,10 +25,18 @@ import {
   searchTools,
   updateTool,
 } from '@/app/actions/tool'
-import { createImage, getImageDocs, runInImage, searchImages, getImageList, getImageCount } from '@/app/actions/image'
-import { getDocument } from '@/app/actions/document'
-import type { DockerToolCreate, SimpleToolDoc, SimpleToolInfo, ToolGroup, ToolHelpDoc, ToolImage, ToolInfo, ToolTag } from '@/types/tool'
 import type { ToolArgPublic } from '@/types/node'
+import type {
+  DockerToolCreate,
+  DockerToolUpdate,
+  SimpleToolInfo,
+  ToolGroup,
+  ToolHelpDoc,
+  ToolImage,
+  ToolImagePublic,
+  ToolInfo,
+  ToolTag,
+} from '@/types/tool'
 
 /**
  * 获取工具参数（用于节点编辑器）
@@ -159,7 +177,13 @@ export const useUpdateTool = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ uid, tool }: { uid: string; tool: Partial<DockerToolCreate> }) => updateTool(uid, tool),
+    mutationFn: ({
+      uid,
+      tool,
+    }: {
+      uid: string
+      tool: Partial<DockerToolUpdate>
+    }) => updateTool(uid, tool),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['tool', variables.uid] })
       queryClient.invalidateQueries({ queryKey: ['toolList'] })
@@ -207,6 +231,18 @@ export const useImageCount = () => {
 }
 
 /**
+ * 获取镜像详情
+ */
+export const useImage = (uid: string) => {
+  return useQuery<ToolImagePublic>({
+    queryKey: ['image', uid],
+    queryFn: () => getImage(uid),
+    enabled: !!uid,
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
+/**
  * 创建镜像
  */
 export const useCreateImage = () => {
@@ -216,6 +252,8 @@ export const useCreateImage = () => {
     mutationFn: (image: ToolImage) => createImage(image),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['images'] })
+      queryClient.invalidateQueries({ queryKey: ['imageList'] })
+      queryClient.invalidateQueries({ queryKey: ['imageCount'] })
       toast.success('镜像创建成功')
     },
     onError: (error: Error) => {
@@ -225,14 +263,23 @@ export const useCreateImage = () => {
 }
 
 /**
- * 获取镜像文档列表
+ * 更新镜像
  */
-export const useImageDocuments = (uid: string) => {
-  return useQuery<SimpleToolDoc[]>({
-    queryKey: ['imageDocs', uid],
-    queryFn: () => getImageDocs(uid),
-    enabled: !!uid,
-    staleTime: 10 * 60 * 1000,
+export const useUpdateImage = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ uid, image }: { uid: string; image: Partial<ToolImage> }) =>
+      updateImage(uid, image),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['images', variables.uid] })
+      queryClient.invalidateQueries({ queryKey: ['imageList'] })
+      queryClient.invalidateQueries({ queryKey: ['imageCount'] })
+      toast.success('镜像更新成功')
+    },
+    onError: (error: Error) => {
+      toast.error(`镜像更新失败: ${error.message}`)
+    },
   })
 }
 
@@ -241,18 +288,25 @@ export const useImageDocuments = (uid: string) => {
  */
 export const useRunInImage = () => {
   return useMutation({
-    mutationFn: ({ uid, command }: { uid: string; command: string }) => runInImage(uid, command),
+    mutationFn: ({ uid, command }: { uid: string; command: string }) =>
+      runInImage(uid, command),
   })
 }
 
 /**
- * 获取文档内容
+ * 刷新文档
  */
-export const useDocument = (uid: string) => {
-  return useQuery<ToolHelpDoc>({
-    queryKey: ['document', uid],
-    queryFn: () => getDocument(uid),
-    enabled: !!uid,
-    staleTime: 10 * 60 * 1000,
+export const useRefreshDocument = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (uid: string) => refreshDocument(uid),
+    onSuccess: (_data, uid) => {
+      queryClient.invalidateQueries({ queryKey: ['tool', uid] })
+      toast.success('文档刷新成功')
+    },
+    onError: (error: Error) => {
+      toast.error(`文档刷新失败: ${error.message}`)
+    },
   })
 }

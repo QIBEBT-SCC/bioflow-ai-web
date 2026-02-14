@@ -1,109 +1,125 @@
-'use client'
-
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { toast } from 'sonner'
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
 import {
   createChatSession,
   deleteChatSession,
+  getChatSession,
+  getChatSessionHistory,
   getChatSessions,
   updateChatSession,
 } from '@/app/actions/chat'
-import type { ChatSessionCreate, ChatSessionPublic } from '@/types/chat'
+import type { ChatSessionPublic, PaginatedChatResponse } from '@/types/chat'
+import type { UIMessage } from 'ai'
 
-// 查询键常量
-export const CHAT_QUERY_KEYS = {
-  sessions: (offset?: number, limit?: number) => ['chat', 'sessions', { offset, limit }] as const,
-  history: (sessionId: string) => ['chat', 'history', sessionId] as const,
-  all: ['chat'] as const,
-} as const
-
+// ============================================
+// Query Hooks (数据查询)
+// ============================================
 /**
- * 获取聊天历史列表
+ * 获取会话列表
  */
-export function useChatHistories(offset: number = 0, limit: number = 8) {
-  return useQuery({
-    queryKey: CHAT_QUERY_KEYS.sessions(offset, limit),
-    queryFn: () => getChatSessions(offset, limit),
-    staleTime: 5 * 60 * 1000, // 5分钟内认为数据是新鲜的
-    gcTime: 10 * 60 * 1000, // 10分钟后清理缓存
+export function useChatSessions(page: number = 1, limit: number = 8) {
+  return useQuery<PaginatedChatResponse>({
+    queryKey: ['chat', page, limit],
+    queryFn: () => getChatSessions(page, limit),
+    staleTime: 30 * 1000,
   })
 }
 
 /**
- * 创建新聊天会话
+ * 获取无限滚动会话列表
  */
-export function useCreateSession() {
+export function useInfiniteChats(limit: number = 12) {
+  return useInfiniteQuery<PaginatedChatResponse>({
+    queryKey: ['chat', 'infinite'],
+    queryFn: ({ pageParam }: { pageParam: unknown }) =>
+      getChatSessions(pageParam as number, limit),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage: PaginatedChatResponse) => {
+      if (lastPage.has_more) {
+        return lastPage.offset + lastPage.limit
+      }
+      return undefined
+    },
+    staleTime: 30 * 1000,
+  })
+}
+
+export function useChatSession(sessionId: string) {
+  return useQuery<ChatSessionPublic>({
+    queryKey: ['chat', sessionId],
+    queryFn: () => getChatSession(sessionId),
+    staleTime: 30 * 1000,
+    enabled: !!sessionId,
+  })
+}
+
+/**
+ * 获取指定会话的对话历史
+ */
+export function useChatHistory(sessionId: string) {
+  return useQuery<UIMessage[]>({
+    queryKey: ['chatHistory', sessionId],
+    queryFn: () => getChatSessionHistory(sessionId),
+    staleTime: 30 * 1000,
+    enabled: !!sessionId,
+  })
+}
+
+// ============================================
+// Mutation Hooks (数据变更)
+// ============================================
+/**
+ * 新建会话
+ */
+export function useCreateChatSession() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (data: ChatSessionCreate = {}) => createChatSession(data),
-    onSuccess: (session) => {
-      // 刷新聊天历史列表
-      queryClient.invalidateQueries({
-        queryKey: CHAT_QUERY_KEYS.all,
-      })
-
-      // 为新创建的会话预置空的历史记录
-      queryClient.setQueryData(CHAT_QUERY_KEYS.history(session.uid), [])
-    },
-    onError: (error) => {
-      console.error('Failed to create chat session:', error)
-      toast.error('创建聊天会话失败')
+    mutationFn: createChatSession,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['chat'] })
     },
   })
 }
 
 /**
- * 更新聊天历史描述
- */
-export function useUpdateChatHistory() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: ({ sessionId, description }: { sessionId: string; description: string }) =>
-      updateChatSession(sessionId, description),
-    onSuccess: (updatedHistory, { sessionId }) => {
-      // 更新聊天历史列表缓存
-      queryClient.setQueriesData({ queryKey: CHAT_QUERY_KEYS.all }, (oldData: ChatSessionPublic[] | undefined) => {
-        if (!oldData) return oldData
-        return oldData.map((history) => (history.uid === sessionId ? updatedHistory : history))
-      })
-
-      toast.success('聊天描述已更新')
-    },
-    onError: (error) => {
-      console.error('Failed to update chat history:', error)
-      toast.error('更新聊天描述失败')
-    },
-  })
-}
-
-/**
- * 删除聊天会话
+ * 删除对话
  */
 export function useDeleteChatSession() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (sessionId: string) => deleteChatSession(sessionId),
-    onSuccess: (_, sessionId) => {
-      // 从聊天历史列表缓存中移除已删除的会话
-      queryClient.setQueriesData({ queryKey: CHAT_QUERY_KEYS.all }, (oldData: ChatSessionPublic[] | undefined) => {
-        if (!oldData) return oldData
-        return oldData.filter((history) => history.uid !== sessionId)
-      })
-
-      // 清除已删除会话的历史记录缓存
-      queryClient.removeQueries({
-        queryKey: CHAT_QUERY_KEYS.history(sessionId),
-      })
-
-      toast.success('对话已删除')
-    },
-    onError: (error) => {
-      console.error('Failed to delete chat session:', error)
-      toast.error('删除对话失败')
+    mutationFn: deleteChatSession,
+    onSuccess: () => {
+      // 刷新会话列表
+      queryClient.invalidateQueries({ queryKey: ['chat'] })
     },
   })
 }
 
+/**
+ * 更新对话信息
+ */
+export function useUpdateChatSession() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      sessionId,
+      description,
+    }: {
+      sessionId: string
+      description: string
+    }) => updateChatSession(sessionId, description),
+    // biome-ignore lint/correctness/noUnusedFunctionParameters: no need
+    onSuccess: (data) => {
+      // 刷新会话列表
+      queryClient.invalidateQueries({ queryKey: ['chat'] })
+      // 如果有单条会话的查询，也可以通过 `queryClient.setQueryData` 更新缓存
+    },
+  })
+}

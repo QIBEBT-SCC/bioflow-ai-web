@@ -47,7 +47,7 @@ export async function getRunCount(): Promise<number> {
  * 获取运行实例统计信息
  */
 export async function getRunStats(): Promise<Statistics> {
-  return await serverFetch<Statistics>('/runs/stats')
+  return await serverFetch<Statistics>('/runs/statistics')
 }
 
 /**

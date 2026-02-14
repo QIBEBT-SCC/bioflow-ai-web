@@ -36,9 +36,9 @@ export const NoteNode = memo(function NoteNode() {
       <NodeCardHeader className={cn(colorSchemes.gray.bg, 'border-b border-border/50')}>
         <NodeTitle className={colorSchemes.gray.primary}>Note</NodeTitle>
       </NodeCardHeader>
-      <NodeCardContent className='flex flex-1 flex-col overflow-hidden pb-0'>
+      <NodeCardContent className='flex flex-1 flex-col overflow-hidden p-2'>
         <Textarea
-          className='nowheel h-full w-full resize-none overflow-y-auto rounded-none border-none bg-background p-3 text-sm focus-visible:border-none focus-visible:ring-0 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/40 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar]:w-1.5'
+          className='nowheel h-full w-full resize-none overflow-y-auto rounded-md border-none bg-background p-3 text-sm focus-visible:border-none focus-visible:ring-0 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/40 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar]:w-1.5'
           placeholder='Enter notes here...'
           value={args}
           onChange={(e) => setArgs(e.target.value)}

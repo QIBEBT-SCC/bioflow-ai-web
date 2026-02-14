@@ -25,6 +25,8 @@
     "chat": "Chat",
     "editor": "Editor",
     "images": "Images",
+    "llm_setting": "LLM Setting",
+    "llm_statistic": "LLM Statistic",
     "projects": "Project",
     "resource": "Resource Management",
     "setting": "Settings",

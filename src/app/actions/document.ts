@@ -14,3 +14,12 @@ export async function createDocument(document: Omit<ToolHelpDoc, 'uid'>): Promis
   })
 }
 
+/**
+ * 刷新文档
+ */
+export async function refreshDocument(uid: string): Promise<ToolHelpDoc> {
+  return await serverFetch<ToolHelpDoc>(`/documents/${uid}/refresh`, {
+    method: 'POST',
+  })
+}
+

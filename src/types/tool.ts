@@ -32,13 +32,24 @@ export interface ToolImage {
   image: ImageConfig
 }
 
+export interface ToolImagePublic {
+  uid: string
+  name: string
+  version: string
+  description: string
+  homepage: string
+  paper_link: string
+  image: ImageConfig
+
+  tools: SimpleToolInfo[]
+}
+
 // 参数定义接口
 export interface ParamDefine {
   description?: string
   command: string
   is_position: boolean
   index?: number
-  required: boolean
 }
 
 // 输出文件接口
@@ -64,20 +75,32 @@ export interface SimpleToolDoc {
   help_command: string
 }
 
-export interface AiGenRequest {
-  name: string
-  description: string
-  image_uid: string
-}
-
-// 工具创建接口
+// 工具创建接口 - 与后端 Pydantic 模型匹配
 export interface DockerToolCreate {
   name: string
   image_uid: string
   description: string
+  help_command: string
+
+  group_id: number
+  tag_ids: number[] // 后端期望 ID 数组
+
+  command_template: string
+  dynamic_params: ParamDefine[]
+  immutable_static_params: string // 后端期望 str,不是 null
+  modifiable_static_params: string // 后端期望 str,不是 null
+  file_mounts: FileMount[]
+}
+
+export interface DockerToolUpdate{
+  name: string
+  image_uid: string
+  description: string
   help_doc_uid: string
+
   group_id: number
   tags: ToolTag[]
+
   command_template: string
   dynamic_params: ParamDefine[]
   immutable_static_params?: string | null
@@ -150,4 +173,3 @@ export interface AIGenTool {
   modifiable_static_params?: string | null
   file_mounts: FileMount[]
 }
-

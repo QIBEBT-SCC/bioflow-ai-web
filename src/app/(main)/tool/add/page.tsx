@@ -24,9 +24,10 @@ import {
   useCreateTool,
   useSearchImages,
   useToolGroupList,
+  useToolTagList,
 } from '@/hooks/use-tool'
 import { useCreateToolStore } from '@/stores/toolStore'
-import type { FileMount, ParamDefine } from '@/types/tool'
+import type { DockerToolCreate, FileMount, ParamDefine, ToolTag } from '@/types/tool'
 
 const steps = [
   { id: 1, title: '选择镜像', description: '选择或创建Docker镜像' },
@@ -44,10 +45,12 @@ export default function AddToolPage() {
     toolConfig,
     setCurrentImage,
     setToolConfig,
+    updateToolConfigField: updateStoreField,
     resetStore,
   } = useCreateToolStore()
   const { data: searchResults = [] } = useSearchImages(searchQuery)
   const { data: toolGroups = [] } = useToolGroupList()
+  const { data: availableTags = [] } = useToolTagList()
   const { mutate: createTool, isPending: isCreating } = useCreateTool()
 
   // 组件卸载时重置store
@@ -73,7 +76,15 @@ export default function AddToolPage() {
 
   // 处理工具创建
   const handleCreateTool = () => {
-    createTool(toolConfig, {
+    // 将 ToolConfigValues 转换为 DockerToolCreate
+    const requestData: DockerToolCreate = {
+      ...toolConfig,
+      tag_ids: toolConfig.tags.map((tag) => tag.id),
+      immutable_static_params: toolConfig.immutable_static_params ?? '',
+      modifiable_static_params: toolConfig.modifiable_static_params ?? '',
+    }
+    
+    createTool(requestData, {
       onSuccess: () => {
         toast.success('工具创建成功')
         router.push('/tool')
@@ -87,7 +98,11 @@ export default function AddToolPage() {
       case 1:
         return currentImage.uid !== undefined
       case 2:
-        return toolConfig.name && toolConfig.command_template
+        return (
+          toolConfig.name &&
+          toolConfig.command_template &&
+          toolConfig.help_command
+        )
       case 3:
         return true
       default:
@@ -97,12 +112,9 @@ export default function AddToolPage() {
 
   const updateToolConfigField = (
     field: keyof ToolConfigValues,
-    value: string | number | boolean | ParamDefine[] | FileMount[],
+    value: string | number | boolean | null | ParamDefine[] | FileMount[] | ToolTag[],
   ) => {
-    setToolConfig({
-      ...toolConfig,
-      [field]: value as never,
-    })
+    updateStoreField(field, value as never)
   }
 
   // 添加动态参数
@@ -116,7 +128,6 @@ export default function AddToolPage() {
           command: '',
           is_position: false,
           index: toolConfig.dynamic_params.length,
-          required: true,
         },
       ],
     })
@@ -324,6 +335,7 @@ export default function AddToolPage() {
                 <ToolConfigForm
                   value={toolConfig}
                   toolGroups={toolGroups}
+                  availableTags={availableTags}
                   onFieldChange={updateToolConfigField}
                   onAddDynamicParam={addDynamicParam}
                   onUpdateDynamicParam={updateDynamicParam}
@@ -331,6 +343,7 @@ export default function AddToolPage() {
                   onAddFileMount={addFileMount}
                   onUpdateFileMount={updateFileMount}
                   onRemoveFileMount={removeFileMount}
+                  imageUid={currentImage?.uid}
                   imageSummary={
                     currentImage?.name || currentImage?.version
                       ? {
