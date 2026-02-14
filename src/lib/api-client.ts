@@ -1,12 +1,12 @@
 import Cookies from "js-cookie";
 
-const FASTAPI_URL = process.env.NEXT_PUBLIC_API_URL
+const FASTAPI_URL = process.env.NEXT_PUBLIC_API_URL ?? '/api/v1'
 
 export class ClientApiError extends Error {
   constructor(
-    message: string,
-    public status: number,
-    public data?: unknown,
+      message: string,
+      public status: number,
+      public data?: unknown,
   ) {
     super(message)
     this.name = 'ClientApiError'
@@ -40,8 +40,8 @@ export function clearToken(): void {
 }
 
 export async function clientFetch<T = unknown>(
-  endpoint: string,
-  options?: RequestInit & { params?: Record<string, string> },
+    endpoint: string,
+    options?: RequestInit & { params?: Record<string, string> },
 ): Promise<T> {
   let url = `${FASTAPI_URL}${endpoint}`
   if (options?.params) {
@@ -70,9 +70,9 @@ export async function clientFetch<T = unknown>(
   if (!res.ok) {
     const errorData = await res.json().catch(() => null)
     throw new ClientApiError(
-      (errorData as any)?.message || `HTTP ${res.status}: ${res.statusText}`,
-      res.status,
-      errorData,
+        (errorData as any)?.message || `HTTP ${res.status}: ${res.statusText}`,
+        res.status,
+        errorData,
     )
   }
 
