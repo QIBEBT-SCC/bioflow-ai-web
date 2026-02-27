@@ -1,6 +1,4 @@
-'use server'
-
-import { serverFetch } from '@/lib/api-server'
+import { clientFetch } from '@/lib/api-client'
 import type {
   ProjectCreateProp,
   ProjectPublic,
@@ -24,7 +22,7 @@ export async function getProjects(
   if (filter) {
     params.filter = filter
   }
-  return await serverFetch<ProjectPublic[]>('/projects', {
+  return await clientFetch<ProjectPublic[]>('/projects', {
     params,
   })
 }
@@ -35,7 +33,7 @@ export async function getProjects(
 export async function getRecentProjects(
   limit: number = 5,
 ): Promise<ProjectPublic[]> {
-  return await serverFetch<ProjectPublic[]>('/projects/recent', {
+  return await clientFetch<ProjectPublic[]>('/projects/recent', {
     params: {
       limit: String(limit),
     },
@@ -46,7 +44,7 @@ export async function getRecentProjects(
  * 获取单个项目详情
  */
 export async function getProject(id: string): Promise<ProjectPublic> {
-  return await serverFetch<ProjectPublic>(`/projects/${id}`)
+  return await clientFetch<ProjectPublic>(`/projects/${id}`)
 }
 
 /**
@@ -55,7 +53,7 @@ export async function getProject(id: string): Promise<ProjectPublic> {
 export async function createProject(
   data: ProjectCreateProp,
 ): Promise<ProjectPublic> {
-  return await serverFetch<ProjectPublic>('/projects', {
+  return await clientFetch<ProjectPublic>('/projects', {
     method: 'POST',
     body: JSON.stringify(data),
   })
@@ -68,7 +66,7 @@ export async function updateProject(
   id: string,
   data: Partial<ProjectCreateProp>,
 ): Promise<ProjectPublic> {
-  return await serverFetch<ProjectPublic>(`/projects/${id}`, {
+  return await clientFetch<ProjectPublic>(`/projects/${id}`, {
     method: 'PATCH',
     body: JSON.stringify(data),
   })
@@ -78,7 +76,7 @@ export async function updateProject(
  * 删除项目
  */
 export async function deleteProject(id: string): Promise<void> {
-  return await serverFetch<void>(`/projects/${id}`, {
+  return await clientFetch<void>(`/projects/${id}`, {
     method: 'DELETE',
   })
 }
@@ -87,7 +85,7 @@ export async function deleteProject(id: string): Promise<void> {
  * 收藏项目
  */
 export async function starProject(id: string): Promise<void> {
-  return await serverFetch<void>(`/projects/${id}/star`, {
+  return await clientFetch<void>(`/projects/${id}/star`, {
     method: 'POST',
   })
 }
@@ -96,7 +94,7 @@ export async function starProject(id: string): Promise<void> {
  * 取消收藏项目
  */
 export async function unstarProject(id: string): Promise<void> {
-  return await serverFetch<void>(`/projects/${id}/unstar`, {
+  return await clientFetch<void>(`/projects/${id}/unstar`, {
     method: 'POST',
   })
 }
@@ -107,7 +105,7 @@ export async function unstarProject(id: string): Promise<void> {
 export async function createProjectTag(
   data: ProjectTagProp,
 ): Promise<ProjectTag> {
-  return await serverFetch<ProjectTag>('/project-tags', {
+  return await clientFetch<ProjectTag>('/project-tags', {
     method: 'POST',
     body: JSON.stringify(data),
   })
@@ -117,5 +115,5 @@ export async function createProjectTag(
  * 获取所有项目标签
  */
 export async function getProjectTags(): Promise<TagWithCount[]> {
-  return await serverFetch<TagWithCount[]>('/project-tags')
+  return await clientFetch<TagWithCount[]>('/project-tags')
 }
