@@ -3,6 +3,7 @@ import './globals.css'
 import { NextIntlClientProvider } from 'next-intl'
 import { getTranslations } from 'next-intl/server'
 import type React from 'react'
+import { QueryProvider } from '@/components/providers/query-provider'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -35,7 +36,9 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <NextIntlClientProvider>
+          <QueryProvider>{children}</QueryProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   )

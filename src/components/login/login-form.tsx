@@ -1,5 +1,6 @@
 'use client'
 
+import { useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import type React from 'react'
@@ -9,7 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
-import { ClientApiError, setToken } from '@/lib/api-client'
+import { ClientApiError, clientFetch, setToken } from '@/lib/api-client'
+import type { User } from '@/types/auth'
 
 export function LoginForm({
   className,
@@ -18,6 +20,7 @@ export function LoginForm({
   const [error, setError] = useState<string>('')
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+  const queryClient = useQueryClient()
 
   const t = useTranslations('Login')
 
@@ -56,12 +59,21 @@ export function LoginForm({
         )
       }
 
-      // 登录成功：保存 token 到 localStorage
+      // 登录成功：保存 token 到 localStorage 和 Cookie
       const data = await res.json()
       if (data.access_token) {
         setToken(data.access_token)
+
+        // 立即获取用户信息并写入 Query 缓存
+        // 这样 GuestGuard 能立即感知到已登录状态，不会把用户打回登录页
+        try {
+          const user = await clientFetch<User>('/auth/me')
+          queryClient.setQueryData(['auth', 'me'], user)
+        } catch {
+          // 即使获取用户信息失败，token 已保存，跳转后 AuthGuard 会正常处理
+        }
+
         router.push('/chat')
-        router.refresh()
       } else {
         setError('登录响应格式错误')
       }
