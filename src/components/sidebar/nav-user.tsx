@@ -10,9 +10,8 @@ import {
   Sparkles,
 } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
-import { useTransition } from 'react'
+
 import { setUserLocale } from '@/app/actions/locale'
-import { clearToken } from '@/lib/api-client'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   DropdownMenu,
@@ -34,6 +33,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 import { type Locale, localeNames, locales } from '@/i18n/config'
+import { clearToken } from '@/lib/api-client'
 
 import type { User } from '@/types/auth'
 
@@ -43,15 +43,14 @@ interface NavUserProps {
 
 export function NavUser({ user }: NavUserProps) {
   const { isMobile } = useSidebar()
-  const [, startTransition] = useTransition()
   const currentLocale = useLocale() as Locale
 
   const t = useTranslations()
 
   const handleLocaleChange = (locale: Locale) => {
-    startTransition(async () => {
-      await setUserLocale(locale)
-    })
+    if (locale === currentLocale) return
+    setUserLocale(locale)
+    window.location.reload()
   }
 
   const handleLogout = () => {

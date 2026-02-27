@@ -1,6 +1,4 @@
-'use server'
-
-import { serverFetch } from '@/lib/api-server'
+import { clientFetch } from '@/lib/api-client'
 import type {
   MonitorPublic,
   SimpleTaskPublic,
@@ -15,7 +13,7 @@ export async function getTasks(
   offset: number = 0,
   limit: number = 20,
 ): Promise<SimpleTaskPublic[]> {
-  return await serverFetch<SimpleTaskPublic[]>(`/tasks`, {
+  return await clientFetch<SimpleTaskPublic[]>(`/tasks`, {
     params: {
       offset: String(offset),
       limit: String(limit),
@@ -27,7 +25,7 @@ export async function getTasks(
  * 获取任务总数
  */
 export async function getTaskCount(): Promise<number> {
-  return await serverFetch<number>('/tasks/count')
+  return await clientFetch<number>('/tasks/count')
 }
 
 /**
@@ -36,33 +34,33 @@ export async function getTaskCount(): Promise<number> {
 export async function getRecentTasks(
   hours: number,
 ): Promise<SimpleTaskPublic[]> {
-  return await serverFetch<SimpleTaskPublic[]>(`/tasks/recent/${hours}`)
+  return await clientFetch<SimpleTaskPublic[]>(`/tasks/recent/${hours}`)
 }
 
 /**
  * 获取单个任务详情
  */
 export async function getTask(uid: string): Promise<TaskPublic> {
-  return await serverFetch<TaskPublic>(`/tasks/${uid}`)
+  return await clientFetch<TaskPublic>(`/tasks/${uid}`)
 }
 
 /**
  * 获取任务结果
  */
 export async function getTaskResult(uid: string): Promise<ToolOutput> {
-  return await serverFetch<ToolOutput>(`/tasks/${uid}/result`)
+  return await clientFetch<ToolOutput>(`/tasks/${uid}/result`)
 }
 
 /**
  * 获取任务监控日志
  */
 export async function getTaskMonitor(uid: string): Promise<MonitorPublic[]> {
-  return await serverFetch<MonitorPublic[]>(`/tasks/${uid}/monitor`)
+  return await clientFetch<MonitorPublic[]>(`/tasks/${uid}/monitor`)
 }
 
 /**
  * 获取任务日志
  */
 export async function getTaskLog(uid: string): Promise<{ content: string }> {
-  return await serverFetch<{ content: string }>(`/tasks/${uid}/log`)
+  return await clientFetch<{ content: string }>(`/tasks/${uid}/log`)
 }

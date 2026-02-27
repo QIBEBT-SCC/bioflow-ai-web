@@ -1,6 +1,12 @@
-import { redirect } from 'next/navigation'
+'use client'
+
+import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
 
 export default function RootPage() {
-  // middleware 已经处理了认证逻辑，这里只需要重定向到默认页面
-  redirect('/chat')
+  const router = useRouter()
+  useEffect(() => {
+    router.push('/chat')
+  }, [router])
+  return null
 }
