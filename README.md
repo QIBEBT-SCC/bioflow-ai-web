@@ -3,6 +3,16 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [
 `create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Development
+
+To run the application in development mode:
+
+```bash
+pnpm dev
+# or on a custom port (e.g., 3001)
+pnpm dev -- -p 3001
+```
+
 ## Deployment
 
 ### Direct Deployment (Locally or on Clean Server)
@@ -22,29 +32,50 @@ To deploy the application directly:
 3. **Start the Server:**
    ```bash
    pnpm start
+   # or on a custom port
+   pnpm start -- -p 3001
    ```
-   The application will be available at `http://localhost:3000`.
+   The application will be available at `http://localhost:3000` (or your custom port).
 
 ### Docker Deployment
 
-To deploy using Docker with the pre-built image `aye1032/bioflow-ai-web`:
+To deploy using Docker with the pre-built image:
 
-1. **Run the Container:**
-   We recommend passing environment variables at runtime for security.
-
+1. **Build the Image (if not already built):**
    ```bash
-   # Using an env file (Recommended)
-   docker run -d -p 3000:3000 --env-file .env.production --name bioflow-ai-web aye1032/bioflow-ai-web
-
-   # OR passing variables individually
-   docker run -d -p 3000:3000 \
-     -e BACKEND_API_URL=http://your-backend-api.com/api/v1 \
-     --name bioflow-ai-web \
-     aye1032/bioflow-ai-web
+   docker build -t bioflow-ai-web:dev-0.1.0 .
    ```
 
-2. **Access the Application:**
-   Open [http://localhost:3000](http://localhost:3000) (or your server's IP) in your browser.
+2. **Run the Container:**
+   You can customize the port and backend URL.
+
+   - **Standard Run (Port 3000):**
+     ```bash
+     docker run -p 3000:3000 \
+       -e BACKEND_API_URL="http://host.docker.internal:8000/api/v1" \
+       bioflow-ai-web:dev-0.1.0
+     ```
+
+   - **Custom Port (e.g., 3001):**
+     Map host port 3001 to container port 3000.
+     ```bash
+     docker run -p 3001:3000 \
+       -e BACKEND_API_URL="http://host.docker.internal:8000/api/v1" \
+       bioflow-ai-web:dev-0.1.0
+     ```
+     Access at `http://localhost:3001`.
+
+   - **Host Networking (Linux only):**
+     If the backend is on localhost, you can use host networking.
+     ```bash
+     docker run --network host \
+       -e BACKEND_API_URL="http://127.0.0.1:8000/api/v1" \
+       bioflow-ai-web:dev-0.1.0
+     ```
+
+**Note on Backend Connection:**
+- If your backend is running on the host machine (outside Docker), use `host.docker.internal` (Windows/Mac) or the host IP (Linux) in `BACKEND_API_URL`.
+- The container listens on port 3000 internally. Always map your desired host port to container port 3000 (e.g., `-p <host_port>:3000`).
 
 ## Environment Variables
 
