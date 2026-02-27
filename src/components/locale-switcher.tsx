@@ -2,7 +2,6 @@
 
 import { LanguagesIcon } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
-import { useTransition } from 'react'
 import { setUserLocale } from '@/app/actions/locale'
 import {
   DropdownMenu,
@@ -13,15 +12,13 @@ import {
 import { type Locale, localeNames, locales } from '@/i18n/config'
 
 export function LocaleSwitcher() {
-  const [isPending, startTransition] = useTransition()
   const currentLocale = useLocale() as Locale
-
   const t = useTranslations('Language')
 
   const handleLocaleChange = (locale: Locale) => {
-    startTransition(async () => {
-      await setUserLocale(locale)
-    })
+    if (locale === currentLocale) return
+    setUserLocale(locale)
+    window.location.reload()
   }
 
   return (

@@ -1,54 +1,100 @@
 ![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [
-`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+BioFlow AI Web 前端，基于 Next.js 构建。采用纯客户端渲染（CSR）架构，Next.js Server 仅承担静态资源托管和 `/api/v1` 反向代理职责。
 
-## Deployment
+## 技术栈
 
-### Direct Deployment (Locally or on Clean Server)
+- **框架**：Next.js 16 (App Router, standalone 模式)
+- **UI**：React 19 + Tailwind CSS v4 + shadcn/ui
+- **状态管理**：TanStack Query v5 + Zustand
+- **国际化**：next-intl（纯客户端模式）
+- **AI 对话**：Vercel AI SDK (`@ai-sdk/react`)
 
-To deploy the application directly:
+## 本地开发
 
-1. **Install Dependencies:**
-   ```bash
-   pnpm install
-   ```
+### 前置条件
 
-2. **Build the Application:**
-   ```bash
-   pnpm build
-   ```
+- Node.js 22+
+- pnpm 10+
 
-3. **Start the Server:**
-   ```bash
-   pnpm start
-   ```
-   The application will be available at `http://localhost:3000`.
+### 启动
 
-### Docker Deployment
+```bash
+# 安装依赖
+pnpm install
 
-To deploy using Docker with the pre-built image `aye1032/bioflow-ai-web`:
+# 启动开发服务器（默认 http://localhost:3000）
+pnpm dev
+```
 
-1. **Run the Container:**
-   We recommend passing environment variables at runtime for security.
+开发时后端地址配置在 `.env.development` 中：
 
-   ```bash
-   # Using an env file (Recommended)
-   docker run -d -p 3000:3000 --env-file .env.production --name bioflow-ai-web aye1032/bioflow-ai-web
+```env
+NEXT_PUBLIC_API_URL=/api/v1
+BACKEND_API_URL=http://your-backend:8000/api/v1
+```
 
-   # OR passing variables individually
-   docker run -d -p 3000:3000 \
-     -e BACKEND_API_URL=http://your-backend-api.com/api/v1 \
-     --name bioflow-ai-web \
-     aye1032/bioflow-ai-web
-   ```
+## 生产部署
 
-2. **Access the Application:**
-   Open [http://localhost:3000](http://localhost:3000) (or your server's IP) in your browser.
+### 方式一：Docker（推荐）
 
-## Environment Variables
+```bash
+# 构建镜像
+docker build -t bioflow-ai-web:latest .
 
-| Variable | Description | Default |
+# 运行（需传入后端地址）
+docker run -p 3000:3000 \
+  -e BACKEND_API_URL="http://your-backend:8000/api/v1" \
+  bioflow-ai-web:latest
+```
+
+**常见场景：**
+
+```bash
+# 后端在宿主机（Windows / macOS）
+docker run -p 3000:3000 \
+  -e BACKEND_API_URL="http://host.docker.internal:8000/api/v1" \
+  bioflow-ai-web:latest
+
+# 后端在宿主机（Linux，使用 host 网络）
+docker run --network host \
+  -e BACKEND_API_URL="http://127.0.0.1:8000/api/v1" \
+  bioflow-ai-web:latest
+
+# 自定义宿主机端口（映射到容器 3000）
+docker run -p 3001:3000 \
+  -e BACKEND_API_URL="http://your-backend:8000/api/v1" \
+  bioflow-ai-web:latest
+```
+
+### 方式二：直接部署
+
+```bash
+pnpm install
+pnpm build
+BACKEND_API_URL=http://your-backend:8000/api/v1 pnpm start
+```
+
+## 环境变量
+
+| 变量 | 说明 | 默认值 |
 | :--- | :--- | :--- |
-| `BACKEND_API_URL` | **Required**. The internal URL for the backend API, used by the Next.js server. | - |
-| `NEXT_PUBLIC_API_URL` | The base URL for the API as seen by the browser client. | `/api/v1` |
+| `BACKEND_API_URL` | **运行时注入**。后端 API 的内网地址，仅 Next.js Server 可见，不暴露到浏览器。 | `http://localhost:8000/api/v1` |
+| `NEXT_PUBLIC_API_URL` | 客户端请求的 API 前缀，固定为相对路径，由 Next.js rewrites 代理到后端。 | `/api/v1` |
+
+> **注意**：`BACKEND_API_URL` 不应写入 `.env.production`，应在运行时通过 `-e` 或系统环境变量注入，以避免后端地址硬编码进代码仓库。
+
+## 架构说明
+
+```
+浏览器
+  │  静态资源（HTML / CSS / JS）
+  │  API 请求 → /api/v1/*
+  ▼
+Next.js Server（standalone）
+  │  rewrites: /api/v1/* → BACKEND_API_URL/*
+  ▼
+后端 FastAPI
+```
+
+客户端认证通过 `access_token` Cookie + localStorage 管理，路由守卫由 `AuthGuard` / `GuestGuard` 组件在客户端执行。
