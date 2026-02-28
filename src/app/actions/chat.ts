@@ -1,7 +1,5 @@
-'use server'
-
 import type { UIMessage } from 'ai'
-import { serverFetch } from '@/lib/api-server'
+import { clientFetch } from '@/lib/api-client'
 import type { ChatSessionPublic, PaginatedChatResponse } from '@/types/chat'
 
 /**
@@ -11,7 +9,7 @@ export async function getChatSessions(
   offset: number = 0,
   limit: number = 12,
 ): Promise<PaginatedChatResponse> {
-  return await serverFetch<PaginatedChatResponse>('/chat', {
+  return await clientFetch<PaginatedChatResponse>('/chat', {
     params: {
       offset: String(offset),
       limit: String(limit),
@@ -25,14 +23,14 @@ export async function getChatSessions(
 export async function getChatSession(
   sessionId: string,
 ): Promise<ChatSessionPublic> {
-  return await serverFetch<ChatSessionPublic>(`/chat/${sessionId}`)
+  return await clientFetch<ChatSessionPublic>(`/chat/${sessionId}`)
 }
 
 /**
  * 新建会话
  */
 export async function createChatSession(): Promise<ChatSessionPublic> {
-  return await serverFetch<ChatSessionPublic>('/chat', {
+  return await clientFetch<ChatSessionPublic>('/chat', {
     method: 'POST',
   })
 }
@@ -43,7 +41,7 @@ export async function createChatSession(): Promise<ChatSessionPublic> {
 export async function deleteChatSession(
   sessionId: string,
 ): Promise<{ message: string }> {
-  return await serverFetch<{ message: string }>(`/chat/${sessionId}`, {
+  return await clientFetch<{ message: string }>(`/chat/${sessionId}`, {
     method: 'DELETE',
   })
 }
@@ -55,7 +53,7 @@ export async function updateChatSession(
   sessionId: string,
   description: string,
 ): Promise<ChatSessionPublic> {
-  return await serverFetch<ChatSessionPublic>(`/chat/${sessionId}`, {
+  return await clientFetch<ChatSessionPublic>(`/chat/${sessionId}`, {
     method: 'PUT',
     params: {
       description,
@@ -69,5 +67,5 @@ export async function updateChatSession(
 export async function getChatSessionHistory(
   sessionId: string,
 ): Promise<UIMessage[]> {
-  return await serverFetch<UIMessage[]>(`/chat/${sessionId}/history`)
+  return await clientFetch<UIMessage[]>(`/chat/${sessionId}/history`)
 }

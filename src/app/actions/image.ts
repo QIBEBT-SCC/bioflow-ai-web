@@ -1,7 +1,4 @@
-'use server'
-
-import { revalidatePath } from 'next/cache'
-import { serverFetch } from '@/lib/api-server'
+import { clientFetch } from '@/lib/api-client'
 import type { ToolImage, ToolImagePublic } from '@/types/tool'
 
 /**
@@ -11,7 +8,7 @@ export async function getImageList(
   offset: number = 0,
   limit: number = 12,
 ): Promise<ToolImage[]> {
-  return await serverFetch<ToolImage[]>('/images', {
+  return await clientFetch<ToolImage[]>('/images', {
     params: {
       offset: String(offset),
       limit: String(limit),
@@ -23,11 +20,11 @@ export async function getImageList(
  * 获取镜像总数
  */
 export async function getImageCount(): Promise<number> {
-  return await serverFetch<number>('/images/count')
+  return await clientFetch<number>('/images/count')
 }
 
 export async function searchImages(name: string): Promise<ToolImage[]> {
-  return await serverFetch<ToolImage[]>('/images/search', {
+  return await clientFetch<ToolImage[]>('/images/search', {
     params: { name },
   })
 }
@@ -36,16 +33,10 @@ export async function searchImages(name: string): Promise<ToolImage[]> {
  * 创建镜像
  */
 export async function createImage(image: ToolImage): Promise<ToolImage> {
-  const response = await serverFetch<ToolImage>('/images', {
+  return await clientFetch<ToolImage>('/images', {
     method: 'POST',
     body: JSON.stringify(image),
   })
-
-  revalidatePath('/tool')
-  revalidatePath('/tool/add')
-  revalidatePath('/image')
-
-  return response
 }
 
 /**
@@ -55,29 +46,24 @@ export async function updateImage(
   uid: string,
   image: Partial<ToolImage>,
 ): Promise<ToolImage> {
-  const response = await serverFetch<ToolImage>(`/images/${uid}`, {
+  return await clientFetch<ToolImage>(`/images/${uid}`, {
     method: 'PATCH',
     body: JSON.stringify(image),
   })
-
-  revalidatePath('/tool')
-  revalidatePath(`/tool/${uid}`)
-
-  return response
 }
 
 /**
  * 获取镜像详情
  */
 export async function getImage(uid: string): Promise<ToolImagePublic> {
-  return await serverFetch<ToolImagePublic>(`/images/${uid}`)
+  return await clientFetch<ToolImagePublic>(`/images/${uid}`)
 }
 
 export async function runInImage(
   uid: string,
   command: string,
 ): Promise<{ result: string }> {
-  return await serverFetch<{ result: string }>(`/images/${uid}/run`, {
+  return await clientFetch<{ result: string }>(`/images/${uid}/run`, {
     method: 'POST',
     body: JSON.stringify({ command }),
   })

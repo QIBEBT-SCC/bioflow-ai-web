@@ -1,6 +1,4 @@
-'use server'
-
-import { serverFetch } from '@/lib/api-server'
+import { clientFetch } from '@/lib/api-client'
 import type {
   AddWorkflowRequest,
   ProjectWorkflow,
@@ -16,7 +14,7 @@ export async function addWorkflowToProject(
   projectId: string,
   data: AddWorkflowRequest,
 ): Promise<ProjectWorkflow> {
-  return await serverFetch<ProjectWorkflow>(
+  return await clientFetch<ProjectWorkflow>(
     `/projects/${projectId}/workflows`,
     {
       method: 'POST',
@@ -33,7 +31,7 @@ export async function getProjectWorkflows(
   offset: number = 0,
   limit: number = 20,
 ): Promise<ProjectWorkflow[]> {
-  return await serverFetch<ProjectWorkflow[]>(
+  return await clientFetch<ProjectWorkflow[]>(
     `/projects/${projectId}/workflows`,
     {
       params: {
@@ -51,7 +49,7 @@ export async function removeWorkflowFromProject(
   projectId: string,
   workflowUid: string,
 ): Promise<{ message: string }> {
-  return await serverFetch<{ message: string }>(
+  return await clientFetch<{ message: string }>(
     `/projects/${projectId}/workflows/${workflowUid}`,
     {
       method: 'DELETE',
@@ -67,7 +65,7 @@ export async function runWorkflow(
   workflowUid: string,
   data: RunWorkflowRequest,
 ): Promise<WorkflowRunResult> {
-  return await serverFetch<WorkflowRunResult>(
+  return await clientFetch<WorkflowRunResult>(
     `/projects/${projectId}/workflows/${workflowUid}/run`,
     {
       method: 'POST',
@@ -84,7 +82,7 @@ export async function getProjectRuns(
   offset: number = 0,
   limit: number = 20,
 ): Promise<RunInstance[]> {
-  return await serverFetch<RunInstance[]>(`/projects/${projectId}/runs`, {
+  return await clientFetch<RunInstance[]>(`/projects/${projectId}/runs`, {
     params: {
       offset: String(offset),
       limit: String(limit),
@@ -96,7 +94,7 @@ export async function getProjectRuns(
  * 获取项目运行实例数量
  */
 export async function getProjectRunCount(projectId: string): Promise<number> {
-  return await serverFetch<number>(`/projects/${projectId}/runs/count`)
+  return await clientFetch<number>(`/projects/${projectId}/runs/count`)
 }
 
 /**
@@ -106,7 +104,5 @@ export async function getProjectRun(
   projectId: string,
   runUid: string,
 ): Promise<RunInstance> {
-  return await serverFetch<RunInstance>(
-    `/projects/${projectId}/runs/${runUid}`,
-  )
+  return await clientFetch<RunInstance>(`/projects/${projectId}/runs/${runUid}`)
 }
