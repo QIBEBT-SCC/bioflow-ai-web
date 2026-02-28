@@ -3,6 +3,12 @@
 import { GlobeIcon, PlusIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import {
+  Attachment,
+  AttachmentPreview,
+  AttachmentRemove,
+  Attachments,
+} from '@/components/ai-elements/attachments'
+import {
   Conversation,
   ConversationContent,
   ConversationEmptyState,
@@ -14,20 +20,16 @@ import {
   PromptInputActionMenu,
   PromptInputActionMenuContent,
   PromptInputActionMenuTrigger,
-  PromptInputAttachment,
-  PromptInputAttachments,
   PromptInputBody,
   PromptInputButton,
   PromptInputFooter,
   PromptInputHeader,
-  PromptInputSpeechButton,
   PromptInputSubmit,
   PromptInputTextarea,
   PromptInputTools,
+  usePromptInputAttachments,
 } from '@/components/ai-elements/prompt-input'
-
 import { ChatHistoryMenu } from '@/components/chat/chat-history-menu'
-
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -38,6 +40,27 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { useCreateChatSession } from '@/hooks/use-chat'
+
+const PromptInputAttachmentsDisplay = () => {
+  const attachments = usePromptInputAttachments()
+  if (attachments.files.length === 0) {
+    return null
+  }
+  return (
+    <Attachments variant='inline'>
+      {attachments.files.map((attachment) => (
+        <Attachment
+          data={attachment}
+          key={attachment.id}
+          onRemove={() => attachments.remove(attachment.id)}
+        >
+          <AttachmentPreview />
+          <AttachmentRemove />
+        </Attachment>
+      ))}
+    </Attachments>
+  )
+}
 
 export default function ChatPage() {
   const router = useRouter()
@@ -95,9 +118,7 @@ export default function ChatPage() {
             multiple
           >
             <PromptInputHeader>
-              <PromptInputAttachments>
-                {(attachment) => <PromptInputAttachment data={attachment} />}
-              </PromptInputAttachments>
+              <PromptInputAttachmentsDisplay />
             </PromptInputHeader>
             <PromptInputBody>
               <PromptInputTextarea value={''} readOnly={true} />
@@ -105,12 +126,11 @@ export default function ChatPage() {
             <PromptInputFooter>
               <PromptInputTools>
                 <PromptInputActionMenu>
-                  <PromptInputActionMenuTrigger />
+                  <PromptInputActionMenuTrigger disabled={true} />
                   <PromptInputActionMenuContent>
                     <PromptInputActionAddAttachments />
                   </PromptInputActionMenuContent>
                 </PromptInputActionMenu>
-                <PromptInputSpeechButton disabled={true} />
                 <PromptInputButton onClick={() => {}} disabled={true}>
                   <GlobeIcon size={16} />
                   <span>Search</span>
