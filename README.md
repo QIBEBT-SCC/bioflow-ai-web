@@ -1,85 +1,100 @@
 ![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [
-`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+BioFlow AI Web 前端，基于 Next.js 构建。采用纯客户端渲染（CSR）架构，Next.js Server 仅承担静态资源托管和 `/api/v1` 反向代理职责。
 
-## Development
+## 技术栈
 
-To run the application in development mode:
+- **框架**：Next.js 16 (App Router, standalone 模式)
+- **UI**：React 19 + Tailwind CSS v4 + shadcn/ui
+- **状态管理**：TanStack Query v5 + Zustand
+- **国际化**：next-intl（纯客户端模式）
+- **AI 对话**：Vercel AI SDK (`@ai-sdk/react`)
+
+## 本地开发
+
+### 前置条件
+
+- Node.js 22+
+- pnpm 10+
+
+### 启动
 
 ```bash
+# 安装依赖
+pnpm install
+
+# 启动开发服务器（默认 http://localhost:3000）
 pnpm dev
-# or on a custom port (e.g., 3001)
-pnpm dev -- -p 3001
 ```
 
-## Deployment
+开发时后端地址配置在 `.env.development` 中：
 
-### Direct Deployment (Locally or on Clean Server)
+```env
+NEXT_PUBLIC_API_URL=/api/v1
+BACKEND_API_URL=http://your-backend:8000/api/v1
+```
 
-To deploy the application directly:
+## 生产部署
 
-1. **Install Dependencies:**
-   ```bash
-   pnpm install
-   ```
+### 方式一：Docker（推荐）
 
-2. **Build the Application:**
-   ```bash
-   pnpm build
-   ```
+```bash
+# 构建镜像
+docker build -t bioflow-ai-web:latest .
 
-3. **Start the Server:**
-   ```bash
-   pnpm start
-   # or on a custom port
-   pnpm start -- -p 3001
-   ```
-   The application will be available at `http://localhost:3000` (or your custom port).
+# 运行（需传入后端地址）
+docker run -p 3000:3000 \
+  -e BACKEND_API_URL="http://your-backend:8000/api/v1" \
+  bioflow-ai-web:latest
+```
 
-### Docker Deployment
+**常见场景：**
 
-To deploy using Docker with the pre-built image:
+```bash
+# 后端在宿主机（Windows / macOS）
+docker run -p 3000:3000 \
+  -e BACKEND_API_URL="http://host.docker.internal:8000/api/v1" \
+  bioflow-ai-web:latest
 
-1. **Build the Image (if not already built):**
-   ```bash
-   docker build -t bioflow-ai-web:dev-0.1.0 .
-   ```
+# 后端在宿主机（Linux，使用 host 网络）
+docker run --network host \
+  -e BACKEND_API_URL="http://127.0.0.1:8000/api/v1" \
+  bioflow-ai-web:latest
 
-2. **Run the Container:**
-   You can customize the port and backend URL.
+# 自定义宿主机端口（映射到容器 3000）
+docker run -p 3001:3000 \
+  -e BACKEND_API_URL="http://your-backend:8000/api/v1" \
+  bioflow-ai-web:latest
+```
 
-   - **Standard Run (Port 3000):**
-     ```bash
-     docker run -p 3000:3000 \
-       -e BACKEND_API_URL="http://host.docker.internal:8000/api/v1" \
-       bioflow-ai-web:dev-0.1.0
-     ```
+### 方式二：直接部署
 
-   - **Custom Port (e.g., 3001):**
-     Map host port 3001 to container port 3000.
-     ```bash
-     docker run -p 3001:3000 \
-       -e BACKEND_API_URL="http://host.docker.internal:8000/api/v1" \
-       bioflow-ai-web:dev-0.1.0
-     ```
-     Access at `http://localhost:3001`.
+```bash
+pnpm install
+pnpm build
+BACKEND_API_URL=http://your-backend:8000/api/v1 pnpm start
+```
 
-   - **Host Networking (Linux only):**
-     If the backend is on localhost, you can use host networking.
-     ```bash
-     docker run --network host \
-       -e BACKEND_API_URL="http://127.0.0.1:8000/api/v1" \
-       bioflow-ai-web:dev-0.1.0
-     ```
+## 环境变量
 
-**Note on Backend Connection:**
-- If your backend is running on the host machine (outside Docker), use `host.docker.internal` (Windows/Mac) or the host IP (Linux) in `BACKEND_API_URL`.
-- The container listens on port 3000 internally. Always map your desired host port to container port 3000 (e.g., `-p <host_port>:3000`).
-
-## Environment Variables
-
-| Variable | Description | Default |
+| 变量 | 说明 | 默认值 |
 | :--- | :--- | :--- |
-| `BACKEND_API_URL` | **Required**. The internal URL for the backend API, used by the Next.js server. | - |
-| `NEXT_PUBLIC_API_URL` | The base URL for the API as seen by the browser client. | `/api/v1` |
+| `BACKEND_API_URL` | **运行时注入**。后端 API 的内网地址，仅 Next.js Server 可见，不暴露到浏览器。 | `http://localhost:8000/api/v1` |
+| `NEXT_PUBLIC_API_URL` | 客户端请求的 API 前缀，固定为相对路径，由 Next.js rewrites 代理到后端。 | `/api/v1` |
+
+> **注意**：`BACKEND_API_URL` 不应写入 `.env.production`，应在运行时通过 `-e` 或系统环境变量注入，以避免后端地址硬编码进代码仓库。
+
+## 架构说明
+
+```
+浏览器
+  │  静态资源（HTML / CSS / JS）
+  │  API 请求 → /api/v1/*
+  ▼
+Next.js Server（standalone）
+  │  rewrites: /api/v1/* → BACKEND_API_URL/*
+  ▼
+后端 FastAPI
+```
+
+客户端认证通过 `access_token` Cookie + localStorage 管理，路由守卫由 `AuthGuard` / `GuestGuard` 组件在客户端执行。

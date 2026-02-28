@@ -1,7 +1,4 @@
-'use server'
-
-import { revalidatePath } from 'next/cache'
-import { serverFetch } from '@/lib/api-server'
+import { clientFetch } from '@/lib/api-client'
 import type { BioDb, BioDbCreate, BioDbSimple } from '@/types/resource'
 
 /**
@@ -11,7 +8,7 @@ export async function getDBList(
   offset: number = 0,
   limit: number = 8,
 ): Promise<BioDbSimple[]> {
-  return await serverFetch('/bio_dbs', {
+  return await clientFetch('/bio_dbs', {
     params: {
       offset: String(offset),
       limit: String(limit),
@@ -23,25 +20,24 @@ export async function getDBList(
  * 获取数据库总数
  */
 export async function getDBCount(): Promise<number> {
-  return await serverFetch('/bio_dbs/count')
+  return await clientFetch('/bio_dbs/count')
 }
 
 /**
  * 获取数据库详情
  */
 export async function getDB(id: number): Promise<BioDb> {
-  return await serverFetch(`/bio_dbs/${id}`)
+  return await clientFetch(`/bio_dbs/${id}`)
 }
 
 /**
  * 创建数据库
  */
 export async function createDB(data: BioDbCreate): Promise<BioDb> {
-  const result = await serverFetch<BioDb>('/bio_dbs', {
+  const result = await clientFetch<BioDb>('/bio_dbs', {
     method: 'POST',
     body: JSON.stringify(data),
   })
-  revalidatePath('/resource')
   return result
 }
 
@@ -49,10 +45,9 @@ export async function createDB(data: BioDbCreate): Promise<BioDb> {
  * 删除数据库
  */
 export async function deleteDB(id: number): Promise<void> {
-  await serverFetch(`/bio_dbs/${id}`, {
+  await clientFetch(`/bio_dbs/${id}`, {
     method: 'DELETE',
   })
-  revalidatePath('/resource')
 }
 
 /**
@@ -63,7 +58,7 @@ export async function searchDB(
   offset: number = 0,
   limit: number = 10,
 ): Promise<BioDb[]> {
-  return await serverFetch<BioDb[]>('/bio_dbs/search', {
+  return await clientFetch<BioDb[]>('/bio_dbs/search', {
     params: {
       name: name,
       offset: String(offset),
