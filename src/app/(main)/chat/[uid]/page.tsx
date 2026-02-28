@@ -1,10 +1,23 @@
 'use client'
 
 import { useChat } from '@ai-sdk/react'
-import { DefaultChatTransport } from 'ai'
+import { DefaultChatTransport, type FileUIPart } from 'ai'
 import { CopyIcon, GlobeIcon, PlusIcon, RefreshCcwIcon } from 'lucide-react'
+import Image from 'next/image'
 import { useParams, useRouter } from 'next/navigation'
-import { Fragment, useEffect, useRef, useState } from 'react'
+import { Fragment, memo, useCallback, useEffect, useRef, useState } from 'react'
+import {
+  Attachment,
+  AttachmentHoverCard,
+  AttachmentHoverCardContent,
+  AttachmentHoverCardTrigger,
+  AttachmentInfo,
+  AttachmentPreview,
+  AttachmentRemove,
+  Attachments,
+  getAttachmentLabel,
+  getMediaCategory,
+} from '@/components/ai-elements/attachments'
 import {
   Conversation,
   ConversationContent,
@@ -15,8 +28,6 @@ import { Loader } from '@/components/ai-elements/loader'
 import {
   MessageAction,
   MessageActions,
-  MessageAttachment,
-  MessageAttachments,
   Message as MessageComponent,
   MessageContent,
   MessageResponse,
@@ -27,17 +38,15 @@ import {
   PromptInputActionMenu,
   PromptInputActionMenuContent,
   PromptInputActionMenuTrigger,
-  PromptInputAttachment,
-  PromptInputAttachments,
   PromptInputBody,
   PromptInputButton,
   PromptInputFooter,
   PromptInputHeader,
   type PromptInputMessage,
-  PromptInputSpeechButton,
   PromptInputSubmit,
   PromptInputTextarea,
   PromptInputTools,
+  usePromptInputAttachments,
 } from '@/components/ai-elements/prompt-input'
 import {
   Reasoning,
@@ -74,6 +83,91 @@ import {
 } from '@/hooks/use-chat'
 import { getToken } from '@/lib/api-client'
 import { useChatStore } from '@/stores/chat-store'
+
+const AttachmentItem = memo(
+  ({
+    attachment,
+    onRemove,
+  }: {
+    attachment: FileUIPart & { id: string }
+    onRemove: (id: string) => void
+  }) => {
+    const handleRemove = useCallback(
+      () => onRemove(attachment.id),
+      [onRemove, attachment.id],
+    )
+    const mediaCategory = getMediaCategory(attachment)
+    const label = getAttachmentLabel(attachment)
+
+    return (
+      <AttachmentHoverCard key={attachment.id}>
+        <AttachmentHoverCardTrigger asChild>
+          <Attachment data={attachment} onRemove={handleRemove}>
+            <div className='relative size-5 shrink-0'>
+              <div className='absolute inset-0 transition-opacity group-hover:opacity-0'>
+                <AttachmentPreview />
+              </div>
+              <AttachmentRemove className='absolute inset-0' />
+            </div>
+            <AttachmentInfo />
+          </Attachment>
+        </AttachmentHoverCardTrigger>
+        <AttachmentHoverCardContent>
+          <div className='space-y-3'>
+            {mediaCategory === 'image' &&
+              attachment.type === 'file' &&
+              attachment.url && (
+                <div className='flex max-h-96 w-80 items-center justify-center overflow-hidden rounded-md border'>
+                  <Image
+                    alt={label}
+                    className='max-h-full max-w-full object-contain'
+                    height={384}
+                    src={attachment.url}
+                    width={320}
+                  />
+                </div>
+              )}
+            <div className='space-y-1 px-0.5'>
+              <h4 className='font-semibold text-sm leading-none'>{label}</h4>
+              {attachment.mediaType && (
+                <p className='font-mono text-muted-foreground text-xs'>
+                  {attachment.mediaType}
+                </p>
+              )}
+            </div>
+          </div>
+        </AttachmentHoverCardContent>
+      </AttachmentHoverCard>
+    )
+  },
+)
+
+const PromptInputAttachmentsDisplay = () => {
+  const attachments = usePromptInputAttachments()
+
+  const handleRemove = useCallback(
+    (id: string) => {
+      attachments.remove(id)
+    },
+    [attachments],
+  )
+
+  if (attachments.files.length === 0) {
+    return null
+  }
+
+  return (
+    <Attachments variant='inline'>
+      {attachments.files.map((attachment) => (
+        <AttachmentItem
+          attachment={attachment}
+          key={attachment.id}
+          onRemove={handleRemove}
+        />
+      ))}
+    </Attachments>
+  )
+}
 
 export default function ChatPage() {
   const params = useParams()
@@ -188,13 +282,16 @@ export default function ChatPage() {
                     {/*Attachments*/}
                     {message.parts.filter((part) => part.type === 'file')
                       .length > 0 && (
-                      <MessageAttachments className='mb-2'>
+                      <Attachments className='mb-2' variant='grid'>
                         {message.parts
                           .filter((part) => part.type === 'file')
-                          .map((part, i) => (
-                            <MessageAttachment data={part} key={part.url} />
+                          .map((attachment) => (
+                            // @ts-expect-error
+                            <Attachment data={attachment} key={attachment.url}>
+                              <AttachmentPreview />
+                            </Attachment>
                           ))}
-                      </MessageAttachments>
+                      </Attachments>
                     )}
                     {/*Sources*/}
                     {message.role === 'assistant' &&
@@ -311,9 +408,7 @@ export default function ChatPage() {
             multiple
           >
             <PromptInputHeader>
-              <PromptInputAttachments>
-                {(attachment) => <PromptInputAttachment data={attachment} />}
-              </PromptInputAttachments>
+              <PromptInputAttachmentsDisplay />
             </PromptInputHeader>
             <PromptInputBody>
               <PromptInputTextarea
@@ -330,10 +425,6 @@ export default function ChatPage() {
                     <PromptInputActionAddAttachments />
                   </PromptInputActionMenuContent>
                 </PromptInputActionMenu>
-                <PromptInputSpeechButton
-                  onTranscriptionChange={setText}
-                  textareaRef={textareaRef}
-                />
                 <PromptInputButton
                   onClick={() => setUseRebuildMode(!useRebuildMode)}
                   variant={useRebuildMode ? 'default' : 'ghost'}
