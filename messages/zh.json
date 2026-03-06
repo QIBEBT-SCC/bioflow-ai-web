@@ -23,7 +23,9 @@
   "Sidebar": {
     "admin": "管理员",
     "chat": "对话",
+    "databases": "生物信息数据库",
     "editor": "编辑器",
+    "genomes": "参考基因组",
     "images": "镜像",
     "llm_setting": "模型设置",
     "llm_statistic": "模型统计",

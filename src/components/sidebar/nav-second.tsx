@@ -2,7 +2,7 @@
 
 import {
   ChevronRightIcon,
-  ServerCogIcon,
+  DatabaseIcon,
   SettingsIcon,
   WrenchIcon,
 } from 'lucide-react'
@@ -37,8 +37,11 @@ const projects = [
   },
   {
     name: 'resource',
-    url: '/resource',
-    icon: ServerCogIcon,
+    icon: DatabaseIcon,
+    items: [
+      { name: 'databases', url: '/resource/database' },
+      { name: 'genomes', url: '/resource/genome' },
+    ],
   },
   {
     name: 'setting',

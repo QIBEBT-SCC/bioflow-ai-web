@@ -23,7 +23,9 @@
   "Sidebar": {
     "admin": "Admin",
     "chat": "Chat",
+    "databases": "Bio Databases",
     "editor": "Editor",
+    "genomes": "Genomes",
     "images": "Images",
     "llm_setting": "LLM Setting",
     "llm_statistic": "LLM Statistic",
