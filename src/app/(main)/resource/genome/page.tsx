@@ -1,6 +1,7 @@
 'use client'
 
 import { DnaIcon } from 'lucide-react'
+import { GenomeManager } from '@/components/resource/genome/genome-manager'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -41,10 +42,15 @@ export default function ResourcePage() {
                 参考基因组管理
               </h1>
             </div>
-            <p className='text-muted-foreground text-pretty'>
-              DESCRIPTION TEXT
+            <p className='text-muted-foreground'>
+              管理本地已下载的参考基因组，查看比对索引状态，从 NCBI RefSeq
+              下载新基因组并构建 Bowtie2 / BWA / HISAT2 / STAR / Minimap2
+              等比对索引。
             </p>
           </div>
+
+          {/* 主体 */}
+          <GenomeManager />
         </div>
       </main>
     </SidebarInset>
