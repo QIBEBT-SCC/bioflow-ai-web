@@ -100,7 +100,7 @@ export function NavSecond() {
                   isActive={item.name === activePage}
                   onClick={() => setActivePage(item.name)}
                 >
-                  <Link href={item.url ?? '/'}>
+                  <Link href={'/'}>
                     {item.icon && <item.icon />}
                     <span>{t(item.name)}</span>
                   </Link>
