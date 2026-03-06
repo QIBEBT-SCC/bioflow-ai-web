@@ -7,6 +7,7 @@ import {
   BreadcrumbItem,
   BreadcrumbList,
   BreadcrumbPage,
+  BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
 import { Card, CardContent } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
@@ -26,6 +27,10 @@ export default function ResourcePage() {
             <BreadcrumbList>
               <BreadcrumbItem className='hidden md:block'>
                 <BreadcrumbPage>Resource</BreadcrumbPage>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem className='hidden md:block'>
+                <BreadcrumbPage>Database</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
