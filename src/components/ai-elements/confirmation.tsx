@@ -91,8 +91,7 @@ export const ConfirmationRequest = ({ children }: ConfirmationRequestProps) => {
   const { state } = useConfirmation()
 
   // Only show when approval is requested
-  // @ts-expect-error
-  if (state !== 'approval-requested') {
+  if ((state as any) !== 'approval-requested') {
     return null
   }
 
