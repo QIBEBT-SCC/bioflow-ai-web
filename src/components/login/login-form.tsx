@@ -35,7 +35,7 @@ export function LoginForm({
 
     try {
       // 调用 FastAPI 登录接口
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/token`, {
+      const res = await fetch(`/api/v1/auth/token`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
