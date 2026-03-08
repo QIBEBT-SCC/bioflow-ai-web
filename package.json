@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
-    "start": "next start --hostname 0.0.0.0",
+    "start": "node --env-file=.env.production ./.next/standalone/server.js",
     "lint": "biome check",
     "format": "biome format --write"
   },
