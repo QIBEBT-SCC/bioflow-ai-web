@@ -1,8 +1,8 @@
 import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
-import type { Metadata } from 'next'
+import { NextIntlClientProvider } from 'next-intl'
+import { getTranslations } from 'next-intl/server'
 import type React from 'react'
-import { IntlProvider } from '@/components/providers/intl-provider'
 import { QueryProvider } from '@/components/providers/query-provider'
 
 const geistSans = Geist({
@@ -15,12 +15,18 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 })
 
-export const metadata: Metadata = {
-  title: 'BioFlow AI',
-  description: 'BioFlow AI Web Application',
+// @ts-expect-error no need
+export async function generateMetadata({ params }) {
+  const { locale } = await params
+  const t = await getTranslations({ locale, namespace: 'Metadata' })
+
+  return {
+    title: t('title'),
+    description: t('description'),
+  }
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
@@ -30,11 +36,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <QueryProvider>
-          <IntlProvider>{children}</IntlProvider>
-        </QueryProvider>
+        <NextIntlClientProvider>
+          <QueryProvider>{children}</QueryProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   )
 }
-

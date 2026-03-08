@@ -15,9 +15,9 @@ export function LocaleSwitcher() {
   const currentLocale = useLocale() as Locale
   const t = useTranslations('Language')
 
-  const handleLocaleChange = (locale: Locale) => {
+  const handleLocaleChange = async (locale: Locale) => {
     if (locale === currentLocale) return
-    setUserLocale(locale)
+    await setUserLocale(locale)
     window.location.reload()
   }
 
