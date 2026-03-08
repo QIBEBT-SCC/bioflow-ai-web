@@ -1,9 +1,12 @@
-import Cookies from 'js-cookie'
+'use server'
+
+import { cookies } from 'next/headers'
 import type { Locale } from '@/i18n/config'
 
-export function setUserLocale(locale: Locale) {
-  Cookies.set('locale', locale, {
-    expires: 365,
+export async function setUserLocale(locale: Locale) {
+  const cookieStore = await cookies()
+  cookieStore.set('locale', locale, {
+    expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
     path: '/',
     sameSite: 'lax',
   })

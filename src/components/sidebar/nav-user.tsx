@@ -47,9 +47,9 @@ export function NavUser({ user }: NavUserProps) {
 
   const t = useTranslations()
 
-  const handleLocaleChange = (locale: Locale) => {
+  const handleLocaleChange = async (locale: Locale) => {
     if (locale === currentLocale) return
-    setUserLocale(locale)
+    await setUserLocale(locale)
     window.location.reload()
   }
 
