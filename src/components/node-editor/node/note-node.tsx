@@ -14,21 +14,21 @@ import { Textarea } from '@/components/ui/textarea'
 
 export const NoteNode = memo(function NoteNode() {
   const nodeId = useNodeId() ?? ''
-  const nodeData = useNodesData<Node<{ args: string }, 'note'>>(nodeId)
+  const nodeData = useNodesData<Node<{ content: string }, 'note'>>(nodeId)
   const { updateNodeData } = useReactFlow()
-  const [args, setArgs] = useState<string>(nodeData?.data.args ?? '')
+  const [args, setArgs] = useState<string>(nodeData?.data.content ?? '')
 
   // 同步外部数据变化到本地state
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: no need
   useEffect(() => {
-    if (nodeData?.data.args !== undefined && nodeData.data.args !== args) {
-      setArgs(nodeData.data.args)
+    if (nodeData?.data.content !== undefined && nodeData.data.content !== args) {
+      setArgs(nodeData.data.content)
     }
-  }, [nodeData?.data.args])
+  }, [nodeData?.data.content])
 
   const handleBlur = useCallback(() => {
-    updateNodeData(nodeId, { args: args })
+    updateNodeData(nodeId, { content: args })
   }, [nodeId, args, updateNodeData])
 
   return (

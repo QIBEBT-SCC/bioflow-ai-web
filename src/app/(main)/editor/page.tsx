@@ -17,21 +17,26 @@ import { toast } from 'sonner'
 import { useShallow } from 'zustand/react/shallow'
 import { LoadWorkflowDialog } from '@/components/node-editor/load-workflow-dialog'
 import { PanelMenu } from '@/components/node-editor/menu/panel-menu'
-import { SaveAsDialog } from '@/components/node-editor/save-as-dialog'
 import {
+  BashCodeNode,
   PythonCodeNode,
   RCodeNode,
 } from '@/components/node-editor/node/code-node'
-import {Copy2FolderNode, GlobalMarkerNode} from '@/components/node-editor/node/data-node'
+import {
+  Copy2FolderNode,
+  GlobalMarkerNode,
+} from '@/components/node-editor/node/data-node'
 import {
   DBInputNode,
   FileInputNode,
+  GlobalFileNode,
   ReferenceInputNode,
   SequenceInputNode,
   StringInputNode,
 } from '@/components/node-editor/node/input-node'
 import { NoteNode } from '@/components/node-editor/node/note-node'
 import { ToolNode } from '@/components/node-editor/node/tool-node'
+import { SaveAsDialog } from '@/components/node-editor/save-as-dialog'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -49,18 +54,22 @@ import { useNodeEditorStore } from '@/stores/nodeviewStore'
 // 注册节点类型
 const nodeTypes = {
   tool: ToolNode,
+  // resource
   value_string: StringInputNode,
   resource_file: FileInputNode,
   resource_sequence: SequenceInputNode,
   resource_db: DBInputNode,
   resource_genome: ReferenceInputNode,
+  resource_global_file: GlobalFileNode,
+  // processor
   processor_copy2folder: Copy2FolderNode,
   global_mark: GlobalMarkerNode,
-  // processor_concat: ConcatNode,
+  // code
   code_R: RCodeNode,
   code_python: PythonCodeNode,
+  code_bash: BashCodeNode,
+  // note
   note: NoteNode,
-  // lineFig: LineFigNode,
 }
 
 function FlowContent() {
@@ -110,13 +119,18 @@ function FlowContent() {
 
       // 节点配置
       const nodeConfig: Record<string, any> = {
-        tool: { data: { resource_uid: resourceId, args: '' } },
-        resource_db: { data: { resource_uid: resourceId, args: '' } },
-        value_string: { data: { args: '' } },
-        resource_file: { data: { args: '' } },
-        code_R: { data: { args: { description: '', code: '' } } },
-        code_python: { data: { args: { description: '', code: '' } } },
-        note: { data: { args: '' } },
+        tool: { data: { tool_uid: resourceId, args: '' } },
+        resource_db: { data: { db_id: resourceId } },
+        value_string: { data: { value: '' } },
+        resource_file: { data: { file_path: '' } },
+        resource_global_file: { data: { mark_name: '' } },
+        resource_sequence: { data: { r1: '', r2: '' } },
+        resource_genome: { data: { required_index: [] } },
+        global_mark: { data: { mark_name: '', description: '' } },
+        code_R: { data: { description: '', code: '' } },
+        code_python: { data: { description: '', code: '' } },
+        code_bash: { data: { description: '', code: '' } },
+        note: { data: { content: '' } },
       }
 
       const config = nodeConfig[nodeType]
@@ -125,7 +139,7 @@ function FlowContent() {
         type: nodeType,
         dragHandle: '.nodeDragable',
         position,
-        data: config?.data ?? { args: '' },
+        data: config?.data ?? {},
         zIndex: nodeType === 'note' ? -10 : 20,
       }
 

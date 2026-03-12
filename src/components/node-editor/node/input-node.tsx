@@ -16,92 +16,27 @@ import { Label } from '@/components/ui/label'
 import { useDB } from '@/hooks/use-resource'
 import type { HandleDefine } from '@/types/node.tsx'
 
-// 常量定义 - 避免每次渲染时重新创建
 const STRING_INPUT_HANDLES = {
   inputs: [] as HandleDefine[],
   outputs: [{ name: 'value', description: 'string value' }] as HandleDefine[],
 }
 
-const FILE_INPUT_HANDLES = {
-  inputs: [] as HandleDefine[],
-  outputs: [
-    { name: 'file_path', description: 'output file' },
-  ] as HandleDefine[],
-}
-
-const GLOBAL_FILE_HANDLES = {
-  inputs: [] as HandleDefine[],
-  outputs: [
-    { name: 'folder_path', description: 'output file' },
-  ] as HandleDefine[],
-}
-
-const SEQUENCE_INPUT_HANDLES = {
-  inputs: [] as HandleDefine[],
-  outputs: [
-    { name: 'r1', description: 'r1 file' },
-    { name: 'r2', description: 'r2 file' },
-  ] as HandleDefine[],
-}
-
-const DB_INPUT_HANDLES = {
-  inputs: [] as HandleDefine[],
-  outputs: [
-    { name: 'file_path', description: 'output file' },
-  ] as HandleDefine[],
-}
-
-const REFERENCE_INPUT_HANDLES = {
-  inputs: [
-    {
-      name: 'species_name',
-      description: 'species name of the reference gene to be used',
-    },
-    {
-      name: 'ncbi_tax_id',
-      description:
-        'NCBI taxonomy ID of the species of the reference gene to be used',
-    },
-  ] as HandleDefine[],
-  outputs: [
-    {
-      name: 'genome_fasta',
-      description: 'Gene fasta file of the reference genome',
-    },
-    {
-      name: 'annotation_gff',
-      description: 'GFF annotation file of the reference genome',
-    },
-    {
-      name: 'annotation_gtf',
-      description: 'GTF annotation file of the reference genome',
-    },
-    { name: 'bowtie2_index', description: '' },
-    { name: 'bwa_index', description: '' },
-    { name: 'hisat2_index', description: '' },
-    { name: 'star_index', description: '' },
-    { name: 'minimap2_index', description: '' },
-  ] as HandleDefine[],
-}
-
-// 将 input 内容提取为单独的组件
 const StringInputCard = memo(function StringInputCard() {
   const nodeId = useNodeId() ?? ''
-  const nodeData = useNodesData<Node<{ args: string }, 'resource_value_string'>>(nodeId)
+  const nodeData = useNodesData<Node<{ value: string }, 'value_string'>>(nodeId)
   const { updateNodeData } = useReactFlow()
 
-  const [args, setArgs] = useState<string>(nodeData?.data.args ?? '')
+  const [args, setArgs] = useState<string>(nodeData?.data.value ?? '')
 
-  // 同步外部数据变化
   // biome-ignore lint/correctness/useExhaustiveDependencies: no need
   useEffect(() => {
-    if (nodeData?.data.args !== undefined && nodeData.data.args !== args) {
-      setArgs(nodeData.data.args)
+    if (nodeData?.data.value !== undefined && nodeData.data.value !== args) {
+      setArgs(nodeData.data.value)
     }
-  }, [nodeData?.data.args])
+  }, [nodeData?.data.value])
 
   const handleBlur = useCallback(() => {
-    updateNodeData(nodeId, { args: args })
+    updateNodeData(nodeId, { value: args })
   }, [nodeId, args, updateNodeData])
 
   return (
@@ -133,23 +68,34 @@ const StringInputNode = memo(function StringInputNode() {
   )
 })
 
+const FILE_INPUT_HANDLES = {
+  inputs: [] as HandleDefine[],
+  outputs: [
+    { name: 'file_path', description: 'output file' },
+  ] as HandleDefine[],
+}
+
 const FileInputCard = memo(() => {
   const nodeId = useNodeId() ?? ''
-  const nodeData = useNodesData<Node<{ args: string }, 'resource_file'>>(nodeId)
+  const nodeData =
+    useNodesData<Node<{ file_path: string }, 'resource_file'>>(nodeId)
   const { updateNodeData } = useReactFlow()
 
-  const [args, setArgs] = useState<string>(nodeData?.data.args ?? '')
+  const [args, setArgs] = useState<string>(nodeData?.data.file_path ?? '')
 
   // 同步外部数据变化
   // biome-ignore lint/correctness/useExhaustiveDependencies: no need
   useEffect(() => {
-    if (nodeData?.data.args !== undefined && nodeData.data.args !== args) {
-      setArgs(nodeData.data.args)
+    if (
+      nodeData?.data.file_path !== undefined &&
+      nodeData.data.file_path !== args
+    ) {
+      setArgs(nodeData.data.file_path)
     }
-  }, [nodeData?.data.args])
+  }, [nodeData?.data.file_path])
 
   const handleBlur = useCallback(() => {
-    updateNodeData(nodeId, { args: args })
+    updateNodeData(nodeId, { file_path: args })
   }, [nodeId, args, updateNodeData])
 
   return (
@@ -181,34 +127,40 @@ const FileInputNode = memo(function FileInputNode() {
   )
 })
 
+const SEQUENCE_INPUT_HANDLES = {
+  inputs: [] as HandleDefine[],
+  outputs: [
+    { name: 'r1', description: 'r1 file' },
+    { name: 'r2', description: 'r2 file' },
+  ] as HandleDefine[],
+}
+
 const SequenceInputCard = memo(function SequenceInputCard() {
   const nodeId = useNodeId() ?? ''
   const nodeData =
-    useNodesData<
-      Node<{ args: { r1: string; r2: string } }, 'resource_sequence'>
-    >(nodeId)
+    useNodesData<Node<{ r1: string; r2: string }, 'resource_sequence'>>(nodeId)
   const { updateNodeData } = useReactFlow()
 
-  const [r1, setR1] = useState<string>(nodeData?.data.args.r1 ?? '')
-  const [r2, setR2] = useState<string>(nodeData?.data.args.r2 ?? '')
+  const [r1, setR1] = useState<string>(nodeData?.data.r1 ?? '')
+  const [r2, setR2] = useState<string>(nodeData?.data.r2 ?? '')
 
   // 同步外部数据变化
   // biome-ignore lint/correctness/useExhaustiveDependencies: no need
   useEffect(() => {
-    if (nodeData?.data.args.r1 !== undefined && nodeData.data.args.r1 !== r1) {
-      setR1(nodeData.data.args.r1)
+    if (nodeData?.data.r1 !== undefined && nodeData.data.r1 !== r1) {
+      setR1(nodeData.data.r1)
     }
-  }, [nodeData?.data.args.r1])
+  }, [nodeData?.data.r1])
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: no need
   useEffect(() => {
-    if (nodeData?.data.args.r2 !== undefined && nodeData.data.args.r2 !== r2) {
-      setR2(nodeData.data.args.r2)
+    if (nodeData?.data.r2 !== undefined && nodeData.data.r2 !== r2) {
+      setR2(nodeData.data.r2)
     }
-  }, [nodeData?.data.args.r2])
+  }, [nodeData?.data.r2])
 
   const handleBlur = useCallback(() => {
-    updateNodeData(nodeId, { args: { r1: r1, r2: r2 } })
+    updateNodeData(nodeId, { r1: r1, r2: r2 })
   }, [nodeId, r1, r2, updateNodeData])
 
   return (
@@ -249,14 +201,18 @@ const SequenceInputNode = memo(function SequenceInputNode() {
   )
 })
 
+const DB_INPUT_HANDLES = {
+  inputs: [] as HandleDefine[],
+  outputs: [
+    { name: 'file_path', description: 'output file' },
+  ] as HandleDefine[],
+}
+
 const DBInputCard = memo(function DBInputCard() {
   const nodeId = useNodeId() ?? ''
-  const nodeData =
-    useNodesData<Node<{ resource_uid: string; args: string }, 'resource_db'>>(
-      nodeId,
-    )
+  const nodeData = useNodesData<Node<{ db_id: string }, 'resource_db'>>(nodeId)
 
-  const { data: bioDb } = useDB(Number(nodeData?.data.resource_uid))
+  const { data: bioDb } = useDB(Number(nodeData?.data.db_id))
 
   return (
     <div className='p-3'>
@@ -282,18 +238,49 @@ const DBInputNode = memo(function DBInputNode() {
   )
 })
 
+const REFERENCE_INPUT_HANDLES = {
+  inputs: [
+    {
+      name: 'species_name',
+      description: 'species name of the reference gene to be used',
+    },
+    {
+      name: 'ncbi_tax_id',
+      description:
+        'NCBI taxonomy ID of the species of the reference gene to be used',
+    },
+  ] as HandleDefine[],
+  outputs: [
+    {
+      name: 'genome_fasta',
+      description: 'Gene fasta file of the reference genome',
+    },
+    {
+      name: 'annotation_gff',
+      description: 'GFF annotation file of the reference genome',
+    },
+    {
+      name: 'annotation_gtf',
+      description: 'GTF annotation file of the reference genome',
+    },
+    { name: 'bowtie2_index', description: '' },
+    { name: 'bwa_index', description: '' },
+    { name: 'hisat2_index', description: '' },
+    { name: 'star_index', description: '' },
+    { name: 'minimap2_index', description: '' },
+  ] as HandleDefine[],
+}
+
 const ReferenceInputCard = memo(function ReferenceInputCard() {
   const nodeId = useNodeId() ?? ''
   const nodeData =
-    useNodesData<Node<{ args: { requiredIndex: string[] } }, 'resource_db'>>(
-      nodeId,
-    )
+    useNodesData<Node<{ required_index: string[] }, 'resource_genome'>>(nodeId)
 
   return (
     <div className='p-3'>
       <Label className='pb-2 font-medium'>Species:</Label>
       <code className='max-w-full overflow-x-auto text-muted-foreground text-sm'>
-        {String(nodeData?.data.args)}
+        {String(nodeData?.data.required_index)}
       </code>
     </div>
   )
@@ -310,7 +297,7 @@ const ReferenceInputNode = memo(function ReferenceInputNode() {
       const parts = conn.sourceHandle.split('-out-')
       return parts[parts.length - 1]
     })
-    updateNodeData(nodeId, { args: { requiredIndex: indexes } })
+    updateNodeData(nodeId, { required_index: indexes })
   }, [connections, nodeId, updateNodeData])
 
   const nodeComponent = useMemo(() => <ReferenceInputCard />, [])
@@ -326,24 +313,37 @@ const ReferenceInputNode = memo(function ReferenceInputNode() {
   )
 })
 
+const GLOBAL_FILE_HANDLES = {
+  inputs: [] as HandleDefine[],
+  outputs: [
+    { name: 'folder_path', description: 'output file' },
+  ] as HandleDefine[],
+}
+
 const GlobalFileCard = memo(() => {
   const nodeId = useNodeId() ?? ''
-  const nodeData = useNodesData<Node<{ args: string }, 'resource_global_file'>>(nodeId)
+  const nodeData =
+    useNodesData<Node<{ mark_name: string }, 'resource_global_file'>>(nodeId)
   const { updateNodeData } = useReactFlow()
 
-  const [args, setArgs] = useState<string>(nodeData?.data.args ?? '')
+  const [markName, setMarkName] = useState<string>(
+    nodeData?.data.mark_name ?? '',
+  )
 
   // 同步外部数据变化
   // biome-ignore lint/correctness/useExhaustiveDependencies: no need
   useEffect(() => {
-    if (nodeData?.data.args !== undefined && nodeData.data.args !== args) {
-      setArgs(nodeData.data.args)
+    if (
+      nodeData?.data.mark_name !== undefined &&
+      nodeData.data.mark_name !== markName
+    ) {
+      setMarkName(nodeData.data.mark_name)
     }
-  }, [nodeData?.data.args])
+  }, [nodeData?.data.mark_name])
 
   const handleBlur = useCallback(() => {
-    updateNodeData(nodeId, { args: args })
-  }, [nodeId, args, updateNodeData])
+    updateNodeData(nodeId, { mark_name: markName })
+  }, [nodeId, markName, updateNodeData])
 
   return (
     <div className='p-3'>
@@ -351,8 +351,8 @@ const GlobalFileCard = memo(() => {
       <Input
         className='w-full border-input focus-visible:ring-ring'
         placeholder='Enter file path here...'
-        value={args}
-        onChange={(e) => setArgs(e.target.value)}
+        value={markName}
+        onChange={(e) => setMarkName(e.target.value)}
         onBlur={handleBlur}
         spellCheck={false}
       />
@@ -367,7 +367,7 @@ const GlobalFileNode = memo(function FileInputNode() {
     <BaseNode
       title='Global File Input'
       description='load file from local path.'
-      handles={FILE_INPUT_HANDLES}
+      handles={GLOBAL_FILE_HANDLES}
       color={colorSchemes.green}
       nodeComponent={nodeComponent}
     />
