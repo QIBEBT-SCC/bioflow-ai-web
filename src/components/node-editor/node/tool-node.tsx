@@ -12,10 +12,10 @@ export const ToolNode = memo(function ToolNode() {
   const nodeId = useNodeId() ?? ''
   const { updateNodeData } = useReactFlow()
   const nodeData =
-    useNodesData<Node<{ resource_uid: string; args: string }, 'tool'>>(nodeId)
+    useNodesData<Node<{ tool_uid: string; args: string }, 'tool'>>(nodeId)
 
   const { data: toolData, isLoading } = useToolArg(
-    nodeData?.data.resource_uid ?? '',
+    nodeData?.data.tool_uid ?? '',
   )
   const [args, setArgs] = useState<string>(nodeData?.data.args ?? '')
 
@@ -33,7 +33,7 @@ export const ToolNode = memo(function ToolNode() {
       const modifiableParams = toolData.modifiable_static_params ?? ''
       if (modifiableParams) {
         setArgs(modifiableParams)
-        updateNodeData(nodeId, { args: modifiableParams })
+        updateNodeData(nodeId, { modifiable_params: modifiableParams })
       }
     }
   }, [toolData, nodeId, updateNodeData, args])
@@ -49,7 +49,7 @@ export const ToolNode = memo(function ToolNode() {
 
   // 使用 useCallback 缓存 onBlur 回调
   const handleBlur = useCallback(() => {
-    updateNodeData(nodeId, { args: args })
+    updateNodeData(nodeId, { modifiable_params: args })
   }, [nodeId, args, updateNodeData])
 
   const immutableParams = toolData?.immutable_static_params ?? ''
