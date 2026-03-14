@@ -60,11 +60,13 @@
       "programming": "编程",
       "python_code": "Python code",
       "r_code": "R code",
+      "reference_genome": "参考基因组",
       "search_database": "搜索数据库...",
       "search_results": "搜索结果",
       "search_tools": "搜索工具...",
       "searching": "搜索中...",
       "select_tool": "选择工具",
+      "sequence_input": "序列输入",
       "text_input": "文本输入",
       "tool_menu": "工具菜单",
       "visualization": "可视化"

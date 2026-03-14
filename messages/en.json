@@ -60,11 +60,13 @@
       "programming": "Programming",
       "python_code": "Python code",
       "r_code": "R code",
+      "reference_genome": "Reference Genome",
       "search_database": "Search database...",
       "search_results": "Search Results",
       "search_tools": "Search tools...",
       "searching": "Searching...",
       "select_tool": "Select Tool",
+      "sequence_input": "Sequence Input",
       "text_input": "Text Input",
       "tool_menu": "Tool Menu",
       "visualization": "Visualization"
