@@ -113,14 +113,14 @@ function FlowContent() {
 
   // 添加节点（通用方法）
   const onAddNode = useCallback(
-    (nodeType: string, resourceId?: string) => {
+    (nodeType: string, resourceId?: string, resourceName?: string) => {
       const nodeId = generateLetterId()
       const position = screenToFlowPosition(clickPosition, { snapToGrid: true })
 
       // 节点配置
       const nodeConfig: Record<string, any> = {
         tool: { data: { tool_uid: resourceId, args: '' } },
-        resource_db: { data: { db_id: resourceId } },
+        resource_db: { data: { db_id: resourceId, db_name: resourceName ?? '' } },
         value_string: { data: { value: '' } },
         resource_file: { data: { file_path: '' } },
         resource_global_file: { data: { mark_name: '' } },

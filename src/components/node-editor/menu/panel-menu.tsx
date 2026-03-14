@@ -91,7 +91,7 @@ interface PanelMenuProps {
   isOpen: boolean
   position: Position
   onClose: () => void
-  onSelectTool: (toolType: string, toolUid?: string) => void
+  onSelectTool: (toolType: string, toolUid?: string, resourceName?: string) => void
 }
 
 export const PanelMenu: React.FC<PanelMenuProps> = ({
@@ -256,7 +256,7 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({
       <DbMenu
         isOpen={isDBMenuOpen}
         onOpenChange={setIsDBMenuOpen}
-        onSelectTool={onSelectTool}
+        onSelectDb={onSelectTool}
       />
     </>
   )
