@@ -210,26 +210,41 @@ const DB_INPUT_HANDLES = {
 
 const DBInputCard = memo(function DBInputCard() {
   const nodeId = useNodeId() ?? ''
-  const nodeData = useNodesData<Node<{ db_id: string }, 'resource_db'>>(nodeId)
+  const nodeData = useNodesData<Node<{ db_id: string; db_name: string }, 'resource_db'>>(nodeId)
 
   const { data: bioDb } = useDB(Number(nodeData?.data.db_id))
 
   return (
-    <div className='p-3'>
-      <Label className='pb-2 font-medium'>Database:</Label>
-      <code className='max-w-full overflow-x-auto text-muted-foreground text-sm'>
-        {bioDb?.description}
-      </code>
+    <div className='p-3 space-y-1'>
+      {bioDb?.size && (
+        <div className='flex items-center gap-2 text-xs text-muted-foreground'>
+          <span className='font-medium'>Size:</span>
+          <span>{bioDb.size}</span>
+        </div>
+      )}
+      {bioDb?.last_update && (
+        <div className='flex items-center gap-2 text-xs text-muted-foreground'>
+          <span className='font-medium'>Updated:</span>
+          <span>{bioDb.last_update}</span>
+        </div>
+      )}
+      {bioDb?.description && (
+        <div className='text-xs text-muted-foreground line-clamp-2'>
+          {bioDb.description}
+        </div>
+      )}
     </div>
   )
 })
 
 const DBInputNode = memo(function DBInputNode() {
+  const nodeId = useNodeId() ?? ''
+  const nodeData = useNodesData<Node<{ db_id: string; db_name: string }, 'resource_db'>>(nodeId)
   const nodeComponent = useMemo(() => <DBInputCard />, [])
 
   return (
     <BaseNode
-      title='Biological Database'
+      title={nodeData?.data.db_name || 'Biological Database'}
       description='分析软件所使用的生物信息数据库'
       handles={DB_INPUT_HANDLES}
       color={colorSchemes.green}

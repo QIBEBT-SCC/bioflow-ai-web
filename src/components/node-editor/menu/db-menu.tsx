@@ -17,7 +17,7 @@ import type { BioDb } from '@/types/resource'
 interface DBMenuProps {
   isOpen: boolean
   onOpenChange: (open: boolean) => void
-  onSelectTool: (toolType: string, toolUid: string) => void
+  onSelectDb: (toolType: string, toolUid: string, resourceName?: string) => void
 }
 
 // 数据库项骨架屏组件
@@ -31,7 +31,7 @@ const DBSkeleton = () => (
 export const DbMenu: React.FC<DBMenuProps> = ({
   isOpen,
   onOpenChange,
-  onSelectTool,
+  onSelectDb,
 }) => {
   const [query, setQuery] = useState('')
 
@@ -41,7 +41,7 @@ export const DbMenu: React.FC<DBMenuProps> = ({
 
   // 处理数据库选择
   const handleDBSelect = (db: BioDb) => {
-    onSelectTool('resource_db', String(db.id))
+    onSelectDb('resource_db', String(db.id), db.name)
     setQuery('') // 清空搜索
     onOpenChange(false)
   }
