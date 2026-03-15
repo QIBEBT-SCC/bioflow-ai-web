@@ -29,6 +29,7 @@ interface MenuItem {
   type: string
   labelKey: string
   Icon: React.ElementType
+  subItems?: MenuItem[]
 }
 
 interface MenuGroup {
@@ -55,9 +56,14 @@ const menuData: Record<string, MenuGroup> = {
       { type: 'resource_sequence', labelKey: 'sequence_input', Icon: DnaIcon },
       { type: 'resource_db', labelKey: 'database', Icon: DatabaseIcon },
       {
-        type: 'resource_genome',
+        type: '__genome_submenu__',
         labelKey: 'reference_genome',
         Icon: DatabaseIcon,
+        subItems: [
+          { type: 'resource_ncbi_genome', labelKey: 'ncbi_genome', Icon: DatabaseIcon },
+          { type: 'resource_GRCh38', labelKey: 'grch38', Icon: DatabaseIcon },
+          { type: 'resource_GRCm39', labelKey: 'grcm39', Icon: DatabaseIcon },
+        ],
       },
     ],
   },
@@ -104,9 +110,11 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({
   const [isAnalysisMenuOpen, setIsAnalysisMenuOpen] = useState(false)
   const [isDBMenuOpen, setIsDBMenuOpen] = useState(false)
   const [activeMenu, setActiveMenu] = useState<string | null>(null)
+  const [activeSubItem, setActiveSubItem] = useState<string | null>(null)
   const [adjustedPosition, setAdjustedPosition] = useState(position)
   const menuRef = useRef<HTMLDivElement>(null)
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const subCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const cancelClose = useCallback(() => {
     if (closeTimerRef.current) {
@@ -119,6 +127,18 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({
     cancelClose()
     closeTimerRef.current = setTimeout(() => setActiveMenu(null), 150)
   }, [cancelClose])
+
+  const cancelSubClose = useCallback(() => {
+    if (subCloseTimerRef.current) {
+      clearTimeout(subCloseTimerRef.current)
+      subCloseTimerRef.current = null
+    }
+  }, [])
+
+  const scheduleSubClose = useCallback(() => {
+    cancelSubClose()
+    subCloseTimerRef.current = setTimeout(() => setActiveSubItem(null), 150)
+  }, [cancelSubClose])
 
   // Fix position after mount so menuRef has real dimensions
   useLayoutEffect(() => {
@@ -146,22 +166,23 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({
 
   // Reset submenu state when parent closes
   useEffect(() => {
-    if (!isOpen) setActiveMenu(null)
+    if (!isOpen) {
+      setActiveMenu(null)
+      setActiveSubItem(null)
+    }
   }, [isOpen])
 
   const handleItemClick = (key: string, itemType?: string) => {
     const group = menuData[key]
     if (itemType) {
-      // sub-item click
       if (itemType === 'resource_db') {
         setIsDBMenuOpen(true)
         onClose()
-      } else {
+      } else if (itemType !== '__genome_submenu__') {
         onSelectTool(itemType)
         onClose()
       }
     } else {
-      // top-level click
       if (group.submenuType === 'tool-modal') {
         setIsAnalysisMenuOpen(true)
         onClose()
@@ -193,7 +214,10 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({
                   <button
                     type='button'
                     onClick={() => handleItemClick(key)}
-                    onMouseEnter={() => setActiveMenu(key)}
+                    onMouseEnter={() => {
+                      setActiveMenu(key)
+                      setActiveSubItem(null)
+                    }}
                     onFocus={() => setActiveMenu(key)}
                     className={cn(
                       'w-full text-left px-4 py-2 text-sm hover:bg-accent flex items-center justify-between transition-colors',
@@ -218,16 +242,55 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({
                     >
                       {group.items.map((item) => {
                         const ItemIcon = item.Icon
+                        const hasSubItems = !!item.subItems?.length
                         return (
-                          <button
-                            key={item.type}
-                            type='button'
-                            onClick={() => handleItemClick(key, item.type)}
-                            className='w-full text-left px-4 py-2 text-sm hover:bg-accent flex items-center transition-colors'
-                          >
-                            <ItemIcon className='h-4 w-4 mr-2' />
-                            {t(item.labelKey)}
-                          </button>
+                          <div key={item.type} className='relative'>
+                            <button
+                              type='button'
+                              onClick={() => handleItemClick(key, item.type)}
+                              onMouseEnter={() => {
+                                cancelSubClose()
+                                setActiveSubItem(hasSubItems ? item.type : null)
+                              }}
+                              onMouseLeave={() => {
+                                if (hasSubItems) scheduleSubClose()
+                              }}
+                              className={cn(
+                                'w-full text-left px-4 py-2 text-sm hover:bg-accent flex items-center justify-between transition-colors',
+                                activeSubItem === item.type && 'bg-accent/50',
+                              )}
+                            >
+                              <span className='flex items-center'>
+                                <ItemIcon className='h-4 w-4 mr-2' />
+                                {t(item.labelKey)}
+                              </span>
+                              {hasSubItems && <ChevronRightIcon className='h-4 w-4' />}
+                            </button>
+
+                            {hasSubItems && activeSubItem === item.type && (
+                              <div
+                                role='menu'
+                                className='absolute left-full top-0 bg-popover text-popover-foreground border rounded-lg shadow-lg py-1 min-w-[200px] z-[110] animate-in fade-in slide-in-from-left-1'
+                                onMouseEnter={cancelSubClose}
+                                onMouseLeave={scheduleSubClose}
+                              >
+                                {item.subItems!.map((sub) => {
+                                  const SubIcon = sub.Icon
+                                  return (
+                                    <button
+                                      key={sub.type}
+                                      type='button'
+                                      onClick={() => handleItemClick(key, sub.type)}
+                                      className='w-full text-left px-4 py-2 text-sm hover:bg-accent flex items-center transition-colors'
+                                    >
+                                      <SubIcon className='h-4 w-4 mr-2' />
+                                      {t(sub.labelKey)}
+                                    </button>
+                                  )
+                                })}
+                              </div>
+                            )}
+                          </div>
                         )
                       })}
                     </div>

@@ -253,7 +253,27 @@ const DBInputNode = memo(function DBInputNode() {
   )
 })
 
-const REFERENCE_INPUT_HANDLES = {
+const GENOME_OUTPUTS = [
+  {
+    name: 'genome_fasta',
+    description: 'Gene fasta file of the reference genome',
+  },
+  {
+    name: 'annotation_gff',
+    description: 'GFF annotation file of the reference genome',
+  },
+  {
+    name: 'annotation_gtf',
+    description: 'GTF annotation file of the reference genome',
+  },
+  { name: 'bowtie2_index', description: '' },
+  { name: 'bwa_index', description: '' },
+  { name: 'hisat2_index', description: '' },
+  { name: 'star_index', description: '' },
+  { name: 'minimap2_index', description: '' },
+] as HandleDefine[]
+
+const NCBI_GENOME_HANDLES = {
   inputs: [
     {
       name: 'species_name',
@@ -265,31 +285,13 @@ const REFERENCE_INPUT_HANDLES = {
         'NCBI taxonomy ID of the species of the reference gene to be used',
     },
   ] as HandleDefine[],
-  outputs: [
-    {
-      name: 'genome_fasta',
-      description: 'Gene fasta file of the reference genome',
-    },
-    {
-      name: 'annotation_gff',
-      description: 'GFF annotation file of the reference genome',
-    },
-    {
-      name: 'annotation_gtf',
-      description: 'GTF annotation file of the reference genome',
-    },
-    { name: 'bowtie2_index', description: '' },
-    { name: 'bwa_index', description: '' },
-    { name: 'hisat2_index', description: '' },
-    { name: 'star_index', description: '' },
-    { name: 'minimap2_index', description: '' },
-  ] as HandleDefine[],
+  outputs: GENOME_OUTPUTS,
 }
 
-const ReferenceInputCard = memo(function ReferenceInputCard() {
+const NcbiGenomeCard = memo(function NcbiGenomeCard() {
   const nodeId = useNodeId() ?? ''
   const nodeData =
-    useNodesData<Node<{ required_index: string[] }, 'resource_genome'>>(nodeId)
+    useNodesData<Node<{ required_index: string[] }, 'resource_ncbi_genome'>>(nodeId)
 
   return (
     <div className='p-3'>
@@ -301,7 +303,7 @@ const ReferenceInputCard = memo(function ReferenceInputCard() {
   )
 })
 
-const ReferenceInputNode = memo(function ReferenceInputNode() {
+const NcbiGenomeNode = memo(function NcbiGenomeNode() {
   const nodeId = useNodeId() ?? ''
   const connections = useNodeConnections({ handleType: 'source' })
   const { updateNodeData } = useReactFlow()
@@ -315,13 +317,49 @@ const ReferenceInputNode = memo(function ReferenceInputNode() {
     updateNodeData(nodeId, { required_index: indexes })
   }, [connections, nodeId, updateNodeData])
 
-  const nodeComponent = useMemo(() => <ReferenceInputCard />, [])
+  const nodeComponent = useMemo(() => <NcbiGenomeCard />, [])
 
   return (
     <BaseNode
-      title='Reference Genomes'
-      description='参考基因组输入节点'
-      handles={REFERENCE_INPUT_HANDLES}
+      title='NCBI Genome'
+      description='从NCBI获取参考基因组'
+      handles={NCBI_GENOME_HANDLES}
+      color={colorSchemes.green}
+      nodeComponent={nodeComponent}
+    />
+  )
+})
+
+const GRCH38_HANDLES = {
+  inputs: [] as HandleDefine[],
+  outputs: GENOME_OUTPUTS,
+}
+
+const GRCh38Node = memo(function GRCh38Node() {
+  const nodeComponent = useMemo(() => <div />, [])
+  return (
+    <BaseNode
+      title='GRCh38'
+      description='人类参考基因组 GRCh38 (hg38)'
+      handles={GRCH38_HANDLES}
+      color={colorSchemes.green}
+      nodeComponent={nodeComponent}
+    />
+  )
+})
+
+const GRCM39_HANDLES = {
+  inputs: [] as HandleDefine[],
+  outputs: GENOME_OUTPUTS,
+}
+
+const GRCm39Node = memo(function GRCm39Node() {
+  const nodeComponent = useMemo(() => <div />, [])
+  return (
+    <BaseNode
+      title='GRCm39'
+      description='小鼠参考基因组 GRCm39 (mm39)'
+      handles={GRCM39_HANDLES}
       color={colorSchemes.green}
       nodeComponent={nodeComponent}
     />
@@ -394,6 +432,8 @@ export {
   FileInputNode,
   SequenceInputNode,
   DBInputNode,
-  ReferenceInputNode,
+  NcbiGenomeNode,
+  GRCh38Node,
+  GRCm39Node,
   GlobalFileNode,
 }

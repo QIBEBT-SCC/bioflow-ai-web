@@ -29,8 +29,10 @@ import {
 import {
   DBInputNode,
   FileInputNode,
+  GRCh38Node,
+  GRCm39Node,
   GlobalFileNode,
-  ReferenceInputNode,
+  NcbiGenomeNode,
   SequenceInputNode,
   StringInputNode,
 } from '@/components/node-editor/node/input-node'
@@ -59,7 +61,9 @@ const nodeTypes = {
   resource_file: FileInputNode,
   resource_sequence: SequenceInputNode,
   resource_db: DBInputNode,
-  resource_genome: ReferenceInputNode,
+  resource_ncbi_genome: NcbiGenomeNode,
+  resource_GRCh38: GRCh38Node,
+  resource_GRCm39: GRCm39Node,
   resource_global_file: GlobalFileNode,
   // processor
   processor_copy2folder: Copy2FolderNode,
@@ -125,7 +129,9 @@ function FlowContent() {
         resource_file: { data: { file_path: '' } },
         resource_global_file: { data: { mark_name: '' } },
         resource_sequence: { data: { r1: '', r2: '' } },
-        resource_genome: { data: { required_index: [] } },
+        resource_ncbi_genome: { data: { required_index: [] } },
+        resource_GRCh38: { data: {} },
+        resource_GRCm39: { data: {} },
         global_mark: { data: { mark_name: '', description: '' } },
         code_R: { data: { description: '', code: '' } },
         code_python: { data: { description: '', code: '' } },
