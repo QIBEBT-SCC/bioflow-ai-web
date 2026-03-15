@@ -1,7 +1,7 @@
 'use client'
 
 import { FileTextIcon } from 'lucide-react'
-import { ScrollArea } from '@/components/ui/scroll-area'
+import { Terminal, TerminalContent } from '@/components/ai-elements/terminal'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useTaskLog } from '@/hooks/use-task'
 
@@ -49,12 +49,9 @@ export function TaskLog({ taskUid }: TaskLogProps) {
           共 {logData.content.split('\n').length} 行
         </span>
       </div>
-      <ScrollArea className='h-[600px] w-full rounded border bg-black/95 dark:bg-black'>
-        <pre className='p-4 text-sm font-mono text-green-400 whitespace-pre-wrap break-words'>
-          {logData.content}
-        </pre>
-      </ScrollArea>
+      <Terminal output={logData.content} autoScroll={false}>
+        <TerminalContent />
+      </Terminal>
     </>
   )
 }
-
