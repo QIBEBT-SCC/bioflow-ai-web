@@ -11,6 +11,7 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 
 import { BaseNode } from '@/components/node-editor/node/base-node'
 import { colorSchemes } from '@/components/node-editor/node/color'
+import { useReadOnly } from '@/components/node-editor/read-only-context'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useDB } from '@/hooks/use-resource'
@@ -22,6 +23,7 @@ const STRING_INPUT_HANDLES = {
 }
 
 const StringInputCard = memo(function StringInputCard() {
+  const readOnly = useReadOnly()
   const nodeId = useNodeId() ?? ''
   const nodeData = useNodesData<Node<{ value: string }, 'value_string'>>(nodeId)
   const { updateNodeData } = useReactFlow()
@@ -49,6 +51,7 @@ const StringInputCard = memo(function StringInputCard() {
         onChange={(e) => setArgs(e.target.value)}
         onBlur={handleBlur}
         spellCheck={false}
+        disabled={readOnly}
       />
     </div>
   )
@@ -76,6 +79,7 @@ const FILE_INPUT_HANDLES = {
 }
 
 const FileInputCard = memo(() => {
+  const readOnly = useReadOnly()
   const nodeId = useNodeId() ?? ''
   const nodeData =
     useNodesData<Node<{ file_path: string }, 'resource_file'>>(nodeId)
@@ -108,6 +112,7 @@ const FileInputCard = memo(() => {
         onChange={(e) => setArgs(e.target.value)}
         onBlur={handleBlur}
         spellCheck={false}
+        disabled={readOnly}
       />
     </div>
   )
@@ -136,6 +141,7 @@ const SEQUENCE_INPUT_HANDLES = {
 }
 
 const SequenceInputCard = memo(function SequenceInputCard() {
+  const readOnly = useReadOnly()
   const nodeId = useNodeId() ?? ''
   const nodeData =
     useNodesData<Node<{ r1: string; r2: string }, 'resource_sequence'>>(nodeId)
@@ -173,6 +179,7 @@ const SequenceInputCard = memo(function SequenceInputCard() {
         onChange={(e) => setR1(e.target.value)}
         onBlur={handleBlur}
         spellCheck={false}
+        disabled={readOnly}
       />
       <Label className='pt-4 pb-2 font-medium'>R2 path:</Label>
       <Input
@@ -182,6 +189,7 @@ const SequenceInputCard = memo(function SequenceInputCard() {
         onChange={(e) => setR2(e.target.value)}
         onBlur={handleBlur}
         spellCheck={false}
+        disabled={readOnly}
       />
     </div>
   )
@@ -210,7 +218,10 @@ const DB_INPUT_HANDLES = {
 
 const DBInputCard = memo(function DBInputCard() {
   const nodeId = useNodeId() ?? ''
-  const nodeData = useNodesData<Node<{ db_id: string; db_name: string }, 'resource_db'>>(nodeId)
+  const nodeData =
+    useNodesData<Node<{ db_id: string; db_name: string }, 'resource_db'>>(
+      nodeId,
+    )
 
   const { data: bioDb } = useDB(Number(nodeData?.data.db_id))
 
@@ -239,7 +250,10 @@ const DBInputCard = memo(function DBInputCard() {
 
 const DBInputNode = memo(function DBInputNode() {
   const nodeId = useNodeId() ?? ''
-  const nodeData = useNodesData<Node<{ db_id: string; db_name: string }, 'resource_db'>>(nodeId)
+  const nodeData =
+    useNodesData<Node<{ db_id: string; db_name: string }, 'resource_db'>>(
+      nodeId,
+    )
   const nodeComponent = useMemo(() => <DBInputCard />, [])
 
   return (
@@ -291,7 +305,9 @@ const NCBI_GENOME_HANDLES = {
 const NcbiGenomeCard = memo(function NcbiGenomeCard() {
   const nodeId = useNodeId() ?? ''
   const nodeData =
-    useNodesData<Node<{ required_index: string[] }, 'resource_ncbi_genome'>>(nodeId)
+    useNodesData<Node<{ required_index: string[] }, 'resource_ncbi_genome'>>(
+      nodeId,
+    )
 
   return (
     <div className='p-3'>
@@ -374,6 +390,7 @@ const GLOBAL_FILE_HANDLES = {
 }
 
 const GlobalFileCard = memo(() => {
+  const readOnly = useReadOnly()
   const nodeId = useNodeId() ?? ''
   const nodeData =
     useNodesData<Node<{ mark_name: string }, 'resource_global_file'>>(nodeId)
@@ -408,6 +425,7 @@ const GlobalFileCard = memo(() => {
         onChange={(e) => setMarkName(e.target.value)}
         onBlur={handleBlur}
         spellCheck={false}
+        disabled={readOnly}
       />
     </div>
   )

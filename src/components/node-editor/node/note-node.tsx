@@ -9,10 +9,12 @@ import {
   NodeTitle,
 } from '@/components/node-editor/node/base-node'
 import { colorSchemes } from '@/components/node-editor/node/color'
-import { cn } from '@/lib/utils'
+import { useReadOnly } from '@/components/node-editor/read-only-context'
 import { Textarea } from '@/components/ui/textarea'
+import { cn } from '@/lib/utils'
 
 export const NoteNode = memo(function NoteNode() {
+  const readOnly = useReadOnly()
   const nodeId = useNodeId() ?? ''
   const nodeData = useNodesData<Node<{ content: string }, 'note'>>(nodeId)
   const { updateNodeData } = useReactFlow()
@@ -22,7 +24,10 @@ export const NoteNode = memo(function NoteNode() {
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: no need
   useEffect(() => {
-    if (nodeData?.data.content !== undefined && nodeData.data.content !== args) {
+    if (
+      nodeData?.data.content !== undefined &&
+      nodeData.data.content !== args
+    ) {
       setArgs(nodeData.data.content)
     }
   }, [nodeData?.data.content])
@@ -32,8 +37,15 @@ export const NoteNode = memo(function NoteNode() {
   }, [nodeId, args, updateNodeData])
 
   return (
-    <NodeCard className={cn('flex h-[350px] w-[400px] flex-col border-t-4', colorSchemes.gray.border)}>
-      <NodeCardHeader className={cn(colorSchemes.gray.bg, 'border-b border-border/50')}>
+    <NodeCard
+      className={cn(
+        'flex h-[350px] w-[400px] flex-col border-t-4',
+        colorSchemes.gray.border,
+      )}
+    >
+      <NodeCardHeader
+        className={cn(colorSchemes.gray.bg, 'border-b border-border/50')}
+      >
         <NodeTitle className={colorSchemes.gray.primary}>Note</NodeTitle>
       </NodeCardHeader>
       <NodeCardContent className='flex flex-1 flex-col overflow-hidden p-2'>
@@ -43,6 +55,7 @@ export const NoteNode = memo(function NoteNode() {
           value={args}
           onChange={(e) => setArgs(e.target.value)}
           onBlur={handleBlur}
+          disabled={readOnly}
         />
       </NodeCardContent>
     </NodeCard>
