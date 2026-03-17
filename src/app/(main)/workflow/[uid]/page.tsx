@@ -6,7 +6,9 @@ import {
   Controls,
   ReactFlow,
   ReactFlowProvider,
+  useNodesState,
 } from '@xyflow/react'
+import type { Node as FlowNode, NodeChange } from '@xyflow/react'
 import {
   ArrowLeftIcon,
   CheckCircle2Icon,
@@ -15,7 +17,7 @@ import {
   XCircleIcon,
 } from 'lucide-react'
 import Link from 'next/link'
-import { use, useMemo } from 'react'
+import { use, useCallback, useEffect, useMemo } from 'react'
 import {
   BashCodeNode,
   PythonCodeNode,
@@ -52,7 +54,7 @@ import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { StatusEdge } from '@/components/workflow/status-edge'
 import { useRun } from '@/hooks/use-run'
-import { Status } from '@/types/run'
+import { type RunData, Status } from '@/types/run'
 
 const nodeTypes = {
   tool: ToolNode,
@@ -100,8 +102,36 @@ const statusConfig = {
 function RunFlowContent({ uid }: { uid: string }) {
   const { data: run } = useRun(uid, 5000)
 
-  const nodes = useMemo(() => run?.nodes ?? [], [run?.nodes])
-  const edges = useMemo(() => run?.edges ?? [], [run?.edges])
+  const [flowNodes, setFlowNodes, onNodesChange] = useNodesState<FlowNode>([])
+
+  useEffect(() => {
+    if (run?.nodes) setFlowNodes(run.nodes)
+  }, [run?.nodes, setFlowNodes])
+
+  const handleNodesChange = useCallback(
+    (changes: NodeChange<FlowNode>[]) => {
+      const positionChanges = changes.filter(
+        (c) => c.type === 'position' || c.type === 'dimensions',
+      )
+      if (positionChanges.length > 0) onNodesChange(positionChanges)
+    },
+    [onNodesChange],
+  )
+
+  const edges = useMemo(() => {
+    if (!run?.edges || !run?.nodes) return []
+    const nodeMap = new Map(run.nodes.map((n) => [n.id, n]))
+    const withAnimate = [Status.RUNNING, Status.WAITING, undefined]
+    return run.edges.map((e) => {
+      const sourceNode = nodeMap.get(e.source)
+      const runData = sourceNode?.data?.run_data as RunData | undefined
+      const status = runData?.status
+      return {
+        ...e,
+        animated: withAnimate.includes(status),
+      }
+    })
+  }, [run?.edges, run?.nodes])
 
   const taskStats = run?.task_statistics
   const progress = taskStats
@@ -164,8 +194,9 @@ function RunFlowContent({ uid }: { uid: string }) {
       <div className='flex-1 w-full'>
         <ReadOnlyProvider value={true}>
           <ReactFlow
-            nodes={nodes}
+            nodes={flowNodes}
             edges={edges}
+            onNodesChange={handleNodesChange}
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
             nodesConnectable={false}

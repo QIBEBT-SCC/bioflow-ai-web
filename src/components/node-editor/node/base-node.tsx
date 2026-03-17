@@ -1,7 +1,13 @@
 'use client'
 
 import { Handle, Position, useNodeConnections, useNodeId } from '@xyflow/react'
-import { CheckCircle2Icon, ClockIcon, InfoIcon, Loader2Icon, XCircleIcon } from 'lucide-react'
+import {
+  CheckCircle2Icon,
+  ClockIcon,
+  InfoIcon,
+  Loader2Icon,
+  XCircleIcon,
+} from 'lucide-react'
 import React, {
   forwardRef,
   type HTMLAttributes,
@@ -165,20 +171,6 @@ const BaseNode = memo(function BaseNode({
     [maxRows],
   )
 
-  const indicators = useMemo(
-    () =>
-      color.indicatorColors.map((colorClass) => (
-        <div
-          key={colorClass}
-          className={cn(
-            'h-1.5 w-1.5 rounded-full ring-1 ring-white/50',
-            colorClass,
-          )}
-        />
-      )),
-    [color.indicatorColors],
-  )
-
   return (
     <NodeCard className={cn('border-t-4', color.border)}>
       <NodeCardHeader className={cn(color.bg, 'border-b border-border/50')}>
@@ -208,7 +200,6 @@ const BaseNode = memo(function BaseNode({
         {nodeComponent}
       </NodeCardContent>
       {/* 调整 footer 位置和样式 */}
-      {indicators.length > 0 && <NodeCardFooter>{indicators}</NodeCardFooter>}
       {runData && <RunStatusBar runData={runData} />}
     </NodeCard>
   )
@@ -264,18 +255,6 @@ const NodeCardContent = memo(function NodeCardContent({
   return <div className={cn('pb-3', className)} {...props} />
 })
 
-const NodeCardFooter = memo(function NodeCardFooter({
-  className,
-  ...props
-}: React.ComponentProps<'div'>) {
-  return (
-    <div
-      className={cn('absolute right-3 bottom-3 flex gap-1', className)}
-      {...props}
-    />
-  )
-})
-
 const statusConfig = {
   [Status.WAITING]: {
     label: '等待中',
@@ -318,7 +297,11 @@ function calcDuration(start?: string, end?: string) {
   return `${Math.floor(sec / 60)}m ${sec % 60}s`
 }
 
-const RunStatusBar = memo(function RunStatusBar({ runData }: { runData: RunData }) {
+const RunStatusBar = memo(function RunStatusBar({
+  runData,
+}: {
+  runData: RunData
+}) {
   if (runData.status === undefined) return null
   const cfg = statusConfig[runData.status]
   const Icon = cfg.icon
@@ -326,9 +309,19 @@ const RunStatusBar = memo(function RunStatusBar({ runData }: { runData: RunData 
   const duration = calcDuration(runData.start_time, runData.end_time)
 
   return (
-    <div className={cn('border-t px-3 py-2 text-xs flex flex-col gap-1', cfg.className)}>
+    <div
+      className={cn(
+        'border-t rounded-b-2xl px-3 py-2 text-xs flex flex-col gap-1',
+        cfg.className,
+      )}
+    >
       <div className='flex items-center gap-1.5 font-medium'>
-        <Icon className={cn('h-3 w-3', runData.status === Status.RUNNING && 'animate-spin')} />
+        <Icon
+          className={cn(
+            'h-3 w-3',
+            runData.status === Status.RUNNING && 'animate-spin',
+          )}
+        />
         {cfg.label}
       </div>
       {startStr && (
@@ -341,11 +334,4 @@ const RunStatusBar = memo(function RunStatusBar({ runData }: { runData: RunData 
   )
 })
 
-export {
-  BaseNode,
-  NodeCard,
-  NodeCardHeader,
-  NodeTitle,
-  NodeCardContent,
-  NodeCardFooter,
-}
+export { BaseNode, NodeCard, NodeCardHeader, NodeTitle, NodeCardContent }
