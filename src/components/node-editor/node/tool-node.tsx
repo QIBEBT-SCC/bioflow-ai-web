@@ -4,15 +4,20 @@ import { type Node, useNodeId, useNodesData, useReactFlow } from '@xyflow/react'
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import { BaseNode } from '@/components/node-editor/node/base-node'
 import { colorSchemes } from '@/components/node-editor/node/color'
+import { useReadOnly } from '@/components/node-editor/read-only-context'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useToolArg } from '@/hooks/use-tool'
+import type { RunData } from '@/types/run'
 
 export const ToolNode = memo(function ToolNode() {
+  const readOnly = useReadOnly()
   const nodeId = useNodeId() ?? ''
   const { updateNodeData } = useReactFlow()
   const nodeData =
-    useNodesData<Node<{ tool_uid: string; args: string }, 'tool'>>(nodeId)
+    useNodesData<
+      Node<{ tool_uid: string; args: string; run_data?: RunData }, 'tool'>
+    >(nodeId)
 
   const { data: toolData, isLoading } = useToolArg(
     nodeData?.data.tool_uid ?? '',
@@ -96,6 +101,7 @@ export const ToolNode = memo(function ToolNode() {
       description={toolData?.description ?? ''}
       handles={handles}
       color={colorSchemes.pink}
+      runData={nodeData?.data.run_data}
       nodeComponent={
         <div className='nowheel p-3 space-y-3'>
           {hasImmutableParams && (
@@ -123,6 +129,7 @@ export const ToolNode = memo(function ToolNode() {
               onChange={(e) => setArgs(e.target.value)}
               onBlur={handleBlur}
               spellCheck={false}
+              disabled={readOnly}
             />
           </div>
         </div>

@@ -1,12 +1,13 @@
 'use client'
 
+import { type Node, useNodeId, useNodesData, useReactFlow } from '@xyflow/react'
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import { BaseNode } from '@/components/node-editor/node/base-node'
 import { colorSchemes } from '@/components/node-editor/node/color'
-import type { HandleDefine } from '@/types/node'
-import { type Node, useNodeId, useNodesData, useReactFlow } from '@xyflow/react'
-import { Label } from '@/components/ui/label'
+import { useReadOnly } from '@/components/node-editor/read-only-context'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import type { HandleDefine } from '@/types/node'
 
 const COPY2FOLDER_HANDLES = {
   inputs: [
@@ -47,6 +48,7 @@ const GLOBAL_MARKER_HANDLES = {
 }
 
 const GlobalFileCard = memo(function GlobalFileCard() {
+  const readOnly = useReadOnly()
   const nodeId = useNodeId() ?? ''
   const nodeData =
     useNodesData<
@@ -99,6 +101,7 @@ const GlobalFileCard = memo(function GlobalFileCard() {
         onChange={(e) => setMarkName(e.target.value)}
         onBlur={handleBlur}
         spellCheck={false}
+        disabled={readOnly}
       />
       <Label className='pt-4 pb-2 font-medium'>Description:</Label>
       <Input
@@ -108,6 +111,7 @@ const GlobalFileCard = memo(function GlobalFileCard() {
         onChange={(e) => setDescription(e.target.value)}
         onBlur={handleBlur}
         spellCheck={false}
+        disabled={readOnly}
       />
     </div>
   )
