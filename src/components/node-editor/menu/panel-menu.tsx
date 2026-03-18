@@ -1,84 +1,86 @@
-"use client"
+'use client'
 
 import {
-    CaseSensitiveIcon,
-    ChevronRightIcon,
-    CodeIcon,
-    DatabaseIcon, DnaIcon,
-    FileInputIcon,
-    PenToolIcon,
-    StickyNoteIcon,
+  CaseSensitiveIcon,
+  ChevronRightIcon,
+  CodeIcon,
+  DatabaseIcon,
+  DnaIcon,
+  FileInputIcon,
+  PenToolIcon,
+  StickyNoteIcon,
 } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import type React from 'react'
-import { useEffect, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react'
 import { DbMenu } from '@/components/node-editor/menu/db-menu'
 import { ToolMenu } from '@/components/node-editor/menu/tool-menu'
 import { cn } from '@/lib/utils'
 
-// 菜单数据结构（简化版，只包含已迁移的节点）
-const menuData = {
+type SubMenuType = 'inline' | 'tool-modal' | 'db-modal'
+
+interface MenuItem {
+  type: string
+  labelKey: string
+  Icon: React.ElementType
+  subItems?: MenuItem[]
+}
+
+interface MenuGroup {
+  labelKey: string
+  Icon: React.ElementType
+  submenuType: SubMenuType
+  items: MenuItem[]
+}
+
+const menuData: Record<string, MenuGroup> = {
   analysis: {
-    name: '分析工具',
-    icon: <PenToolIcon className='h-4 w-4 mr-2' />,
-    items: [], // 这个会打开分层菜单
+    labelKey: 'analysis_tools',
+    Icon: PenToolIcon,
+    submenuType: 'tool-modal',
+    items: [],
   },
   io: {
-    name: '输入输出',
-    icon: <FileInputIcon className='h-4 w-4 mr-2' />,
+    labelKey: 'io',
+    Icon: FileInputIcon,
+    submenuType: 'inline',
     items: [
+      { type: 'value_string', labelKey: 'text_input', Icon: CaseSensitiveIcon },
+      { type: 'resource_file', labelKey: 'file_input', Icon: FileInputIcon },
+      { type: 'resource_sequence', labelKey: 'sequence_input', Icon: DnaIcon },
+      { type: 'resource_db', labelKey: 'database', Icon: DatabaseIcon },
       {
-        type: 'value_string',
-        label: '文本输入',
-        icon: <CaseSensitiveIcon className='h-4 w-4 mr-2' />,
-      },
-      {
-        type: 'resource_file',
-        label: '文件输入',
-        icon: <FileInputIcon className='h-4 w-4 mr-2' />,
-      },
-      {
-        type: 'resource_sequence',
-        label: '序列输入',
-        icon: <DnaIcon className='h-4 w-4 mr-2' />,
-      },
-      {
-        type: 'resource_db',
-        label: '数据库',
-        icon: <DatabaseIcon className='h-4 w-4 mr-2' />,
-      },
-      {
-        type: 'resource_genome',
-        label: '参考基因组',
-        icon: <DatabaseIcon className='h-4 w-4 mr-2' />,
+        type: '__genome_submenu__',
+        labelKey: 'reference_genome',
+        Icon: DatabaseIcon,
+        subItems: [
+          { type: 'resource_ncbi_genome', labelKey: 'ncbi_genome', Icon: DatabaseIcon },
+          { type: 'resource_GRCh38', labelKey: 'grch38', Icon: DatabaseIcon },
+          { type: 'resource_GRCm39', labelKey: 'grcm39', Icon: DatabaseIcon },
+        ],
       },
     ],
   },
   programming: {
-    name: '编程',
-    icon: <CodeIcon className='h-4 w-4 mr-2' />,
+    labelKey: 'programming',
+    Icon: CodeIcon,
+    submenuType: 'inline',
     items: [
-      {
-        type: 'code_R',
-        label: 'R code',
-        icon: <CodeIcon className='h-4 w-4 mr-2' />,
-      },
-      {
-        type: 'code_python',
-        label: 'Python code',
-        icon: <CodeIcon className='h-4 w-4 mr-2' />,
-      },
+      { type: 'code_R', labelKey: 'r_code', Icon: CodeIcon },
+      { type: 'code_python', labelKey: 'python_code', Icon: CodeIcon },
     ],
   },
   other: {
-    name: '其它',
-    icon: <StickyNoteIcon className='h-4 w-4 mr-2' />,
-    items: [
-      {
-        type: 'note',
-        label: '笔记',
-        icon: <StickyNoteIcon className='h-4 w-4 mr-2' />,
-      },
-    ],
+    labelKey: 'other',
+    Icon: StickyNoteIcon,
+    submenuType: 'inline',
+    items: [{ type: 'note', labelKey: 'note', Icon: StickyNoteIcon }],
   },
 }
 
@@ -91,7 +93,11 @@ interface PanelMenuProps {
   isOpen: boolean
   position: Position
   onClose: () => void
-  onSelectTool: (toolType: string, toolUid?: string) => void
+  onSelectTool: (
+    toolType: string,
+    toolUid?: string,
+    resourceName?: string,
+  ) => void
 }
 
 export const PanelMenu: React.FC<PanelMenuProps> = ({
@@ -100,163 +106,212 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({
   onClose,
   onSelectTool,
 }) => {
+  const t = useTranslations('editor.menu')
   const [isAnalysisMenuOpen, setIsAnalysisMenuOpen] = useState(false)
   const [isDBMenuOpen, setIsDBMenuOpen] = useState(false)
   const [activeMenu, setActiveMenu] = useState<string | null>(null)
+  const [activeSubItem, setActiveSubItem] = useState<string | null>(null)
+  const [adjustedPosition, setAdjustedPosition] = useState(position)
   const menuRef = useRef<HTMLDivElement>(null)
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const subCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // 处理点击分析工具
-  const handleAnalysisToolClick = () => {
-    setIsAnalysisMenuOpen(true)
-    onClose()
-  }
-
-  const handleDBClick = () => {
-    setIsDBMenuOpen(true)
-    onClose()
-  }
-
-  // 处理菜单项点击
-  const handleMenuItemClick = (menuType: string) => {
-    if (menuType === 'analysis') {
-      handleAnalysisToolClick()
-    } else if (
-      menuData[menuType as keyof typeof menuData]?.items.length === 0
-    ) {
-      onClose()
+  const cancelClose = useCallback(() => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current)
+      closeTimerRef.current = null
     }
-  }
+  }, [])
 
-  // 处理子菜单项点击
-  const handleSubMenuItemClick = (itemType: string) => {
-    if (itemType === 'resource_db') {
-      handleDBClick()
-    } else {
-      onSelectTool(itemType)
-      onClose()
+  const scheduleClose = useCallback(() => {
+    cancelClose()
+    closeTimerRef.current = setTimeout(() => setActiveMenu(null), 150)
+  }, [cancelClose])
+
+  const cancelSubClose = useCallback(() => {
+    if (subCloseTimerRef.current) {
+      clearTimeout(subCloseTimerRef.current)
+      subCloseTimerRef.current = null
     }
-  }
+  }, [])
 
-  // 调整菜单位置，确保不超出视口
-  const adjustPosition = (pos: Position) => {
-    if (!menuRef.current) return pos
+  const scheduleSubClose = useCallback(() => {
+    cancelSubClose()
+    subCloseTimerRef.current = setTimeout(() => setActiveSubItem(null), 150)
+  }, [cancelSubClose])
 
-    const menuRect = menuRef.current.getBoundingClientRect()
-    const viewportWidth = window.innerWidth
-    const viewportHeight = window.innerHeight
+  // Fix position after mount so menuRef has real dimensions
+  useLayoutEffect(() => {
+    if (!isOpen || !menuRef.current) return
+    const { width, height } = menuRef.current.getBoundingClientRect()
+    const vw = window.innerWidth
+    const vh = window.innerHeight
+    setAdjustedPosition({
+      x: position.x + width > vw ? vw - width - 10 : position.x,
+      y: position.y + height > vh ? vh - height - 10 : position.y,
+    })
+  }, [isOpen, position])
 
-    let { x, y } = pos
-
-    // 调整水平位置
-    if (x + menuRect.width > viewportWidth) {
-      x = viewportWidth - menuRect.width - 10
+  // Click-outside to close
+  useEffect(() => {
+    if (!isOpen) return
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        onClose()
+      }
     }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [isOpen, onClose])
 
-    // 调整垂直位置
-    if (y + menuRect.height > viewportHeight) {
-      y = viewportHeight - menuRect.height - 10
-    }
-
-    return { x, y }
-  }
-
-  // 当父菜单关闭时，重置所有子菜单状态
+  // Reset submenu state when parent closes
   useEffect(() => {
     if (!isOpen) {
       setActiveMenu(null)
+      setActiveSubItem(null)
     }
   }, [isOpen])
 
-  if (!isOpen && !isAnalysisMenuOpen && !isDBMenuOpen) return null
+  const handleItemClick = (key: string, itemType?: string) => {
+    const group = menuData[key]
+    if (itemType) {
+      if (itemType === 'resource_db') {
+        setIsDBMenuOpen(true)
+        onClose()
+      } else if (itemType !== '__genome_submenu__') {
+        onSelectTool(itemType)
+        onClose()
+      }
+    } else {
+      if (group.submenuType === 'tool-modal') {
+        setIsAnalysisMenuOpen(true)
+        onClose()
+      }
+    }
+  }
 
-  const adjustedPosition = adjustPosition(position)
+  if (!isOpen && !isAnalysisMenuOpen && !isDBMenuOpen) return null
 
   return (
     <>
       {isOpen && (
         <div
           ref={menuRef}
-          className='fixed z-50 bg-white rounded-lg shadow-lg border overflow-visible min-w-[200px] animate-in fade-in zoom-in-95'
-          style={{
-            left: `${adjustedPosition.x}px`,
-            top: `${adjustedPosition.y}px`,
-          }}
+          className='fixed z-50 bg-popover text-popover-foreground rounded-lg shadow-lg border overflow-visible min-w-[200px] animate-in fade-in zoom-in-95'
+          style={{ left: adjustedPosition.x, top: adjustedPosition.y }}
           role='menu'
           tabIndex={-1}
-          onMouseLeave={() => setActiveMenu(null)}
-          onBlur={() => setActiveMenu(null)}
+          onMouseLeave={scheduleClose}
+          onMouseEnter={cancelClose}
         >
           <div className='py-1'>
-            {/* 所有菜单项 */}
-            {Object.entries(menuData).map(([key, menu]) => (
-              <div
-                key={key}
-                className='relative menu-item'
-              >
-                <button
-                  type='button'
-                  onClick={() => handleMenuItemClick(key)}
-                  onMouseEnter={() => setActiveMenu(key)}
-                  onFocus={() => setActiveMenu(key)}
-                  className={cn(
-                    'w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center justify-between transition-colors',
-                    activeMenu === key && 'bg-gray-50',
-                  )}
-                >
-                  <span className='flex items-center'>
-                    {menu.icon}
-                    {menu.name}
-                  </span>
-                  {menu.items.length > 0 && (
-                    <ChevronRightIcon className='h-4 w-4' />
-                  )}
-                </button>
+            {Object.entries(menuData).map(([key, group]) => {
+              const GroupIcon = group.Icon
+              const hasInlineSubmenu =
+                group.submenuType === 'inline' && group.items.length > 0
+              return (
+                <div key={key} className='relative'>
+                  <button
+                    type='button'
+                    onClick={() => handleItemClick(key)}
+                    onMouseEnter={() => {
+                      setActiveMenu(key)
+                      setActiveSubItem(null)
+                    }}
+                    onFocus={() => setActiveMenu(key)}
+                    className={cn(
+                      'w-full text-left px-4 py-2 text-sm hover:bg-accent flex items-center justify-between transition-colors',
+                      activeMenu === key && 'bg-accent/50',
+                    )}
+                  >
+                    <span className='flex items-center'>
+                      <GroupIcon className='h-4 w-4 mr-2' />
+                      {t(group.labelKey)}
+                    </span>
+                    {hasInlineSubmenu && (
+                      <ChevronRightIcon className='h-4 w-4' />
+                    )}
+                  </button>
 
-                {/* 子菜单 */}
-                {key !== 'analysis' &&
-                  menu.items.length > 0 &&
-                  activeMenu === key && (
+                  {hasInlineSubmenu && activeMenu === key && (
                     <div
-                      className='absolute bg-white border rounded-lg shadow-lg py-1 animate-in fade-in slide-in-from-left-1'
-                      style={{
-                        left: '100%',
-                        top: '0',
-                        marginLeft: '4px',
-                        minWidth: '200px',
-                        zIndex: 100,
-                      }}
+                      role='menu'
+                      className='absolute left-full top-0 bg-popover text-popover-foreground border rounded-lg shadow-lg py-1 min-w-[200px] z-[100] animate-in fade-in slide-in-from-left-1'
+                      onMouseEnter={cancelClose}
+                      onMouseLeave={scheduleClose}
                     >
-                      {menu.items.map((item) => (
-                        <button
-                          key={item.type}
-                          type='button'
-                          onClick={() => handleSubMenuItemClick(item.type)}
-                          className='w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center transition-colors'
-                        >
-                          {item.icon}
-                          {item.label}
-                        </button>
-                      ))}
+                      {group.items.map((item) => {
+                        const ItemIcon = item.Icon
+                        const hasSubItems = !!item.subItems?.length
+                        return (
+                          <div key={item.type} className='relative'>
+                            <button
+                              type='button'
+                              onClick={() => handleItemClick(key, item.type)}
+                              onMouseEnter={() => {
+                                cancelSubClose()
+                                setActiveSubItem(hasSubItems ? item.type : null)
+                              }}
+                              onMouseLeave={() => {
+                                if (hasSubItems) scheduleSubClose()
+                              }}
+                              className={cn(
+                                'w-full text-left px-4 py-2 text-sm hover:bg-accent flex items-center justify-between transition-colors',
+                                activeSubItem === item.type && 'bg-accent/50',
+                              )}
+                            >
+                              <span className='flex items-center'>
+                                <ItemIcon className='h-4 w-4 mr-2' />
+                                {t(item.labelKey)}
+                              </span>
+                              {hasSubItems && <ChevronRightIcon className='h-4 w-4' />}
+                            </button>
+
+                            {hasSubItems && activeSubItem === item.type && (
+                              <div
+                                role='menu'
+                                className='absolute left-full top-0 bg-popover text-popover-foreground border rounded-lg shadow-lg py-1 min-w-[200px] z-[110] animate-in fade-in slide-in-from-left-1'
+                                onMouseEnter={cancelSubClose}
+                                onMouseLeave={scheduleSubClose}
+                              >
+                                {item.subItems!.map((sub) => {
+                                  const SubIcon = sub.Icon
+                                  return (
+                                    <button
+                                      key={sub.type}
+                                      type='button'
+                                      onClick={() => handleItemClick(key, sub.type)}
+                                      className='w-full text-left px-4 py-2 text-sm hover:bg-accent flex items-center transition-colors'
+                                    >
+                                      <SubIcon className='h-4 w-4 mr-2' />
+                                      {t(sub.labelKey)}
+                                    </button>
+                                  )
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
                     </div>
                   )}
-              </div>
-            ))}
+                </div>
+              )
+            })}
           </div>
         </div>
       )}
 
-      {/* 分析工具分层菜单 */}
       <ToolMenu
         isOpen={isAnalysisMenuOpen}
         onClose={() => setIsAnalysisMenuOpen(false)}
         onSelectTool={onSelectTool}
       />
 
-      {/* 数据库选择菜单 */}
       <DbMenu
         isOpen={isDBMenuOpen}
         onOpenChange={setIsDBMenuOpen}
-        onSelectTool={onSelectTool}
+        onSelectDb={onSelectTool}
       />
     </>
   )

@@ -12,6 +12,12 @@ import {
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { useState } from 'react'
+import {
+  Snippet,
+  SnippetAddon,
+  SnippetInput,
+  SnippetText,
+} from '@/components/ai-elements/snippet'
 import { TaskLog } from '@/components/task/task-log'
 import { TaskMonitor } from '@/components/task/task-monitor'
 import { Badge } from '@/components/ui/badge'
@@ -25,10 +31,11 @@ import {
 } from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { CopyButton } from '@/components/ui/copy-button'
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { useTask } from '@/hooks/use-task'
-import {Status} from "@/types/run";
+import { Status } from '@/types/run'
 
 // 状态配置
 const statusConfig = {
@@ -91,7 +98,9 @@ export default function TaskDetailPage() {
   const params = useParams()
   const taskUid = params.uid as string
   const { data: task, isLoading } = useTask(taskUid)
-  const [activeView, setActiveView] = useState<'result' | 'log' | 'monitor'>('result')
+  const [activeView, setActiveView] = useState<'result' | 'log' | 'monitor'>(
+    'result',
+  )
 
   if (isLoading) {
     return (
@@ -199,11 +208,7 @@ export default function TaskDetailPage() {
                   variant='outline'
                   size='sm'
                   onClick={() => setActiveView('result')}
-                  className={
-                    activeView === 'result'
-                      ? 'bg-muted'
-                      : ''
-                  }
+                  className={activeView === 'result' ? 'bg-muted' : ''}
                 >
                   运行结果
                 </Button>
@@ -211,11 +216,7 @@ export default function TaskDetailPage() {
                   variant='outline'
                   size='sm'
                   onClick={() => setActiveView('log')}
-                  className={
-                    activeView === 'log'
-                      ? 'bg-muted'
-                      : ''
-                  }
+                  className={activeView === 'log' ? 'bg-muted' : ''}
                 >
                   任务日志
                 </Button>
@@ -223,11 +224,7 @@ export default function TaskDetailPage() {
                   variant='outline'
                   size='sm'
                   onClick={() => setActiveView('monitor')}
-                  className={
-                    activeView === 'monitor'
-                      ? 'bg-muted'
-                      : ''
-                  }
+                  className={activeView === 'monitor' ? 'bg-muted' : ''}
                 >
                   系统监控
                 </Button>
@@ -278,9 +275,21 @@ export default function TaskDetailPage() {
                         <CardTitle className='text-base'>执行命令</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <pre className='bg-muted p-3 rounded text-xs font-mono overflow-x-auto'>
-                          {task.commands}
-                        </pre>
+                        {/*<pre className='bg-muted p-3 rounded text-xs font-mono overflow-x-auto'>*/}
+                        {/*  {task.commands}*/}
+                        {/*</pre>*/}
+                        <Snippet
+                          className='py-5 bg-muted text-sm font-mono'
+                          code={task.commands}
+                        >
+                          <SnippetAddon className='pl-1'>
+                            <SnippetText>$</SnippetText>
+                          </SnippetAddon>
+                          <SnippetInput />
+                          <SnippetAddon align='inline-end' className='pr-2'>
+                            <CopyButton code={task.commands} />
+                          </SnippetAddon>
+                        </Snippet>
                       </CardContent>
                     </Card>
                   )}
@@ -336,21 +345,27 @@ export default function TaskDetailPage() {
                 </CardHeader>
                 <CardContent className='space-y-3 text-sm'>
                   <div>
-                    <p className='text-xs text-muted-foreground mb-1'>创建时间</p>
+                    <p className='text-xs text-muted-foreground mb-1'>
+                      创建时间
+                    </p>
                     <p className='font-mono text-xs'>
                       {formatDateTime(task.create_time)}
                     </p>
                   </div>
                   <Separator />
                   <div>
-                    <p className='text-xs text-muted-foreground mb-1'>开始时间</p>
+                    <p className='text-xs text-muted-foreground mb-1'>
+                      开始时间
+                    </p>
                     <p className='font-mono text-xs'>
                       {formatDateTime(task.start_time)}
                     </p>
                   </div>
                   <Separator />
                   <div>
-                    <p className='text-xs text-muted-foreground mb-1'>结束时间</p>
+                    <p className='text-xs text-muted-foreground mb-1'>
+                      结束时间
+                    </p>
                     <p className='font-mono text-xs'>
                       {formatDateTime(task.end_time)}
                     </p>
@@ -368,7 +383,9 @@ export default function TaskDetailPage() {
                     {task.hostname && (
                       <>
                         <div>
-                          <p className='text-xs text-muted-foreground mb-1'>主机</p>
+                          <p className='text-xs text-muted-foreground mb-1'>
+                            主机
+                          </p>
                           <p className='font-mono text-xs'>{task.hostname}</p>
                         </div>
                         {task.system && <Separator />}
@@ -376,8 +393,12 @@ export default function TaskDetailPage() {
                     )}
                     {task.system && (
                       <div>
-                        <p className='text-xs text-muted-foreground mb-1'>系统</p>
-                        <p className='font-mono text-xs break-all'>{task.system}</p>
+                        <p className='text-xs text-muted-foreground mb-1'>
+                          系统
+                        </p>
+                        <p className='font-mono text-xs break-all'>
+                          {task.system}
+                        </p>
                       </div>
                     )}
                   </CardContent>

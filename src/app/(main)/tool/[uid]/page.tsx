@@ -2,19 +2,28 @@
 
 import {
   BookOpen,
-  Check,
   Container,
-  Copy,
   ExternalLink,
   FileInput,
   FileOutput,
   Pencil,
-  Terminal,
+  TerminalIcon,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
-import { useState } from 'react'
-import { toast } from 'sonner'
+import {
+  Snippet,
+  SnippetAddon,
+  SnippetInput,
+  SnippetText,
+} from '@/components/ai-elements/snippet'
+import { CopyButton } from '@/components/ui/copy-button'
+import {
+  Terminal,
+  TerminalContent,
+  TerminalHeader,
+  TerminalTitle,
+} from '@/components/ai-elements/terminal'
 import { Badge } from '@/components/ui/badge'
 import {
   Breadcrumb,
@@ -42,34 +51,11 @@ export default function ToolDetailPage() {
   const toolUid = params.uid as string
   const { data: tool, isLoading } = useTool(toolUid)
 
-  const [copiedCommand, setCopiedCommand] = useState(false)
-  const [copiedDocker, setCopiedDocker] = useState(false)
-
   const inputFiles =
     tool?.file_mounts.filter((f) => f.file_type === 'INPUT') || []
   const outputFiles =
     tool?.file_mounts.filter((f) => f.file_type === 'OUTPUT') || []
   const dockerImage = `${tool?.image.image.registry || ''}/${tool?.image.image.namespace || ''}/${tool?.image.image.repository || ''}:${tool?.image.image.tag || ''}`
-
-  // 复制命令到剪贴板
-  const copyToClipboard = (text: string, type: 'command' | 'docker') => {
-    navigator.clipboard
-      .writeText(text)
-      .then(() => {
-        toast.success('已复制到剪贴板')
-      })
-      .catch((err) => {
-        console.error('复制失败:', err)
-        toast.error('复制失败')
-      })
-    if (type === 'command') {
-      setCopiedCommand(true)
-      setTimeout(() => setCopiedCommand(false), 2000)
-    } else {
-      setCopiedDocker(true)
-      setTimeout(() => setCopiedDocker(false), 2000)
-    }
-  }
 
   if (isLoading) {
     return (
@@ -145,7 +131,7 @@ export default function ToolDetailPage() {
               <Card>
                 <CardHeader>
                   <div className='flex items-center gap-2'>
-                    <Terminal className='h-5 w-5 text-primary' />
+                    <TerminalIcon className='h-5 w-5 text-primary' />
                     <CardTitle>Command Template</CardTitle>
                   </div>
                   <CardDescription>
@@ -154,23 +140,18 @@ export default function ToolDetailPage() {
                 </CardHeader>
                 <CardContent>
                   <div className='relative'>
-                    <pre className='bg-muted p-4 rounded-lg overflow-x-auto text-sm font-mono'>
-                      <code>{tool.complete_command}</code>
-                    </pre>
-                    <Button
-                      size='sm'
-                      variant='ghost'
-                      className='absolute top-2 right-2'
-                      onClick={() =>
-                        copyToClipboard(tool.complete_command, 'command')
-                      }
+                    <Snippet
+                      className='py-5 bg-muted text-sm font-mono'
+                      code={tool.complete_command}
                     >
-                      {copiedCommand ? (
-                        <Check className='h-4 w-4' />
-                      ) : (
-                        <Copy className='h-4 w-4' />
-                      )}
-                    </Button>
+                      <SnippetAddon className='pl-1'>
+                        <SnippetText>$</SnippetText>
+                      </SnippetAddon>
+                      <SnippetInput />
+                      <SnippetAddon align='inline-end' className='pr-2'>
+                        <CopyButton code={tool.complete_command} />
+                      </SnippetAddon>
+                    </Snippet>
                   </div>
                 </CardContent>
               </Card>
@@ -359,18 +340,35 @@ export default function ToolDetailPage() {
                       <h4 className='text-sm font-semibold mb-2'>
                         Help Command
                       </h4>
-                      <code className='text-sm bg-muted px-3 py-2 rounded block'>
-                        {tool.help_doc.help_command}
-                      </code>
+                      <Snippet
+                        className='py-2 bg-muted text-sm font-mono'
+                        code={tool.help_doc.help_command}
+                      >
+                        <SnippetAddon className='pl-1'>
+                          <SnippetText>$</SnippetText>
+                        </SnippetAddon>
+                        <SnippetInput />
+                        <SnippetAddon align='inline-end' className='pr-2'>
+                          <CopyButton code={tool.help_doc.help_command} />
+                        </SnippetAddon>
+                      </Snippet>
                     </div>
                     <Separator />
                     <div>
                       <h4 className='text-sm font-semibold mb-2'>
                         Command Output
                       </h4>
-                      <pre className='bg-muted p-4 rounded-lg overflow-x-auto overflow-y-auto text-xs font-mono max-h-96'>
-                        <code>{tool.help_doc.content}</code>
-                      </pre>
+                      <Terminal
+                        output={tool.help_doc.content}
+                        autoScroll={false}
+                      >
+                        <TerminalHeader>
+                          <TerminalTitle>
+                            {tool.help_doc.help_command}
+                          </TerminalTitle>
+                        </TerminalHeader>
+                        <TerminalContent />
+                      </Terminal>
                     </div>
                   </div>
                 </CardContent>
@@ -442,21 +440,15 @@ export default function ToolDetailPage() {
                   <div>
                     <h4 className='text-sm font-semibold mb-2'>Docker Image</h4>
                     <div className='relative'>
-                      <code className='text-xs bg-muted px-3 py-2 rounded block break-all'>
-                        {dockerImage}
-                      </code>
-                      <Button
-                        size='sm'
-                        variant='ghost'
-                        className='absolute top-1 right-1'
-                        onClick={() => copyToClipboard(dockerImage, 'docker')}
+                      <Snippet
+                        className='!text-xs bg-muted py-2'
+                        code={dockerImage}
                       >
-                        {copiedDocker ? (
-                          <Check className='h-3 w-3' />
-                        ) : (
-                          <Copy className='h-3 w-3' />
-                        )}
-                      </Button>
+                        <SnippetInput />
+                        <SnippetAddon align='inline-end' className='pr-2'>
+                          <CopyButton code={dockerImage} />
+                        </SnippetAddon>
+                      </Snippet>
                     </div>
                   </div>
                   <Separator />

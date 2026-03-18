@@ -4,6 +4,7 @@ import { type Node, useNodeId, useNodesData, useReactFlow } from '@xyflow/react'
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import { BaseNode } from '@/components/node-editor/node/base-node'
 import { colorSchemes } from '@/components/node-editor/node/color'
+import { useReadOnly } from '@/components/node-editor/read-only-context'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 
@@ -12,49 +13,47 @@ interface CodeCardProps {
 }
 
 const CodeCard = memo(function CodeCard({ nodeType }: CodeCardProps) {
+  const readOnly = useReadOnly()
   const nodeId = useNodeId() ?? ''
   const nodeData =
-    useNodesData<
-      Node<{ args: { description: string; code: string } }, typeof nodeType>
-    >(nodeId)
+    useNodesData<Node<{ description: string; code: string }, typeof nodeType>>(
+      nodeId,
+    )
   const { updateNodeData } = useReactFlow()
 
-  const [code, setCode] = useState<string>(nodeData?.data.args.code ?? '')
-  const [prompt, setPrompt] = useState<string>(
-    nodeData?.data.args.description ?? '',
-  )
+  const [code, setCode] = useState<string>(nodeData?.data.code ?? '')
+  const [prompt, setPrompt] = useState<string>(nodeData?.data.description ?? '')
 
   // 同步外部数据变化到本地state
   // biome-ignore lint/correctness/useExhaustiveDependencies: no need
   useEffect(() => {
-    if (
-      nodeData?.data.args.code !== undefined &&
-      nodeData.data.args.code !== code
-    ) {
-      setCode(nodeData.data.args.code)
+    if (nodeData?.data.code !== undefined && nodeData.data.code !== code) {
+      setCode(nodeData.data.code)
     }
-  }, [nodeData?.data.args.code])
+  }, [nodeData?.data.code])
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: no need
   useEffect(() => {
     if (
-      nodeData?.data.args.description !== undefined &&
-      nodeData.data.args.description !== prompt
+      nodeData?.data.description !== undefined &&
+      nodeData.data.description !== prompt
     ) {
-      setPrompt(nodeData.data.args.description)
+      setPrompt(nodeData.data.description)
     }
-  }, [nodeData?.data.args.description])
+  }, [nodeData?.data.description])
 
   // onBlur 回调需要用 useCallback，因为它们依赖于多个变量
   const handlePromptBlur = useCallback(() => {
     updateNodeData(nodeId, {
-      args: { description: prompt, code: code },
+      description: prompt,
+      code: code,
     })
   }, [nodeId, prompt, code, updateNodeData])
 
   const handleCodeBlur = useCallback(() => {
     updateNodeData(nodeId, {
-      args: { description: prompt, code: code },
+      description: prompt,
+      code: code,
     })
   }, [nodeId, prompt, code, updateNodeData])
 
@@ -69,6 +68,7 @@ const CodeCard = memo(function CodeCard({ nodeType }: CodeCardProps) {
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             onBlur={handlePromptBlur}
+            disabled={readOnly}
           />
         </div>
         <div>
@@ -80,6 +80,7 @@ const CodeCard = memo(function CodeCard({ nodeType }: CodeCardProps) {
             onChange={(e) => setCode(e.target.value)}
             onBlur={handleCodeBlur}
             spellCheck={false}
+            disabled={readOnly}
           />
         </div>
       </div>
