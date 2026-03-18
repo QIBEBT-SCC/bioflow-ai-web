@@ -1,7 +1,13 @@
 'use client'
 
 import { Handle, Position, useNodeConnections, useNodeId } from '@xyflow/react'
-import { InfoIcon } from 'lucide-react'
+import {
+  CheckCircle2Icon,
+  ClockIcon,
+  InfoIcon,
+  Loader2Icon,
+  XCircleIcon,
+} from 'lucide-react'
 import React, {
   forwardRef,
   type HTMLAttributes,
@@ -20,6 +26,8 @@ import {
 } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
 import type { HandleDefine } from '@/types/node'
+import type { RunData } from '@/types/run'
+import { Status } from '@/types/run'
 
 // 纯函数定义 - 避免在组件内部重复创建
 const calculateMaxRows = (
@@ -47,6 +55,7 @@ interface BaseNodeProps {
     indicatorColors: string[]
   }
   nodeComponent: React.ReactNode
+  runData?: RunData
 }
 
 const BaseNode = memo(function BaseNode({
@@ -55,6 +64,7 @@ const BaseNode = memo(function BaseNode({
   handles,
   color,
   nodeComponent,
+  runData,
 }: BaseNodeProps) {
   const nodeId = useNodeId()
   const connections = useNodeConnections()
@@ -161,20 +171,6 @@ const BaseNode = memo(function BaseNode({
     [maxRows],
   )
 
-  const indicators = useMemo(
-    () =>
-      color.indicatorColors.map((colorClass) => (
-        <div
-          key={colorClass}
-          className={cn(
-            'h-1.5 w-1.5 rounded-full ring-1 ring-white/50',
-            colorClass,
-          )}
-        />
-      )),
-    [color.indicatorColors],
-  )
-
   return (
     <NodeCard className={cn('border-t-4', color.border)}>
       <NodeCardHeader className={cn(color.bg, 'border-b border-border/50')}>
@@ -204,7 +200,7 @@ const BaseNode = memo(function BaseNode({
         {nodeComponent}
       </NodeCardContent>
       {/* 调整 footer 位置和样式 */}
-      {indicators.length > 0 && <NodeCardFooter>{indicators}</NodeCardFooter>}
+      {runData && <RunStatusBar runData={runData} />}
     </NodeCard>
   )
 })
@@ -259,23 +255,83 @@ const NodeCardContent = memo(function NodeCardContent({
   return <div className={cn('pb-3', className)} {...props} />
 })
 
-const NodeCardFooter = memo(function NodeCardFooter({
-  className,
-  ...props
-}: React.ComponentProps<'div'>) {
+const statusConfig = {
+  [Status.WAITING]: {
+    label: '等待中',
+    icon: ClockIcon,
+    className: 'bg-yellow-50 text-yellow-700 border-yellow-200',
+  },
+  [Status.RUNNING]: {
+    label: '运行中',
+    icon: Loader2Icon,
+    className: 'bg-blue-50 text-blue-700 border-blue-200',
+  },
+  [Status.SUCCESS]: {
+    label: '成功',
+    icon: CheckCircle2Icon,
+    className: 'bg-green-50 text-green-700 border-green-200',
+  },
+  [Status.ERROR]: {
+    label: '失败',
+    icon: XCircleIcon,
+    className: 'bg-red-50 text-red-700 border-red-200',
+  },
+}
+
+function formatTime(dateStr?: string) {
+  if (!dateStr) return null
+  try {
+    const d = new Date(dateStr)
+    return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`
+  } catch {
+    return null
+  }
+}
+
+function calcDuration(start?: string, end?: string) {
+  if (!start) return null
+  const s = new Date(start).getTime()
+  const e = end ? new Date(end).getTime() : Date.now()
+  const sec = Math.floor((e - s) / 1000)
+  if (sec < 60) return `${sec}s`
+  return `${Math.floor(sec / 60)}m ${sec % 60}s`
+}
+
+const RunStatusBar = memo(function RunStatusBar({
+  runData,
+}: {
+  runData: RunData
+}) {
+  if (runData.status === undefined) return null
+  const cfg = statusConfig[runData.status]
+  const Icon = cfg.icon
+  const startStr = formatTime(runData.start_time)
+  const duration = calcDuration(runData.start_time, runData.end_time)
+
   return (
     <div
-      className={cn('absolute right-3 bottom-3 flex gap-1', className)}
-      {...props}
-    />
+      className={cn(
+        'border-t rounded-b-2xl px-3 py-2 text-xs flex flex-col gap-1',
+        cfg.className,
+      )}
+    >
+      <div className='flex items-center gap-1.5 font-medium'>
+        <Icon
+          className={cn(
+            'h-3 w-3',
+            runData.status === Status.RUNNING && 'animate-spin',
+          )}
+        />
+        {cfg.label}
+      </div>
+      {startStr && (
+        <div className='text-[10px] opacity-70 flex gap-2'>
+          <span>开始 {startStr}</span>
+          {duration && <span>耗时 {duration}</span>}
+        </div>
+      )}
+    </div>
   )
 })
 
-export {
-  BaseNode,
-  NodeCard,
-  NodeCardHeader,
-  NodeTitle,
-  NodeCardContent,
-  NodeCardFooter,
-}
+export { BaseNode, NodeCard, NodeCardHeader, NodeTitle, NodeCardContent }

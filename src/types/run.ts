@@ -1,4 +1,4 @@
-// 运行实例相关类型定义
+import type { Edge, Node } from '@xyflow/react'
 import type { User } from '@/types/auth'
 
 export enum Status {
@@ -16,10 +16,8 @@ export interface Statistics {
   error?: number
 }
 
-interface TaskInfo4Run {
-  uid: string
-  name: string
-  status: Status
+export interface RunData {
+  status?: Status
   create_time?: string
   start_time?: string
   end_time?: string
@@ -37,5 +35,6 @@ export interface SimpleRunPublic {
 }
 
 export interface RunPublic extends SimpleRunPublic {
-  tasks: TaskInfo4Run[]
+  nodes: Node[]
+  edges: Edge[]
 }

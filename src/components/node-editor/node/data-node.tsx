@@ -1,12 +1,13 @@
 'use client'
 
+import { type Node, useNodeId, useNodesData, useReactFlow } from '@xyflow/react'
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import { BaseNode } from '@/components/node-editor/node/base-node'
 import { colorSchemes } from '@/components/node-editor/node/color'
-import type { HandleDefine } from '@/types/node'
-import { type Node, useNodeId, useNodesData, useReactFlow } from '@xyflow/react'
-import { Label } from '@/components/ui/label'
+import { useReadOnly } from '@/components/node-editor/read-only-context'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import type { HandleDefine } from '@/types/node'
 
 const COPY2FOLDER_HANDLES = {
   inputs: [
@@ -23,15 +24,6 @@ const COPY2FOLDER_HANDLES = {
   ] as HandleDefine[],
 }
 
-const GLOBAL_MARKER_HANDLES = {
-  inputs: [
-    {
-      name: 'files',
-      description: 'File to be marked as global use',
-    },
-  ] as HandleDefine[],
-  outputs: [] as HandleDefine[],
-}
 const Copy2FolderNode = memo(function Copy2FolderNode() {
   const nodeComponent = useMemo(() => <div />, [])
   return (
@@ -45,48 +37,57 @@ const Copy2FolderNode = memo(function Copy2FolderNode() {
   )
 })
 
+const GLOBAL_MARKER_HANDLES = {
+  inputs: [
+    {
+      name: 'files',
+      description: 'File to be marked as global use',
+    },
+  ] as HandleDefine[],
+  outputs: [] as HandleDefine[],
+}
+
 const GlobalFileCard = memo(function GlobalFileCard() {
+  const readOnly = useReadOnly()
   const nodeId = useNodeId() ?? ''
   const nodeData =
     useNodesData<
-      Node<
-        { args: { mark_name: string; description: string } },
-        'global_mark'
-      >
+      Node<{ mark_name: string; description: string }, 'global_mark'>
     >(nodeId)
   const { updateNodeData } = useReactFlow()
 
   const [mark_name, setMarkName] = useState<string>(
-    nodeData?.data.args.mark_name ?? '',
+    nodeData?.data.mark_name ?? '',
   )
   const [description, setDescription] = useState<string>(
-    nodeData?.data.args.description ?? '',
+    nodeData?.data.description ?? '',
   )
 
   // 同步外部数据变化
   // biome-ignore lint/correctness/useExhaustiveDependencies: no need
   useEffect(() => {
     if (
-      nodeData?.data.args.mark_name !== undefined &&
-      nodeData.data.args.mark_name !== mark_name
+      nodeData?.data.mark_name !== undefined &&
+      nodeData.data.mark_name !== mark_name
     ) {
-      setMarkName(nodeData.data.args.mark_name)
+      setMarkName(nodeData.data.mark_name)
     }
-  }, [nodeData?.data.args.mark_name])
+  }, [nodeData?.data.mark_name])
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: no need
   useEffect(() => {
     if (
-      nodeData?.data.args.description !== undefined &&
-      nodeData.data.args.description !== description
+      nodeData?.data.description !== undefined &&
+      nodeData.data.description !== description
     ) {
-      setDescription(nodeData.data.args.description)
+      setDescription(nodeData.data.description)
     }
-  }, [nodeData?.data.args.description])
+  }, [nodeData?.data.description])
 
   const handleBlur = useCallback(() => {
     updateNodeData(nodeId, {
-      args: { mark_name: mark_name, description: description },
+      mark_name: mark_name,
+      description: description,
     })
   }, [nodeId, mark_name, description, updateNodeData])
 
@@ -100,6 +101,7 @@ const GlobalFileCard = memo(function GlobalFileCard() {
         onChange={(e) => setMarkName(e.target.value)}
         onBlur={handleBlur}
         spellCheck={false}
+        disabled={readOnly}
       />
       <Label className='pt-4 pb-2 font-medium'>Description:</Label>
       <Input
@@ -109,6 +111,7 @@ const GlobalFileCard = memo(function GlobalFileCard() {
         onChange={(e) => setDescription(e.target.value)}
         onBlur={handleBlur}
         spellCheck={false}
+        disabled={readOnly}
       />
     </div>
   )

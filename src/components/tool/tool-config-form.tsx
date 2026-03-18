@@ -1,7 +1,12 @@
 'use client'
 
-import { Loader2, Play, Sparkles } from 'lucide-react'
-import { useState } from 'react'
+import { Loader2Icon, PlayIcon, SparklesIcon } from 'lucide-react'
+import { ReactNode, useState } from 'react'
+import { ToolFileCard, ToolParamCard } from '@/components/tool/tool-cards'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Dialog,
   DialogContent,
@@ -9,15 +14,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { useRunInImage } from '@/hooks/use-tool'
-import { ToolFileCard, ToolParamCard } from '@/components/tool/tool-cards'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Select,
   SelectContent,
@@ -27,6 +26,7 @@ import {
 } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
+import { useRunInImage } from '@/hooks/use-tool'
 import type {
   DockerToolCreate,
   FileMount,
@@ -34,6 +34,15 @@ import type {
   ToolGroup,
   ToolTag,
 } from '@/types/tool'
+import {
+  Terminal,
+  TerminalActions,
+  TerminalContent,
+  TerminalCopyButton,
+  TerminalHeader,
+  TerminalStatus,
+  TerminalTitle,
+} from '@/components/ai-elements/terminal'
 
 export type ToolConfigValues = Omit<
   DockerToolCreate,
@@ -259,9 +268,9 @@ export function ToolConfigForm({
                       title={isRunning ? '执行中...' : '测试帮助命令'}
                     >
                       {isRunning ? (
-                        <Loader2 className='h-4 w-4 animate-spin' />
+                        <Loader2Icon className='h-4 w-4 animate-spin' />
                       ) : (
-                        <Play className='h-4 w-4' />
+                        <PlayIcon className='h-4 w-4' />
                       )}
                     </Button>
                   )}
@@ -339,7 +348,7 @@ export function ToolConfigForm({
               {showAIGeneratePlaceholder && (
                 <div className='flex justify-end pt-4 border-t'>
                   <Button variant='outline' disabled>
-                    <Sparkles className='h-4 w-4 mr-2' />
+                    <SparklesIcon className='h-4 w-4 mr-2' />
                     AI智能生成配置
                     <Badge variant='secondary' className='ml-2'>
                       即将推出
@@ -364,7 +373,10 @@ export function ToolConfigForm({
                   <div className='space-y-4'>
                     {value.dynamic_params.map((param, index) => (
                       <ToolParamCard
-                        key={`param-${index}`}
+                        key={`param-${
+                          // biome-ignore lint/suspicious/noArrayIndexKey: no need
+                          index
+                        }`}
                         param={param}
                         index={index}
                         onRemove={onRemoveDynamicParam}
@@ -442,7 +454,10 @@ export function ToolConfigForm({
                   <div className='space-y-4'>
                     {value.file_mounts.map((file, index) => (
                       <ToolFileCard
-                        key={`file-${index}`}
+                        key={`file-${
+                          // biome-ignore lint/suspicious/noArrayIndexKey: no need
+                          index
+                        }`}
                         file={file}
                         index={index}
                         onUpdate={onUpdateFileMount}
@@ -470,14 +485,13 @@ export function ToolConfigForm({
         <DialogContent className='sm:!max-w-5xl'>
           <DialogHeader>
             <DialogTitle>帮助命令执行结果</DialogTitle>
-            <DialogDescription asChild>
-              <ScrollArea className='h-[500px] w-full rounded-md border bg-muted/30'>
-                <pre className='p-4 text-sm leading-relaxed whitespace-pre-wrap font-mono text-foreground'>
-                  {helpCommandResult}
-                </pre>
-              </ScrollArea>
-            </DialogDescription>
           </DialogHeader>
+          <Terminal output={helpCommandResult} autoScroll={false}>
+            <TerminalHeader>
+              <TerminalTitle>{value.help_command}</TerminalTitle>
+            </TerminalHeader>
+            <TerminalContent />
+          </Terminal>
         </DialogContent>
       </Dialog>
     </div>
