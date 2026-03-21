@@ -2,7 +2,7 @@
 
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { ToolConfigForm, type ToolConfigValues } from '@/components/tool/tool-config-form'
@@ -27,6 +27,7 @@ import {
   useToolTagList,
 } from '@/hooks/use-tool'
 import { useCreateToolStore } from '@/stores/toolStore'
+import { getTool } from '@/app/actions/tool'
 import type { DockerToolCreate, FileMount, ParamDefine, ToolTag } from '@/types/tool'
 
 const steps = [
@@ -37,7 +38,10 @@ const steps = [
 
 export default function AddToolPage() {
   const router = useRouter()
-  const [currentStep, setCurrentStep] = useState(1)
+  const searchParams = useSearchParams()
+  const initialStep = Number(searchParams.get('step')) || 1
+  const copyUid = searchParams.get('copy')
+  const [currentStep, setCurrentStep] = useState(initialStep)
   const [searchQuery, setSearchQuery] = useState('')
 
   const {
@@ -59,6 +63,33 @@ export default function AddToolPage() {
       resetStore()
     }
   }, [resetStore])
+
+  // 复制工具时，从URL参数获取源工具UID并预填充store
+  useEffect(() => {
+    if (!copyUid) return
+    let cancelled = false
+    getTool(copyUid).then((tool) => {
+      if (cancelled) return
+      setCurrentImage(tool.image)
+      setSearchQuery(tool.image.name)
+      setToolConfig({
+        name: `${tool.name} (副本)`,
+        image_uid: tool.image.uid ?? '',
+        description: tool.description,
+        help_command: tool.help_doc?.help_command ?? '',
+        group_id: tool.group_id ?? 0,
+        tags: tool.tags,
+        command_template: tool.command_template,
+        dynamic_params: tool.dynamic_params,
+        immutable_static_params: tool.immutable_static_params ?? null,
+        modifiable_static_params: tool.modifiable_static_params ?? null,
+        file_mounts: tool.file_mounts,
+      })
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [copyUid, setCurrentImage, setToolConfig])
 
   // 处理下一步
   const handleNext = () => {

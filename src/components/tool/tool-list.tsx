@@ -1,7 +1,8 @@
 'use client'
 
-import { MoreHorizontalIcon, Trash2Icon } from 'lucide-react'
+import { CopyIcon, MoreHorizontalIcon, Trash2Icon } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import {
   AlertDialog,
@@ -20,6 +21,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
@@ -79,6 +81,7 @@ export function ToolList({
   const pageSize = viewMode === 'list' ? 10 : 12
   const offset = (currentPage - 1) * pageSize
 
+  const router = useRouter()
   const deleteToolMutation = useDeleteTool()
 
   const handleDeleteTool = () => {
@@ -88,6 +91,10 @@ export function ToolList({
         setDeleteConfirmTool(null)
       },
     })
+  }
+
+  const handleCopyTool = (uid: string) => {
+    router.push(`/tool/add?copy=${uid}&step=2`)
   }
 
   // 根据搜索条件和分组选择，决定使用哪个 hook
@@ -253,6 +260,11 @@ export function ToolList({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align='end'>
+                    <DropdownMenuItem onClick={() => handleCopyTool(tool.uid)}>
+                      <CopyIcon className='h-4 w-4 mr-2' />
+                      复制工具
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem
                       className='text-destructive'
                       onClick={() =>
@@ -342,6 +354,11 @@ export function ToolList({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align='end'>
+                    <DropdownMenuItem onClick={() => handleCopyTool(tool.uid)}>
+                      <CopyIcon className='h-4 w-4 mr-2' />
+                      复制工具
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem
                       className='text-destructive'
                       onClick={() =>
