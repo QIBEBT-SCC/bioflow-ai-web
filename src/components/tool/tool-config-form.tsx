@@ -1,7 +1,30 @@
 'use client'
 
+import {
+  closestCenter,
+  DndContext,
+  type DragEndEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core'
+import {
+  arrayMove,
+  SortableContext,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
 import { Loader2Icon, PlayIcon, SparklesIcon } from 'lucide-react'
-import { ReactNode, useState } from 'react'
+import { nanoid } from 'nanoid'
+import { ReactNode, useRef, useState } from 'react'
+import {
+  Terminal,
+  TerminalActions,
+  TerminalContent,
+  TerminalCopyButton,
+  TerminalHeader,
+  TerminalStatus,
+  TerminalTitle,
+} from '@/components/ai-elements/terminal'
 import { ToolFileCard, ToolParamCard } from '@/components/tool/tool-cards'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -34,15 +57,6 @@ import type {
   ToolGroup,
   ToolTag,
 } from '@/types/tool'
-import {
-  Terminal,
-  TerminalActions,
-  TerminalContent,
-  TerminalCopyButton,
-  TerminalHeader,
-  TerminalStatus,
-  TerminalTitle,
-} from '@/components/ai-elements/terminal'
 
 export type ToolConfigValues = Omit<
   DockerToolCreate,
@@ -82,6 +96,8 @@ interface ToolConfigFormProps {
     value: string | boolean,
   ) => void
   onRemoveFileMount: (index: number) => void
+  onReorderDynamicParams: (newParams: ParamDefine[]) => void
+  onReorderFileMounts: (newMounts: FileMount[]) => void
   imageSummary?: {
     name?: string
     version?: string
@@ -103,6 +119,8 @@ export function ToolConfigForm({
   onAddFileMount,
   onUpdateFileMount,
   onRemoveFileMount,
+  onReorderDynamicParams,
+  onReorderFileMounts,
   imageSummary,
   imageUid,
   showTabBadges = false,
@@ -112,6 +130,41 @@ export function ToolConfigForm({
   const [showHelpResult, setShowHelpResult] = useState(false)
   const [helpCommandResult, setHelpCommandResult] = useState('')
   const { mutate: runInImage, isPending: isRunning } = useRunInImage()
+
+  const paramIds = useRef<string[]>([])
+  const fileIds = useRef<string[]>([])
+
+  while (paramIds.current.length < value.dynamic_params.length)
+    paramIds.current.push(nanoid())
+  paramIds.current = paramIds.current.slice(0, value.dynamic_params.length)
+  while (fileIds.current.length < value.file_mounts.length)
+    fileIds.current.push(nanoid())
+  fileIds.current = fileIds.current.slice(0, value.file_mounts.length)
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+  )
+
+  const handleParamDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    const oldIndex = paramIds.current.indexOf(active.id as string)
+    const newIndex = paramIds.current.indexOf(over.id as string)
+    paramIds.current = arrayMove(paramIds.current, oldIndex, newIndex)
+    const reordered = arrayMove(value.dynamic_params, oldIndex, newIndex).map(
+      (p, i) => ({ ...p, index: i }),
+    )
+    onReorderDynamicParams(reordered)
+  }
+
+  const handleFileDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    const oldIndex = fileIds.current.indexOf(active.id as string)
+    const newIndex = fileIds.current.indexOf(over.id as string)
+    fileIds.current = arrayMove(fileIds.current, oldIndex, newIndex)
+    onReorderFileMounts(arrayMove(value.file_mounts, oldIndex, newIndex))
+  }
 
   const tabBadge = (content?: string | number) =>
     showTabBadges && content ? (
@@ -370,20 +423,29 @@ export function ToolConfigForm({
                     暂无动态参数
                   </div>
                 ) : (
-                  <div className='space-y-4'>
-                    {value.dynamic_params.map((param, index) => (
-                      <ToolParamCard
-                        key={`param-${
-                          // biome-ignore lint/suspicious/noArrayIndexKey: no need
-                          index
-                        }`}
-                        param={param}
-                        index={index}
-                        onRemove={onRemoveDynamicParam}
-                        onUpdate={onUpdateDynamicParam}
-                      />
-                    ))}
-                  </div>
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleParamDragEnd}
+                  >
+                    <SortableContext
+                      items={paramIds.current}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <div className='space-y-4'>
+                        {value.dynamic_params.map((param, index) => (
+                          <ToolParamCard
+                            key={paramIds.current[index]}
+                            id={paramIds.current[index]}
+                            param={param}
+                            index={index}
+                            onRemove={onRemoveDynamicParam}
+                            onUpdate={onUpdateDynamicParam}
+                          />
+                        ))}
+                      </div>
+                    </SortableContext>
+                  </DndContext>
                 )}
                 <Button
                   type='button'
@@ -451,20 +513,29 @@ export function ToolConfigForm({
                     暂无文件挂载
                   </div>
                 ) : (
-                  <div className='space-y-4'>
-                    {value.file_mounts.map((file, index) => (
-                      <ToolFileCard
-                        key={`file-${
-                          // biome-ignore lint/suspicious/noArrayIndexKey: no need
-                          index
-                        }`}
-                        file={file}
-                        index={index}
-                        onUpdate={onUpdateFileMount}
-                        onRemove={onRemoveFileMount}
-                      />
-                    ))}
-                  </div>
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleFileDragEnd}
+                  >
+                    <SortableContext
+                      items={fileIds.current}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <div className='space-y-4'>
+                        {value.file_mounts.map((file, index) => (
+                          <ToolFileCard
+                            key={fileIds.current[index]}
+                            id={fileIds.current[index]}
+                            file={file}
+                            index={index}
+                            onUpdate={onUpdateFileMount}
+                            onRemove={onRemoveFileMount}
+                          />
+                        ))}
+                      </div>
+                    </SortableContext>
+                  </DndContext>
                 )}
                 <Button
                   type='button'
