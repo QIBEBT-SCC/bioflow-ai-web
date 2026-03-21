@@ -27,6 +27,9 @@ import {
 import {
   Copy2FolderNode,
   GlobalMarkerNode,
+  GzipNode,
+  Move2FolderNode,
+  RenameFileNode,
 } from '@/components/node-editor/node/data-node'
 import {
   DBInputNode,
@@ -69,8 +72,10 @@ const nodeTypes = {
   resource_GRCm39: GRCm39Node,
   resource_global_file: GlobalFileNode,
   // processor
-  processor_copy2folder: Copy2FolderNode,
+  move_files_to_folder: Move2FolderNode,
+  gzip: GzipNode,
   global_mark: GlobalMarkerNode,
+  rename_file: RenameFileNode,
   // code
   code_R: RCodeNode,
   code_python: PythonCodeNode,
@@ -140,6 +145,8 @@ function FlowContent() {
         resource_GRCh38: { data: {} },
         resource_GRCm39: { data: {} },
         global_mark: { data: { mark_name: '', description: '' } },
+        rename_file: { data: { new_file_name: '' } },
+        processor_move2folder: { data: { folder_name: '' } },
         code_R: { data: { description: '', code: '' } },
         code_python: { data: { description: '', code: '' } },
         code_bash: { data: { description: '', code: '' } },

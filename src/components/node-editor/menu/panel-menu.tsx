@@ -4,11 +4,16 @@ import {
   CaseSensitiveIcon,
   ChevronRightIcon,
   CodeIcon,
+  CpuIcon,
   DatabaseIcon,
   DnaIcon,
+  FileArchiveIcon,
   FileInputIcon,
+  FilePenIcon,
+  FolderInputIcon,
   PenToolIcon,
   StickyNoteIcon,
+  TagIcon,
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import type React from 'react'
@@ -60,7 +65,11 @@ const menuData: Record<string, MenuGroup> = {
         labelKey: 'reference_genome',
         Icon: DatabaseIcon,
         subItems: [
-          { type: 'resource_ncbi_genome', labelKey: 'ncbi_genome', Icon: DatabaseIcon },
+          {
+            type: 'resource_ncbi_genome',
+            labelKey: 'ncbi_genome',
+            Icon: DatabaseIcon,
+          },
           { type: 'resource_GRCh38', labelKey: 'grch38', Icon: DatabaseIcon },
           { type: 'resource_GRCm39', labelKey: 'grcm39', Icon: DatabaseIcon },
         ],
@@ -74,6 +83,21 @@ const menuData: Record<string, MenuGroup> = {
     items: [
       { type: 'code_R', labelKey: 'r_code', Icon: CodeIcon },
       { type: 'code_python', labelKey: 'python_code', Icon: CodeIcon },
+    ],
+  },
+  processor: {
+    labelKey: 'processor',
+    Icon: CpuIcon,
+    submenuType: 'inline',
+    items: [
+      {
+        type: 'move_files_to_folder',
+        labelKey: 'move_to_folder',
+        Icon: FolderInputIcon,
+      },
+      { type: 'gzip', labelKey: 'gzip', Icon: FileArchiveIcon },
+      { type: 'global_mark', labelKey: 'global_marker', Icon: TagIcon },
+      { type: 'rename_file', labelKey: 'rename_file', Icon: FilePenIcon },
     ],
   },
   other: {
@@ -264,7 +288,9 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({
                                 <ItemIcon className='h-4 w-4 mr-2' />
                                 {t(item.labelKey)}
                               </span>
-                              {hasSubItems && <ChevronRightIcon className='h-4 w-4' />}
+                              {hasSubItems && (
+                                <ChevronRightIcon className='h-4 w-4' />
+                              )}
                             </button>
 
                             {hasSubItems && activeSubItem === item.type && (
@@ -280,7 +306,9 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({
                                     <button
                                       key={sub.type}
                                       type='button'
-                                      onClick={() => handleItemClick(key, sub.type)}
+                                      onClick={() =>
+                                        handleItemClick(key, sub.type)
+                                      }
                                       className='w-full text-left px-4 py-2 text-sm hover:bg-accent flex items-center transition-colors'
                                     >
                                       <SubIcon className='h-4 w-4 mr-2' />
