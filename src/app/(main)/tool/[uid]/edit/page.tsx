@@ -4,7 +4,10 @@ import { ArrowLeft, Loader2, RefreshCw } from 'lucide-react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
-import { ToolConfigForm, type ToolConfigValues } from '@/components/tool/tool-config-form'
+import {
+  ToolConfigForm,
+  type ToolConfigValues,
+} from '@/components/tool/tool-config-form'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -23,7 +26,12 @@ import {
   useToolTagList,
   useUpdateTool,
 } from '@/hooks/use-tool'
-import type { DockerToolCreate, FileMount, ParamDefine, ToolTag } from '@/types/tool'
+import type {
+  DockerToolCreate,
+  FileMount,
+  ParamDefine,
+  ToolTag,
+} from '@/types/tool'
 
 export default function EditToolPage() {
   const params = useParams()
@@ -180,6 +188,14 @@ export default function EditToolPage() {
     })
   }
 
+  const reorderDynamicParams = (newParams: ParamDefine[]) =>
+    setFormState((prev) =>
+      prev ? { ...prev, dynamic_params: newParams } : prev,
+    )
+
+  const reorderFileMounts = (newMounts: FileMount[]) =>
+    setFormState((prev) => (prev ? { ...prev, file_mounts: newMounts } : prev))
+
   const canSave =
     !!formState &&
     formState.name.trim().length > 0 &&
@@ -187,7 +203,7 @@ export default function EditToolPage() {
 
   const handleSaveChanges = () => {
     if (!tool || !formState || !canSave) return
-    
+
     // 将 ToolConfigValues 转换为 DockerToolCreate
     const requestData: Partial<DockerToolCreate> = {
       ...formState,
@@ -195,7 +211,7 @@ export default function EditToolPage() {
       immutable_static_params: formState.immutable_static_params ?? '',
       modifiable_static_params: formState.modifiable_static_params ?? '',
     }
-    
+
     updateTool(
       { uid: tool.uid, tool: requestData },
       {
@@ -272,6 +288,8 @@ export default function EditToolPage() {
             onAddFileMount={addFileMount}
             onUpdateFileMount={updateFileMount}
             onRemoveFileMount={removeFileMount}
+            onReorderDynamicParams={reorderDynamicParams}
+            onReorderFileMounts={reorderFileMounts}
             imageSummary={{
               name: tool?.image.name,
               version: tool?.image.version,
@@ -282,7 +300,9 @@ export default function EditToolPage() {
           <div className='flex justify-between pt-4 border-t'>
             <Button
               variant='outline'
-              onClick={() => tool?.help_doc.uid && refreshDoc(tool.help_doc.uid)}
+              onClick={() =>
+                tool?.help_doc.uid && refreshDoc(tool.help_doc.uid)
+              }
               disabled={!tool?.help_doc.uid || isRefreshing}
             >
               {isRefreshing ? (
@@ -305,7 +325,10 @@ export default function EditToolPage() {
               >
                 取消
               </Button>
-              <Button onClick={handleSaveChanges} disabled={!canSave || isUpdating}>
+              <Button
+                onClick={handleSaveChanges}
+                disabled={!canSave || isUpdating}
+              >
                 {isUpdating ? '保存中...' : '保存修改'}
               </Button>
             </div>

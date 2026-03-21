@@ -5,7 +5,11 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { ToolConfigForm, type ToolConfigValues } from '@/components/tool/tool-config-form'
+import { getTool } from '@/app/actions/tool'
+import {
+  ToolConfigForm,
+  type ToolConfigValues,
+} from '@/components/tool/tool-config-form'
 import { Badge } from '@/components/ui/badge'
 import {
   Breadcrumb,
@@ -27,8 +31,12 @@ import {
   useToolTagList,
 } from '@/hooks/use-tool'
 import { useCreateToolStore } from '@/stores/toolStore'
-import { getTool } from '@/app/actions/tool'
-import type { DockerToolCreate, FileMount, ParamDefine, ToolTag } from '@/types/tool'
+import type {
+  DockerToolCreate,
+  FileMount,
+  ParamDefine,
+  ToolTag,
+} from '@/types/tool'
 
 const steps = [
   { id: 1, title: '选择镜像', description: '选择或创建Docker镜像' },
@@ -114,7 +122,7 @@ export default function AddToolPage() {
       immutable_static_params: toolConfig.immutable_static_params ?? '',
       modifiable_static_params: toolConfig.modifiable_static_params ?? '',
     }
-    
+
     createTool(requestData, {
       onSuccess: () => {
         toast.success('工具创建成功')
@@ -143,7 +151,14 @@ export default function AddToolPage() {
 
   const updateToolConfigField = (
     field: keyof ToolConfigValues,
-    value: string | number | boolean | null | ParamDefine[] | FileMount[] | ToolTag[],
+    value:
+      | string
+      | number
+      | boolean
+      | null
+      | ParamDefine[]
+      | FileMount[]
+      | ToolTag[],
   ) => {
     updateStoreField(field, value as never)
   }
@@ -222,6 +237,12 @@ export default function AddToolPage() {
     updatedFiles.splice(index, 1)
     setToolConfig({ ...toolConfig, file_mounts: updatedFiles })
   }
+
+  const reorderDynamicParams = (newParams: ParamDefine[]) =>
+    setToolConfig({ ...toolConfig, dynamic_params: newParams })
+
+  const reorderFileMounts = (newMounts: FileMount[]) =>
+    setToolConfig({ ...toolConfig, file_mounts: newMounts })
 
   return (
     <SidebarInset className='h-screen flex flex-col'>
@@ -374,6 +395,8 @@ export default function AddToolPage() {
                   onAddFileMount={addFileMount}
                   onUpdateFileMount={updateFileMount}
                   onRemoveFileMount={removeFileMount}
+                  onReorderDynamicParams={reorderDynamicParams}
+                  onReorderFileMounts={reorderFileMounts}
                   imageUid={currentImage?.uid}
                   imageSummary={
                     currentImage?.name || currentImage?.version
@@ -452,8 +475,10 @@ export default function AddToolPage() {
                         </div>
                         <div className='text-center'>
                           <div className='text-2xl font-bold text-primary'>
-                            {(toolConfig.immutable_static_params || '').length > 0 ||
-                            (toolConfig.modifiable_static_params || '').length > 0
+                            {(toolConfig.immutable_static_params || '').length >
+                              0 ||
+                            (toolConfig.modifiable_static_params || '').length >
+                              0
                               ? '是'
                               : '否'}
                           </div>
