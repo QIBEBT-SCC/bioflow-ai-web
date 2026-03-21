@@ -15,6 +15,8 @@ import type React from 'react'
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { useShallow } from 'zustand/react/shallow'
+import { ChatSidebar } from '@/components/chat/chat-sidebar'
+import { ChatSidebarToggle } from '@/components/chat/chat-sidebar-toggle'
 import { LoadWorkflowDialog } from '@/components/node-editor/load-workflow-dialog'
 import { PanelMenu } from '@/components/node-editor/menu/panel-menu'
 import {
@@ -29,9 +31,9 @@ import {
 import {
   DBInputNode,
   FileInputNode,
+  GlobalFileNode,
   GRCh38Node,
   GRCm39Node,
-  GlobalFileNode,
   NcbiGenomeNode,
   SequenceInputNode,
   StringInputNode,
@@ -51,6 +53,7 @@ import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { useNewRunInstance } from '@/hooks/use-run'
 import { useUpdateWorkflow, useWorkflow } from '@/hooks/use-workflow'
 import { generateLetterId } from '@/lib/id-generator'
+import { useChatSidebarStore } from '@/stores/chat-sidebar-store'
 import { useNodeEditorStore } from '@/stores/nodeviewStore'
 
 // 注册节点类型
@@ -99,6 +102,8 @@ function FlowContent() {
     })),
   )
 
+  const isOpen = useChatSidebarStore((s) => s.isOpen)
+
   const { screenToFlowPosition } = useReactFlow()
   const { data: workflowData } = useWorkflow(currentWorkflowUid)
   const updateWorkflowMutation = useUpdateWorkflow()
@@ -124,7 +129,9 @@ function FlowContent() {
       // 节点配置
       const nodeConfig: Record<string, any> = {
         tool: { data: { tool_uid: resourceId, args: '' } },
-        resource_db: { data: { db_id: resourceId, db_name: resourceName ?? '' } },
+        resource_db: {
+          data: { db_id: resourceId, db_name: resourceName ?? '' },
+        },
         value_string: { data: { value: '' } },
         resource_file: { data: { file_path: '' } },
         resource_global_file: { data: { mark_name: '' } },
@@ -190,92 +197,100 @@ function FlowContent() {
   }, [])
 
   return (
-    <SidebarInset className='h-screen flex flex-col'>
-      <header className='flex flex-col shrink-0 border-b'>
-        <div className='flex h-12 items-center gap-2 bg-background px-4'>
-          <SidebarTrigger className='-ml-1' />
-          <Separator orientation='vertical' className='!mr-2 !h-4' />
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem className='hidden md:block'>
-                <BreadcrumbPage>节点编辑器</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-        </div>
-
-        {/* 工具栏 */}
-        <div className='flex h-12 items-center border-t bg-muted/30 px-3'>
-          <div className='flex items-center gap-1'>
-            <LoadWorkflowDialog />
-
-            <Button
-              variant='ghost'
-              size='sm'
-              onClick={onSave}
-              disabled={!currentWorkflowUid || updateWorkflowMutation.isPending}
-            >
-              <SaveIcon className='h-4 w-4 mr-2' />
-              {updateWorkflowMutation.isPending ? '保存中...' : '保存'}
-            </Button>
-
-            <SaveAsDialog
-              currentWorkflowName={workflowData?.name}
-              disabled={nodes.length === 0}
-            />
-
-            <Separator orientation='vertical' className='!h-8 mx-2' />
-
-            <Button
-              variant='ghost'
-              size='sm'
-              onClick={onRun}
-              disabled={runMutation.isPending}
-            >
-              <PlayIcon className='h-4 w-4 mr-2 text-green-500' />
-              {runMutation.isPending ? '运行中...' : '运行'}
-            </Button>
-
-            <Separator orientation='vertical' className='!h-8 mx-2' />
-
-            <div className='text-sm text-muted-foreground'>
-              右键点击画布添加节点
+    <SidebarInset className='h-screen flex flex-row'>
+      <div className='flex-1 flex flex-col min-w-0'>
+        <header className='flex flex-col shrink-0 border-b'>
+          <div className='flex h-12 items-center gap-2 bg-background px-4'>
+            <SidebarTrigger className='-ml-1' />
+            <Separator orientation='vertical' className='!mr-2 !h-4' />
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem className='hidden md:block'>
+                  <BreadcrumbPage>节点编辑器</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+            <div className='ml-auto'>
+              <ChatSidebarToggle />
             </div>
           </div>
-        </div>
-      </header>
 
-      {/* React Flow 画布 */}
-      <div className='flex-1 w-full'>
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          onPaneContextMenu={onPaneContextMenu}
-          onPaneClick={closeMenu}
-          nodeTypes={nodeTypes}
-          defaultEdgeOptions={{ animated: true }}
-          fitView
-          className='bg-gray-50'
-        >
-          <Background
-            variant={BackgroundVariant.Dots}
-            className='!bg-gray-100'
+          {/* 工具栏 */}
+          <div className='flex h-12 items-center border-t bg-muted/30 px-3'>
+            <div className='flex items-center gap-1'>
+              <LoadWorkflowDialog />
+
+              <Button
+                variant='ghost'
+                size='sm'
+                onClick={onSave}
+                disabled={
+                  !currentWorkflowUid || updateWorkflowMutation.isPending
+                }
+              >
+                <SaveIcon className='h-4 w-4 mr-2' />
+                {updateWorkflowMutation.isPending ? '保存中...' : '保存'}
+              </Button>
+
+              <SaveAsDialog
+                currentWorkflowName={workflowData?.name}
+                disabled={nodes.length === 0}
+              />
+
+              <Separator orientation='vertical' className='!h-8 mx-2' />
+
+              <Button
+                variant='ghost'
+                size='sm'
+                onClick={onRun}
+                disabled={runMutation.isPending}
+              >
+                <PlayIcon className='h-4 w-4 mr-2 text-green-500' />
+                {runMutation.isPending ? '运行中...' : '运行'}
+              </Button>
+
+              <Separator orientation='vertical' className='!h-8 mx-2' />
+
+              <div className='text-sm text-muted-foreground'>
+                右键点击画布添加节点
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* React Flow 画布 */}
+        <div className='flex-1 w-full'>
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            onPaneContextMenu={onPaneContextMenu}
+            onPaneClick={closeMenu}
+            nodeTypes={nodeTypes}
+            defaultEdgeOptions={{ animated: true }}
+            fitView
+            className='bg-gray-50'
+          >
+            <Background
+              variant={BackgroundVariant.Dots}
+              className='!bg-gray-100'
+            />
+            <Controls />
+            <MiniMap nodeStrokeWidth={3} zoomable pannable />
+          </ReactFlow>
+
+          {/* 右键菜单 */}
+          <PanelMenu
+            isOpen={isMenuOpen}
+            position={clickPosition}
+            onClose={closeMenu}
+            onSelectTool={onAddNode}
           />
-          <Controls />
-          <MiniMap nodeStrokeWidth={3} zoomable pannable />
-        </ReactFlow>
-
-        {/* 右键菜单 */}
-        <PanelMenu
-          isOpen={isMenuOpen}
-          position={clickPosition}
-          onClose={closeMenu}
-          onSelectTool={onAddNode}
-        />
+        </div>
       </div>
+      {isOpen && <ChatSidebar />}
     </SidebarInset>
   )
 }
