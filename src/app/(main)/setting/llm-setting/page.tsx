@@ -12,6 +12,7 @@ import {
   Trash2Icon,
   XIcon,
 } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -61,10 +62,12 @@ import type {
   LLMModelCreate,
   LLMModelUpdate,
   LLMProviderCreate,
-  LLMProviderUpdate, ProviderType,
+  LLMProviderUpdate,
+  ProviderType,
 } from '@/types/setting'
 
 export default function LLMSettingPage() {
+  const t = useTranslations('setting.llm_setting')
   const { data: serverProviders = [], isLoading } = useLLMProviders()
   const createProviderMutation = useCreateLLMProvider()
   const updateProviderMutation = useUpdateLLMProvider()
@@ -289,7 +292,7 @@ export default function LLMSettingPage() {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className='hidden md:block'>
-                  <BreadcrumbPage>模型统计</BreadcrumbPage>
+                  <BreadcrumbPage>{t('breadcrumb')}</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
@@ -302,10 +305,10 @@ export default function LLMSettingPage() {
           <div className='mb-8'>
             <div className='flex items-center gap-3 mb-2'>
               <SettingsIcon className='h-8 w-8 text-primary' />
-              <h1 className='text-4xl font-bold text-balance'>模型设置</h1>
+              <h1 className='text-4xl font-bold text-balance'>{t('title')}</h1>
             </div>
             <p className='text-muted-foreground text-pretty'>
-              管理 AI 模型提供商和定价配置
+              {t('description')}
             </p>
           </div>
 
@@ -316,19 +319,21 @@ export default function LLMSettingPage() {
                 <DialogTrigger asChild>
                   <Button className='gap-2'>
                     <PlusIcon className='h-4 w-4' />
-                    添加 Provider
+                    {t('add_provider')}
                   </Button>
                 </DialogTrigger>
                 <DialogContent className='sm:max-w-[500px]'>
                   <DialogHeader>
-                    <DialogTitle>添加新 Provider</DialogTitle>
+                    <DialogTitle>{t('add_provider_title')}</DialogTitle>
                     <DialogDescription>
-                      配置新的 AI 模型提供商
+                      {t('add_provider_desc')}
                     </DialogDescription>
                   </DialogHeader>
                   <div className='space-y-4 py-4'>
                     <div className='space-y-2'>
-                      <Label htmlFor='new-provider-name'>Provider 名称</Label>
+                      <Label htmlFor='new-provider-name'>
+                        {t('provider_name')}
+                      </Label>
                       <Input
                         id='new-provider-name'
                         value={newProvider.name}
@@ -342,7 +347,9 @@ export default function LLMSettingPage() {
                       />
                     </div>
                     <div className='space-y-2'>
-                      <Label htmlFor='new-provider-type'>Provider 类型</Label>
+                      <Label htmlFor='new-provider-type'>
+                        {t('provider_type')}
+                      </Label>
                       <Select
                         value={newProvider.provider_type}
                         onValueChange={(value) =>
@@ -353,7 +360,7 @@ export default function LLMSettingPage() {
                         }
                       >
                         <SelectTrigger id='new-provider-type'>
-                          <SelectValue placeholder='选择类型' />
+                          <SelectValue placeholder={t('select_type')} />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value={'openai'}>OpenAI</SelectItem>
@@ -395,9 +402,11 @@ export default function LLMSettingPage() {
                     </div>
                     <div className='flex items-center justify-between'>
                       <div className='space-y-0.5'>
-                        <Label htmlFor='new-provider-proxy'>使用网络代理</Label>
+                        <Label htmlFor='new-provider-proxy'>
+                          {t('use_proxy')}
+                        </Label>
                         <p className='text-xs text-muted-foreground'>
-                          通过代理服务器访问 API
+                          {t('use_proxy_desc')}
                         </p>
                       </div>
                       <Switch
@@ -411,10 +420,10 @@ export default function LLMSettingPage() {
                     <div className='flex items-center justify-between'>
                       <div className='space-y-0.5'>
                         <Label htmlFor='new-provider-active'>
-                          启用 Provider
+                          {t('enable_provider')}
                         </Label>
                         <p className='text-xs text-muted-foreground'>
-                          是否激活此 Provider
+                          {t('enable_provider_desc')}
                         </p>
                       </div>
                       <Switch
@@ -431,13 +440,13 @@ export default function LLMSettingPage() {
                       variant='outline'
                       onClick={() => setAddProviderOpen(false)}
                     >
-                      取消
+                      {t('cancel')}
                     </Button>
                     <Button
                       onClick={handleAddProvider}
                       disabled={!newProvider.name}
                     >
-                      添加
+                      {t('add')}
                     </Button>
                   </DialogFooter>
                 </DialogContent>
@@ -483,26 +492,29 @@ export default function LLMSettingPage() {
                           </h2>
                         )}
                         <Badge variant='secondary' className='ml-2'>
-                          {provider.models.length} 个模型
+                          {t('model_count', { count: provider.models.length })}
                         </Badge>
                         <Badge variant='outline' className='ml-1 capitalize'>
                           {provider.provider_type}
                         </Badge>
                         {provider.use_proxy && (
                           <Badge variant='outline' className='ml-1'>
-                            使用代理
+                            {t('using_proxy')}
                           </Badge>
                         )}
                         {provider.is_active && (
-                          <Badge variant='destructive' className='ml-1 bg-green-500 text-white'>
-                            激活
+                          <Badge
+                            variant='destructive'
+                            className='ml-1 bg-green-500 text-white'
+                          >
+                            {t('active')}
                           </Badge>
                         )}
                       </div>
                       <div className='flex items-center gap-2'>
                         <div className='flex items-center gap-2'>
                           <span className='text-sm text-muted-foreground'>
-                            激活
+                            {t('active')}
                           </span>
                           <Switch
                             checked={provider.is_active}
@@ -523,7 +535,7 @@ export default function LLMSettingPage() {
                               className='gap-2 bg-transparent'
                             >
                               <SaveIcon className='h-4 w-4' />
-                              保存
+                              {t('save')}
                             </Button>
                             <Button
                               variant='outline'
@@ -532,7 +544,7 @@ export default function LLMSettingPage() {
                               className='gap-2 bg-transparent'
                             >
                               <XIcon className='h-4 w-4' />
-                              取消
+                              {t('cancel')}
                             </Button>
                           </>
                         ) : (
@@ -543,7 +555,7 @@ export default function LLMSettingPage() {
                             className='gap-2'
                           >
                             <Edit2Icon className='h-4 w-4' />
-                            编辑
+                            {t('edit')}
                           </Button>
                         )}
                         <Button
@@ -566,7 +578,7 @@ export default function LLMSettingPage() {
                             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                               <div className='space-y-2'>
                                 <Label htmlFor={`provider-type-${provider.id}`}>
-                                  Provider 类型
+                                  {t('provider_type')}
                                 </Label>
                                 <Select
                                   value={draftProvider?.provider_type}
@@ -578,7 +590,9 @@ export default function LLMSettingPage() {
                                     id={`provider-type-${provider.id}`}
                                     className='bg-background'
                                   >
-                                    <SelectValue placeholder='选择类型' />
+                                    <SelectValue
+                                      placeholder={t('select_type')}
+                                    />
                                   </SelectTrigger>
                                   <SelectContent>
                                     <SelectItem value={'openai'}>
@@ -653,10 +667,10 @@ export default function LLMSettingPage() {
                             <div className='flex items-center justify-between max-w-md'>
                               <div className='space-y-0.5'>
                                 <Label htmlFor={`proxy-${provider.id}`}>
-                                  使用网络代理
+                                  {t('use_proxy')}
                                 </Label>
                                 <p className='text-xs text-muted-foreground'>
-                                  通过代理服务器访问 API
+                                  {t('use_proxy_desc')}
                                 </p>
                               </div>
                               <Switch
@@ -670,10 +684,10 @@ export default function LLMSettingPage() {
                             <div className='flex items-center justify-between max-w-md'>
                               <div className='space-y-0.5'>
                                 <Label htmlFor={`active-${provider.id}`}>
-                                  启用 Provider
+                                  {t('enable_provider')}
                                 </Label>
                                 <p className='text-xs text-muted-foreground'>
-                                  是否激活此 Provider
+                                  {t('enable_provider_desc')}
                                 </p>
                               </div>
                               <Switch
@@ -691,7 +705,7 @@ export default function LLMSettingPage() {
                             <div className='flex items-start gap-8'>
                               <div className='space-y-1 min-w-[120px]'>
                                 <p className='text-muted-foreground'>
-                                  Provider 类型
+                                  {t('provider_type')}
                                 </p>
                                 <p className='capitalize'>
                                   {provider.provider_type}
@@ -702,7 +716,7 @@ export default function LLMSettingPage() {
                                   Base URL
                                 </p>
                                 <p className='font-mono'>
-                                  {provider.base_url || '未设置'}
+                                  {provider.base_url || t('base_url_not_set')}
                                 </p>
                               </div>
                               <div className='space-y-1 min-w-[120px]'>
@@ -710,23 +724,27 @@ export default function LLMSettingPage() {
                                 <p className='font-mono'>
                                   {provider.api_key
                                     ? '••••••••' + provider.api_key.slice(-4)
-                                    : '未设置'}
+                                    : t('base_url_not_set')}
                                 </p>
                               </div>
                               <div className='space-y-1 min-w-[120px]'>
                                 <p className='text-muted-foreground'>
-                                  网络代理
+                                  {t('network_proxy')}
                                 </p>
                                 <p>
-                                  {provider.use_proxy ? '已启用' : '未启用'}
+                                  {provider.use_proxy
+                                    ? t('proxy_enabled')
+                                    : t('proxy_disabled')}
                                 </p>
                               </div>
                               <div className='space-y-1 min-w-[120px]'>
                                 <p className='text-muted-foreground'>
-                                  激活状态
+                                  {t('active_status')}
                                 </p>
                                 <p>
-                                  {provider.is_active ? '已激活' : '未激活'}
+                                  {provider.is_active
+                                    ? t('provider_active')
+                                    : t('provider_inactive')}
                                 </p>
                               </div>
                             </div>
@@ -737,7 +755,9 @@ export default function LLMSettingPage() {
                       {/* Models Section */}
                       <div className='pl-11 space-y-4'>
                         <div className='flex justify-between items-center mb-4'>
-                          <h4 className='text-sm font-medium'>模型列表</h4>
+                          <h4 className='text-sm font-medium'>
+                            {t('model_list')}
+                          </h4>
                           <Dialog
                             open={addModelProviderId === provider.id}
                             onOpenChange={(open) => {
@@ -752,20 +772,22 @@ export default function LLMSettingPage() {
                                 className='gap-2'
                               >
                                 <PlusIcon className='h-3 w-3' />
-                                添加模型
+                                {t('add_model')}
                               </Button>
                             </DialogTrigger>
                             <DialogContent>
                               <DialogHeader>
-                                <DialogTitle>添加新模型</DialogTitle>
+                                <DialogTitle>
+                                  {t('add_model_title')}
+                                </DialogTitle>
                                 <DialogDescription>
-                                  为 {provider.name} 添加一个新的 LLM 模型
+                                  {t('add_model_desc', { name: provider.name })}
                                 </DialogDescription>
                               </DialogHeader>
                               <div className='space-y-4 py-4'>
                                 <div className='space-y-2'>
                                   <Label htmlFor='new-model-name'>
-                                    模型名称
+                                    {t('model_name')}
                                   </Label>
                                   <Input
                                     id='new-model-name'
@@ -782,7 +804,7 @@ export default function LLMSettingPage() {
                                 <div className='grid grid-cols-2 gap-4'>
                                   <div className='space-y-2'>
                                     <Label htmlFor='new-model-input'>
-                                      输入价格 ($/1k tokens)
+                                      {t('input_price')}
                                     </Label>
                                     <Input
                                       id='new-model-input'
@@ -799,7 +821,7 @@ export default function LLMSettingPage() {
                                   </div>
                                   <div className='space-y-2'>
                                     <Label htmlFor='new-model-output'>
-                                      输出价格 ($/1k tokens)
+                                      {t('output_price')}
                                     </Label>
                                     <Input
                                       id='new-model-output'
@@ -816,7 +838,7 @@ export default function LLMSettingPage() {
                                   </div>
                                   <div className='space-y-2'>
                                     <Label htmlFor='new-model-cache'>
-                                      缓存价格 ($/1k tokens)
+                                      {t('cache_price')}
                                     </Label>
                                     <Input
                                       id='new-model-cache'
@@ -837,10 +859,10 @@ export default function LLMSettingPage() {
                                 <div className='flex items-center justify-between'>
                                   <div className='space-y-0.5'>
                                     <Label htmlFor='new-model-active'>
-                                      启用模型
+                                      {t('enable_model')}
                                     </Label>
                                     <p className='text-xs text-muted-foreground'>
-                                      是否激活此模型
+                                      {t('enable_model_desc')}
                                     </p>
                                   </div>
                                   <Switch
@@ -860,13 +882,13 @@ export default function LLMSettingPage() {
                                   variant='outline'
                                   onClick={() => setAddModelProviderId(null)}
                                 >
-                                  取消
+                                  {t('cancel')}
                                 </Button>
                                 <Button
                                   onClick={handleAddModel}
                                   disabled={!newModel.name}
                                 >
-                                  添加
+                                  {t('add')}
                                 </Button>
                               </DialogFooter>
                             </DialogContent>
@@ -902,7 +924,7 @@ export default function LLMSettingPage() {
 
                                     <div className='flex items-center gap-2'>
                                       <span className='text-xs text-muted-foreground'>
-                                        激活
+                                        {t('active')}
                                       </span>
                                       <Switch
                                         checked={model.is_active}
@@ -1034,7 +1056,7 @@ export default function LLMSettingPage() {
                                           htmlFor={`model-active-${model.id}`}
                                           className='text-xs'
                                         >
-                                          激活
+                                          {t('active')}
                                         </Label>
                                         <Switch
                                           id={`model-active-${model.id}`}
@@ -1084,7 +1106,7 @@ export default function LLMSettingPage() {
 
                           {provider.models.length === 0 && (
                             <div className='text-center py-8 text-muted-foreground text-sm'>
-                              暂无模型配置，点击上方按钮添加模型
+                              {t('no_models')}
                             </div>
                           )}
                         </div>
@@ -1099,10 +1121,10 @@ export default function LLMSettingPage() {
               <Card className='p-12 text-center'>
                 <SettingsIcon className='h-12 w-12 mx-auto mb-4 text-muted-foreground' />
                 <h3 className='text-lg font-semibold mb-2'>
-                  暂无 Provider 配置
+                  {t('no_providers')}
                 </h3>
                 <p className='text-muted-foreground mb-4'>
-                  开始添加您的第一个 AI 模型提供商
+                  {t('no_providers_desc')}
                 </p>
                 <Dialog
                   open={addProviderOpen}
@@ -1111,7 +1133,7 @@ export default function LLMSettingPage() {
                   <DialogTrigger asChild>
                     <Button className='gap-2'>
                       <PlusIcon className='h-4 w-4' />
-                      添加 Provider
+                      {t('add_provider')}
                     </Button>
                   </DialogTrigger>
                 </Dialog>

@@ -1,6 +1,7 @@
 'use client'
 
 import { format } from 'date-fns'
+import { enUS } from 'date-fns/locale'
 import { zhCN } from 'date-fns/locale'
 import {
   BarChart3Icon,
@@ -56,6 +57,7 @@ import {
   useUpdateLLMSetting,
 } from '@/hooks/use-setting'
 import { cn } from '@/lib/utils'
+import { useLocale, useTranslations } from 'next-intl'
 import type {
   LLMSettingKey,
   LLMSettingPublic,
@@ -83,6 +85,9 @@ const defaultStats: LLMStatisticOverview = {
 
 export default function LLMStatisticPage() {
   // Hooks
+  const t = useTranslations('setting.llm_statistic')
+  const locale = useLocale()
+  const dateFnsLocale = locale === 'zh' ? zhCN : enUS
   const { data: providers = [] } = useLLMProviders()
   const { data: settings } = useLLMSettings()
   const updateSettingMutation = useUpdateLLMSetting()
@@ -153,13 +158,13 @@ export default function LLMStatisticPage() {
 
   /* Removed modelTypeLabels definition here to avoid duplication if it's defined below or to be redefined */
   const modelTypeLabels: Record<string, string> = {
-    chat_model: '对话模型',
-    vision_model: '视觉模型',
-    agent_model: '智能体模型',
-    coding_model: '代码模型',
-    long_context_model: '长上下文模型',
-    high_performance_model: '高性能模型',
-    simple_model: '轻量模型',
+    chat_model: t('model_type_chat'),
+    vision_model: t('model_type_vision'),
+    agent_model: t('model_type_agent'),
+    coding_model: t('model_type_coding'),
+    long_context_model: t('model_type_long_context'),
+    high_performance_model: t('model_type_high_performance'),
+    simple_model: t('model_type_simple'),
   }
 
   const totalPages = Math.ceil((usageRecordsRes?.total || 0) / pageSize)
@@ -177,7 +182,7 @@ export default function LLMStatisticPage() {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className='hidden md:block'>
-                  <BreadcrumbPage>任务监控</BreadcrumbPage>
+                  <BreadcrumbPage>{t('breadcrumb')}</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
@@ -191,11 +196,11 @@ export default function LLMStatisticPage() {
             <div className='flex items-center gap-3 mb-2'>
               <BarChart3Icon className='h-8 w-8 text-primary' />
               <h1 className='text-4xl font-bold text-balance'>
-                模型使用与统计
+                {t('title')}
               </h1>
             </div>
             <p className='text-muted-foreground text-pretty'>
-              配置项目模块所使用的模型并查看使用统计
+              {t('description')}
             </p>
           </div>
 
@@ -203,18 +208,18 @@ export default function LLMStatisticPage() {
             <TabsList>
               <TabsTrigger value='config' className='gap-2'>
                 <SettingsIcon className='h-4 w-4' />
-                模型配置
+                {t('tab_config')}
               </TabsTrigger>
               <TabsTrigger value='statistics' className='gap-2'>
                 <TrendingUpIcon className='h-4 w-4' />
-                使用统计
+                {t('tab_statistics')}
               </TabsTrigger>
             </TabsList>
 
             {/* Model Configuration Tab */}
             <TabsContent value='config' className='space-y-4'>
               <Card className='border-border bg-card p-6'>
-                <h2 className='text-xl font-semibold mb-6'>模块模型配置</h2>
+                <h2 className='text-xl font-semibold mb-6'>{t('module_config_title')}</h2>
                 <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
                   {Object.keys(modelTypeLabels).map((key) => (
                     <div key={key} className='space-y-2'>
@@ -226,7 +231,7 @@ export default function LLMStatisticPage() {
                         onValueChange={(value) => updateModelConfig(key, value)}
                       >
                         <SelectTrigger id={key} className='bg-background'>
-                          <SelectValue placeholder='选择模型' />
+                          <SelectValue placeholder={t('select_model')} />
                         </SelectTrigger>
                         <SelectContent>
                           {availableModels.map((model) => (
@@ -251,14 +256,14 @@ export default function LLMStatisticPage() {
                     onClick={handleSaveConfig}
                     disabled={updateSettingMutation.isPending}
                   >
-                    {updateSettingMutation.isPending ? '保存中...' : '保存配置'}
+                    {updateSettingMutation.isPending ? t('saving') : t('save_config')}
                   </Button>
                 </div>
               </Card>
 
               {/* Current Configuration Summary */}
               <Card className='border-border bg-card p-6'>
-                <h3 className='text-lg font-semibold mb-4'>当前配置概览</h3>
+                <h3 className='text-lg font-semibold mb-4'>{t('current_config_title')}</h3>
                 <div className='space-y-3'>
                   {Object.keys(modelTypeLabels).map((key) => {
                     const modelId = localConfig[key]
@@ -279,7 +284,7 @@ export default function LLMStatisticPage() {
                             variant='secondary'
                             className='font-mono text-xs'
                           >
-                            {model?.name || '未配置'}
+                            {model?.name || t('not_configured')}
                           </Badge>
                           {model && (
                             <Badge variant='outline' className='text-xs'>
@@ -300,7 +305,7 @@ export default function LLMStatisticPage() {
                 <div className='flex items-center justify-between'>
                   <div className='flex items-center gap-2'>
                     <CalendarIcon className='h-4 w-4 text-muted-foreground' />
-                    <span className='text-sm font-medium'>统计时间范围</span>
+                    <span className='text-sm font-medium'>{t('date_range_label')}</span>
                   </div>
                   <div className='flex items-center gap-3'>
                     <Popover>
@@ -319,16 +324,16 @@ export default function LLMStatisticPage() {
                             dateRange.to ? (
                               <>
                                 {format(dateRange.from, 'PPP', {
-                                  locale: zhCN,
+                                  locale: dateFnsLocale,
                                 })}{' '}
                                 -{' '}
-                                {format(dateRange.to, 'PPP', { locale: zhCN })}
+                                {format(dateRange.to, 'PPP', { locale: dateFnsLocale })}
                               </>
                             ) : (
-                              format(dateRange.from, 'PPP', { locale: zhCN })
+                              format(dateRange.from, 'PPP', { locale: dateFnsLocale })
                             )
                           ) : (
-                            <span>选择日期范围</span>
+                            <span>{t('select_date_range')}</span>
                           )}
                         </Button>
                       </PopoverTrigger>
@@ -343,7 +348,7 @@ export default function LLMStatisticPage() {
                             })
                           }}
                           numberOfMonths={2}
-                          locale={zhCN}
+                          locale={dateFnsLocale}
                         />
                         <div className='flex items-center justify-between gap-2 p-3 border-t'>
                           <Button
@@ -358,7 +363,7 @@ export default function LLMStatisticPage() {
                               })
                             }}
                           >
-                            最近7天
+                            {t('last_7_days')}
                           </Button>
                           <Button
                             variant='outline'
@@ -372,7 +377,7 @@ export default function LLMStatisticPage() {
                               })
                             }}
                           >
-                            最近30天
+                            {t('last_30_days')}
                           </Button>
                           <Button
                             variant='outline'
@@ -381,7 +386,7 @@ export default function LLMStatisticPage() {
                               setDateRange({ from: undefined, to: undefined })
                             }}
                           >
-                            全部
+                            {t('all')}
                           </Button>
                         </div>
                       </PopoverContent>
@@ -396,7 +401,7 @@ export default function LLMStatisticPage() {
                     <div className='p-2 bg-primary/10 rounded-lg'>
                       <TrendingUpIcon className='h-5 w-5 text-primary' />
                     </div>
-                    <p className='text-sm text-muted-foreground'>总花费</p>
+                    <p className='text-sm text-muted-foreground'>{t('total_cost')}</p>
                   </div>
                   <p className='text-3xl font-bold text-primary'>
                     ${statsData.total.total_price.toLocaleString()}
@@ -408,7 +413,7 @@ export default function LLMStatisticPage() {
                     <div className='p-2 bg-chart-2/10 rounded-lg'>
                       <BarChart3Icon className='h-5 w-5 text-chart-2' />
                     </div>
-                    <p className='text-sm text-muted-foreground'>输入 Tokens</p>
+                    <p className='text-sm text-muted-foreground'>{t('input_tokens')}</p>
                   </div>
                   <p className='text-3xl font-bold'>
                     {statsData.total.total_input_tokens.toLocaleString()}
@@ -420,7 +425,7 @@ export default function LLMStatisticPage() {
                     <div className='p-2 bg-chart-3/10 rounded-lg'>
                       <BarChart3Icon className='h-5 w-5 text-chart-3' />
                     </div>
-                    <p className='text-sm text-muted-foreground'>输出 Tokens</p>
+                    <p className='text-sm text-muted-foreground'>{t('output_tokens')}</p>
                   </div>
                   <p className='text-3xl font-bold'>
                     {statsData.total.total_output_tokens.toLocaleString()}
@@ -432,7 +437,7 @@ export default function LLMStatisticPage() {
                     <div className='p-2 bg-chart-4/10 rounded-lg'>
                       <BarChart3Icon className='h-5 w-5 text-chart-4' />
                     </div>
-                    <p className='text-sm text-muted-foreground'>缓存读取</p>
+                    <p className='text-sm text-muted-foreground'>{t('cache_read')}</p>
                   </div>
                   <p className='text-3xl font-bold'>
                     {statsData.total.total_cache_read.toLocaleString()}
@@ -441,24 +446,24 @@ export default function LLMStatisticPage() {
               </div>
 
               <Card className='border-border bg-card p-6'>
-                <h3 className='text-lg font-semibold mb-4'>详细统计</h3>
+                <h3 className='text-lg font-semibold mb-4'>{t('detail_stats_title')}</h3>
                 <Tabs defaultValue='by_agent' className='space-y-4'>
                   <TabsList className='grid w-full grid-cols-4'>
                     <TabsTrigger value='by_agent' className='gap-2'>
                       <LayersIcon className='h-4 w-4' />
-                      按模块
+                      {t('by_module')}
                     </TabsTrigger>
                     <TabsTrigger value='by_model' className='gap-2'>
                       <CpuIcon className='h-4 w-4' />
-                      按模型
+                      {t('by_model')}
                     </TabsTrigger>
                     <TabsTrigger value='by_type' className='gap-2'>
                       <SettingsIcon className='h-4 w-4' />
-                      按类型
+                      {t('by_type')}
                     </TabsTrigger>
                     <TabsTrigger value='by_user' className='gap-2'>
                       <UsersIcon className='h-4 w-4' />
-                      按用户
+                      {t('by_user')}
                     </TabsTrigger>
                   </TabsList>
 
@@ -475,7 +480,7 @@ export default function LLMStatisticPage() {
                                 {stats.agent_name}
                               </span>
                               <Badge variant='secondary' className='text-xs'>
-                                {stats.count} 次调用
+                                {t('call_count', { count: stats.count })}
                               </Badge>
                             </div>
                             <div className='text-sm font-semibold'>
@@ -490,19 +495,19 @@ export default function LLMStatisticPage() {
                           </div>
                           <div className='grid grid-cols-3 gap-4 text-xs text-muted-foreground'>
                             <div>
-                              <span>输入: </span>
+                              <span>{t('input_label')}</span>
                               <span className='font-medium text-foreground'>
                                 {stats.total_input_tokens.toLocaleString()}
                               </span>
                             </div>
                             <div>
-                              <span>输出: </span>
+                              <span>{t('output_label')}</span>
                               <span className='font-medium text-foreground'>
                                 {stats.total_output_tokens.toLocaleString()}
                               </span>
                             </div>
                             <div>
-                              <span>缓存: </span>
+                              <span>{t('cache_label')}</span>
                               <span className='font-medium text-foreground'>
                                 {stats.total_cache_read.toLocaleString()}
                               </span>
@@ -529,7 +534,7 @@ export default function LLMStatisticPage() {
                                 {stats.model_name}
                               </Badge>
                               <Badge variant='secondary' className='text-xs'>
-                                {stats.count} 次调用
+                                {t('call_count', { count: stats.count })}
                               </Badge>
                             </div>
                             <div className='text-sm font-semibold'>
@@ -544,19 +549,19 @@ export default function LLMStatisticPage() {
                           </div>
                           <div className='grid grid-cols-3 gap-4 text-xs text-muted-foreground'>
                             <div>
-                              <span>输入: </span>
+                              <span>{t('input_label')}</span>
                               <span className='font-medium text-foreground'>
                                 {stats.total_input_tokens.toLocaleString()}
                               </span>
                             </div>
                             <div>
-                              <span>输出: </span>
+                              <span>{t('output_label')}</span>
                               <span className='font-medium text-foreground'>
                                 {stats.total_output_tokens.toLocaleString()}
                               </span>
                             </div>
                             <div>
-                              <span>缓存: </span>
+                              <span>{t('cache_label')}</span>
                               <span className='font-medium text-foreground'>
                                 {stats.total_cache_read.toLocaleString()}
                               </span>
@@ -586,7 +591,7 @@ export default function LLMStatisticPage() {
                                 {stats.setting_key}
                               </span>
                               <Badge variant='secondary' className='text-xs'>
-                                {stats.count} 次调用
+                                {t('call_count', { count: stats.count })}
                               </Badge>
                             </div>
                             <div className='text-sm font-semibold'>
@@ -601,19 +606,19 @@ export default function LLMStatisticPage() {
                           </div>
                           <div className='grid grid-cols-3 gap-4 text-xs text-muted-foreground'>
                             <div>
-                              <span>输入: </span>
+                              <span>{t('input_label')}</span>
                               <span className='font-medium text-foreground'>
                                 {stats.total_input_tokens.toLocaleString()}
                               </span>
                             </div>
                             <div>
-                              <span>输出: </span>
+                              <span>{t('output_label')}</span>
                               <span className='font-medium text-foreground'>
                                 {stats.total_output_tokens.toLocaleString()}
                               </span>
                             </div>
                             <div>
-                              <span>缓存: </span>
+                              <span>{t('cache_label')}</span>
                               <span className='font-medium text-foreground'>
                                 {stats.total_cache_read.toLocaleString()}
                               </span>
@@ -642,7 +647,7 @@ export default function LLMStatisticPage() {
                                 </span>
                               </div>
                               <Badge variant='secondary' className='text-xs'>
-                                {stats.count} 次调用
+                                {t('call_count', { count: stats.count })}
                               </Badge>
                             </div>
                             <div className='text-sm font-semibold'>
@@ -657,19 +662,19 @@ export default function LLMStatisticPage() {
                           </div>
                           <div className='grid grid-cols-3 gap-4 text-xs text-muted-foreground'>
                             <div>
-                              <span>输入: </span>
+                              <span>{t('input_label')}</span>
                               <span className='font-medium text-foreground'>
                                 {stats.total_input_tokens.toLocaleString()}
                               </span>
                             </div>
                             <div>
-                              <span>输出: </span>
+                              <span>{t('output_label')}</span>
                               <span className='font-medium text-foreground'>
                                 {stats.total_output_tokens.toLocaleString()}
                               </span>
                             </div>
                             <div>
-                              <span>缓存: </span>
+                              <span>{t('cache_label')}</span>
                               <span className='font-medium text-foreground'>
                                 {stats.total_cache_read.toLocaleString()}
                               </span>
@@ -684,11 +689,11 @@ export default function LLMStatisticPage() {
 
               <Card className='border-border bg-card p-6'>
                 <div className='flex items-center justify-between mb-4'>
-                  <h3 className='text-lg font-semibold'>使用详情</h3>
+                  <h3 className='text-lg font-semibold'>{t('usage_detail_title')}</h3>
                   <div className='flex items-center gap-4'>
                     <div className='flex items-center gap-2'>
                       <Label className='text-sm text-muted-foreground'>
-                        每页显示
+                        {t('per_page')}
                       </Label>
                       <Select
                         value={pageSize.toString()}
@@ -701,15 +706,15 @@ export default function LLMStatisticPage() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value='10'>10 条</SelectItem>
-                          <SelectItem value='20'>20 条</SelectItem>
-                          <SelectItem value='50'>50 条</SelectItem>
-                          <SelectItem value='100'>100 条</SelectItem>
+                          <SelectItem value='10'>{t('items_per_page_10')}</SelectItem>
+                          <SelectItem value='20'>{t('items_per_page_20')}</SelectItem>
+                          <SelectItem value='50'>{t('items_per_page_50')}</SelectItem>
+                          <SelectItem value='100'>{t('items_per_page_100')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <Badge variant='secondary'>
-                      共 {usageRecordsRes?.total || 0} 条记录
+                      {t('total_records', { total: usageRecordsRes?.total || 0 })}
                     </Badge>
                   </div>
                 </div>
@@ -718,22 +723,22 @@ export default function LLMStatisticPage() {
                   <Table>
                     <TableHeader>
                       <TableRow className='bg-muted/50'>
-                        <TableHead className='font-semibold'>模块</TableHead>
-                        <TableHead className='font-semibold'>模型</TableHead>
-                        <TableHead className='font-semibold'>类型</TableHead>
+                        <TableHead className='font-semibold'>{t('col_module')}</TableHead>
+                        <TableHead className='font-semibold'>{t('col_model')}</TableHead>
+                        <TableHead className='font-semibold'>{t('col_type')}</TableHead>
                         <TableHead className='text-right font-semibold'>
-                          输入 Tokens
+                          {t('col_input_tokens')}
                         </TableHead>
                         <TableHead className='text-right font-semibold'>
-                          输出 Tokens
+                          {t('col_output_tokens')}
                         </TableHead>
                         <TableHead className='text-right font-semibold'>
-                          缓存读取
+                          {t('col_cache_read')}
                         </TableHead>
                         <TableHead className='text-right font-semibold'>
-                          花费
+                          {t('col_cost')}
                         </TableHead>
-                        <TableHead className='font-semibold'>时间</TableHead>
+                        <TableHead className='font-semibold'>{t('col_time')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -794,9 +799,11 @@ export default function LLMStatisticPage() {
 
                 <div className='flex items-center justify-between mt-4'>
                   <div className='text-sm text-muted-foreground'>
-                    显示第 {startIndex + 1} -{' '}
-                    {Math.min(endIndex, usageRecordsRes?.total || 0)} 条，共{' '}
-                    {usageRecordsRes?.total || 0} 条
+                    {t('pagination_info', {
+                      start: startIndex + 1,
+                      end: Math.min(endIndex, usageRecordsRes?.total || 0),
+                      total: usageRecordsRes?.total || 0,
+                    })}
                   </div>
                   <div className='flex items-center gap-2'>
                     <Button
@@ -806,7 +813,7 @@ export default function LLMStatisticPage() {
                       disabled={currentPage === 1}
                     >
                       <ChevronLeftIcon className='h-4 w-4' />
-                      上一页
+                      {t('prev_page')}
                     </Button>
                     <div className='flex items-center gap-1'>
                       {Array.from(
@@ -844,7 +851,7 @@ export default function LLMStatisticPage() {
                       onClick={() => setCurrentPage(currentPage + 1)}
                       disabled={currentPage === totalPages}
                     >
-                      下一页
+                      {t('next_page')}
                       <ChevronRightIcon className='h-4 w-4' />
                     </Button>
                   </div>
