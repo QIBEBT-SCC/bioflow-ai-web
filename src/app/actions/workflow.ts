@@ -45,14 +45,23 @@ export async function saveWorkflow(workflow: Workflow): Promise<string> {
 }
 
 /**
- * 更新已有workflow
+ * 更新已有workflow（名称和/或定义）
  */
 export async function updateWorkflow(
   uid: string,
-  workflow: WorkflowDefinition,
+  data: { name?: string; workflow?: WorkflowDefinition },
 ): Promise<void> {
   await clientFetch(`/workflows/${uid}`, {
     method: 'PATCH',
-    body: JSON.stringify(workflow),
+    body: JSON.stringify(data),
+  })
+}
+
+/**
+ * 删除workflow
+ */
+export async function deleteWorkflow(uid: string): Promise<void> {
+  await clientFetch(`/workflows/${uid}`, {
+    method: 'DELETE',
   })
 }

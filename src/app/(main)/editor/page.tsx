@@ -177,7 +177,7 @@ function FlowContent() {
     }
 
     const workflow = { nodes, edges }
-    updateWorkflowMutation.mutate({ uid: currentWorkflowUid, workflow })
+    updateWorkflowMutation.mutate({ uid: currentWorkflowUid, data: { workflow } })
   }, [currentWorkflowUid, nodes, edges, updateWorkflowMutation])
 
   // 运行workflow
