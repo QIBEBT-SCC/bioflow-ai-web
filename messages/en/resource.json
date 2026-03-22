@@ -1,0 +1,32 @@
+{
+  "resource": {
+    "add_database": "Add Database",
+    "add_new_database": "Add New Database",
+    "add_new_database_desc": "Add a reference to a bioinformatics database. Fields marked with * are required.",
+    "create_failed": "Failed to add database",
+    "create_success": "Database added successfully",
+    "database_detail": "Database Detail",
+    "database_list": "Database List",
+    "database_name": "Database Name",
+    "databases": "Bioinformatics Databases",
+    "delete_confirm": "Confirm Delete Database",
+    "delete_confirm_message": "This will remove the database reference from the system. The database file itself will not be deleted, but the system will no longer have access to it.",
+    "delete_failed": "Failed to delete",
+    "delete_success": "Database deleted successfully",
+    "description": "Manage sample data and bioinformatics databases",
+    "description_label": "Description",
+    "file_path": "File Path",
+    "last_update": "Last Update",
+    "name": "Name",
+    "name_exists": "Database name already exists, please use a different name",
+    "no_database_found": "No database found",
+    "no_database_selected": "Please select a database",
+    "path": "Path",
+    "path_not_found": "File path does not exist, please check the path",
+    "samples": "Sample Data",
+    "search_database": "Search database...",
+    "size": "Size",
+    "title": "Resource Management",
+    "update_time": "Update Time"
+  }
+}

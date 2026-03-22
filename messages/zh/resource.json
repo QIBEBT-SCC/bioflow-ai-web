@@ -1,0 +1,32 @@
+{
+  "resource": {
+    "add_database": "添加数据库",
+    "add_new_database": "添加新数据库",
+    "add_new_database_desc": "添加生物信息数据库的引用。所有带 * 的字段为必填项。",
+    "create_failed": "添加数据库失败",
+    "create_success": "数据库添加成功",
+    "database_detail": "数据库详情",
+    "database_list": "数据库列表",
+    "database_name": "数据库名称",
+    "databases": "生物信息数据库",
+    "delete_confirm": "确认删除数据库",
+    "delete_confirm_message": "此操作将从系统中移除此数据库的引用。数据库文件本身不会被删除，但系统将无法再访问它。",
+    "delete_failed": "删除失败",
+    "delete_success": "数据库删除成功",
+    "description": "管理样本数据和生物信息数据库",
+    "description_label": "描述",
+    "file_path": "文件路径",
+    "last_update": "最后更新",
+    "name": "名称",
+    "name_exists": "数据库名称已存在，请使用其他名称",
+    "no_database_found": "未找到数据库",
+    "no_database_selected": "请选择一个数据库",
+    "path": "路径",
+    "path_not_found": "文件路径不存在，请检查路径是否正确",
+    "samples": "样本数据",
+    "search_database": "搜索数据库...",
+    "size": "大小",
+    "title": "资源管理",
+    "update_time": "更新时间"
+  }
+}

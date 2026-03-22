@@ -1,0 +1,12 @@
+{
+  "Login": {
+    "forgot_password": "忘记密码？",
+    "logging_in": "登录中...",
+    "login": "登录",
+    "no_account": "没有账号？",
+    "password": "密码",
+    "signup": "注册",
+    "title": "欢迎回来",
+    "username": "用户名"
+  }
+}
