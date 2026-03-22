@@ -86,6 +86,7 @@ const defaultStats: LLMStatisticOverview = {
 export default function LLMStatisticPage() {
   // Hooks
   const t = useTranslations('setting.llm_statistic')
+  const tSetting = useTranslations('setting.llm_setting')
   const locale = useLocale()
   const dateFnsLocale = locale === 'zh' ? zhCN : enUS
   const { data: providers = [] } = useLLMProviders()
@@ -129,6 +130,7 @@ export default function LLMStatisticPage() {
 
   // Model Config State
   const [localConfig, setLocalConfig] = useState<Record<string, string>>({})
+  const [isEditing, setIsEditing] = useState(false)
 
   useEffect(() => {
     if (settings) {
@@ -147,13 +149,31 @@ export default function LLMStatisticPage() {
   }
 
   const handleSaveConfig = async () => {
-    const promises = Object.entries(localConfig).map(([key, modelId]) =>
-      updateSettingMutation.mutateAsync({
-        key: key as LLMSettingKey,
-        model_id: parseInt(modelId),
-      }),
-    )
-    await Promise.all(promises)
+    try {
+      const promises = Object.entries(localConfig).map(([key, modelId]) =>
+        updateSettingMutation.mutateAsync({
+          key: key as LLMSettingKey,
+          model_id: parseInt(modelId),
+        }),
+      )
+      await Promise.all(promises)
+      setIsEditing(false)
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const handleCancelConfig = () => {
+    if (settings) {
+      const config: Record<string, string> = {}
+      ;(Object.keys(settings) as Array<keyof LLMSettingPublic>).forEach(
+        (key) => {
+          config[key] = settings[key].model_id.toString()
+        },
+      )
+      setLocalConfig(config)
+    }
+    setIsEditing(false)
   }
 
   /* Removed modelTypeLabels definition here to avoid duplication if it's defined below or to be redefined */
@@ -218,85 +238,99 @@ export default function LLMStatisticPage() {
 
             {/* Model Configuration Tab */}
             <TabsContent value='config' className='space-y-4'>
-              <Card className='border-border bg-card p-6'>
-                <h2 className='text-xl font-semibold mb-6'>{t('module_config_title')}</h2>
-                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-                  {Object.keys(modelTypeLabels).map((key) => (
-                    <div key={key} className='space-y-2'>
-                      <Label htmlFor={key} className='text-sm font-medium'>
-                        {modelTypeLabels[key]}
-                      </Label>
-                      <Select
-                        value={localConfig[key]}
-                        onValueChange={(value) => updateModelConfig(key, value)}
-                      >
-                        <SelectTrigger id={key} className='bg-background'>
-                          <SelectValue placeholder={t('select_model')} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {availableModels.map((model) => (
-                            <SelectItem key={model.id} value={model.id}>
-                              <div className='flex items-center gap-2'>
-                                <span className='font-mono text-sm'>
-                                  {model.name}
-                                </span>
-                                <span className='text-xs text-muted-foreground'>
-                                  ({model.provider_name})
-                                </span>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  ))}
-                </div>
-                <div className='mt-6 flex justify-end'>
-                  <Button
-                    onClick={handleSaveConfig}
-                    disabled={updateSettingMutation.isPending}
-                  >
-                    {updateSettingMutation.isPending ? t('saving') : t('save_config')}
-                  </Button>
-                </div>
-              </Card>
-
-              {/* Current Configuration Summary */}
-              <Card className='border-border bg-card p-6'>
-                <h3 className='text-lg font-semibold mb-4'>{t('current_config_title')}</h3>
-                <div className='space-y-3'>
-                  {Object.keys(modelTypeLabels).map((key) => {
-                    const modelId = localConfig[key]
-                    const model = availableModels.find((m) => m.id === modelId)
-                    return (
-                      <div
-                        key={key}
-                        className='flex items-center justify-between py-2 border-b border-border last:border-0'
-                      >
-                        <div className='space-y-1'>
-                          <p className='text-sm font-medium'>
-                            {modelTypeLabels[key]}
-                          </p>
-                          <p className='text-xs text-muted-foreground'>{key}</p>
-                        </div>
-                        <div className='flex items-center gap-2'>
-                          <Badge
-                            variant='secondary'
-                            className='font-mono text-xs'
-                          >
-                            {model?.name || t('not_configured')}
-                          </Badge>
-                          {model && (
-                            <Badge variant='outline' className='text-xs'>
-                              {model.provider_name}
-                            </Badge>
-                          )}
-                        </div>
+              {isEditing ? (
+                <Card className='border-border bg-card p-6'>
+                  <h2 className='text-xl font-semibold mb-6'>{t('module_config_title')}</h2>
+                  <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+                    {Object.keys(modelTypeLabels).map((key) => (
+                      <div key={key} className='space-y-2'>
+                        <Label htmlFor={key} className='text-sm font-medium'>
+                          {modelTypeLabels[key]}
+                        </Label>
+                        <Select
+                          value={localConfig[key]}
+                          onValueChange={(value) => updateModelConfig(key, value)}
+                        >
+                          <SelectTrigger id={key} className='bg-background'>
+                            <SelectValue placeholder={t('select_model')} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {availableModels.map((model) => (
+                              <SelectItem key={model.id} value={model.id}>
+                                <div className='flex items-center gap-2'>
+                                  <span className='font-mono text-sm'>
+                                    {model.name}
+                                  </span>
+                                  <span className='text-xs text-muted-foreground'>
+                                    ({model.provider_name})
+                                  </span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
-                    )
-                  })}
-                </div>
-              </Card>
+                    ))}
+                  </div>
+                  <div className='mt-6 flex justify-end gap-2'>
+                    <Button
+                      variant='outline'
+                      onClick={handleCancelConfig}
+                      disabled={updateSettingMutation.isPending}
+                    >
+                      {tSetting('cancel')}
+                    </Button>
+                    <Button
+                      onClick={handleSaveConfig}
+                      disabled={updateSettingMutation.isPending}
+                    >
+                      {updateSettingMutation.isPending ? t('saving') : t('save_config')}
+                    </Button>
+                  </div>
+                </Card>
+              ) : (
+                <Card className='border-border bg-card p-6'>
+                  <div className='flex items-center justify-between mb-4'>
+                    <h3 className='text-lg font-semibold'>{t('current_config_title')}</h3>
+                    <Button variant='outline' onClick={() => setIsEditing(true)}>
+                      <SettingsIcon className='h-4 w-4 mr-2' />
+                      {tSetting('edit')}
+                    </Button>
+                  </div>
+                  <div className='space-y-3'>
+                    {Object.keys(modelTypeLabels).map((key) => {
+                      const modelId = localConfig[key]
+                      const model = availableModels.find((m) => m.id === modelId)
+                      return (
+                        <div
+                          key={key}
+                          className='flex items-center justify-between py-2 border-b border-border last:border-0'
+                        >
+                          <div className='space-y-1'>
+                            <p className='text-sm font-medium'>
+                              {modelTypeLabels[key]}
+                            </p>
+                            <p className='text-xs text-muted-foreground'>{key}</p>
+                          </div>
+                          <div className='flex items-center gap-2'>
+                            <Badge
+                              variant='secondary'
+                              className='font-mono text-xs'
+                            >
+                              {model?.name || t('not_configured')}
+                            </Badge>
+                            {model && (
+                              <Badge variant='outline' className='text-xs'>
+                                {model.provider_name}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </Card>
+              )}
             </TabsContent>
 
             {/* Statistics Tab */}
