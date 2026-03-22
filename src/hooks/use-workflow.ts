@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import {
+  deleteWorkflow,
   getWorkflow,
   getWorkflowCount,
   getWorkflows,
@@ -82,19 +83,37 @@ export const useUpdateWorkflow = () => {
   return useMutation({
     mutationFn: ({
       uid,
-      workflow,
+      data,
     }: {
       uid: string
-      workflow: WorkflowDefinition
-    }) => updateWorkflow(uid, workflow),
+      data: { name?: string; workflow?: WorkflowDefinition }
+    }) => updateWorkflow(uid, data),
     onSuccess: (_, { uid }) => {
       toast.success('Workflow更新成功')
-      // 刷新特定workflow和列表
       queryClient.invalidateQueries({ queryKey: ['workflow', uid] })
       queryClient.invalidateQueries({ queryKey: ['workflows'] })
     },
     onError: (error: Error) => {
       toast.error(`更新失败: ${error.message || '未知错误'}`)
+    },
+  })
+}
+
+/**
+ * 删除workflow
+ */
+export const useDeleteWorkflow = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (uid: string) => deleteWorkflow(uid),
+    onSuccess: () => {
+      toast.success('Workflow已删除')
+      queryClient.invalidateQueries({ queryKey: ['workflows'] })
+      queryClient.invalidateQueries({ queryKey: ['workflowCount'] })
+    },
+    onError: (error: Error) => {
+      toast.error(`删除失败: ${error.message || '未知错误'}`)
     },
   })
 }
