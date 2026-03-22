@@ -1,0 +1,26 @@
+{
+  "Language": {
+    "language": "Language"
+  },
+  "Metadata": {
+    "description": "Bioinformatics Workflow Platform",
+    "title": "BioFlow AI"
+  },
+  "Sidebar": {
+    "admin": "Admin",
+    "chat": "Chat",
+    "databases": "Bio Databases",
+    "editor": "Editor",
+    "genomes": "Genomes",
+    "images": "Images",
+    "llm_setting": "LLM Setting",
+    "llm_statistic": "LLM Statistic",
+    "projects": "Project",
+    "resource": "Resource Management",
+    "setting": "Settings",
+    "tasks": "Task",
+    "tool_config": "Tool Config",
+    "tools": "Tool",
+    "workflows": "Workflow"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "Language": {
+    "language": "语言"
+  },
+  "Metadata": {
+    "description": "生物信息学工作流平台",
+    "title": "BioFlow AI"
+  },
+  "Sidebar": {
+    "admin": "管理员",
+    "chat": "对话",
+    "databases": "生物信息数据库",
+    "editor": "编辑器",
+    "genomes": "参考基因组",
+    "images": "镜像",
+    "llm_setting": "模型设置",
+    "llm_statistic": "模型统计",
+    "projects": "项目",
+    "resource": "资源管理",
+    "setting": "设置",
+    "tasks": "任务",
+    "tool_config": "工具管理",
+    "tools": "工具",
+    "workflows": "工作流"
+  }
+}
