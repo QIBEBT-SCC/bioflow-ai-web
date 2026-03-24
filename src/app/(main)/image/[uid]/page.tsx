@@ -1,6 +1,18 @@
 'use client'
 
-import { ArrowLeftIcon, CheckIcon, CopyIcon, EditIcon, ExternalLinkIcon, FileTextIcon, PackageIcon, SaveIcon, XIcon } from 'lucide-react'
+import { useTranslations } from 'next-intl'
+
+import {
+  ArrowLeftIcon,
+  CheckIcon,
+  CopyIcon,
+  EditIcon,
+  ExternalLinkIcon,
+  FileTextIcon,
+  PackageIcon,
+  SaveIcon,
+  XIcon,
+} from 'lucide-react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useState } from 'react'
@@ -14,7 +26,13 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
@@ -26,6 +44,7 @@ import type { ToolImage } from '@/types/tool'
 import { Badge } from '@/components/ui/badge'
 
 export default function ImageDetailPage() {
+  const t = useTranslations('image.detail')
   const params = useParams()
   const router = useRouter()
   const uid = params.uid as string
@@ -44,10 +63,10 @@ export default function ImageDetailPage() {
       try {
         await navigator.clipboard.writeText(imageTag)
         setCopied(true)
-        toast.success('镜像标签已复制到剪贴板')
+        toast.success(t('copySuccess'))
         setTimeout(() => setCopied(false), 2000)
       } catch (_err) {
-        toast.error('复制失败')
+        toast.error(t('copyFail'))
       }
     }
   }
@@ -80,7 +99,7 @@ export default function ImageDetailPage() {
         onSuccess: () => {
           setIsEditing(false)
         },
-      }
+      },
     )
   }
 
@@ -102,7 +121,7 @@ export default function ImageDetailPage() {
           </div>
         </header>
         <div className='flex-1 overflow-y-auto flex items-center justify-center'>
-          <div className='text-muted-foreground'>加载中...</div>
+          <div className='text-muted-foreground'>{t('loading')}</div>
         </div>
       </SidebarInset>
     )
@@ -122,13 +141,13 @@ export default function ImageDetailPage() {
         <div className='flex-1 overflow-y-auto flex items-center justify-center'>
           <div className='text-center'>
             <PackageIcon className='h-12 w-12 mx-auto mb-4 text-muted-foreground' />
-            <h2 className='text-xl font-semibold mb-2'>镜像未找到</h2>
+            <h2 className='text-xl font-semibold mb-2'>{t('notFoundTitle')}</h2>
             <p className='text-muted-foreground mb-4'>
-              {error?.message || '请求的镜像不存在'}
+              {error?.message || t('notFoundDesc')}
             </p>
             <Button onClick={() => router.push('/image')} variant='outline'>
               <ArrowLeftIcon className='h-4 w-4 mr-2' />
-              返回列表
+              {t('backToList')}
             </Button>
           </div>
         </div>
@@ -168,32 +187,34 @@ export default function ImageDetailPage() {
                   <PackageIcon className='h-8 w-8 text-primary' />
                   <div>
                     <CardTitle className='text-2xl'>{image.name}</CardTitle>
-                    <CardDescription>版本 {image.version}</CardDescription>
+                    <CardDescription>
+                      {t('version', { val: image.version })}
+                    </CardDescription>
                   </div>
                 </div>
                 {!isEditing ? (
                   <Button onClick={handleEdit} variant='outline' size='sm'>
                     <EditIcon className='h-4 w-4 mr-2' />
-                    编辑
+                    {t('edit')}
                   </Button>
                 ) : (
                   <div className='flex gap-2'>
-                    <Button 
-                      onClick={handleCancel} 
-                      variant='outline' 
+                    <Button
+                      onClick={handleCancel}
+                      variant='outline'
                       size='sm'
                       disabled={updateImageMutation.isPending}
                     >
                       <XIcon className='h-4 w-4 mr-2' />
-                      取消
+                      {t('cancel')}
                     </Button>
-                    <Button 
-                      onClick={handleSave} 
+                    <Button
+                      onClick={handleSave}
                       size='sm'
                       disabled={updateImageMutation.isPending}
                     >
                       <SaveIcon className='h-4 w-4 mr-2' />
-                      保存
+                      {t('save')}
                     </Button>
                   </div>
                 )}
@@ -203,28 +224,37 @@ export default function ImageDetailPage() {
               {isEditing ? (
                 <>
                   <div className='space-y-2'>
-                    <Label htmlFor='name'>名称</Label>
+                    <Label htmlFor='name'>{t('nameLabel')}</Label>
                     <Input
                       id='name'
                       value={formData.name || ''}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
                     />
                   </div>
                   <div className='space-y-2'>
-                    <Label htmlFor='version'>版本</Label>
+                    <Label htmlFor='version'>{t('versionLabel')}</Label>
                     <Input
                       id='version'
                       value={formData.version || ''}
-                      onChange={(e) => setFormData({ ...formData, version: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, version: e.target.value })
+                      }
                     />
                   </div>
                   <div className='space-y-2'>
-                    <Label htmlFor='description'>描述</Label>
+                    <Label htmlFor='description'>{t('descLabel')}</Label>
                     <Textarea
                       id='description'
                       rows={4}
                       value={formData.description || ''}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          description: e.target.value,
+                        })
+                      }
                     />
                   </div>
                   <div className='space-y-2'>
@@ -233,7 +263,9 @@ export default function ImageDetailPage() {
                       id='homepage'
                       type='url'
                       value={formData.homepage || ''}
-                      onChange={(e) => setFormData({ ...formData, homepage: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, homepage: e.target.value })
+                      }
                     />
                   </div>
                   <div className='space-y-2'>
@@ -242,73 +274,99 @@ export default function ImageDetailPage() {
                       id='paper_link'
                       type='url'
                       value={formData.paper_link || ''}
-                      onChange={(e) => setFormData({ ...formData, paper_link: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, paper_link: e.target.value })
+                      }
                     />
                   </div>
-                  
+
                   <Separator />
-                  
+
                   <div className='space-y-4'>
-                    <h3 className='text-sm font-medium'>镜像配置</h3>
+                    <h3 className='text-sm font-medium'>{t('config')}</h3>
                     <div className='grid grid-cols-2 gap-4'>
                       <div className='space-y-2'>
-                        <Label htmlFor='registry'>Registry</Label>
+                        <Label htmlFor='registry'>{t('registry')}</Label>
                         <Input
                           id='registry'
                           value={formData.image?.registry || ''}
-                          onChange={(e) => setFormData({ 
-                            ...formData, 
-                            image: { 
-                              ...(formData.image || { namespace: '', repository: '', tag: '' }),
-                              registry: e.target.value 
-                            } 
-                          })}
-                          placeholder='例如: quay.io'
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              image: {
+                                ...(formData.image || {
+                                  namespace: '',
+                                  repository: '',
+                                  tag: '',
+                                }),
+                                registry: e.target.value,
+                              },
+                            })
+                          }
+                          placeholder={t('registryPlaceholder')}
                         />
                       </div>
                       <div className='space-y-2'>
-                        <Label htmlFor='namespace'>Namespace</Label>
+                        <Label htmlFor='namespace'>{t('namespace')}</Label>
                         <Input
                           id='namespace'
                           value={formData.image?.namespace || ''}
-                          onChange={(e) => setFormData({ 
-                            ...formData, 
-                            image: { 
-                              ...(formData.image || { registry: '', repository: '', tag: '' }),
-                              namespace: e.target.value 
-                            } 
-                          })}
-                          placeholder='例如: biocontainers'
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              image: {
+                                ...(formData.image || {
+                                  registry: '',
+                                  repository: '',
+                                  tag: '',
+                                }),
+                                namespace: e.target.value,
+                              },
+                            })
+                          }
+                          placeholder={t('namespacePlaceholder')}
                         />
                       </div>
                       <div className='space-y-2'>
-                        <Label htmlFor='repository'>Repository</Label>
+                        <Label htmlFor='repository'>{t('repository')}</Label>
                         <Input
                           id='repository'
                           value={formData.image?.repository || ''}
-                          onChange={(e) => setFormData({ 
-                            ...formData, 
-                            image: { 
-                              ...(formData.image || { registry: '', namespace: '', tag: '' }),
-                              repository: e.target.value 
-                            } 
-                          })}
-                          placeholder='例如: blast'
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              image: {
+                                ...(formData.image || {
+                                  registry: '',
+                                  namespace: '',
+                                  tag: '',
+                                }),
+                                repository: e.target.value,
+                              },
+                            })
+                          }
+                          placeholder={t('repositoryPlaceholder')}
                         />
                       </div>
                       <div className='space-y-2'>
-                        <Label htmlFor='tag'>Tag</Label>
+                        <Label htmlFor='tag'>{t('tag')}</Label>
                         <Input
                           id='tag'
                           value={formData.image?.tag || ''}
-                          onChange={(e) => setFormData({ 
-                            ...formData, 
-                            image: { 
-                              ...(formData.image || { registry: '', namespace: '', repository: '' }),
-                              tag: e.target.value 
-                            } 
-                          })}
-                          placeholder='例如: 2.14.0'
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              image: {
+                                ...(formData.image || {
+                                  registry: '',
+                                  namespace: '',
+                                  repository: '',
+                                }),
+                                tag: e.target.value,
+                              },
+                            })
+                          }
+                          placeholder={t('tagPlaceholder')}
                         />
                       </div>
                     </div>
@@ -317,15 +375,23 @@ export default function ImageDetailPage() {
               ) : (
                 <>
                   <div>
-                    <h3 className='text-sm font-medium text-muted-foreground mb-2'>描述</h3>
-                    <p className='text-sm'>{image.description || '无描述'}</p>
+                    <h3 className='text-sm font-medium text-muted-foreground mb-2'>
+                      {t('descLabel')}
+                    </h3>
+                    <p className='text-sm'>
+                      {image.description || t('noDesc')}
+                    </p>
                   </div>
 
                   <div>
-                    <h3 className='text-sm font-medium text-muted-foreground mb-2'>镜像标签</h3>
+                    <h3 className='text-sm font-medium text-muted-foreground mb-2'>
+                      {t('imageTag')}
+                    </h3>
                     <div className='flex items-center gap-2'>
                       <div className='flex-1 p-3 bg-muted rounded-md'>
-                        <code className='text-sm font-mono'>{formatImageTag(image)}</code>
+                        <code className='text-sm font-mono'>
+                          {formatImageTag(image)}
+                        </code>
                       </div>
                       <Button
                         variant='outline'
@@ -345,7 +411,11 @@ export default function ImageDetailPage() {
                   <div className='flex flex-wrap gap-3'>
                     {image.homepage && (
                       <Button variant='outline' size='sm' asChild>
-                        <a href={image.homepage} target='_blank' rel='noopener noreferrer'>
+                        <a
+                          href={image.homepage}
+                          target='_blank'
+                          rel='noopener noreferrer'
+                        >
                           <ExternalLinkIcon className='h-4 w-4 mr-2' />
                           Homepage
                         </a>
@@ -353,7 +423,11 @@ export default function ImageDetailPage() {
                     )}
                     {image.paper_link && (
                       <Button variant='outline' size='sm' asChild>
-                        <a href={image.paper_link} target='_blank' rel='noopener noreferrer'>
+                        <a
+                          href={image.paper_link}
+                          target='_blank'
+                          rel='noopener noreferrer'
+                        >
                           <FileTextIcon className='h-4 w-4 mr-2' />
                           Paper
                         </a>
@@ -368,60 +442,60 @@ export default function ImageDetailPage() {
           {/* 工具列表 */}
           <div className='mt-8'>
             <h2 className='text-xl font-semibold mb-4'>
-              关联工具 ({image.tools?.length || 0})
+              {t('relatedTools', { count: image.tools?.length || 0 })}
             </h2>
-              {(!image.tools || image.tools.length === 0) ? (
-                <Card>
-                  <CardContent className='py-12 text-center text-muted-foreground'>
-                    该镜像暂无关联的工具
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-                  {image.tools.map((tool) => (
-                    <Link key={tool.uid} href={`/tool/${tool.uid}`}>
-                      <Card className='h-full hover:shadow-lg transition-shadow cursor-pointer'>
-                        <CardHeader>
-                          <CardTitle className='text-lg'>{tool.name}</CardTitle>
-                          <CardDescription className='line-clamp-2'>
-                            {tool.description || '无描述'}
-                          </CardDescription>
-                        </CardHeader>
-                        {tool.tags && tool.tags.length > 0 && (
-                          <CardContent>
-                            <div className='flex flex-wrap gap-1'>
-                              {tool.tags.map((tag) => {
-                                const getTagStyle = (tagName: string) => {
-                                  switch (tagName) {
-                                    case 'AI Checked':
-                                      return 'bg-green-50 text-green-600 border-green-200'
-                                    case 'AI Unchecked':
-                                      return 'bg-yellow-50 text-yellow-600 border-yellow-200'
-                                    default:
-                                      return 'bg-blue-50 text-blue-600 border-blue-200'
-                                  }
+            {!image.tools || image.tools.length === 0 ? (
+              <Card>
+                <CardContent className='py-12 text-center text-muted-foreground'>
+                  {t('noTools')}
+                </CardContent>
+              </Card>
+            ) : (
+              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
+                {image.tools.map((tool) => (
+                  <Link key={tool.uid} href={`/tool/${tool.uid}`}>
+                    <Card className='h-full hover:shadow-lg transition-shadow cursor-pointer'>
+                      <CardHeader>
+                        <CardTitle className='text-lg'>{tool.name}</CardTitle>
+                        <CardDescription className='line-clamp-2'>
+                          {tool.description || t('noDesc')}
+                        </CardDescription>
+                      </CardHeader>
+                      {tool.tags && tool.tags.length > 0 && (
+                        <CardContent>
+                          <div className='flex flex-wrap gap-1'>
+                            {tool.tags.map((tag) => {
+                              const getTagStyle = (tagName: string) => {
+                                switch (tagName) {
+                                  case 'AI Checked':
+                                    return 'bg-green-50 text-green-600 border-green-200'
+                                  case 'AI Unchecked':
+                                    return 'bg-yellow-50 text-yellow-600 border-yellow-200'
+                                  default:
+                                    return 'bg-blue-50 text-blue-600 border-blue-200'
                                 }
-                                return (
-                                  <Badge
-                                    key={tag.id}
-                                    variant='outline'
-                                    className={`${getTagStyle(tag.name)} text-xs`}
-                                  >
-                                    {tag.name}
-                                  </Badge>
-                                )
-                              })}
-                            </div>
-                          </CardContent>
-                        )}
-                      </Card>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
+                              }
+                              return (
+                                <Badge
+                                  key={tag.id}
+                                  variant='outline'
+                                  className={`${getTagStyle(tag.name)} text-xs`}
+                                >
+                                  {tag.name}
+                                </Badge>
+                              )
+                            })}
+                          </div>
+                        </CardContent>
+                      )}
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         </div>
+      </div>
     </SidebarInset>
   )
 }
