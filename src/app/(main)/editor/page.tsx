@@ -28,7 +28,6 @@ import {
   Copy2FolderNode,
   GlobalMarkerNode,
   GzipNode,
-  Move2FolderNode,
   RenameFileNode,
 } from '@/components/node-editor/node/data-node'
 import {
@@ -72,7 +71,7 @@ const nodeTypes = {
   resource_GRCm39: GRCm39Node,
   resource_global_file: GlobalFileNode,
   // processor
-  move_files_to_folder: Move2FolderNode,
+  copy2folder: Copy2FolderNode,
   gzip: GzipNode,
   global_mark: GlobalMarkerNode,
   rename_file: RenameFileNode,

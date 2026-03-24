@@ -91,13 +91,13 @@ const menuData: Record<string, MenuGroup> = {
     submenuType: 'inline',
     items: [
       {
-        type: 'move_files_to_folder',
-        labelKey: 'move_to_folder',
+        type: 'copy2folder',
+        labelKey: 'copy2folder',
         Icon: FolderInputIcon,
       },
       { type: 'gzip', labelKey: 'gzip', Icon: FileArchiveIcon },
-      { type: 'global_mark', labelKey: 'global_marker', Icon: TagIcon },
       { type: 'rename_file', labelKey: 'rename_file', Icon: FilePenIcon },
+      { type: 'global_mark', labelKey: 'global_marker', Icon: TagIcon },
     ],
   },
   other: {
