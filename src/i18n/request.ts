@@ -2,7 +2,15 @@ import { cookies } from 'next/headers'
 import { getRequestConfig } from 'next-intl/server'
 import { defaultLocale, type Locale } from './config'
 
-const namespaces = ['common', 'login', 'chat', 'editor', 'resource', 'setting']
+const namespaces = [
+  'common',
+  'login',
+  'chat',
+  'editor',
+  'resource',
+  'setting',
+  'image',
+]
 
 export default getRequestConfig(async () => {
   // 从 cookie 读取用户语言偏好

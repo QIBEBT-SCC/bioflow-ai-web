@@ -1,5 +1,7 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
+
 import { PackageIcon, PlusIcon, SearchIcon, XIcon } from 'lucide-react'
 import { useState } from 'react'
 import { CreateImageDialog } from '@/components/image/create-image-dialog'
@@ -31,6 +33,7 @@ const SKELETON_KEYS = ['sk-0', 'sk-1', 'sk-2', 'sk-3', 'sk-4', 'sk-5']
 // 以实际接口数据替换 mock
 
 export default function ImagePage() {
+  const t = useTranslations('image')
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 6
@@ -68,7 +71,7 @@ export default function ImagePage() {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className='hidden md:block'>
-                  <BreadcrumbPage>Images</BreadcrumbPage>
+                  <BreadcrumbPage>{t('title')}</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
@@ -82,13 +85,12 @@ export default function ImagePage() {
             <div className='flex items-start justify-between gap-4 mb-3'>
               <div>
                 <h1 className='text-4xl font-bold text-balance'>
-                  Docker Image Registry
+                  {t('headerTitle')}
                 </h1>
               </div>
             </div>
             <p className='text-lg text-muted-foreground text-pretty'>
-              Browse and discover containerized tools and frameworks for your
-              projects
+              {t('headerDesc')}
             </p>
           </div>
 
@@ -99,7 +101,7 @@ export default function ImagePage() {
                 <SearchIcon className='absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground' />
                 <Input
                   type='text'
-                  placeholder='Search images by name, description, or version...'
+                  placeholder={t('searchPlaceholder')}
                   value={searchQuery}
                   onChange={(e) => handleSearchChange(e.target.value)}
                   className='pl-10 pr-10 h-12 text-base'
@@ -109,7 +111,7 @@ export default function ImagePage() {
                     variant='ghost'
                     size='icon'
                     className='absolute right-1.5 top-1/2 -translate-y-1/2 h-8 w-8'
-                    aria-label='Clear search'
+                    aria-label={t('searchClear')}
                     onClick={() => handleSearchChange('')}
                   >
                     <XIcon className='h-4 w-4 text-muted-foreground' />
@@ -124,7 +126,9 @@ export default function ImagePage() {
           {enableSearch && (
             <div className='mb-6'>
               <p className='text-sm text-muted-foreground'>
-                {images.length} {images.length === 1 ? 'image' : 'images'} found
+                {images.length === 1
+                  ? t('imageFound', { count: images.length })
+                  : t('imagesFound', { count: images.length })}
               </p>
             </div>
           )}
@@ -135,9 +139,9 @@ export default function ImagePage() {
                 <EmptyMedia>
                   <PackageIcon className='h-12 w-12' />
                 </EmptyMedia>
-                <EmptyTitle>加载失败</EmptyTitle>
+                <EmptyTitle>{t('loadFail')}</EmptyTitle>
                 <EmptyDescription>
-                  {error ? error.message : '加载失败'}
+                  {error ? error.message : t('loadFail')}
                 </EmptyDescription>
               </EmptyHeader>
               <EmptyContent>
@@ -145,7 +149,7 @@ export default function ImagePage() {
                   variant='outline'
                   onClick={() => window.location.reload()}
                 >
-                  重试
+                  {t('retry')}
                 </Button>
               </EmptyContent>
             </Empty>
@@ -161,19 +165,15 @@ export default function ImagePage() {
                 <EmptyMedia>
                   <PackageIcon className='h-12 w-12' />
                 </EmptyMedia>
-                <EmptyTitle>No Docker Images Found</EmptyTitle>
-                <EmptyDescription>
-                  {
-                    "You haven't added any Docker images yet. Get started by creating your first image."
-                  }
-                </EmptyDescription>
+                <EmptyTitle>{t('noImagesTitle')}</EmptyTitle>
+                <EmptyDescription>{t('noImagesDesc')}</EmptyDescription>
               </EmptyHeader>
               <EmptyContent>
                 <CreateImageDialog
                   trigger={
                     <Button>
                       <PlusIcon className='h-4 w-4 mr-2' />
-                      Create First Image
+                      {t('createFirstBtn')}
                     </Button>
                   }
                 />
