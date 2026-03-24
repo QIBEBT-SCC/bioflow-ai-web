@@ -18,19 +18,152 @@ const COPY2FOLDER_HANDLES = {
   ] as HandleDefine[],
   outputs: [
     {
-      name: 'folder',
-      description: 'Folder path containing all files',
+      name: 'folder_path',
+      description: 'Path of the destination folder',
     },
   ] as HandleDefine[],
 }
 
+const Copy2FolderCard = memo(function Copy2FolderCard() {
+  const readOnly = useReadOnly()
+  const nodeId = useNodeId() ?? ''
+  const nodeData =
+    useNodesData<Node<{ folder_name: string }, 'copy2folder'>>(nodeId)
+  const { updateNodeData } = useReactFlow()
+
+  const [folder_name, setFolderName] = useState<string>(
+    nodeData?.data.folder_name ?? '',
+  )
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: no need
+  useEffect(() => {
+    if (
+      nodeData?.data.folder_name !== undefined &&
+      nodeData.data.folder_name !== folder_name
+    ) {
+      setFolderName(nodeData.data.folder_name)
+    }
+  }, [nodeData?.data.folder_name])
+
+  const handleBlur = useCallback(() => {
+    updateNodeData(nodeId, { folder_name })
+  }, [nodeId, folder_name, updateNodeData])
+
+  return (
+    <div className='p-3'>
+      <Label className='pb-2 font-medium'>Folder Name:</Label>
+      <Input
+        className='w-full border-input focus-visible:ring-ring'
+        placeholder='Enter folder name...'
+        value={folder_name}
+        onChange={(e) => setFolderName(e.target.value)}
+        onBlur={handleBlur}
+        spellCheck={false}
+        disabled={readOnly}
+      />
+    </div>
+  )
+})
+
 const Copy2FolderNode = memo(function Copy2FolderNode() {
-  const nodeComponent = useMemo(() => <div />, [])
+  const nodeComponent = useMemo(() => <Copy2FolderCard />, [])
+
   return (
     <BaseNode
       title='Copy To Folder'
       description='Copy files from multiple input sources to the same folder.'
       handles={COPY2FOLDER_HANDLES}
+      color={colorSchemes.orange}
+      nodeComponent={nodeComponent}
+    />
+  )
+})
+
+const GZIP_HANDLES = {
+  inputs: [
+    {
+      name: 'file',
+      description: 'File to be compressed',
+    },
+  ] as HandleDefine[],
+  outputs: [
+    {
+      name: 'zipped_file',
+      description: 'Gzip compressed file',
+    },
+  ] as HandleDefine[],
+}
+
+const GzipNode = memo(function GzipNode() {
+  const nodeComponent = useMemo(() => <div />, [])
+  return (
+    <BaseNode
+      title='Gzip'
+      description='Compress a file using gzip.'
+      handles={GZIP_HANDLES}
+      color={colorSchemes.orange}
+      nodeComponent={nodeComponent}
+    />
+  )
+})
+
+const RENAME_FILE_HANDLES = {
+  inputs: [
+    { name: 'old_file', description: 'File to be renamed' },
+  ] as HandleDefine[],
+  outputs: [
+    { name: 'renamed_file', description: 'Renamed file' },
+  ] as HandleDefine[],
+}
+
+const RenameFileCard = memo(function RenameFileCard() {
+  const nodeId = useNodeId() ?? ''
+  const nodeData =
+    useNodesData<Node<{ new_file_name: string }, 'rename_file'>>(nodeId)
+  const { updateNodeData } = useReactFlow()
+  const readOnly = useReadOnly()
+
+  const [newFileName, setNewFileName] = useState<string>(
+    nodeData?.data.new_file_name ?? '',
+  )
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: no need
+  useEffect(() => {
+    if (
+      nodeData?.data.new_file_name !== undefined &&
+      nodeData.data.new_file_name !== newFileName
+    ) {
+      setNewFileName(nodeData.data.new_file_name)
+    }
+  }, [nodeData?.data.new_file_name])
+
+  const handleBlur = useCallback(() => {
+    updateNodeData(nodeId, { new_file_name: newFileName })
+  }, [nodeId, newFileName, updateNodeData])
+
+  return (
+    <div className='p-3'>
+      <Label className='pb-2 font-medium'>New File Name:</Label>
+      <Input
+        className='w-full border-input focus-visible:ring-ring'
+        placeholder='Enter new file name...'
+        value={newFileName}
+        onChange={(e) => setNewFileName(e.target.value)}
+        onBlur={handleBlur}
+        spellCheck={false}
+        disabled={readOnly}
+      />
+    </div>
+  )
+})
+
+const RenameFileNode = memo(function RenameFileNode() {
+  const nodeComponent = useMemo(() => <RenameFileCard />, [])
+  return (
+    <BaseNode
+      title='Rename File'
+      description='Rename a file to a new name.'
+      handles={RENAME_FILE_HANDLES}
       color={colorSchemes.orange}
       nodeComponent={nodeComponent}
     />
@@ -131,155 +264,4 @@ const GlobalMarkerNode = memo(function FileInputNode() {
   )
 })
 
-const MOVE2FOLDER_HANDLES = {
-  inputs: [
-    {
-      name: 'files',
-      description: 'Files to be moved',
-    },
-  ] as HandleDefine[],
-  outputs: [
-    {
-      name: 'folder_path',
-      description: 'Path of the destination folder',
-    },
-  ] as HandleDefine[],
-}
-
-const Move2FolderCard = memo(function Move2FolderCard() {
-  const readOnly = useReadOnly()
-  const nodeId = useNodeId() ?? ''
-  const nodeData =
-    useNodesData<Node<{ folder_name: string }, 'processor_move2folder'>>(nodeId)
-  const { updateNodeData } = useReactFlow()
-
-  const [folder_name, setFolderName] = useState<string>(
-    nodeData?.data.folder_name ?? '',
-  )
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: no need
-  useEffect(() => {
-    if (
-      nodeData?.data.folder_name !== undefined &&
-      nodeData.data.folder_name !== folder_name
-    ) {
-      setFolderName(nodeData.data.folder_name)
-    }
-  }, [nodeData?.data.folder_name])
-
-  const handleBlur = useCallback(() => {
-    updateNodeData(nodeId, { folder_name })
-  }, [nodeId, folder_name, updateNodeData])
-
-  return (
-    <div className='p-3'>
-      <Label className='pb-2 font-medium'>Folder Name:</Label>
-      <Input
-        className='w-full border-input focus-visible:ring-ring'
-        placeholder='Enter folder name...'
-        value={folder_name}
-        onChange={(e) => setFolderName(e.target.value)}
-        onBlur={handleBlur}
-        spellCheck={false}
-        disabled={readOnly}
-      />
-    </div>
-  )
-})
-
-const Move2FolderNode = memo(function Move2FolderNode() {
-  const nodeComponent = useMemo(() => <Move2FolderCard />, [])
-
-  return (
-    <BaseNode
-      title='Move Files to Folder'
-      description='Move files to a specified destination folder.'
-      handles={MOVE2FOLDER_HANDLES}
-      color={colorSchemes.orange}
-      nodeComponent={nodeComponent}
-    />
-  )
-})
-
-const GZIP_HANDLES = {
-  inputs: [
-    {
-      name: 'file',
-      description: 'File to be compressed',
-    },
-  ] as HandleDefine[],
-  outputs: [
-    {
-      name: 'zipped_file',
-      description: 'Gzip compressed file',
-    },
-  ] as HandleDefine[],
-}
-
-const GzipNode = memo(function GzipNode() {
-  const nodeComponent = useMemo(() => <div />, [])
-  return (
-    <BaseNode
-      title='Gzip'
-      description='Compress a file using gzip.'
-      handles={GZIP_HANDLES}
-      color={colorSchemes.orange}
-      nodeComponent={nodeComponent}
-    />
-  )
-})
-
-const RENAME_FILE_HANDLES = {
-  inputs: [{ name: 'old_file', description: 'File to be renamed' }] as HandleDefine[],
-  outputs: [{ name: 'renamed_file', description: 'Renamed file' }] as HandleDefine[],
-}
-
-const RenameFileCard = memo(function RenameFileCard() {
-  const nodeId = useNodeId() ?? ''
-  const nodeData = useNodesData<Node<{ new_file_name: string }, 'rename_file'>>(nodeId)
-  const { updateNodeData } = useReactFlow()
-  const readOnly = useReadOnly()
-
-  const [newFileName, setNewFileName] = useState<string>(nodeData?.data.new_file_name ?? '')
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: no need
-  useEffect(() => {
-    if (nodeData?.data.new_file_name !== undefined && nodeData.data.new_file_name !== newFileName) {
-      setNewFileName(nodeData.data.new_file_name)
-    }
-  }, [nodeData?.data.new_file_name])
-
-  const handleBlur = useCallback(() => {
-    updateNodeData(nodeId, { new_file_name: newFileName })
-  }, [nodeId, newFileName, updateNodeData])
-
-  return (
-    <div className='p-3'>
-      <Label className='pb-2 font-medium'>New File Name:</Label>
-      <Input
-        className='w-full border-input focus-visible:ring-ring'
-        placeholder='Enter new file name...'
-        value={newFileName}
-        onChange={(e) => setNewFileName(e.target.value)}
-        onBlur={handleBlur}
-        spellCheck={false}
-        disabled={readOnly}
-      />
-    </div>
-  )
-})
-
-const RenameFileNode = memo(function RenameFileNode() {
-  const nodeComponent = useMemo(() => <RenameFileCard />, [])
-  return (
-    <BaseNode
-      title='Rename File'
-      description='Rename a file to a new name.'
-      handles={RENAME_FILE_HANDLES}
-      color={colorSchemes.orange}
-      nodeComponent={nodeComponent}
-    />
-  )
-})
-
-export { Copy2FolderNode, GlobalMarkerNode, GzipNode, Move2FolderNode, RenameFileNode }
+export { Copy2FolderNode, GzipNode, RenameFileNode, GlobalMarkerNode }

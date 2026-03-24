@@ -1,5 +1,6 @@
 'use client'
 
+import type { Node as FlowNode, NodeChange } from '@xyflow/react'
 import {
   Background,
   BackgroundVariant,
@@ -8,7 +9,6 @@ import {
   ReactFlowProvider,
   useNodesState,
 } from '@xyflow/react'
-import type { Node as FlowNode, NodeChange } from '@xyflow/react'
 import {
   ArrowLeftIcon,
   CheckCircle2Icon,
@@ -66,7 +66,7 @@ const nodeTypes = {
   resource_GRCh38: GRCh38Node,
   resource_GRCm39: GRCm39Node,
   resource_global_file: GlobalFileNode,
-  processor_copy2folder: Copy2FolderNode,
+  copy2folder: Copy2FolderNode,
   global_mark: GlobalMarkerNode,
   code_R: RCodeNode,
   code_python: PythonCodeNode,
