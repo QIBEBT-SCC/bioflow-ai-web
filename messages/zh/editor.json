@@ -20,6 +20,7 @@
       "note": "笔记",
       "other": "其它",
       "processor": "处理器",
+      "select_file_in_folder": "从文件夹提取",
       "copy2folder": "复制到文件夹",
       "gzip": "Gzip 压缩",
       "global_marker": "全局标记",

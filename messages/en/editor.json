@@ -22,6 +22,7 @@
       "processor": "Processor",
       "copy2folder": "Copy to Folder",
       "gzip": "Gzip",
+      "select_file_in_folder": "Select File in Folder",
       "global_marker": "Global Marker",
       "rename_file": "Rename File",
       "programming": "Programming",

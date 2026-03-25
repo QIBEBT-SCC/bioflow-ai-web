@@ -1,20 +1,6 @@
 'use client'
 
-import {
-  CaseSensitiveIcon,
-  ChevronRightIcon,
-  CodeIcon,
-  CpuIcon,
-  DatabaseIcon,
-  DnaIcon,
-  FileArchiveIcon,
-  FileInputIcon,
-  FilePenIcon,
-  FolderInputIcon,
-  PenToolIcon,
-  StickyNoteIcon,
-  TagIcon,
-} from 'lucide-react'
+import { ChevronRightIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import type React from 'react'
 import {
@@ -26,87 +12,9 @@ import {
 } from 'react'
 import { DbMenu } from '@/components/node-editor/menu/db-menu'
 import { ToolMenu } from '@/components/node-editor/menu/tool-menu'
+import { menuData } from '@/components/node-editor/node-registry'
 import { cn } from '@/lib/utils'
 
-type SubMenuType = 'inline' | 'tool-modal' | 'db-modal'
-
-interface MenuItem {
-  type: string
-  labelKey: string
-  Icon: React.ElementType
-  subItems?: MenuItem[]
-}
-
-interface MenuGroup {
-  labelKey: string
-  Icon: React.ElementType
-  submenuType: SubMenuType
-  items: MenuItem[]
-}
-
-const menuData: Record<string, MenuGroup> = {
-  analysis: {
-    labelKey: 'analysis_tools',
-    Icon: PenToolIcon,
-    submenuType: 'tool-modal',
-    items: [],
-  },
-  io: {
-    labelKey: 'io',
-    Icon: FileInputIcon,
-    submenuType: 'inline',
-    items: [
-      { type: 'value_string', labelKey: 'text_input', Icon: CaseSensitiveIcon },
-      { type: 'resource_file', labelKey: 'file_input', Icon: FileInputIcon },
-      { type: 'resource_sequence', labelKey: 'sequence_input', Icon: DnaIcon },
-      { type: 'resource_db', labelKey: 'database', Icon: DatabaseIcon },
-      {
-        type: '__genome_submenu__',
-        labelKey: 'reference_genome',
-        Icon: DatabaseIcon,
-        subItems: [
-          {
-            type: 'resource_ncbi_genome',
-            labelKey: 'ncbi_genome',
-            Icon: DatabaseIcon,
-          },
-          { type: 'resource_GRCh38', labelKey: 'grch38', Icon: DatabaseIcon },
-          { type: 'resource_GRCm39', labelKey: 'grcm39', Icon: DatabaseIcon },
-        ],
-      },
-    ],
-  },
-  programming: {
-    labelKey: 'programming',
-    Icon: CodeIcon,
-    submenuType: 'inline',
-    items: [
-      { type: 'code_R', labelKey: 'r_code', Icon: CodeIcon },
-      { type: 'code_python', labelKey: 'python_code', Icon: CodeIcon },
-    ],
-  },
-  processor: {
-    labelKey: 'processor',
-    Icon: CpuIcon,
-    submenuType: 'inline',
-    items: [
-      {
-        type: 'copy2folder',
-        labelKey: 'copy2folder',
-        Icon: FolderInputIcon,
-      },
-      { type: 'gzip', labelKey: 'gzip', Icon: FileArchiveIcon },
-      { type: 'rename_file', labelKey: 'rename_file', Icon: FilePenIcon },
-      { type: 'global_mark', labelKey: 'global_marker', Icon: TagIcon },
-    ],
-  },
-  other: {
-    labelKey: 'other',
-    Icon: StickyNoteIcon,
-    submenuType: 'inline',
-    items: [{ type: 'note', labelKey: 'note', Icon: StickyNoteIcon }],
-  },
-}
 
 interface Position {
   x: number
