@@ -3,6 +3,7 @@
 import { CopyIcon, MoreHorizontalIcon, Trash2Icon } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import {
   AlertDialog,
@@ -73,6 +74,7 @@ export function ToolList({
   searchQuery = '',
   selectedGroupId = null,
 }: ToolListProps) {
+  const t = useTranslations('tool.List')
   const [currentPage, setCurrentPage] = useState(1)
   const [deleteConfirmTool, setDeleteConfirmTool] = useState<{
     uid: string
@@ -194,7 +196,7 @@ export function ToolList({
       <div className='flex items-center justify-center py-12'>
         <div className='text-center'>
           <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2'></div>
-          <p className='text-muted-foreground'>加载中...</p>
+          <p className='text-muted-foreground'>{t('loading')}</p>
         </div>
       </div>
     )
@@ -205,13 +207,13 @@ export function ToolList({
       <Table>
         <TableHeader className='bg-muted/50'>
           <TableRow>
-            <TableHead className='h-12 px-4 text-left w-30'>工具名称</TableHead>
+            <TableHead className='h-12 px-4 text-left w-30'>{t('toolName')}</TableHead>
             <TableHead className='h-12 px-4 text-left w-60'>
-              Docker镜像
+              {t('dockerImage')}
             </TableHead>
-            <TableHead className='h-12 px-4 text-left w-85'>描述</TableHead>
-            <TableHead className='h-12 px-4 text-left w-30'>标签</TableHead>
-            <TableHead className='h-12 px-4 text-center w-5'>操作</TableHead>
+            <TableHead className='h-12 px-4 text-left w-85'>{t('description')}</TableHead>
+            <TableHead className='h-12 px-4 text-left w-30'>{t('tags')}</TableHead>
+            <TableHead className='h-12 px-4 text-center w-5'>{t('actions')}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -230,7 +232,7 @@ export function ToolList({
               </TableCell>
               <TableCell className='max-w-85'>
                 <div className='line-clamp-2 text-sm truncate'>
-                  {tool.description || '暂无描述'}
+                  {tool.description || t('noDescription')}
                 </div>
               </TableCell>
               <TableCell className='max-w-30'>
@@ -256,13 +258,13 @@ export function ToolList({
                   <DropdownMenuTrigger asChild>
                     <Button variant='ghost' size='icon' className='h-8 w-8'>
                       <MoreHorizontalIcon className='h-4 w-4' />
-                      <span className='sr-only'>更多选项</span>
+                      <span className='sr-only'>{t('moreOptions')}</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align='end'>
                     <DropdownMenuItem onClick={() => handleCopyTool(tool.uid)}>
                       <CopyIcon className='h-4 w-4 mr-2' />
-                      复制工具
+                      {t('copyTool')}
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
@@ -272,7 +274,7 @@ export function ToolList({
                       }
                     >
                       <Trash2Icon className='h-4 w-4 mr-2' />
-                      删除工具
+                      {t('deleteTool')}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -285,8 +287,11 @@ export function ToolList({
       {/* 分页 */}
       <div className='flex items-center justify-between mt-4'>
         <div className='text-sm text-muted-foreground'>
-          显示 {offset + 1}-{Math.min(offset + pageSize, toolCounts)} 共{' '}
-          {toolCounts} 项
+          {t('showing', {
+            start: offset + 1,
+            end: Math.min(offset + pageSize, toolCounts),
+            total: toolCounts,
+          })}
         </div>
         <Pagination>
           <PaginationContent>
@@ -372,7 +377,7 @@ export function ToolList({
                 </DropdownMenu>
               </div>
               <p className='text-sm text-muted-foreground mb-3 line-clamp-2'>
-                {tool.description || '暂无描述'}
+                {tool.description || t('noDescription')}
               </p>
               <div className='flex items-center justify-between text-xs text-muted-foreground'>
                 <span className='truncate'>
@@ -471,22 +476,23 @@ function DeleteToolDialog({
   onClose: () => void
   onConfirm: () => void
 }) {
+  const t = useTranslations('tool.DeleteDialog')
   return (
     <AlertDialog open={!!tool} onOpenChange={(open) => !open && onClose()}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>确认删除工具</AlertDialogTitle>
+          <AlertDialogTitle>{t('title')}</AlertDialogTitle>
           <AlertDialogDescription>
-            确定要删除工具 "{tool?.name}" 吗？此操作无法撤销。
+            {t('description', { name: tool?.name || '' })}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>取消</AlertDialogCancel>
+          <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
             className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
           >
-            删除
+            {t('delete')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

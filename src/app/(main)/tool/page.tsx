@@ -11,6 +11,7 @@ import {
   Search,
 } from 'lucide-react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { ToolGroupSidebar } from '@/components/tool/tool-group-sidebar'
 import { ToolList } from '@/components/tool/tool-list'
@@ -33,6 +34,7 @@ import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 
 export default function ToolsPage() {
+  const t = useTranslations('tool.Page')
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null)
@@ -46,7 +48,7 @@ export default function ToolsPage() {
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem className='hidden md:block'>
-                <BreadcrumbPage>工具</BreadcrumbPage>
+                <BreadcrumbPage>{t('title')}</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
@@ -57,13 +59,13 @@ export default function ToolsPage() {
         <div className='container mx-auto py-6'>
           {/* 顶部操作栏 */}
           <div className='flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center mb-6'>
-            <h1 className='text-2xl font-bold'>工具管理</h1>
+            <h1 className='text-2xl font-bold'>{t('management')}</h1>
             <div className='flex gap-2 w-full sm:w-auto'>
               <div className='relative flex-1 sm:flex-initial'>
                 <Search className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
                 <Input
                   type='search'
-                  placeholder='搜索工具...'
+                  placeholder={t('searchPlaceholder')}
                   className='pl-8 w-full sm:w-[250px]'
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -73,7 +75,7 @@ export default function ToolsPage() {
                 <DropdownMenuTrigger asChild>
                   <Button variant='outline'>
                     <Plus className='h-4 w-4 mr-2' />
-                    添加
+                    {t('add')}
                     <ChevronDown className='h-4 w-4 ml-2' />
                   </Button>
                 </DropdownMenuTrigger>
@@ -81,17 +83,17 @@ export default function ToolsPage() {
                   <Link href='/tool/add'>
                     <DropdownMenuItem>
                       <Plus className='h-4 w-4 mr-2' />
-                      添加工具
+                      {t('addTool')}
                     </DropdownMenuItem>
                   </Link>
                   <DropdownMenuItem>
                     <FolderPlus className='h-4 w-4 mr-2' />
-                    创建分组
+                    {t('createGroup')}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem>
                     <Download className='h-4 w-4 mr-2' />
-                    导入工具
+                    {t('importTool')}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -110,12 +112,12 @@ export default function ToolsPage() {
               {/* 视图切换和筛选 */}
               <div className='flex justify-between items-center'>
                 <h2 className='text-lg font-medium'>
-                  {selectedGroupId === null ? '所有工具' : '分组工具'}
+                  {selectedGroupId === null ? t('allTools') : t('groupTools')}
                 </h2>
                 <div className='flex items-center gap-2'>
                   <Button variant='outline' size='sm'>
                     <Filter className='h-4 w-4 mr-2' />
-                    筛选
+                    {t('filter')}
                   </Button>
                   <div className='border rounded-md flex'>
                     <Button

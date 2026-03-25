@@ -15,14 +15,12 @@ import {
 } from '@dnd-kit/sortable'
 import { Loader2Icon, PlayIcon, SparklesIcon } from 'lucide-react'
 import { nanoid } from 'nanoid'
-import { ReactNode, useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
+import { useRef, useState } from 'react'
 import {
   Terminal,
-  TerminalActions,
   TerminalContent,
-  TerminalCopyButton,
   TerminalHeader,
-  TerminalStatus,
   TerminalTitle,
 } from '@/components/ai-elements/terminal'
 import { ToolFileCard, ToolParamCard } from '@/components/tool/tool-cards'
@@ -33,13 +31,11 @@ import { Checkbox } from '@/components/ui/checkbox'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Select,
   SelectContent,
@@ -127,6 +123,7 @@ export function ToolConfigForm({
   showAIGeneratePlaceholder = false,
   initialTab = 'basic',
 }: ToolConfigFormProps) {
+  const t = useTranslations('tool.ConfigForm')
   const [showHelpResult, setShowHelpResult] = useState(false)
   const [helpCommandResult, setHelpCommandResult] = useState('')
   const { mutate: runInImage, isPending: isRunning } = useRunInImage()
@@ -228,7 +225,9 @@ export function ToolConfigForm({
     <div>
       {imageSummary && (imageSummary.name || imageSummary.version) && (
         <div className='mb-4 flex items-center gap-2'>
-          <span className='text-sm text-muted-foreground'>基于镜像：</span>
+          <span className='text-sm text-muted-foreground'>
+            {t('baseImage')}
+          </span>
           {imageSummary.name && (
             <Badge variant='outline'>{imageSummary.name}</Badge>
           )}
@@ -241,15 +240,15 @@ export function ToolConfigForm({
       <Tabs defaultValue={initialTab} className='w-full'>
         <TabsList className='grid w-full grid-cols-3'>
           <TabsTrigger value='basic'>
-            基本信息
+            {t('tabs.basic')}
             {tabBadge(value.name)}
           </TabsTrigger>
           <TabsTrigger value='params'>
-            参数配置
+            {t('tabs.params')}
             {tabBadge(value.dynamic_params.length || undefined)}
           </TabsTrigger>
           <TabsTrigger value='files'>
-            文件挂载
+            {t('tabs.files')}
             {tabBadge(value.file_mounts.length || undefined)}
           </TabsTrigger>
         </TabsList>
@@ -259,31 +258,31 @@ export function ToolConfigForm({
             <CardContent className='space-y-6 pt-6'>
               <div className='space-y-2'>
                 <Label htmlFor='tool-name'>
-                  工具名称 <span className='text-red-500'>*</span>
+                  {t('toolName')} <span className='text-red-500'>*</span>
                 </Label>
                 <Input
                   id='tool-name'
                   value={value.name}
                   onChange={(e) => onFieldChange('name', e.target.value)}
-                  placeholder='输入工具名称'
+                  placeholder={t('toolNamePlaceholder')}
                   required
                 />
               </div>
 
               <div className='space-y-2'>
-                <Label htmlFor='tool-description'>描述</Label>
+                <Label htmlFor='tool-description'>{t('description')}</Label>
                 <Textarea
                   id='tool-description'
                   value={value.description}
                   onChange={(e) => onFieldChange('description', e.target.value)}
-                  placeholder='描述工具的功能'
+                  placeholder={t('descriptionPlaceholder')}
                   rows={3}
                 />
               </div>
 
               <div className='space-y-2'>
                 <Label htmlFor='tool-command'>
-                  命令模板 <span className='text-red-500'>*</span>
+                  {t('commandTemplate')} <span className='text-red-500'>*</span>
                 </Label>
                 <Input
                   id='tool-command'
@@ -298,7 +297,7 @@ export function ToolConfigForm({
 
               <div className='space-y-2'>
                 <Label htmlFor='tool-help-command'>
-                  帮助命令 <span className='text-red-500'>*</span>
+                  {t('helpCommand')} <span className='text-red-500'>*</span>
                 </Label>
                 <div className='flex gap-2'>
                   <Input
@@ -307,7 +306,7 @@ export function ToolConfigForm({
                     onChange={(e) =>
                       onFieldChange('help_command', e.target.value)
                     }
-                    placeholder='--help 或 -h'
+                    placeholder={t('helpCommandPlaceholder')}
                     required
                     className='flex-1'
                   />
@@ -318,7 +317,7 @@ export function ToolConfigForm({
                       size='icon'
                       onClick={handleTestHelpCommand}
                       disabled={!value.help_command || isRunning}
-                      title={isRunning ? '执行中...' : '测试帮助命令'}
+                      title={isRunning ? t('testHelpRunning') : t('testHelp')}
                     >
                       {isRunning ? (
                         <Loader2Icon className='h-4 w-4 animate-spin' />
@@ -331,13 +330,13 @@ export function ToolConfigForm({
               </div>
 
               <div className='space-y-2'>
-                <Label htmlFor='tool-group'>工具分组</Label>
+                <Label htmlFor='tool-group'>{t('toolGroup')}</Label>
                 <Select
                   value={value.group_id?.toString() || ''}
                   onValueChange={(val) => handleGroupChange(Number(val))}
                 >
                   <SelectTrigger id='tool-group'>
-                    <SelectValue placeholder='选择分组' />
+                    <SelectValue placeholder={t('selectGroup')} />
                   </SelectTrigger>
                   <SelectContent>
                     {toolGroups.map((group) => (
@@ -351,7 +350,7 @@ export function ToolConfigForm({
 
               {availableTags.length > 0 && (
                 <div className='space-y-2'>
-                  <Label>工具标签</Label>
+                  <Label>{t('toolTags')}</Label>
                   <div className='flex flex-wrap gap-3 p-3 border rounded-md bg-muted/30'>
                     {availableTags.map((tag) => {
                       const isSelected = value.tags.some((t) => t.id === tag.id)
@@ -402,9 +401,9 @@ export function ToolConfigForm({
                 <div className='flex justify-end pt-4 border-t'>
                   <Button variant='outline' disabled>
                     <SparklesIcon className='h-4 w-4 mr-2' />
-                    AI智能生成配置
+                    {t('aiGenerate')}
                     <Badge variant='secondary' className='ml-2'>
-                      即将推出
+                      {t('comingSoon')}
                     </Badge>
                   </Button>
                 </div>
@@ -417,10 +416,10 @@ export function ToolConfigForm({
           <Card>
             <CardContent className='space-y-6 pt-6'>
               <div className='space-y-2'>
-                <Label>动态参数</Label>
+                <Label>{t('dynamicParams')}</Label>
                 {value.dynamic_params.length === 0 ? (
                   <div className='text-center py-6 text-muted-foreground border rounded-md bg-muted/30'>
-                    暂无动态参数
+                    {t('noDynamicParams')}
                   </div>
                 ) : (
                   <DndContext
@@ -439,8 +438,8 @@ export function ToolConfigForm({
                             id={paramIds.current[index]}
                             param={param}
                             index={index}
-                            onRemove={onRemoveDynamicParam}
-                            onUpdate={onUpdateDynamicParam}
+                            onRemoveAction={onRemoveDynamicParam}
+                            onUpdateAction={onUpdateDynamicParam}
                           />
                         ))}
                       </div>
@@ -453,16 +452,16 @@ export function ToolConfigForm({
                   variant='outline'
                   className='w-full'
                 >
-                  添加动态参数
+                  {t('addDynamicParam')}
                 </Button>
               </div>
 
               <div className='space-y-4'>
                 <div className='space-y-2'>
                   <Label htmlFor='tool-immutable-static'>
-                    不可变静态参数
+                    {t('immutableStaticParams')}
                     <span className='text-xs text-muted-foreground ml-2'>
-                      (创建后不可修改)
+                      {t('immutableStaticParamsHint')}
                     </span>
                   </Label>
                   <Textarea
@@ -474,15 +473,15 @@ export function ToolConfigForm({
                         e.target.value || null,
                       )
                     }
-                    placeholder='--threads 4 --output /output'
+                    placeholder={t('immutableStaticParamsPlaceholder')}
                     rows={3}
                   />
                 </div>
                 <div className='space-y-2'>
                   <Label htmlFor='tool-modifiable-static'>
-                    可修改静态参数
+                    {t('modifiableStaticParams')}
                     <span className='text-xs text-muted-foreground ml-2'>
-                      (可在编辑时修改)
+                      {t('modifiableStaticParamsHint')}
                     </span>
                   </Label>
                   <Textarea
@@ -494,7 +493,7 @@ export function ToolConfigForm({
                         e.target.value || null,
                       )
                     }
-                    placeholder='--verbose --log-level info'
+                    placeholder={t('modifiableStaticParamsPlaceholder')}
                     rows={3}
                   />
                 </div>
@@ -507,10 +506,10 @@ export function ToolConfigForm({
           <Card>
             <CardContent className='space-y-6 pt-6'>
               <div className='space-y-2'>
-                <Label>文件挂载</Label>
+                <Label>{t('fileMounts')}</Label>
                 {value.file_mounts.length === 0 ? (
                   <div className='text-center py-6 text-muted-foreground border rounded-md bg-muted/30'>
-                    暂无文件挂载
+                    {t('noFileMounts')}
                   </div>
                 ) : (
                   <DndContext
@@ -529,8 +528,8 @@ export function ToolConfigForm({
                             id={fileIds.current[index]}
                             file={file}
                             index={index}
-                            onUpdate={onUpdateFileMount}
-                            onRemove={onRemoveFileMount}
+                            onUpdateAction={onUpdateFileMount}
+                            onRemoveAction={onRemoveFileMount}
                           />
                         ))}
                       </div>
@@ -543,7 +542,7 @@ export function ToolConfigForm({
                   variant='outline'
                   className='w-full'
                 >
-                  添加文件挂载
+                  {t('addFileMount')}
                 </Button>
               </div>
             </CardContent>
@@ -555,7 +554,7 @@ export function ToolConfigForm({
       <Dialog open={showHelpResult} onOpenChange={setShowHelpResult}>
         <DialogContent className='sm:!max-w-5xl'>
           <DialogHeader>
-            <DialogTitle>帮助命令执行结果</DialogTitle>
+            <DialogTitle>{t('helpCommandResult')}</DialogTitle>
           </DialogHeader>
           <Terminal output={helpCommandResult} autoScroll={false}>
             <TerminalHeader>
