@@ -40,9 +40,18 @@
       "subtitle": "Create a custom analysis tool in 3 steps",
       "back": "Back",
       "steps": {
-        "step1": { "title": "Select Image", "description": "Select or create Docker image" },
-        "step2": { "title": "Configure Tool", "description": "Configure tool parameters and files" },
-        "step3": { "title": "Confirm Creation", "description": "Confirm and create tool" }
+        "step1": {
+          "title": "Select Image",
+          "description": "Select or create Docker image"
+        },
+        "step2": {
+          "title": "Configure Tool",
+          "description": "Configure tool parameters and files"
+        },
+        "step3": {
+          "title": "Confirm Creation",
+          "description": "Confirm and create tool"
+        }
       },
       "selectImage": "Select Docker Image",
       "searchImage": "Search and select the Docker image to use",

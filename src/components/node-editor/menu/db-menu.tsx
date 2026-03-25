@@ -104,4 +104,3 @@ export const DbMenu: React.FC<DBMenuProps> = ({
     </CommandDialog>
   )
 }
-

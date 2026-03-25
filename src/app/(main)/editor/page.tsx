@@ -131,6 +131,7 @@ function FlowContent() {
       const position = screenToFlowPosition(clickPosition, { snapToGrid: true })
 
       // 节点配置
+      // biome-ignore lint/suspicious/noExplicitAny: no need
       const nodeConfig: Record<string, any> = {
         tool: { data: { tool_uid: resourceId, args: '' } },
         resource_db: {
@@ -176,7 +177,10 @@ function FlowContent() {
     }
 
     const workflow = { nodes, edges }
-    updateWorkflowMutation.mutate({ uid: currentWorkflowUid, data: { workflow } })
+    updateWorkflowMutation.mutate({
+      uid: currentWorkflowUid,
+      data: { workflow },
+    })
   }, [currentWorkflowUid, nodes, edges, updateWorkflowMutation])
 
   // 运行workflow

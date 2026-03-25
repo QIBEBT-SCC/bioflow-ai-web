@@ -1,7 +1,7 @@
 'use client'
 
 import { HistoryIcon, Loader2Icon, MessageSquareIcon } from 'lucide-react'
-import {useParams, usePathname, useRouter} from 'next/navigation'
+import { useParams, usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { ChatHistoryItem } from '@/components/chat/chat-history-item'
 import { Button } from '@/components/ui/button'

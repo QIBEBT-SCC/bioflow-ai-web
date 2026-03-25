@@ -47,7 +47,7 @@ export const useNewRunInstance = () => {
 export const useRuns = (
   offset: number = 0,
   limit: number = 20,
-  refetchInterval?: number | false
+  refetchInterval?: number | false,
 ) => {
   return useQuery<RunPublic[]>({
     queryKey: ['runs', offset, limit],

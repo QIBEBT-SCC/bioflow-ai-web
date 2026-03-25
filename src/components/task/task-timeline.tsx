@@ -34,13 +34,16 @@ export function TaskTimeline() {
       return { tasks: [], timeLabels: [], minTime: 0, maxTime: 0 }
 
     // 过滤有开始时间的任务
-    const validTasks = tasks.filter((task) => task.start_time)
+    const validTasks = tasks.filter(
+      (task): task is SimpleTaskPublic & { start_time: string } =>
+        !!task.start_time,
+    )
 
     if (validTasks.length === 0)
       return { tasks: [], timeLabels: [], minTime: 0, maxTime: 0 }
 
     // 找出时间范围
-    const times = validTasks.map((task) => new Date(task.start_time!).getTime())
+    const times = validTasks.map((task) => new Date(task.start_time).getTime())
     const endTimes = validTasks.map((task) =>
       task.end_time ? new Date(task.end_time).getTime() : Date.now(),
     )
@@ -54,7 +57,7 @@ export function TaskTimeline() {
     const rows: number[] = [] // 每行的最后结束时间
 
     for (const task of validTasks) {
-      const startTime = new Date(task.start_time!).getTime()
+      const startTime = new Date(task.start_time).getTime()
       const endTime = task.end_time
         ? new Date(task.end_time).getTime()
         : Date.now()
@@ -141,6 +144,7 @@ export function TaskTimeline() {
           <div className='relative h-6 mb-2 border-b'>
             {timelineData.timeLabels.map((label, i) => (
               <div
+                // biome-ignore lint/suspicious/noArrayIndexKey: no need
                 key={i}
                 className='absolute top-0 text-xs text-muted-foreground'
                 style={{
@@ -158,7 +162,7 @@ export function TaskTimeline() {
             className='relative'
             style={{ height: `${(maxRow + 1) * rowHeight}px` }}
           >
-            {timelineData.tasks.map((item, index) => {
+            {timelineData.tasks.map((item) => {
               const color = statusColors[item.task.status]
               const isRunning = item.task.status === Status.RUNNING
 

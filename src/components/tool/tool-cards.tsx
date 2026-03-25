@@ -103,7 +103,9 @@ export function ToolParamCard({
             <Input
               id={`param-description-${index}`}
               value={param.description || ''}
-              onChange={(e) => onUpdateAction(index, 'description', e.target.value)}
+              onChange={(e) =>
+                onUpdateAction(index, 'description', e.target.value)
+              }
               placeholder={t('paramDescriptionPlaceholder')}
             />
           </div>
@@ -114,7 +116,11 @@ export function ToolParamCard({
               type='number'
               value={param.index || 0}
               onChange={(e) =>
-                onUpdateAction(index, 'index', Number.parseInt(e.target.value) || 0)
+                onUpdateAction(
+                  index,
+                  'index',
+                  Number.parseInt(e.target.value, -1) || 0,
+                )
               }
               disabled={!param.is_position}
               placeholder='0'
@@ -265,7 +271,9 @@ export function ToolFileCard({
             </Label>
             <Select
               value={file.file_type}
-              onValueChange={(value) => onUpdateAction(index, 'file_type', value)}
+              onValueChange={(value) =>
+                onUpdateAction(index, 'file_type', value)
+              }
             >
               <SelectTrigger id={`file-type-${index}`}>
                 <SelectValue placeholder={t('selectFileType')} />
@@ -285,7 +293,9 @@ export function ToolFileCard({
           <Input
             id={`file-description-${index}`}
             value={file.description || ''}
-            onChange={(e) => onUpdateAction(index, 'description', e.target.value)}
+            onChange={(e) =>
+              onUpdateAction(index, 'description', e.target.value)
+            }
             placeholder={t('fileDescriptionPlaceholder')}
           />
         </div>
@@ -298,7 +308,9 @@ export function ToolFileCard({
             <Input
               id={`file-path-${index}`}
               value={file.file_path}
-              onChange={(e) => onUpdateAction(index, 'file_path', e.target.value)}
+              onChange={(e) =>
+                onUpdateAction(index, 'file_path', e.target.value)
+              }
               placeholder={t('filePathPlaceholder')}
               required
             />
@@ -310,7 +322,9 @@ export function ToolFileCard({
             <Input
               id={`mount-path-${index}`}
               value={file.mount_path}
-              onChange={(e) => onUpdateAction(index, 'mount_path', e.target.value)}
+              onChange={(e) =>
+                onUpdateAction(index, 'mount_path', e.target.value)
+              }
               placeholder={t('mountPathPlaceholder')}
               required
             />

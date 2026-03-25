@@ -11,8 +11,13 @@ export function formatImageTag(image: {
     tag?: string
   }
 }): string {
-  const { registry = '', namespace = '', repository = '', tag = '' } = image.image || {}
-  
+  const {
+    registry = '',
+    namespace = '',
+    repository = '',
+    tag = '',
+  } = image.image || {}
+
   return `${registry}/${namespace}/${repository}:${tag}`
     .replace(/^\/+/, '') // 移除开头的斜杠
     .replace(/\/+/g, '/') // 将多个斜杠替换为单个斜杠

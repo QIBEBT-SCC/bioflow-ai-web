@@ -61,7 +61,7 @@ export const useSearchGenome = (q: string) => {
 export const useGenome = (id: number | null) => {
   return useQuery({
     queryKey: ['genome', id],
-    queryFn: () => getGenome(id!),
+    queryFn: () => getGenome(id ?? -1),
     enabled: id !== null,
     staleTime: 15 * 1000,
   })

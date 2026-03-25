@@ -92,7 +92,7 @@ export interface DockerToolCreate {
   file_mounts: FileMount[]
 }
 
-export interface DockerToolUpdate{
+export interface DockerToolUpdate {
   name: string
   image_uid: string
   description: string

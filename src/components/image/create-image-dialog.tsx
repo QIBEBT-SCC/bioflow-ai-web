@@ -28,13 +28,13 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
   const [description, setDescription] = useState('')
   const [homepage, setHomepage] = useState('')
   const [paperLink, setPaperLink] = useState('')
-  
+
   // 镜像配置
   const [registry, setRegistry] = useState('')
   const [namespace, setNamespace] = useState('')
   const [repository, setRepository] = useState('')
   const [tag, setTag] = useState('latest')
-  
+
   const [open, setOpen] = useState(false)
 
   const { mutate: createImage, isPending } = useCreateImage()
@@ -84,9 +84,7 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || defaultTrigger}
-      </DialogTrigger>
+      <DialogTrigger asChild>{trigger || defaultTrigger}</DialogTrigger>
       <DialogContent className='max-w-2xl max-h-[90vh] overflow-y-auto'>
         <DialogHeader>
           <DialogTitle className='flex items-center gap-2'>
@@ -97,12 +95,12 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
             填写镜像的基本信息和 Docker 配置
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className='space-y-6 py-4'>
           {/* 基本信息 */}
           <div className='space-y-4'>
             <h3 className='text-sm font-semibold text-foreground'>基本信息</h3>
-            
+
             <div className='grid grid-cols-2 gap-4'>
               <div className='space-y-2'>
                 <Label htmlFor='name'>
@@ -116,7 +114,7 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
                   required
                 />
               </div>
-              
+
               <div className='space-y-2'>
                 <Label htmlFor='version'>
                   版本 <span className='text-destructive'>*</span>
@@ -130,7 +128,7 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
                 />
               </div>
             </div>
-            
+
             <div className='space-y-2'>
               <Label htmlFor='description'>描述</Label>
               <Textarea
@@ -141,7 +139,7 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
                 rows={3}
               />
             </div>
-            
+
             <div className='grid grid-cols-2 gap-4'>
               <div className='space-y-2'>
                 <Label htmlFor='homepage'>主页链接</Label>
@@ -153,7 +151,7 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
                   onChange={(e) => setHomepage(e.target.value)}
                 />
               </div>
-              
+
               <div className='space-y-2'>
                 <Label htmlFor='paperLink'>论文链接</Label>
                 <Input
@@ -169,8 +167,10 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
 
           {/* Docker 镜像配置 */}
           <div className='space-y-4'>
-            <h3 className='text-sm font-semibold text-foreground'>Docker 镜像配置</h3>
-            
+            <h3 className='text-sm font-semibold text-foreground'>
+              Docker 镜像配置
+            </h3>
+
             <div className='grid grid-cols-2 gap-4'>
               <div className='space-y-2'>
                 <Label htmlFor='registry'>
@@ -184,7 +184,7 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
                   required
                 />
               </div>
-              
+
               <div className='space-y-2'>
                 <Label htmlFor='namespace'>
                   Namespace <span className='text-destructive'>*</span>
@@ -198,7 +198,7 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
                 />
               </div>
             </div>
-            
+
             <div className='grid grid-cols-2 gap-4'>
               <div className='space-y-2'>
                 <Label htmlFor='repository'>
@@ -212,7 +212,7 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
                   required
                 />
               </div>
-              
+
               <div className='space-y-2'>
                 <Label htmlFor='tag'>
                   Tag <span className='text-destructive'>*</span>
@@ -226,7 +226,7 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
                 />
               </div>
             </div>
-            
+
             {/* 预览完整镜像地址 */}
             <div className='space-y-2'>
               <Label>镜像地址预览</Label>

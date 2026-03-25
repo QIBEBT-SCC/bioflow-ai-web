@@ -29,7 +29,10 @@ interface TaskMonitorProps {
 }
 
 // 格式化字节大小,自动选择合适的单位
-function formatBytes(bytes: number, decimals = 2): { value: number; unit: string } {
+function formatBytes(
+  bytes: number,
+  decimals = 2,
+): { value: number; unit: string } {
   if (bytes === 0) return { value: 0, unit: 'B' }
 
   const k = 1024

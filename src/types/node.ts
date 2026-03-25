@@ -12,4 +12,3 @@ export interface ToolArgPublic {
   immutable_static_params?: string | null
   modifiable_static_params?: string | null
 }
-

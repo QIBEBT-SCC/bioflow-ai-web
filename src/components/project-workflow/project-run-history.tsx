@@ -110,7 +110,11 @@ export function ProjectRunHistory({ projectId }: ProjectRunHistoryProps) {
   const limit = 10
 
   const { data: runCount = 0 } = useProjectRunCount(projectId)
-  const { data: runs = [], isLoading } = useProjectRuns(projectId, page * limit, limit)
+  const { data: runs = [], isLoading } = useProjectRuns(
+    projectId,
+    page * limit,
+    limit,
+  )
 
   // 过滤运行实例
   const filteredRuns = runs.filter((run) => {
@@ -170,6 +174,7 @@ export function ProjectRunHistory({ projectId }: ProjectRunHistoryProps) {
               {isLoading ? (
                 // 加载骨架屏
                 [...Array(5)].map((_, i) => (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: no need
                   <TableRow key={i}>
                     <TableCell>
                       <Skeleton className='h-5 w-[200px]' />

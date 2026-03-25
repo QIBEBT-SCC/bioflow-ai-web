@@ -1,7 +1,7 @@
 'use client'
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { clientFetch, clearToken } from '@/lib/api-client'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { clearToken, clientFetch } from '@/lib/api-client'
 import type { User } from '@/types/auth'
 
 /**
@@ -17,7 +17,7 @@ export function useAuth() {
     queryFn: async () => {
       const token = localStorage.getItem('access_token')
       if (!token) return null
-      
+
       try {
         return await clientFetch<User>('/auth/me')
       } catch {

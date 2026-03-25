@@ -1,8 +1,4 @@
-import {
-  ExternalLinkIcon,
-  FileTextIcon,
-  PackageIcon,
-} from 'lucide-react'
+import { ExternalLinkIcon, FileTextIcon, PackageIcon } from 'lucide-react'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -40,7 +36,7 @@ export function ImageCard({ image }: ImageCardProps) {
           <div className='flex items-center gap-2 min-w-0'>
             <PackageIcon className='h-5 w-5 text-primary shrink-0' />
             <CardTitle className='text-lg truncate'>
-              <Link 
+              <Link
                 href={`/image/${image.uid}`}
                 className='after:absolute after:inset-0'
               >
@@ -50,10 +46,7 @@ export function ImageCard({ image }: ImageCardProps) {
           </div>
         </div>
         {image.version && (
-          <Badge
-            variant='secondary'
-            className='w-fit font-mono text-xs'
-          >
+          <Badge variant='secondary' className='w-fit font-mono text-xs'>
             {image.version}
           </Badge>
         )}

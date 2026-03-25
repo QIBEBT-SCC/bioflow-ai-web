@@ -2,8 +2,8 @@
 
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
-import type { ToolImage } from '@/types/tool'
 import type { ToolConfigValues } from '@/components/tool/tool-config-form'
+import type { ToolImage } from '@/types/tool'
 
 interface CreateToolStore {
   currentImage: ToolImage
@@ -77,8 +77,8 @@ export const useCreateToolStore = create<CreateToolStore>()(
         set({ currentImage: initialImage, toolConfig: initialToolConfig })
       },
     }),
-    { name: 'create-tool-store' }
-  )
+    { name: 'create-tool-store' },
+  ),
 )
 
 interface ToolNodeStore {
@@ -90,4 +90,3 @@ export const useToolNodeStore = create<ToolNodeStore>((set) => ({
   currentGroupId: undefined,
   setCurrentGroupId: (id) => set({ currentGroupId: id }),
 }))
-

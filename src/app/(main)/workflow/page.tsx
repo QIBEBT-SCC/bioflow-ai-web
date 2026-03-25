@@ -29,8 +29,8 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { RunTables } from '@/components/workflow/run-table'
+import { useRunStats } from '@/hooks/use-run'
 import { useWorkflowStore } from '@/stores/workflowStore'
-import {useRunStats} from "@/hooks/use-run";
 
 export default function WorkflowPage() {
   const queryClient = useQueryClient()
@@ -41,14 +41,14 @@ export default function WorkflowPage() {
   // 计算 refetchInterval 的毫秒数
   const refetchIntervalMs = useMemo(() => {
     if (refreshInterval === 'off') return false
-    
+
     const intervalMap = {
       '10s': 10000,
       '30s': 30000,
       '1m': 60000,
       '5m': 300000,
     } as const
-    
+
     return intervalMap[refreshInterval as keyof typeof intervalMap] || false
   }, [refreshInterval])
 

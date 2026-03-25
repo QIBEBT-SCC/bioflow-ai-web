@@ -200,6 +200,7 @@ export function GenomeDownloadDialog({
                 {INDEX_TOOLS.map((tool) => (
                   <label
                     key={tool.key}
+                    htmlFor={`index-${tool.field}`}
                     className={`flex items-center gap-3 p-2.5 rounded-lg border cursor-pointer transition-colors ${
                       selectedIndexes.includes(tool.field)
                         ? 'border-primary bg-primary/5'
@@ -207,6 +208,7 @@ export function GenomeDownloadDialog({
                     }`}
                   >
                     <Checkbox
+                      id={`index-${tool.field}`}
                       checked={selectedIndexes.includes(tool.field)}
                       onCheckedChange={() => toggleIndex(tool.field)}
                       disabled={downloadMutation.isPending}

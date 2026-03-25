@@ -300,7 +300,7 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({
                                 onMouseEnter={cancelSubClose}
                                 onMouseLeave={scheduleSubClose}
                               >
-                                {item.subItems!.map((sub) => {
+                                {item.subItems?.map((sub) => {
                                   const SubIcon = sub.Icon
                                   return (
                                     <button
