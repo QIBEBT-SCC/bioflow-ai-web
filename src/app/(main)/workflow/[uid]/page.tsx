@@ -18,27 +18,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { use, useCallback, useEffect, useMemo } from 'react'
-import {
-  BashCodeNode,
-  PythonCodeNode,
-  RCodeNode,
-} from '@/components/node-editor/node/code-node'
-import {
-  Copy2FolderNode,
-  GlobalMarkerNode,
-} from '@/components/node-editor/node/data-node'
-import {
-  DBInputNode,
-  FileInputNode,
-  GlobalFileNode,
-  GRCh38Node,
-  GRCm39Node,
-  NcbiGenomeNode,
-  SequenceInputNode,
-  StringInputNode,
-} from '@/components/node-editor/node/input-node'
-import { NoteNode } from '@/components/node-editor/node/note-node'
-import { ToolNode } from '@/components/node-editor/node/tool-node'
+import { nodeTypes } from '@/components/node-editor/node-registry'
 import { ReadOnlyProvider } from '@/components/node-editor/read-only-context'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -56,23 +36,7 @@ import { StatusEdge } from '@/components/workflow/status-edge'
 import { useRun } from '@/hooks/use-run'
 import { type RunData, Status } from '@/types/run'
 
-const nodeTypes = {
-  tool: ToolNode,
-  value_string: StringInputNode,
-  resource_file: FileInputNode,
-  resource_sequence: SequenceInputNode,
-  resource_db: DBInputNode,
-  resource_ncbi_genome: NcbiGenomeNode,
-  resource_GRCh38: GRCh38Node,
-  resource_GRCm39: GRCm39Node,
-  resource_global_file: GlobalFileNode,
-  copy2folder: Copy2FolderNode,
-  global_mark: GlobalMarkerNode,
-  code_R: RCodeNode,
-  code_python: PythonCodeNode,
-  code_bash: BashCodeNode,
-  note: NoteNode,
-}
+
 
 const edgeTypes = { default: StatusEdge }
 

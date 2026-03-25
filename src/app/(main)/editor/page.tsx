@@ -20,28 +20,9 @@ import { ChatSidebarToggle } from '@/components/chat/chat-sidebar-toggle'
 import { LoadWorkflowDialog } from '@/components/node-editor/load-workflow-dialog'
 import { PanelMenu } from '@/components/node-editor/menu/panel-menu'
 import {
-  BashCodeNode,
-  PythonCodeNode,
-  RCodeNode,
-} from '@/components/node-editor/node/code-node'
-import {
-  Copy2FolderNode,
-  GlobalMarkerNode,
-  GzipNode,
-  RenameFileNode,
-} from '@/components/node-editor/node/data-node'
-import {
-  DBInputNode,
-  FileInputNode,
-  GlobalFileNode,
-  GRCh38Node,
-  GRCm39Node,
-  NcbiGenomeNode,
-  SequenceInputNode,
-  StringInputNode,
-} from '@/components/node-editor/node/input-node'
-import { NoteNode } from '@/components/node-editor/node/note-node'
-import { ToolNode } from '@/components/node-editor/node/tool-node'
+  nodeDefaultData,
+  nodeTypes,
+} from '@/components/node-editor/node-registry'
 import { SaveAsDialog } from '@/components/node-editor/save-as-dialog'
 import {
   Breadcrumb,
@@ -58,30 +39,7 @@ import { generateLetterId } from '@/lib/id-generator'
 import { useChatSidebarStore } from '@/stores/chat-sidebar-store'
 import { useNodeEditorStore } from '@/stores/nodeviewStore'
 
-// 注册节点类型
-const nodeTypes = {
-  tool: ToolNode,
-  // resource
-  value_string: StringInputNode,
-  resource_file: FileInputNode,
-  resource_sequence: SequenceInputNode,
-  resource_db: DBInputNode,
-  resource_ncbi_genome: NcbiGenomeNode,
-  resource_GRCh38: GRCh38Node,
-  resource_GRCm39: GRCm39Node,
-  resource_global_file: GlobalFileNode,
-  // processor
-  copy2folder: Copy2FolderNode,
-  gzip: GzipNode,
-  global_mark: GlobalMarkerNode,
-  rename_file: RenameFileNode,
-  // code
-  code_R: RCodeNode,
-  code_python: PythonCodeNode,
-  code_bash: BashCodeNode,
-  // note
-  note: NoteNode,
-}
+
 
 function FlowContent() {
   const {
@@ -130,30 +88,17 @@ function FlowContent() {
       const nodeId = generateLetterId()
       const position = screenToFlowPosition(clickPosition, { snapToGrid: true })
 
-      // 节点配置
-      // biome-ignore lint/suspicious/noExplicitAny: no need
-      const nodeConfig: Record<string, any> = {
-        tool: { data: { tool_uid: resourceId, args: '' } },
-        resource_db: {
-          data: { db_id: resourceId, db_name: resourceName ?? '' },
-        },
-        value_string: { data: { value: '' } },
-        resource_file: { data: { file_path: '' } },
-        resource_global_file: { data: { mark_name: '' } },
-        resource_sequence: { data: { r1: '', r2: '' } },
-        resource_ncbi_genome: { data: { required_index: [] } },
-        resource_GRCh38: { data: {} },
-        resource_GRCm39: { data: {} },
-        global_mark: { data: { mark_name: '', description: '' } },
-        rename_file: { data: { new_file_name: '' } },
-        processor_move2folder: { data: { folder_name: '' } },
-        code_R: { data: { description: '', code: '' } },
-        code_python: { data: { description: '', code: '' } },
-        code_bash: { data: { description: '', code: '' } },
-        note: { data: { content: '' } },
+      // 节点默认 data（特殊节点覆盖 registry 默认值）
+      const defaultData = {
+        ...nodeDefaultData[nodeType],
+        ...(nodeType === 'tool' && { tool_uid: resourceId }),
+        ...(nodeType === 'resource_db' && {
+          db_id: resourceId,
+          db_name: resourceName ?? '',
+        }),
       }
 
-      const config = nodeConfig[nodeType]
+      const config = { data: defaultData }
       const newNode = {
         id: nodeId,
         type: nodeType,

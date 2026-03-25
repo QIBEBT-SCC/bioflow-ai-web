@@ -162,34 +162,64 @@ const MyNode = memo(function MyNode() {
 
 ## Registration Steps
 
-After creating the node component, update these locations:
+After creating the node component, **only edit one file**:
 
-### 1. Register in `src/app/(main)/editor/page.tsx`
+### `src/components/node-editor/node-registry.ts`
 
-Add import at the top, then add to `nodeTypes` object and `nodeConfig`:
+This is the single source of truth for all node registrations. Make three additions:
 
-```tsx
-// Import
+#### 1. Import the component
+
+```ts
 import { MyNode } from '@/components/node-editor/node/my-node'
+```
 
-// nodeTypes
-const nodeTypes = {
+#### 2. Add to `nodeTypes`
+
+```ts
+export const nodeTypes = {
   // ... existing
   my_node: MyNode,
 }
+```
 
-// nodeConfig (inside onAddNode)
-const nodeConfig: Record<string, any> = {
+#### 3. Add to `nodeDefaultData`
+
+```ts
+export const nodeDefaultData = {
   // ... existing
-  my_node: { data: { field1: '', field2: '' } },
+  my_node: { field1: '', field2: '' },
 }
 ```
 
-The default values in nodeConfig should match the field types:
+Default value rules:
 - `string` → `''`
 - `string[]` → `[]`
 - `number` → `0`
 - `boolean` → `false`
+
+#### 4. Add to `menuData`
+
+Add a menu item in the appropriate group (`io`, `programming`, `processor`, `other`):
+
+```ts
+export const menuData = {
+  processor: {
+    // ...
+    items: [
+      // ... existing
+      { type: 'my_node', labelKey: 'my_node_label', Icon: SomeIcon },
+    ],
+  },
+}
+```
+
+#### 5. Add i18n keys
+
+Add `my_node_label` to both translation files:
+
+- `messages/zh/editor.json` → `editor.menu.my_node_label: "我的节点"`
+- `messages/en/editor.json` → `editor.menu.my_node_label: "My Node"`
 
 ## Style Rules
 

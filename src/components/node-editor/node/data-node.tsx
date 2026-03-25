@@ -264,4 +264,67 @@ const GlobalMarkerNode = memo(function FileInputNode() {
   )
 })
 
-export { Copy2FolderNode, GzipNode, RenameFileNode, GlobalMarkerNode }
+const SELECT_FILE_IN_FOLDER_HANDLES = {
+  inputs: [
+    { name: 'folder_path', description: 'Path of the folder to select from' },
+  ] as HandleDefine[],
+  outputs: [
+    { name: 'file_path', description: 'Path of the selected file' },
+  ] as HandleDefine[],
+}
+
+const SelectFileInFolderCard = memo(function SelectFileInFolderCard() {
+  const readOnly = useReadOnly()
+  const nodeId = useNodeId() ?? ''
+  const nodeData =
+    useNodesData<Node<{ file_name: string }, 'select_file_in_folder'>>(nodeId)
+  const { updateNodeData } = useReactFlow()
+
+  const [file_name, setFileName] = useState<string>(
+    nodeData?.data.file_name ?? '',
+  )
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: no need
+  useEffect(() => {
+    if (
+      nodeData?.data.file_name !== undefined &&
+      nodeData.data.file_name !== file_name
+    ) {
+      setFileName(nodeData.data.file_name)
+    }
+  }, [nodeData?.data.file_name])
+
+  const handleBlur = useCallback(() => {
+    updateNodeData(nodeId, { file_name })
+  }, [nodeId, file_name, updateNodeData])
+
+  return (
+    <div className='p-3'>
+      <Label className='pb-2 font-medium'>File Name:</Label>
+      <Input
+        className='w-full border-input focus-visible:ring-ring'
+        placeholder='Enter file name...'
+        value={file_name}
+        onChange={(e) => setFileName(e.target.value)}
+        onBlur={handleBlur}
+        spellCheck={false}
+        disabled={readOnly}
+      />
+    </div>
+  )
+})
+
+const SelectFileInFolderNode = memo(function SelectFileInFolderNode() {
+  const nodeComponent = useMemo(() => <SelectFileInFolderCard />, [])
+  return (
+    <BaseNode
+      title='Select File in Folder'
+      description='Select a specific file from a folder by name.'
+      handles={SELECT_FILE_IN_FOLDER_HANDLES}
+      color={colorSchemes.orange}
+      nodeComponent={nodeComponent}
+    />
+  )
+})
+
+export { Copy2FolderNode, GzipNode, RenameFileNode, GlobalMarkerNode, SelectFileInFolderNode }
