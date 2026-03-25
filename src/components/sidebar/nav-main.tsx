@@ -1,6 +1,12 @@
 'use client'
 
-import { Bot,EditIcon, HomeIcon, NetworkIcon, TvMinimalIcon } from 'lucide-react'
+import {
+  Bot,
+  EditIcon,
+  HomeIcon,
+  NetworkIcon,
+  TvMinimalIcon,
+} from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'

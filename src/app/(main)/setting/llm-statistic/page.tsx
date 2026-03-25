@@ -1,8 +1,7 @@
 'use client'
 
 import { format } from 'date-fns'
-import { enUS } from 'date-fns/locale'
-import { zhCN } from 'date-fns/locale'
+import { enUS, zhCN } from 'date-fns/locale'
 import {
   BarChart3Icon,
   CalendarIcon,
@@ -14,6 +13,7 @@ import {
   TrendingUpIcon,
   UsersIcon,
 } from 'lucide-react'
+import { useLocale, useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -57,7 +57,6 @@ import {
   useUpdateLLMSetting,
 } from '@/hooks/use-setting'
 import { cn } from '@/lib/utils'
-import { useLocale, useTranslations } from 'next-intl'
 import type {
   LLMSettingKey,
   LLMSettingPublic,
@@ -153,7 +152,7 @@ export default function LLMStatisticPage() {
       const promises = Object.entries(localConfig).map(([key, modelId]) =>
         updateSettingMutation.mutateAsync({
           key: key as LLMSettingKey,
-          model_id: parseInt(modelId),
+          model_id: parseInt(modelId, -1),
         }),
       )
       await Promise.all(promises)
@@ -215,9 +214,7 @@ export default function LLMStatisticPage() {
           <div className='mb-8'>
             <div className='flex items-center gap-3 mb-2'>
               <BarChart3Icon className='h-8 w-8 text-primary' />
-              <h1 className='text-4xl font-bold text-balance'>
-                {t('title')}
-              </h1>
+              <h1 className='text-4xl font-bold text-balance'>{t('title')}</h1>
             </div>
             <p className='text-muted-foreground text-pretty'>
               {t('description')}
@@ -240,7 +237,9 @@ export default function LLMStatisticPage() {
             <TabsContent value='config' className='space-y-4'>
               {isEditing ? (
                 <Card className='border-border bg-card p-6'>
-                  <h2 className='text-xl font-semibold mb-6'>{t('module_config_title')}</h2>
+                  <h2 className='text-xl font-semibold mb-6'>
+                    {t('module_config_title')}
+                  </h2>
                   <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
                     {Object.keys(modelTypeLabels).map((key) => (
                       <div key={key} className='space-y-2'>
@@ -249,7 +248,9 @@ export default function LLMStatisticPage() {
                         </Label>
                         <Select
                           value={localConfig[key]}
-                          onValueChange={(value) => updateModelConfig(key, value)}
+                          onValueChange={(value) =>
+                            updateModelConfig(key, value)
+                          }
                         >
                           <SelectTrigger id={key} className='bg-background'>
                             <SelectValue placeholder={t('select_model')} />
@@ -284,15 +285,22 @@ export default function LLMStatisticPage() {
                       onClick={handleSaveConfig}
                       disabled={updateSettingMutation.isPending}
                     >
-                      {updateSettingMutation.isPending ? t('saving') : t('save_config')}
+                      {updateSettingMutation.isPending
+                        ? t('saving')
+                        : t('save_config')}
                     </Button>
                   </div>
                 </Card>
               ) : (
                 <Card className='border-border bg-card p-6'>
                   <div className='flex items-center justify-between mb-4'>
-                    <h3 className='text-lg font-semibold'>{t('current_config_title')}</h3>
-                    <Button variant='outline' onClick={() => setIsEditing(true)}>
+                    <h3 className='text-lg font-semibold'>
+                      {t('current_config_title')}
+                    </h3>
+                    <Button
+                      variant='outline'
+                      onClick={() => setIsEditing(true)}
+                    >
                       <SettingsIcon className='h-4 w-4 mr-2' />
                       {tSetting('edit')}
                     </Button>
@@ -300,7 +308,9 @@ export default function LLMStatisticPage() {
                   <div className='space-y-3'>
                     {Object.keys(modelTypeLabels).map((key) => {
                       const modelId = localConfig[key]
-                      const model = availableModels.find((m) => m.id === modelId)
+                      const model = availableModels.find(
+                        (m) => m.id === modelId,
+                      )
                       return (
                         <div
                           key={key}
@@ -310,7 +320,9 @@ export default function LLMStatisticPage() {
                             <p className='text-sm font-medium'>
                               {modelTypeLabels[key]}
                             </p>
-                            <p className='text-xs text-muted-foreground'>{key}</p>
+                            <p className='text-xs text-muted-foreground'>
+                              {key}
+                            </p>
                           </div>
                           <div className='flex items-center gap-2'>
                             <Badge
@@ -339,7 +351,9 @@ export default function LLMStatisticPage() {
                 <div className='flex items-center justify-between'>
                   <div className='flex items-center gap-2'>
                     <CalendarIcon className='h-4 w-4 text-muted-foreground' />
-                    <span className='text-sm font-medium'>{t('date_range_label')}</span>
+                    <span className='text-sm font-medium'>
+                      {t('date_range_label')}
+                    </span>
                   </div>
                   <div className='flex items-center gap-3'>
                     <Popover>
@@ -361,10 +375,14 @@ export default function LLMStatisticPage() {
                                   locale: dateFnsLocale,
                                 })}{' '}
                                 -{' '}
-                                {format(dateRange.to, 'PPP', { locale: dateFnsLocale })}
+                                {format(dateRange.to, 'PPP', {
+                                  locale: dateFnsLocale,
+                                })}
                               </>
                             ) : (
-                              format(dateRange.from, 'PPP', { locale: dateFnsLocale })
+                              format(dateRange.from, 'PPP', {
+                                locale: dateFnsLocale,
+                              })
                             )
                           ) : (
                             <span>{t('select_date_range')}</span>
@@ -435,7 +453,9 @@ export default function LLMStatisticPage() {
                     <div className='p-2 bg-primary/10 rounded-lg'>
                       <TrendingUpIcon className='h-5 w-5 text-primary' />
                     </div>
-                    <p className='text-sm text-muted-foreground'>{t('total_cost')}</p>
+                    <p className='text-sm text-muted-foreground'>
+                      {t('total_cost')}
+                    </p>
                   </div>
                   <p className='text-3xl font-bold text-primary'>
                     ${statsData.total.total_price.toLocaleString()}
@@ -447,7 +467,9 @@ export default function LLMStatisticPage() {
                     <div className='p-2 bg-chart-2/10 rounded-lg'>
                       <BarChart3Icon className='h-5 w-5 text-chart-2' />
                     </div>
-                    <p className='text-sm text-muted-foreground'>{t('input_tokens')}</p>
+                    <p className='text-sm text-muted-foreground'>
+                      {t('input_tokens')}
+                    </p>
                   </div>
                   <p className='text-3xl font-bold'>
                     {statsData.total.total_input_tokens.toLocaleString()}
@@ -459,7 +481,9 @@ export default function LLMStatisticPage() {
                     <div className='p-2 bg-chart-3/10 rounded-lg'>
                       <BarChart3Icon className='h-5 w-5 text-chart-3' />
                     </div>
-                    <p className='text-sm text-muted-foreground'>{t('output_tokens')}</p>
+                    <p className='text-sm text-muted-foreground'>
+                      {t('output_tokens')}
+                    </p>
                   </div>
                   <p className='text-3xl font-bold'>
                     {statsData.total.total_output_tokens.toLocaleString()}
@@ -471,7 +495,9 @@ export default function LLMStatisticPage() {
                     <div className='p-2 bg-chart-4/10 rounded-lg'>
                       <BarChart3Icon className='h-5 w-5 text-chart-4' />
                     </div>
-                    <p className='text-sm text-muted-foreground'>{t('cache_read')}</p>
+                    <p className='text-sm text-muted-foreground'>
+                      {t('cache_read')}
+                    </p>
                   </div>
                   <p className='text-3xl font-bold'>
                     {statsData.total.total_cache_read.toLocaleString()}
@@ -480,7 +506,9 @@ export default function LLMStatisticPage() {
               </div>
 
               <Card className='border-border bg-card p-6'>
-                <h3 className='text-lg font-semibold mb-4'>{t('detail_stats_title')}</h3>
+                <h3 className='text-lg font-semibold mb-4'>
+                  {t('detail_stats_title')}
+                </h3>
                 <Tabs defaultValue='by_agent' className='space-y-4'>
                   <TabsList className='grid w-full grid-cols-4'>
                     <TabsTrigger value='by_agent' className='gap-2'>
@@ -723,7 +751,9 @@ export default function LLMStatisticPage() {
 
               <Card className='border-border bg-card p-6'>
                 <div className='flex items-center justify-between mb-4'>
-                  <h3 className='text-lg font-semibold'>{t('usage_detail_title')}</h3>
+                  <h3 className='text-lg font-semibold'>
+                    {t('usage_detail_title')}
+                  </h3>
                   <div className='flex items-center gap-4'>
                     <div className='flex items-center gap-2'>
                       <Label className='text-sm text-muted-foreground'>
@@ -732,7 +762,7 @@ export default function LLMStatisticPage() {
                       <Select
                         value={pageSize.toString()}
                         onValueChange={(value) => {
-                          setPageSize(Number.parseInt(value))
+                          setPageSize(Number.parseInt(value, -1))
                           setCurrentPage(1)
                         }}
                       >
@@ -740,15 +770,25 @@ export default function LLMStatisticPage() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value='10'>{t('items_per_page_10')}</SelectItem>
-                          <SelectItem value='20'>{t('items_per_page_20')}</SelectItem>
-                          <SelectItem value='50'>{t('items_per_page_50')}</SelectItem>
-                          <SelectItem value='100'>{t('items_per_page_100')}</SelectItem>
+                          <SelectItem value='10'>
+                            {t('items_per_page_10')}
+                          </SelectItem>
+                          <SelectItem value='20'>
+                            {t('items_per_page_20')}
+                          </SelectItem>
+                          <SelectItem value='50'>
+                            {t('items_per_page_50')}
+                          </SelectItem>
+                          <SelectItem value='100'>
+                            {t('items_per_page_100')}
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <Badge variant='secondary'>
-                      {t('total_records', { total: usageRecordsRes?.total || 0 })}
+                      {t('total_records', {
+                        total: usageRecordsRes?.total || 0,
+                      })}
                     </Badge>
                   </div>
                 </div>
@@ -757,9 +797,15 @@ export default function LLMStatisticPage() {
                   <Table>
                     <TableHeader>
                       <TableRow className='bg-muted/50'>
-                        <TableHead className='font-semibold'>{t('col_module')}</TableHead>
-                        <TableHead className='font-semibold'>{t('col_model')}</TableHead>
-                        <TableHead className='font-semibold'>{t('col_type')}</TableHead>
+                        <TableHead className='font-semibold'>
+                          {t('col_module')}
+                        </TableHead>
+                        <TableHead className='font-semibold'>
+                          {t('col_model')}
+                        </TableHead>
+                        <TableHead className='font-semibold'>
+                          {t('col_type')}
+                        </TableHead>
                         <TableHead className='text-right font-semibold'>
                           {t('col_input_tokens')}
                         </TableHead>
@@ -772,7 +818,9 @@ export default function LLMStatisticPage() {
                         <TableHead className='text-right font-semibold'>
                           {t('col_cost')}
                         </TableHead>
-                        <TableHead className='font-semibold'>{t('col_time')}</TableHead>
+                        <TableHead className='font-semibold'>
+                          {t('col_time')}
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>

@@ -4,6 +4,7 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query'
+import type { UIMessage } from 'ai'
 import {
   createChatSession,
   deleteChatSession,
@@ -13,7 +14,6 @@ import {
   updateChatSession,
 } from '@/app/actions/chat'
 import type { ChatSessionPublic, PaginatedChatResponse } from '@/types/chat'
-import type { UIMessage } from 'ai'
 
 // ============================================
 // Query Hooks (数据查询)

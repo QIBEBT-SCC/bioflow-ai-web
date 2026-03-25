@@ -37,6 +37,7 @@ export interface LLMModelCreate {
   input_price: number
   output_price: number
   cache_read_price: number
+  // biome-ignore lint/suspicious/noExplicitAny: no need
   extra_body?: Record<string, any>
   is_active?: boolean
 }
@@ -46,6 +47,7 @@ export interface LLMModelUpdate {
   input_price?: number
   output_price?: number
   cache_read_price?: number
+  // biome-ignore lint/suspicious/noExplicitAny: no need
   extra_body?: Record<string, any>
   is_active?: boolean
 }
@@ -57,6 +59,7 @@ export interface LLMModelPublic {
   input_price: number
   output_price: number
   cache_read_price: number
+  // biome-ignore lint/suspicious/noExplicitAny: no need
   extra_body: Record<string, any>
   is_active: boolean
 }

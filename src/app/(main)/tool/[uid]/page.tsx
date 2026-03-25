@@ -17,7 +17,6 @@ import {
   SnippetInput,
   SnippetText,
 } from '@/components/ai-elements/snippet'
-import { CopyButton } from '@/components/ui/copy-button'
 import {
   Terminal,
   TerminalContent,
@@ -41,6 +40,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { CopyButton } from '@/components/ui/copy-button'
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'

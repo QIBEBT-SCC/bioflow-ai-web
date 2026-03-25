@@ -1,7 +1,5 @@
 'use client'
 
-import { useTranslations } from 'next-intl'
-
 import {
   ArrowLeftIcon,
   CheckIcon,
@@ -15,8 +13,10 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { Badge } from '@/components/ui/badge'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -41,7 +41,6 @@ import { Textarea } from '@/components/ui/textarea'
 import { useImage, useUpdateImage } from '@/hooks/use-tool'
 import { formatImageTag } from '@/lib/image-utils'
 import type { ToolImage } from '@/types/tool'
-import { Badge } from '@/components/ui/badge'
 
 export default function ImageDetailPage() {
   const t = useTranslations('image.detail')

@@ -225,10 +225,7 @@ export function LoadWorkflowDialog() {
                             <DropdownMenuContent align='end'>
                               <DropdownMenuItem
                                 onClick={() =>
-                                  handleRenameStart(
-                                    workflow.uid,
-                                    workflow.name,
-                                  )
+                                  handleRenameStart(workflow.uid, workflow.name)
                                 }
                               >
                                 <PencilIcon className='h-4 w-4 mr-2' />

@@ -135,7 +135,7 @@
   stroke-width: 2;
 }
 
-.react-flow__node.selected>div {
+.react-flow__node.selected > div {
   /* indigo-500 */
   /* border-color: rgb(99 102 241);  */
   box-shadow:

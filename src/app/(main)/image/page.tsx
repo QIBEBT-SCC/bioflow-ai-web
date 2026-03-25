@@ -1,8 +1,7 @@
 'use client'
 
-import { useTranslations } from 'next-intl'
-
 import { PackageIcon, PlusIcon, SearchIcon, XIcon } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { CreateImageDialog } from '@/components/image/create-image-dialog'
 import { ImageCard } from '@/components/image/image-card'

@@ -24,7 +24,7 @@ export function ImagePagination({
 
   const renderPageNumbers = () => {
     const items: React.ReactNode[] = []
-    
+
     const addLink = (page: number, active = false) => {
       items.push(
         <PaginationItem key={`p-${page}`}>
@@ -41,7 +41,7 @@ export function ImagePagination({
         </PaginationItem>,
       )
     }
-    
+
     const addEllipsis = (key: string) => {
       items.push(
         <PaginationItem key={key}>
@@ -49,7 +49,7 @@ export function ImagePagination({
         </PaginationItem>,
       )
     }
-    
+
     const windowSize = 1 // show 1 page around current
     const start = Math.max(2, currentPage - windowSize)
     const end = Math.min(totalPages - 1, currentPage + windowSize)

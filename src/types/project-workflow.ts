@@ -1,5 +1,5 @@
-import type { Statistics, Status } from '@/types/run'
 import type { User } from '@/types/auth'
+import type { Statistics, Status } from '@/types/run'
 
 /**
  * 项目工作流信息

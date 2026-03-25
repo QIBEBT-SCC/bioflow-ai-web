@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { getDocument, refreshDocument } from '@/app/actions/document'
+import { refreshDocument } from '@/app/actions/document'
 import {
   createImage,
   getImage,
@@ -31,7 +31,6 @@ import type {
   DockerToolUpdate,
   SimpleToolInfo,
   ToolGroup,
-  ToolHelpDoc,
   ToolImage,
   ToolImagePublic,
   ToolInfo,

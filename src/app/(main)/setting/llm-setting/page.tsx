@@ -68,7 +68,7 @@ import type {
 
 export default function LLMSettingPage() {
   const t = useTranslations('setting.llm_setting')
-  const { data: serverProviders = [], isLoading } = useLLMProviders()
+  const { data: serverProviders = [] } = useLLMProviders()
   const createProviderMutation = useCreateLLMProvider()
   const updateProviderMutation = useUpdateLLMProvider()
   const deleteProviderMutation = useDeleteLLMProvider()
@@ -221,7 +221,7 @@ export default function LLMSettingPage() {
 
   const toggleProviderActive = async (providerId: string, checked: boolean) => {
     await updateProviderMutation.mutateAsync({
-      id: parseInt(providerId),
+      id: parseInt(providerId, -1),
       data: { is_active: checked },
     })
   }
@@ -267,10 +267,12 @@ export default function LLMSettingPage() {
     })
   }
 
+  // biome-ignore lint/suspicious/noExplicitAny: no need
   const updateDraftProvider = (field: keyof LLMProviderUpdate, value: any) => {
     setDraftProvider((prev) => (prev ? { ...prev, [field]: value } : null))
   }
 
+  // biome-ignore lint/suspicious/noExplicitAny: no need
   const updateDraftModel = (field: keyof LLMModelUpdate, value: any) => {
     setDraftModel((prev) => (prev ? { ...prev, [field]: value } : null))
   }
@@ -723,7 +725,7 @@ export default function LLMSettingPage() {
                                 <p className='text-muted-foreground'>API Key</p>
                                 <p className='font-mono'>
                                   {provider.api_key
-                                    ? '••••••••' + provider.api_key.slice(-4)
+                                    ? `••••••••${provider.api_key.slice(-4)}`
                                     : t('base_url_not_set')}
                                 </p>
                               </div>

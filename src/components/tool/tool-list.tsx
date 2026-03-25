@@ -202,257 +202,280 @@ export function ToolList({
     )
   }
 
-  const content = viewMode === 'list' ? (
-    <div>
-      <Table>
-        <TableHeader className='bg-muted/50'>
-          <TableRow>
-            <TableHead className='h-12 px-4 text-left w-30'>{t('toolName')}</TableHead>
-            <TableHead className='h-12 px-4 text-left w-60'>
-              {t('dockerImage')}
-            </TableHead>
-            <TableHead className='h-12 px-4 text-left w-85'>{t('description')}</TableHead>
-            <TableHead className='h-12 px-4 text-left w-30'>{t('tags')}</TableHead>
-            <TableHead className='h-12 px-4 text-center w-5'>{t('actions')}</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
+  const content =
+    viewMode === 'list' ? (
+      <div>
+        <Table>
+          <TableHeader className='bg-muted/50'>
+            <TableRow>
+              <TableHead className='h-12 px-4 text-left w-30'>
+                {t('toolName')}
+              </TableHead>
+              <TableHead className='h-12 px-4 text-left w-60'>
+                {t('dockerImage')}
+              </TableHead>
+              <TableHead className='h-12 px-4 text-left w-85'>
+                {t('description')}
+              </TableHead>
+              <TableHead className='h-12 px-4 text-left w-30'>
+                {t('tags')}
+              </TableHead>
+              <TableHead className='h-12 px-4 text-center w-5'>
+                {t('actions')}
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {allTools.map((tool: SimpleToolInfo) => (
+              <TableRow key={tool.uid}>
+                <TableCell className='font-medium max-w-30'>
+                  <Link href={`/tool/${tool.uid}`} className='hover:underline'>
+                    <div className='truncate'>{tool.name}</div>
+                  </Link>
+                </TableCell>
+                <TableCell className='text-muted-foreground max-w-60'>
+                  <div className='truncate'>
+                    {tool.image.image.registry}/{tool.image.image.namespace}/
+                    {tool.image.image.repository}:{tool.image.image.tag}
+                  </div>
+                </TableCell>
+                <TableCell className='max-w-85'>
+                  <div className='line-clamp-2 text-sm truncate'>
+                    {tool.description || t('noDescription')}
+                  </div>
+                </TableCell>
+                <TableCell className='max-w-30'>
+                  <div className='flex flex-row flex-wrap gap-1'>
+                    {tool.tags.slice(0, 2).map((tag) => (
+                      <Badge
+                        key={tag.id}
+                        variant='outline'
+                        className={`${getTagStyle(tag.name)} text-xs`}
+                      >
+                        {tag.name}
+                      </Badge>
+                    ))}
+                    {tool.tags.length > 2 && (
+                      <Badge variant='outline' className='text-xs'>
+                        +{tool.tags.length - 2}
+                      </Badge>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell className='text-center'>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant='ghost' size='icon' className='h-8 w-8'>
+                        <MoreHorizontalIcon className='h-4 w-4' />
+                        <span className='sr-only'>{t('moreOptions')}</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align='end'>
+                      <DropdownMenuItem
+                        onClick={() => handleCopyTool(tool.uid)}
+                      >
+                        <CopyIcon className='h-4 w-4 mr-2' />
+                        {t('copyTool')}
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        className='text-destructive'
+                        onClick={() =>
+                          setDeleteConfirmTool({
+                            uid: tool.uid,
+                            name: tool.name,
+                          })
+                        }
+                      >
+                        <Trash2Icon className='h-4 w-4 mr-2' />
+                        {t('deleteTool')}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+
+        {/* 分页 */}
+        <div className='flex items-center justify-between mt-4'>
+          <div className='text-sm text-muted-foreground'>
+            {t('showing', {
+              start: offset + 1,
+              end: Math.min(offset + pageSize, toolCounts),
+              total: toolCounts,
+            })}
+          </div>
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(1, prev - 1))
+                  }
+                  className={
+                    currentPage === 1
+                      ? 'pointer-events-none opacity-50'
+                      : 'cursor-pointer'
+                  }
+                />
+              </PaginationItem>
+              {getPageNumbers().map((page, index) =>
+                typeof page === 'number' ? (
+                  <PaginationItem key={`page-list-${page}`}>
+                    <PaginationLink
+                      onClick={() => setCurrentPage(page)}
+                      isActive={currentPage === page}
+                      className='cursor-pointer'
+                    >
+                      {page}
+                    </PaginationLink>
+                  </PaginationItem>
+                ) : (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: no need
+                  <PaginationItem key={`ellipsis-list-${index}`}>
+                    <PaginationEllipsis />
+                  </PaginationItem>
+                ),
+              )}
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                  }
+                  className={
+                    currentPage === totalPages
+                      ? 'pointer-events-none opacity-50'
+                      : 'cursor-pointer'
+                  }
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      </div>
+    ) : (
+      <div>
+        <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
           {allTools.map((tool: SimpleToolInfo) => (
-            <TableRow key={tool.uid}>
-              <TableCell className='font-medium max-w-30'>
-                <Link href={`/tool/${tool.uid}`} className='hover:underline'>
-                  <div className='truncate'>{tool.name}</div>
-                </Link>
-              </TableCell>
-              <TableCell className='text-muted-foreground max-w-60'>
-                <div className='truncate'>
-                  {tool.image.image.registry}/{tool.image.image.namespace}/
-                  {tool.image.image.repository}:{tool.image.image.tag}
+            <Card key={tool.uid} className='py-0 gap-0'>
+              <CardContent className='p-4'>
+                <div className='flex justify-between items-start mb-2'>
+                  <Link
+                    href={`/tool/${tool.uid}`}
+                    className='font-medium hover:underline'
+                  >
+                    {tool.name}
+                  </Link>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant='ghost' size='icon' className='h-8 w-8'>
+                        <MoreHorizontalIcon className='h-4 w-4' />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align='end'>
+                      <DropdownMenuItem
+                        onClick={() => handleCopyTool(tool.uid)}
+                      >
+                        <CopyIcon className='h-4 w-4 mr-2' />
+                        复制工具
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        className='text-destructive'
+                        onClick={() =>
+                          setDeleteConfirmTool({
+                            uid: tool.uid,
+                            name: tool.name,
+                          })
+                        }
+                      >
+                        <Trash2Icon className='h-4 w-4 mr-2' />
+                        删除工具
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
-              </TableCell>
-              <TableCell className='max-w-85'>
-                <div className='line-clamp-2 text-sm truncate'>
+                <p className='text-sm text-muted-foreground mb-3 line-clamp-2'>
                   {tool.description || t('noDescription')}
+                </p>
+                <div className='flex items-center justify-between text-xs text-muted-foreground'>
+                  <span className='truncate'>
+                    {tool.image.image.registry}/{tool.image.image.namespace}/
+                    {tool.image.image.repository}:{tool.image.image.tag}
+                  </span>
                 </div>
-              </TableCell>
-              <TableCell className='max-w-30'>
-                <div className='flex flex-row flex-wrap gap-1'>
-                  {tool.tags.slice(0, 2).map((tag) => (
+                <div className='flex flex-wrap gap-1 mt-3'>
+                  {tool.tags.slice(0, 3).map((tag) => (
                     <Badge
                       key={tag.id}
                       variant='outline'
-                      className={`${getTagStyle(tag.name)} text-xs`}
+                      className={getTagStyle(tag.name)}
                     >
                       {tag.name}
                     </Badge>
                   ))}
-                  {tool.tags.length > 2 && (
-                    <Badge variant='outline' className='text-xs'>
-                      +{tool.tags.length - 2}
-                    </Badge>
+                  {tool.tags.length > 3 && (
+                    <Badge variant='outline'>+{tool.tags.length - 3}</Badge>
                   )}
                 </div>
-              </TableCell>
-              <TableCell className='text-center'>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant='ghost' size='icon' className='h-8 w-8'>
-                      <MoreHorizontalIcon className='h-4 w-4' />
-                      <span className='sr-only'>{t('moreOptions')}</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align='end'>
-                    <DropdownMenuItem onClick={() => handleCopyTool(tool.uid)}>
-                      <CopyIcon className='h-4 w-4 mr-2' />
-                      {t('copyTool')}
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      className='text-destructive'
-                      onClick={() =>
-                        setDeleteConfirmTool({ uid: tool.uid, name: tool.name })
-                      }
-                    >
-                      <Trash2Icon className='h-4 w-4 mr-2' />
-                      {t('deleteTool')}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
-            </TableRow>
+              </CardContent>
+            </Card>
           ))}
-        </TableBody>
-      </Table>
-
-      {/* 分页 */}
-      <div className='flex items-center justify-between mt-4'>
-        <div className='text-sm text-muted-foreground'>
-          {t('showing', {
-            start: offset + 1,
-            end: Math.min(offset + pageSize, toolCounts),
-            total: toolCounts,
-          })}
         </div>
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
-                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                className={
-                  currentPage === 1
-                    ? 'pointer-events-none opacity-50'
-                    : 'cursor-pointer'
-                }
-              />
-            </PaginationItem>
-            {getPageNumbers().map((page, index) =>
-              typeof page === 'number' ? (
-                <PaginationItem key={`page-list-${page}`}>
-                  <PaginationLink
-                    onClick={() => setCurrentPage(page)}
-                    isActive={currentPage === page}
-                    className='cursor-pointer'
-                  >
-                    {page}
-                  </PaginationLink>
-                </PaginationItem>
-              ) : (
-                // biome-ignore lint/suspicious/noArrayIndexKey: no need
-                <PaginationItem key={`ellipsis-list-${index}`}>
-                  <PaginationEllipsis />
-                </PaginationItem>
-              ),
-            )}
-            <PaginationItem>
-              <PaginationNext
-                onClick={() =>
-                  setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-                }
-                className={
-                  currentPage === totalPages
-                    ? 'pointer-events-none opacity-50'
-                    : 'cursor-pointer'
-                }
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      </div>
-    </div>
-  ) : (
-    <div>
-      <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
-        {allTools.map((tool: SimpleToolInfo) => (
-          <Card key={tool.uid} className='py-0 gap-0'>
-            <CardContent className='p-4'>
-              <div className='flex justify-between items-start mb-2'>
-                <Link
-                  href={`/tool/${tool.uid}`}
-                  className='font-medium hover:underline'
-                >
-                  {tool.name}
-                </Link>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant='ghost' size='icon' className='h-8 w-8'>
-                      <MoreHorizontalIcon className='h-4 w-4' />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align='end'>
-                    <DropdownMenuItem onClick={() => handleCopyTool(tool.uid)}>
-                      <CopyIcon className='h-4 w-4 mr-2' />
-                      复制工具
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      className='text-destructive'
-                      onClick={() =>
-                        setDeleteConfirmTool({ uid: tool.uid, name: tool.name })
-                      }
-                    >
-                      <Trash2Icon className='h-4 w-4 mr-2' />
-                      删除工具
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-              <p className='text-sm text-muted-foreground mb-3 line-clamp-2'>
-                {tool.description || t('noDescription')}
-              </p>
-              <div className='flex items-center justify-between text-xs text-muted-foreground'>
-                <span className='truncate'>
-                  {tool.image.image.registry}/{tool.image.image.namespace}/
-                  {tool.image.image.repository}:{tool.image.image.tag}
-                </span>
-              </div>
-              <div className='flex flex-wrap gap-1 mt-3'>
-                {tool.tags.slice(0, 3).map((tag) => (
-                  <Badge
-                    key={tag.id}
-                    variant='outline'
-                    className={getTagStyle(tag.name)}
-                  >
-                    {tag.name}
-                  </Badge>
-                ))}
-                {tool.tags.length > 3 && (
-                  <Badge variant='outline'>+{tool.tags.length - 3}</Badge>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
 
-      {/* 分页 */}
-      <div className='flex items-center justify-center mt-6'>
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
-                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                className={
-                  currentPage === 1
-                    ? 'pointer-events-none opacity-50'
-                    : 'cursor-pointer'
-                }
-              />
-            </PaginationItem>
-            {getPageNumbers().map((page, index) =>
-              typeof page === 'number' ? (
-                <PaginationItem key={`page-grid-${page}`}>
-                  <PaginationLink
-                    onClick={() => setCurrentPage(page)}
-                    isActive={currentPage === page}
-                    className='cursor-pointer'
-                  >
-                    {page}
-                  </PaginationLink>
-                </PaginationItem>
-              ) : (
-                // biome-ignore lint/suspicious/noArrayIndexKey: no need
-                <PaginationItem key={`ellipsis-grid-${index}`}>
-                  <PaginationEllipsis />
-                </PaginationItem>
-              ),
-            )}
-            <PaginationItem>
-              <PaginationNext
-                onClick={() =>
-                  setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-                }
-                className={
-                  currentPage === totalPages
-                    ? 'pointer-events-none opacity-50'
-                    : 'cursor-pointer'
-                }
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
+        {/* 分页 */}
+        <div className='flex items-center justify-center mt-6'>
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(1, prev - 1))
+                  }
+                  className={
+                    currentPage === 1
+                      ? 'pointer-events-none opacity-50'
+                      : 'cursor-pointer'
+                  }
+                />
+              </PaginationItem>
+              {getPageNumbers().map((page, index) =>
+                typeof page === 'number' ? (
+                  <PaginationItem key={`page-grid-${page}`}>
+                    <PaginationLink
+                      onClick={() => setCurrentPage(page)}
+                      isActive={currentPage === page}
+                      className='cursor-pointer'
+                    >
+                      {page}
+                    </PaginationLink>
+                  </PaginationItem>
+                ) : (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: no need
+                  <PaginationItem key={`ellipsis-grid-${index}`}>
+                    <PaginationEllipsis />
+                  </PaginationItem>
+                ),
+              )}
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                  }
+                  className={
+                    currentPage === totalPages
+                      ? 'pointer-events-none opacity-50'
+                      : 'cursor-pointer'
+                  }
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
       </div>
-    </div>
-  )
+    )
 
   return (
     <>

@@ -3,6 +3,7 @@
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { getTool } from '@/app/actions/tool'
@@ -10,7 +11,6 @@ import {
   ToolConfigForm,
   type ToolConfigValues,
 } from '@/components/tool/tool-config-form'
-import { useTranslations } from 'next-intl'
 import { Badge } from '@/components/ui/badge'
 import {
   Breadcrumb,
@@ -110,7 +110,7 @@ export default function AddToolPage() {
     return () => {
       cancelled = true
     }
-  }, [copyUid, setCurrentImage, setToolConfig])
+  }, [copyUid, setCurrentImage, setToolConfig, t])
 
   // 处理下一步
   const handleNext = () => {
