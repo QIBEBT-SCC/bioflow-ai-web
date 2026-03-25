@@ -10,6 +10,7 @@ import {
   ToolConfigForm,
   type ToolConfigValues,
 } from '@/components/tool/tool-config-form'
+import { useTranslations } from 'next-intl'
 import { Badge } from '@/components/ui/badge'
 import {
   Breadcrumb,
@@ -37,14 +38,26 @@ import type {
   ParamDefine,
   ToolTag,
 } from '@/types/tool'
-
-const steps = [
-  { id: 1, title: '选择镜像', description: '选择或创建Docker镜像' },
-  { id: 2, title: '配置工具', description: '配置工具参数和文件' },
-  { id: 3, title: '确认创建', description: '确认并创建工具' },
-]
-
 export default function AddToolPage() {
+  const t = useTranslations('tool.AddPage')
+  const tPage = useTranslations('tool.Page')
+  const steps = [
+    {
+      id: 1,
+      title: t('steps.step1.title'),
+      description: t('steps.step1.description'),
+    },
+    {
+      id: 2,
+      title: t('steps.step2.title'),
+      description: t('steps.step2.description'),
+    },
+    {
+      id: 3,
+      title: t('steps.step3.title'),
+      description: t('steps.step3.description'),
+    },
+  ]
   const router = useRouter()
   const searchParams = useSearchParams()
   const initialStep = Number(searchParams.get('step')) || 1
@@ -81,7 +94,7 @@ export default function AddToolPage() {
       setCurrentImage(tool.image)
       setSearchQuery(tool.image.name)
       setToolConfig({
-        name: `${tool.name} (副本)`,
+        name: `${tool.name}${t('copySuffix')}`,
         image_uid: tool.image.uid ?? '',
         description: tool.description,
         help_command: tool.help_doc?.help_command ?? '',
@@ -125,7 +138,7 @@ export default function AddToolPage() {
 
     createTool(requestData, {
       onSuccess: () => {
-        toast.success('工具创建成功')
+        toast.success(t('createSuccess'))
         router.push('/tool')
       },
     })
@@ -254,12 +267,12 @@ export default function AddToolPage() {
             <BreadcrumbList>
               <BreadcrumbItem className='hidden md:block'>
                 <BreadcrumbLink asChild>
-                  <Link href='/tool'>工具</Link>
+                  <Link href='/tool'>{tPage('title')}</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator className='hidden md:block' />
               <BreadcrumbItem>
-                <BreadcrumbPage>添加工具</BreadcrumbPage>
+                <BreadcrumbPage>{t('breadcrumb')}</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
@@ -274,12 +287,10 @@ export default function AddToolPage() {
               className='inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-2'
             >
               <ArrowLeft className='h-4 w-4 mr-1' />
-              返回
+              {t('back')}
             </Link>
-            <h1 className='text-2xl font-bold'>添加新工具</h1>
-            <p className='text-muted-foreground mt-1'>
-              通过3个步骤创建自定义分析工具
-            </p>
+            <h1 className='text-2xl font-bold'>{t('title')}</h1>
+            <p className='text-muted-foreground mt-1'>{t('subtitle')}</p>
           </div>
 
           {/* 进度条 */}
@@ -327,14 +338,14 @@ export default function AddToolPage() {
             {/* 步骤1: 选择镜像 */}
             {currentStep === 1 && (
               <div>
-                <h2 className='text-xl font-semibold mb-2'>选择Docker镜像</h2>
-                <p className='text-muted-foreground mb-6'>
-                  搜索并选择要使用的Docker镜像
-                </p>
+                <h2 className='text-xl font-semibold mb-2'>
+                  {t('selectImage')}
+                </h2>
+                <p className='text-muted-foreground mb-6'>{t('searchImage')}</p>
 
                 <div className='mb-6'>
                   <Input
-                    placeholder='搜索镜像...'
+                    placeholder={t('searchPlaceholder')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
@@ -370,7 +381,7 @@ export default function AddToolPage() {
 
                 {searchQuery && searchResults.length === 0 && (
                   <div className='text-center py-12 text-muted-foreground'>
-                    <p>未找到匹配的镜像</p>
+                    <p>{t('noImageFound')}</p>
                   </div>
                 )}
               </div>
@@ -379,9 +390,11 @@ export default function AddToolPage() {
             {/* 步骤2: 配置工具 */}
             {currentStep === 2 && (
               <div>
-                <h2 className='text-xl font-semibold mb-2'>配置工具</h2>
+                <h2 className='text-xl font-semibold mb-2'>
+                  {t('configTool')}
+                </h2>
                 <p className='text-muted-foreground mb-6'>
-                  填写工具的基本信息和参数配置
+                  {t('fillBasicInfo')}
                 </p>
 
                 <ToolConfigForm
@@ -415,35 +428,41 @@ export default function AddToolPage() {
             {/* 步骤3: 确认创建 */}
             {currentStep === 3 && (
               <div>
-                <h2 className='text-xl font-semibold mb-2'>确认创建</h2>
-                <p className='text-muted-foreground mb-6'>请检查工具配置信息</p>
+                <h2 className='text-xl font-semibold mb-2'>
+                  {t('confirmCreate')}
+                </h2>
+                <p className='text-muted-foreground mb-6'>{t('checkConfig')}</p>
 
                 <div className='space-y-4'>
                   <Card>
                     <CardContent className='pt-6'>
-                      <h3 className='font-semibold mb-4'>基本信息</h3>
+                      <h3 className='font-semibold mb-4'>{t('basicInfo')}</h3>
                       <div className='space-y-2'>
                         <div className='flex justify-between'>
                           <span className='text-muted-foreground'>
-                            工具名称：
+                            {t('toolName')}
                           </span>
                           <span className='font-medium'>{toolConfig.name}</span>
                         </div>
                         <div className='flex justify-between'>
-                          <span className='text-muted-foreground'>描述：</span>
+                          <span className='text-muted-foreground'>
+                            {t('toolDesc')}
+                          </span>
                           <span className='font-medium'>
                             {toolConfig.description}
                           </span>
                         </div>
                         <div className='flex justify-between'>
-                          <span className='text-muted-foreground'>镜像：</span>
+                          <span className='text-muted-foreground'>
+                            {t('toolImage')}
+                          </span>
                           <span className='font-medium'>
                             {currentImage?.name}
                           </span>
                         </div>
                         <div className='flex justify-between'>
                           <span className='text-muted-foreground'>
-                            命令模板：
+                            {t('commandTemplate')}
                           </span>
                           <code className='text-sm bg-muted px-2 py-1 rounded'>
                             {toolConfig.command_template}
@@ -455,14 +474,16 @@ export default function AddToolPage() {
 
                   <Card>
                     <CardContent className='pt-6'>
-                      <h3 className='font-semibold mb-4'>配置汇总</h3>
+                      <h3 className='font-semibold mb-4'>
+                        {t('configSummary')}
+                      </h3>
                       <div className='grid grid-cols-2 md:grid-cols-3 gap-4'>
                         <div className='text-center'>
                           <div className='text-2xl font-bold text-primary'>
                             {toolConfig.dynamic_params.length}
                           </div>
                           <div className='text-sm text-muted-foreground'>
-                            动态参数
+                            {t('dynamicParams')}
                           </div>
                         </div>
                         <div className='text-center'>
@@ -470,7 +491,7 @@ export default function AddToolPage() {
                             {toolConfig.file_mounts.length}
                           </div>
                           <div className='text-sm text-muted-foreground'>
-                            文件挂载
+                            {t('fileMounts')}
                           </div>
                         </div>
                         <div className='text-center'>
@@ -479,11 +500,11 @@ export default function AddToolPage() {
                               0 ||
                             (toolConfig.modifiable_static_params || '').length >
                               0
-                              ? '是'
-                              : '否'}
+                              ? t('yes')
+                              : t('no')}
                           </div>
                           <div className='text-sm text-muted-foreground'>
-                            静态参数
+                            {t('staticParams')}
                           </div>
                         </div>
                       </div>
@@ -502,16 +523,16 @@ export default function AddToolPage() {
               disabled={currentStep === 1}
             >
               <ArrowLeft className='h-4 w-4 mr-2' />
-              上一步
+              {t('prevStep')}
             </Button>
 
             <div className='text-sm text-muted-foreground'>
-              步骤 {currentStep} / {steps.length}
+              {t('stepProgress', { current: currentStep, total: steps.length })}
             </div>
 
             {currentStep < steps.length ? (
               <Button onClick={handleNext} disabled={!canProceed()}>
-                下一步
+                {t('nextStep')}
                 <ArrowRight className='h-4 w-4 ml-2' />
               </Button>
             ) : (
@@ -520,7 +541,7 @@ export default function AddToolPage() {
                 className='bg-green-600 hover:bg-green-700'
                 disabled={!canProceed() || isCreating}
               >
-                {isCreating ? '创建中...' : '创建工具'}
+                {isCreating ? t('creating') : t('createTool')}
               </Button>
             )}
           </div>

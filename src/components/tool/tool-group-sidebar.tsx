@@ -1,6 +1,7 @@
 'use client'
 
 import { ChevronRight, Folder, FolderOpen, FolderPlus } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -27,6 +28,7 @@ export function ToolGroupSidebar({
   selectedGroupId,
   onSelectGroup,
 }: ToolGroupSidebarProps) {
+  const t = useTranslations('tool.Sidebar')
   const [expandedGroups, setExpandedGroups] = useState<Record<number, boolean>>(
     {},
   )
@@ -149,7 +151,7 @@ export function ToolGroupSidebar({
       <Card className='py-0 gap-0'>
         <CardContent className='p-4'>
           <div className='flex justify-between items-center mb-4'>
-            <h2 className='text-md font-medium'>工具分组</h2>
+            <h2 className='text-md font-medium'>{t('title')}</h2>
             <Button variant='ghost' size='icon' className='h-8 w-8'>
               <FolderPlus className='h-4 w-4' />
             </Button>
@@ -162,7 +164,7 @@ export function ToolGroupSidebar({
               size='sm'
               onClick={() => onSelectGroup(null)}
             >
-              <span className='flex-1 truncate'>所有工具</span>
+              <span className='flex-1 truncate'>{t('allTools')}</span>
               <Badge className='ml-2 shrink-0'>{allToolsCount}</Badge>
             </Button>
 
