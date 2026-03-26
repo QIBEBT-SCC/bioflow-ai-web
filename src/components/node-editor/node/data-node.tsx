@@ -7,6 +7,14 @@ import { colorSchemes } from '@/components/node-editor/node/color'
 import { useReadOnly } from '@/components/node-editor/read-only-context'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
 import type { HandleDefine } from '@/types/node'
 
 const COPY2FOLDER_HANDLES = {
@@ -327,4 +335,166 @@ const SelectFileInFolderNode = memo(function SelectFileInFolderNode() {
   )
 })
 
-export { Copy2FolderNode, GzipNode, RenameFileNode, GlobalMarkerNode, SelectFileInFolderNode }
+const LLM_VALUE_OUTPUT_HANDLES = {
+  inputs: [
+    { name: 'file', description: 'Input file to process' },
+  ] as HandleDefine[],
+  outputs: [
+    { name: 'value', description: 'Extracted value from the file' },
+  ] as HandleDefine[],
+}
+
+type ValueType = 'string' | 'number'
+
+const LlmValueOutputCard = memo(function LlmValueOutputCard() {
+  const readOnly = useReadOnly()
+  const nodeId = useNodeId() ?? ''
+  const nodeData = useNodesData<
+    Node<{ prompt: string; value_name: string; value_type: ValueType }, 'llm_value_output'>
+  >(nodeId)
+  const { updateNodeData } = useReactFlow()
+
+  const [prompt, setPrompt] = useState<string>(nodeData?.data.prompt ?? '')
+  const [value_name, setValueName] = useState<string>(nodeData?.data.value_name ?? '')
+  const [value_type, setValueType] = useState<ValueType>(nodeData?.data.value_type ?? 'string')
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: no need
+  useEffect(() => {
+    if (nodeData?.data.prompt !== undefined && nodeData.data.prompt !== prompt) {
+      setPrompt(nodeData.data.prompt)
+    }
+  }, [nodeData?.data.prompt])
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: no need
+  useEffect(() => {
+    if (nodeData?.data.value_name !== undefined && nodeData.data.value_name !== value_name) {
+      setValueName(nodeData.data.value_name)
+    }
+  }, [nodeData?.data.value_name])
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: no need
+  useEffect(() => {
+    if (nodeData?.data.value_type !== undefined && nodeData.data.value_type !== value_type) {
+      setValueType(nodeData.data.value_type)
+    }
+  }, [nodeData?.data.value_type])
+
+  const handleBlur = useCallback(() => {
+    updateNodeData(nodeId, { prompt, value_name, value_type })
+  }, [nodeId, prompt, value_name, value_type, updateNodeData])
+
+  const handleValueTypeChange = useCallback(
+    (val: ValueType) => {
+      setValueType(val)
+      updateNodeData(nodeId, { prompt, value_name, value_type: val })
+    },
+    [nodeId, prompt, value_name, updateNodeData],
+  )
+
+  return (
+    <div className='p-3'>
+      <Label className='pb-2 font-medium'>Prompt:</Label>
+      <Textarea
+        className='w-full border-input focus-visible:ring-ring'
+        placeholder='Enter prompt...'
+        value={prompt}
+        onChange={(e) => setPrompt(e.target.value)}
+        onBlur={handleBlur}
+        spellCheck={false}
+        disabled={readOnly}
+      />
+      <Label className='pt-4 pb-2 font-medium'>Value Name:</Label>
+      <Input
+        className='w-full border-input focus-visible:ring-ring'
+        placeholder='Enter value name...'
+        value={value_name}
+        onChange={(e) => setValueName(e.target.value)}
+        onBlur={handleBlur}
+        spellCheck={false}
+        disabled={readOnly}
+      />
+      <Label className='pt-4 pb-2 font-medium'>Value Type:</Label>
+      <Select value={value_type} onValueChange={handleValueTypeChange} disabled={readOnly}>
+        <SelectTrigger className='w-full'>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value='string'>string</SelectItem>
+          <SelectItem value='number'>number</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  )
+})
+
+const LlmValueOutputNode = memo(function LlmValueOutputNode() {
+  const nodeComponent = useMemo(() => <LlmValueOutputCard />, [])
+  return (
+    <BaseNode
+      title='LLM Value Output'
+      description='Use an LLM to extract a named value from a file.'
+      handles={LLM_VALUE_OUTPUT_HANDLES}
+      color={colorSchemes.orange}
+      nodeComponent={nodeComponent}
+    />
+  )
+})
+
+const BIND_PARAM_HANDLES = {
+  inputs: [
+    { name: 'file', description: 'Input file to bind parameter to' },
+  ] as HandleDefine[],
+  outputs: [
+    { name: 'file_with_param', description: 'File with bound parameter' },
+  ] as HandleDefine[],
+}
+
+const BindParamCard = memo(function BindParamCard() {
+  const readOnly = useReadOnly()
+  const nodeId = useNodeId() ?? ''
+  const nodeData = useNodesData<Node<{ parameter: string }, 'bind_param'>>(nodeId)
+  const { updateNodeData } = useReactFlow()
+
+  const [parameter, setParameter] = useState<string>(nodeData?.data.parameter ?? '')
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: no need
+  useEffect(() => {
+    if (nodeData?.data.parameter !== undefined && nodeData.data.parameter !== parameter) {
+      setParameter(nodeData.data.parameter)
+    }
+  }, [nodeData?.data.parameter])
+
+  const handleBlur = useCallback(() => {
+    updateNodeData(nodeId, { parameter })
+  }, [nodeId, parameter, updateNodeData])
+
+  return (
+    <div className='p-3'>
+      <Label className='pb-2 font-medium'>Parameter:</Label>
+      <Input
+        className='w-full border-input focus-visible:ring-ring'
+        placeholder='Enter parameter...'
+        value={parameter}
+        onChange={(e) => setParameter(e.target.value)}
+        onBlur={handleBlur}
+        spellCheck={false}
+        disabled={readOnly}
+      />
+    </div>
+  )
+})
+
+const BindParamNode = memo(function BindParamNode() {
+  const nodeComponent = useMemo(() => <BindParamCard />, [])
+  return (
+    <BaseNode
+      title='Bind Parameter'
+      description='Bind a parameter to a file.'
+      handles={BIND_PARAM_HANDLES}
+      color={colorSchemes.orange}
+      nodeComponent={nodeComponent}
+    />
+  )
+})
+
+export { Copy2FolderNode, GzipNode, RenameFileNode, GlobalMarkerNode, SelectFileInFolderNode, LlmValueOutputNode, BindParamNode }

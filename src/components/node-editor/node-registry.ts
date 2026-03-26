@@ -10,14 +10,33 @@
  */
 
 import {
+  BotIcon,
+  CaseSensitiveIcon,
+  CodeIcon,
+  CpuIcon,
+  DatabaseIcon,
+  DnaIcon,
+  FileArchiveIcon,
+  FileInputIcon,
+  FilePenIcon,
+  FolderInputIcon,
+  FolderOutputIcon,
+  PenToolIcon,
+  StickyNoteIcon,
+  TagIcon,
+} from 'lucide-react'
+import type React from 'react'
+import {
   BashCodeNode,
   PythonCodeNode,
   RCodeNode,
 } from '@/components/node-editor/node/code-node'
 import {
+  BindParamNode,
   Copy2FolderNode,
   GlobalMarkerNode,
   GzipNode,
+  LlmValueOutputNode,
   RenameFileNode,
   SelectFileInFolderNode,
 } from '@/components/node-editor/node/data-node'
@@ -33,22 +52,6 @@ import {
 } from '@/components/node-editor/node/input-node'
 import { NoteNode } from '@/components/node-editor/node/note-node'
 import { ToolNode } from '@/components/node-editor/node/tool-node'
-import type React from 'react'
-import {
-  CaseSensitiveIcon,
-  CodeIcon,
-  CpuIcon,
-  DatabaseIcon,
-  DnaIcon,
-  FileArchiveIcon,
-  FileInputIcon,
-  FilePenIcon,
-  FolderInputIcon,
-  FolderOutputIcon,
-  PenToolIcon,
-  StickyNoteIcon,
-  TagIcon,
-} from 'lucide-react'
 
 // ─────────────────────────────────────────────
 // 1. nodeTypes — 供 ReactFlow nodeTypes prop 使用
@@ -71,8 +74,10 @@ export const nodeTypes: Record<string, React.ComponentType<any>> = {
   global_mark: GlobalMarkerNode,
   rename_file: RenameFileNode,
   select_file_in_folder: SelectFileInFolderNode,
+  llm_value_output: LlmValueOutputNode,
+  bind_param: BindParamNode,
   // code
-  code_R: RCodeNode,
+  code_r: RCodeNode,
   code_python: PythonCodeNode,
   code_bash: BashCodeNode,
   // note
@@ -99,7 +104,9 @@ export const nodeDefaultData: Record<string, Record<string, unknown>> = {
   global_mark: { mark_name: '', description: '' },
   rename_file: { new_file_name: '' },
   select_file_in_folder: { file_name: '' },
-  code_R: { description: '', code: '' },
+  llm_value_output: { prompt: '', value_name: '', value_type: 'string' },
+  bind_param: { parameter: '' },
+  code_r: { description: '', code: '' },
   code_python: { description: '', code: '' },
   code_bash: { description: '', code: '' },
   note: { content: '' },
@@ -162,8 +169,9 @@ export const menuData: Record<string, MenuGroup> = {
     Icon: CodeIcon,
     submenuType: 'inline',
     items: [
-      { type: 'code_R', labelKey: 'r_code', Icon: CodeIcon },
-      { type: 'code_python', labelKey: 'python_code', Icon: CodeIcon },
+      { type: 'code_bash', labelKey: 'code_bash', Icon: CodeIcon },
+      { type: 'code_r', labelKey: 'code_r', Icon: CodeIcon },
+      { type: 'code_python', labelKey: 'code_python', Icon: CodeIcon },
     ],
   },
   processor: {
@@ -180,6 +188,8 @@ export const menuData: Record<string, MenuGroup> = {
       { type: 'gzip', labelKey: 'gzip', Icon: FileArchiveIcon },
       { type: 'rename_file', labelKey: 'rename_file', Icon: FilePenIcon },
       { type: 'global_mark', labelKey: 'global_marker', Icon: TagIcon },
+      { type: 'llm_value_output', labelKey: 'llm_value_output', Icon: BotIcon },
+      { type: 'bind_param', labelKey: 'bind_param', Icon: TagIcon },
     ],
   },
   other: {
