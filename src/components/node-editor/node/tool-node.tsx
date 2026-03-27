@@ -1,6 +1,7 @@
 'use client'
 
 import { type Node, useNodeId, useNodesData, useReactFlow } from '@xyflow/react'
+import { useTranslations } from 'next-intl'
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import { BaseNode } from '@/components/node-editor/node/base-node'
 import { colorSchemes } from '@/components/node-editor/node/color'
@@ -14,6 +15,7 @@ export const ToolNode = memo(function ToolNode() {
   const readOnly = useReadOnly()
   const nodeId = useNodeId() ?? ''
   const { updateNodeData } = useReactFlow()
+  const t = useTranslations('editor.tool_node')
   const nodeData =
     useNodesData<
       Node<{ tool_uid: string; args: string; run_data?: RunData }, 'tool'>
@@ -72,7 +74,7 @@ export const ToolNode = memo(function ToolNode() {
             {hasImmutableParams && (
               <div>
                 <Label className='pb-2 font-medium text-xs text-muted-foreground'>
-                  不可变参数:
+                  {t('immutable_params')}
                 </Label>
                 <Textarea
                   className='h-[60px] w-full resize-none overflow-y-auto border-gray-200 text-sm bg-muted'
@@ -82,10 +84,12 @@ export const ToolNode = memo(function ToolNode() {
               </div>
             )}
             <div>
-              <Label className='pb-2 font-medium'>可修改参数:</Label>
+              <Label className='pb-2 font-medium'>
+                {t('modifiable_params')}
+              </Label>
               <Textarea
                 className='h-[100px] w-full resize-none overflow-y-auto border-gray-200 text-sm focus-visible:ring focus-visible:ring-rose-400 focus-visible:ring-offset-2'
-                placeholder='Enter arguments here...'
+                placeholder={t('args_placeholder')}
                 value='--'
                 disabled={true}
               />
@@ -107,7 +111,7 @@ export const ToolNode = memo(function ToolNode() {
           {hasImmutableParams && (
             <div>
               <Label className='pb-2 font-medium text-xs text-muted-foreground'>
-                不可变参数:
+                {t('immutable_params')}
               </Label>
               <Textarea
                 className='h-[60px] w-full resize-none overflow-y-auto border-gray-200 text-sm bg-muted
@@ -119,12 +123,12 @@ export const ToolNode = memo(function ToolNode() {
             </div>
           )}
           <div>
-            <Label className='pb-2 font-medium'>可修改参数:</Label>
+            <Label className='pb-2 font-medium'>{t('modifiable_params')}</Label>
             <Textarea
               className='h-[100px] w-full resize-none overflow-y-auto border-gray-200 text-sm
               focus-visible:ring focus-visible:ring-rose-400 focus-visible:ring-offset-2
               [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-200 hover:[&::-webkit-scrollbar-thumb]:bg-gray-400 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar]:w-1.5'
-              placeholder='Enter arguments here...'
+              placeholder={t('args_placeholder')}
               value={args}
               onChange={(e) => setArgs(e.target.value)}
               onBlur={handleBlur}

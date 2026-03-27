@@ -349,32 +349,49 @@ type ValueType = 'string' | 'number'
 const LlmValueOutputCard = memo(function LlmValueOutputCard() {
   const readOnly = useReadOnly()
   const nodeId = useNodeId() ?? ''
-  const nodeData = useNodesData<
-    Node<{ prompt: string; value_name: string; value_type: ValueType }, 'llm_value_output'>
-  >(nodeId)
+  const nodeData =
+    useNodesData<
+      Node<
+        { prompt: string; value_name: string; value_type: ValueType },
+        'llm_value_output'
+      >
+    >(nodeId)
   const { updateNodeData } = useReactFlow()
 
   const [prompt, setPrompt] = useState<string>(nodeData?.data.prompt ?? '')
-  const [value_name, setValueName] = useState<string>(nodeData?.data.value_name ?? '')
-  const [value_type, setValueType] = useState<ValueType>(nodeData?.data.value_type ?? 'string')
+  const [value_name, setValueName] = useState<string>(
+    nodeData?.data.value_name ?? '',
+  )
+  const [value_type, setValueType] = useState<ValueType>(
+    nodeData?.data.value_type ?? 'string',
+  )
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: no need
   useEffect(() => {
-    if (nodeData?.data.prompt !== undefined && nodeData.data.prompt !== prompt) {
+    if (
+      nodeData?.data.prompt !== undefined &&
+      nodeData.data.prompt !== prompt
+    ) {
       setPrompt(nodeData.data.prompt)
     }
   }, [nodeData?.data.prompt])
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: no need
   useEffect(() => {
-    if (nodeData?.data.value_name !== undefined && nodeData.data.value_name !== value_name) {
+    if (
+      nodeData?.data.value_name !== undefined &&
+      nodeData.data.value_name !== value_name
+    ) {
       setValueName(nodeData.data.value_name)
     }
   }, [nodeData?.data.value_name])
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: no need
   useEffect(() => {
-    if (nodeData?.data.value_type !== undefined && nodeData.data.value_type !== value_type) {
+    if (
+      nodeData?.data.value_type !== undefined &&
+      nodeData.data.value_type !== value_type
+    ) {
       setValueType(nodeData.data.value_type)
     }
   }, [nodeData?.data.value_type])
@@ -414,7 +431,11 @@ const LlmValueOutputCard = memo(function LlmValueOutputCard() {
         disabled={readOnly}
       />
       <Label className='pt-4 pb-2 font-medium'>Value Type:</Label>
-      <Select value={value_type} onValueChange={handleValueTypeChange} disabled={readOnly}>
+      <Select
+        value={value_type}
+        onValueChange={handleValueTypeChange}
+        disabled={readOnly}
+      >
         <SelectTrigger className='w-full'>
           <SelectValue />
         </SelectTrigger>
@@ -452,14 +473,20 @@ const BIND_PARAM_HANDLES = {
 const BindParamCard = memo(function BindParamCard() {
   const readOnly = useReadOnly()
   const nodeId = useNodeId() ?? ''
-  const nodeData = useNodesData<Node<{ parameter: string }, 'bind_param'>>(nodeId)
+  const nodeData =
+    useNodesData<Node<{ parameter: string }, 'bind_param'>>(nodeId)
   const { updateNodeData } = useReactFlow()
 
-  const [parameter, setParameter] = useState<string>(nodeData?.data.parameter ?? '')
+  const [parameter, setParameter] = useState<string>(
+    nodeData?.data.parameter ?? '',
+  )
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: no need
   useEffect(() => {
-    if (nodeData?.data.parameter !== undefined && nodeData.data.parameter !== parameter) {
+    if (
+      nodeData?.data.parameter !== undefined &&
+      nodeData.data.parameter !== parameter
+    ) {
       setParameter(nodeData.data.parameter)
     }
   }, [nodeData?.data.parameter])
@@ -497,4 +524,12 @@ const BindParamNode = memo(function BindParamNode() {
   )
 })
 
-export { Copy2FolderNode, GzipNode, RenameFileNode, GlobalMarkerNode, SelectFileInFolderNode, LlmValueOutputNode, BindParamNode }
+export {
+  Copy2FolderNode,
+  GzipNode,
+  RenameFileNode,
+  GlobalMarkerNode,
+  SelectFileInFolderNode,
+  LlmValueOutputNode,
+  BindParamNode,
+}

@@ -51,6 +51,11 @@
     "save": "Save",
     "save_as": "Save As",
     "saving": "Saving...",
-    "title": "Node Editor"
+    "title": "Node Editor",
+    "tool_node": {
+      "immutable_params": "Immutable Params:",
+      "modifiable_params": "Modifiable Params:",
+      "args_placeholder": "Enter arguments here..."
+    }
   }
 }
