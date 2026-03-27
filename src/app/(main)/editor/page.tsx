@@ -39,8 +39,6 @@ import { generateLetterId } from '@/lib/id-generator'
 import { useChatSidebarStore } from '@/stores/chat-sidebar-store'
 import { useNodeEditorStore } from '@/stores/nodeviewStore'
 
-
-
 function FlowContent() {
   const {
     currentWorkflowUid,

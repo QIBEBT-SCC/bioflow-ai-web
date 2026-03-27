@@ -51,6 +51,11 @@
     "save": "保存",
     "save_as": "另存为",
     "saving": "保存中...",
-    "title": "节点编辑器"
+    "title": "节点编辑器",
+    "tool_node": {
+      "immutable_params": "不可变参数:",
+      "modifiable_params": "可修改参数:",
+      "args_placeholder": "在此输入参数..."
+    }
   }
 }

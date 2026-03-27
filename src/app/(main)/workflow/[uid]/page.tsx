@@ -36,8 +36,6 @@ import { StatusEdge } from '@/components/workflow/status-edge'
 import { useRun } from '@/hooks/use-run'
 import { type RunData, Status } from '@/types/run'
 
-
-
 const edgeTypes = { default: StatusEdge }
 
 const statusConfig = {

@@ -76,7 +76,7 @@ const CodeCard = memo(function CodeCard({ nodeType }: CodeCardProps) {
           <Textarea
             className='h-[120px] w-full resize-none overflow-y-auto border-input font-mono text-sm'
             placeholder='在这里编写或粘贴代码...'
-            value={code}
+            value={code ?? ''}
             onChange={(e) => setCode(e.target.value)}
             onBlur={handleCodeBlur}
             spellCheck={false}

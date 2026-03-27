@@ -15,7 +15,6 @@ import { ToolMenu } from '@/components/node-editor/menu/tool-menu'
 import { menuData } from '@/components/node-editor/node-registry'
 import { cn } from '@/lib/utils'
 
-
 interface Position {
   x: number
   y: number
