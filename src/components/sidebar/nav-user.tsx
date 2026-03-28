@@ -32,6 +32,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar'
+import { Skeleton } from '@/components/ui/skeleton'
 import { type Locale, localeNames, locales } from '@/i18n/config'
 import { clearToken } from '@/lib/api-client'
 
@@ -58,6 +59,22 @@ export function NavUser({ user }: NavUserProps) {
     clearToken()
     // 跳转登录
     window.location.href = '/login'
+  }
+
+  if (!user) {
+    return (
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton size='lg' className='cursor-default'>
+            <Skeleton className='h-8 w-8 rounded-lg' />
+            <div className='grid flex-1 gap-1'>
+              <Skeleton className='h-4 w-24' />
+              <Skeleton className='h-3 w-32' />
+            </div>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    )
   }
 
   return (
