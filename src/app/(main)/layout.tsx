@@ -25,9 +25,8 @@ export default function MainLayout({
 }) {
   return (
     <SidebarProvider>
-      <AuthGuard>
-        <MainContent>{children}</MainContent>
-      </AuthGuard>
+      <AuthGuard />
+      <MainContent>{children}</MainContent>
       <Toaster />
     </SidebarProvider>
   )
