@@ -79,17 +79,19 @@ export function RunWorkflowDialog({
         },
       })
 
-      toast.success(`成功创建 ${result.count} 个运行实例`)
+      toast.success(`成功提交 ${result.count} 个运行实例`)
 
       // 重置状态
       setSelectedSamples(new Set())
       setRunNamePrefix('')
       onOpenChange(false)
     } catch (error) {
-      if (error instanceof Error) {
+      if (error instanceof Error && error.message.includes('409')) {
+        toast.error('部分样本正在运行中，请等待完成后再重跑')
+      } else if (error instanceof Error) {
         toast.error(`运行失败: ${error.message}`)
       } else {
-        toast.error('运行失败,请重试')
+        toast.error('运行失败，请重试')
       }
     }
   }
@@ -100,7 +102,7 @@ export function RunWorkflowDialog({
         <DialogHeader>
           <DialogTitle>运行工作流: {workflowName}</DialogTitle>
           <DialogDescription>
-            选择要分析的样本,系统将为每个样本创建独立的运行实例
+        选择要分析的样本，对已有实例的样本将重新运行分析
           </DialogDescription>
         </DialogHeader>
 

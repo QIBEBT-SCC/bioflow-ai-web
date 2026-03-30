@@ -1,14 +1,9 @@
 'use client'
 
-import {
-  Download,
-  Loader2,
-  MoreHorizontal,
-  PlayIcon,
-  Trash2Icon,
-} from 'lucide-react'
+import { ChevronDown, ChevronRight, Loader2, PlayIcon, Trash2Icon } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { WorkflowRunInstances } from '@/components/project-workflow/workflow-run-instances'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,20 +24,6 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import {
   useProjectWorkflows,
   useRemoveWorkflowFromProject,
 } from '@/hooks/use-project-workflow'
@@ -59,17 +40,28 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
     uid: string
     name: string
   } | null>(null)
+  const [expandedWorkflows, setExpandedWorkflows] = useState<Set<string>>(
+    new Set(),
+  )
 
   const { data: workflows, isLoading } = useProjectWorkflows(projectId)
   const removeWorkflowMutation = useRemoveWorkflowFromProject()
 
+  const toggleExpand = (workflowUid: string) => {
+    setExpandedWorkflows((prev) => {
+      const next = new Set(prev)
+      if (next.has(workflowUid)) {
+        next.delete(workflowUid)
+      } else {
+        next.add(workflowUid)
+      }
+      return next
+    })
+  }
+
   const handleRemove = async (workflowUid: string) => {
     try {
-      await removeWorkflowMutation.mutateAsync({
-        projectId,
-        workflowUid,
-      })
-
+      await removeWorkflowMutation.mutateAsync({ projectId, workflowUid })
       toast.success('工作流移除成功')
       setRemovingWorkflow(null)
     } catch {
@@ -89,117 +81,115 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
 
   return (
     <>
-      <Card>
-        <CardHeader className='pb-3'>
-          <div className='flex items-center justify-between'>
-            <div>
-              <CardTitle>工作流模板</CardTitle>
-              <CardDescription>
-                管理项目中的工作流模板,并在样本上运行分析
-              </CardDescription>
-            </div>
-            <ImportWorkflowDialog projectId={projectId} />
+      <div className='space-y-3'>
+        <div className='flex items-center justify-between'>
+          <div>
+            <h2 className='text-lg font-semibold'>工作流模板</h2>
+            <p className='text-sm text-muted-foreground'>
+              管理项目工作流，点击展开查看各样本运行状态
+            </p>
           </div>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className='w-[250px]'>工作流名称</TableHead>
-                <TableHead className='w-[180px]'>导入时间</TableHead>
-                <TableHead className='w-[100px]'>状态</TableHead>
-                <TableHead className='w-[150px]'>操作</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {!workflows || workflows.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={4}
-                    className='text-center py-8 text-muted-foreground'
-                  >
-                    暂无工作流模板,点击"导入工作流"按钮从工作流库中导入
-                  </TableCell>
-                </TableRow>
-              ) : (
-                workflows.map((workflow) => (
-                  <TableRow key={workflow.workflow_uid}>
-                    <TableCell className='font-medium'>
-                      {workflow.workflow_name}
-                    </TableCell>
-                    <TableCell>
-                      {new Date(workflow.import_time).toLocaleString('zh-CN')}
-                    </TableCell>
-                    <TableCell>
-                      {workflow.enabled ? (
-                        <Badge
-                          variant='outline'
-                          className='bg-green-50 text-green-600 border-green-200'
-                        >
-                          已启用
-                        </Badge>
+          <ImportWorkflowDialog projectId={projectId} />
+        </div>
+
+        {!workflows || workflows.length === 0 ? (
+          <Card>
+            <CardContent className='flex flex-col items-center justify-center py-12 text-muted-foreground'>
+              <p className='text-sm'>
+                暂无工作流模板，点击「导入工作流」从工作流库中导入
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          workflows.map((workflow) => {
+            const isExpanded = expandedWorkflows.has(workflow.workflow_uid)
+            return (
+              <Card key={workflow.workflow_uid} className='overflow-hidden'>
+                <CardHeader className='pb-3'>
+                  <div className='flex items-center gap-3'>
+                    {/* 展开按钮 */}
+                    <button
+                      type='button'
+                      onClick={() => toggleExpand(workflow.workflow_uid)}
+                      className='text-muted-foreground hover:text-foreground transition-colors shrink-0'
+                    >
+                      {isExpanded ? (
+                        <ChevronDown className='h-4 w-4' />
                       ) : (
-                        <Badge variant='outline'>已禁用</Badge>
+                        <ChevronRight className='h-4 w-4' />
                       )}
-                    </TableCell>
-                    <TableCell>
+                    </button>
+
+                    {/* 工作流信息 */}
+                    <button
+                      type='button'
+                      className='flex-1 text-left'
+                      onClick={() => toggleExpand(workflow.workflow_uid)}
+                    >
                       <div className='flex items-center gap-2'>
-                        <Button
-                          size='sm'
-                          onClick={() =>
-                            setRunningWorkflow({
-                              uid: workflow.workflow_uid,
-                              name: workflow.workflow_name,
-                            })
-                          }
-                          disabled={!workflow.enabled}
-                        >
-                          <PlayIcon className='h-4 w-4 mr-2' />
-                          运行
-                        </Button>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant='ghost' size='icon'>
-                              <MoreHorizontal className='h-4 w-4' />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align='end'>
-                            <DropdownMenuItem
-                              onClick={() =>
-                                setRunningWorkflow({
-                                  uid: workflow.workflow_uid,
-                                  name: workflow.workflow_name,
-                                })
-                              }
-                              disabled={!workflow.enabled}
-                            >
-                              <PlayIcon className='h-4 w-4 mr-2' />
-                              运行工作流
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <Download className='h-4 w-4 mr-2' />
-                              导出配置
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className='text-destructive'
-                              onClick={() =>
-                                setRemovingWorkflow(workflow.workflow_uid)
-                              }
-                            >
-                              <Trash2Icon className='h-4 w-4 mr-2' />
-                              移除
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <CardTitle className='text-base'>
+                          {workflow.workflow_name}
+                        </CardTitle>
+                        {workflow.enabled ? (
+                          <Badge
+                            variant='outline'
+                            className='bg-green-50 text-green-600 border-green-200 text-xs'
+                          >
+                            已启用
+                          </Badge>
+                        ) : (
+                          <Badge variant='outline' className='text-xs'>
+                            已禁用
+                          </Badge>
+                        )}
                       </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                      <CardDescription className='mt-0.5'>
+                        导入时间：
+                        {new Date(workflow.import_time).toLocaleString('zh-CN')}
+                      </CardDescription>
+                    </button>
+
+                    {/* 操作按钮 */}
+                    <div className='flex items-center gap-2 shrink-0'>
+                      <Button
+                        size='sm'
+                        onClick={() =>
+                          setRunningWorkflow({
+                            uid: workflow.workflow_uid,
+                            name: workflow.workflow_name,
+                          })
+                        }
+                        disabled={!workflow.enabled}
+                      >
+                        <PlayIcon className='h-4 w-4 mr-1' />
+                        运行
+                      </Button>
+                      <Button
+                        variant='ghost'
+                        size='icon'
+                        className='text-muted-foreground hover:text-destructive'
+                        onClick={() =>
+                          setRemovingWorkflow(workflow.workflow_uid)
+                        }
+                      >
+                        <Trash2Icon className='h-4 w-4' />
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+
+                {/* 展开的运行实例列表 */}
+                {isExpanded && (
+                  <WorkflowRunInstances
+                    projectId={projectId}
+                    workflowUid={workflow.workflow_uid}
+                  />
+                )}
+              </Card>
+            )
+          })
+        )}
+      </div>
 
       {/* 运行工作流对话框 */}
       {runningWorkflow && (
@@ -208,7 +198,7 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
           workflowUid={runningWorkflow.uid}
           workflowName={runningWorkflow.name}
           open={!!runningWorkflow}
-          onOpenChange={(open: boolean) => !open && setRunningWorkflow(null)}
+          onOpenChange={(open) => !open && setRunningWorkflow(null)}
         />
       )}
 
@@ -221,7 +211,7 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>确认移除</AlertDialogTitle>
             <AlertDialogDescription>
-              确定要从项目中移除这个工作流模板吗?这不会删除工作流本身,只是解除与项目的关联。
+              确定要从项目中移除这个工作流模板吗？这不会删除工作流本身，只是解除与项目的关联。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
