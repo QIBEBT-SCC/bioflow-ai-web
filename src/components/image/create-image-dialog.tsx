@@ -30,10 +30,10 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
   const [paperLink, setPaperLink] = useState('')
 
   // 镜像配置
-  const [registry, setRegistry] = useState('')
-  const [namespace, setNamespace] = useState('')
+  const [registry, setRegistry] = useState('docker.io')
+  const [namespace, setNamespace] = useState('biocontainers')
   const [repository, setRepository] = useState('')
-  const [tag, setTag] = useState('latest')
+  const [tag, setTag] = useState('')
 
   const [open, setOpen] = useState(false)
 
