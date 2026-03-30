@@ -22,9 +22,6 @@ import type {
 // Query Hooks (数据查询)
 // ============================================
 
-/**
- * 获取项目的工作流列表
- */
 export function useProjectWorkflows(
   projectId: string,
   offset: number = 0,
@@ -38,25 +35,21 @@ export function useProjectWorkflows(
   })
 }
 
-/**
- * 获取项目的运行历史
- */
 export function useProjectRuns(
   projectId: string,
   offset: number = 0,
-  limit: number = 20,
+  limit: number = 100,
+  refetchInterval?: number | false,
 ) {
   return useQuery<RunInstance[]>({
     queryKey: ['projects', projectId, 'runs', offset, limit],
     queryFn: () => getProjectRuns(projectId, offset, limit),
     enabled: !!projectId,
     staleTime: 30 * 1000,
+    refetchInterval,
   })
 }
 
-/**
- * 获取项目运行实例数量
- */
 export function useProjectRunCount(projectId: string) {
   return useQuery<number>({
     queryKey: ['projects', projectId, 'runs', 'count'],
@@ -66,9 +59,6 @@ export function useProjectRunCount(projectId: string) {
   })
 }
 
-/**
- * 获取运行实例详情
- */
 export function useProjectRun(projectId: string, runUid: string) {
   return useQuery<RunInstance>({
     queryKey: ['projects', projectId, 'runs', runUid],
@@ -82,9 +72,6 @@ export function useProjectRun(projectId: string, runUid: string) {
 // Mutation Hooks (数据变更)
 // ============================================
 
-/**
- * 添加工作流到项目
- */
 export function useAddWorkflowToProject() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -103,9 +90,6 @@ export function useAddWorkflowToProject() {
   })
 }
 
-/**
- * 从项目移除工作流
- */
 export function useRemoveWorkflowFromProject() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -124,9 +108,6 @@ export function useRemoveWorkflowFromProject() {
   })
 }
 
-/**
- * 运行工作流
- */
 export function useRunWorkflow() {
   const queryClient = useQueryClient()
   return useMutation<
@@ -141,9 +122,11 @@ export function useRunWorkflow() {
     mutationFn: ({ projectId, workflowUid, data }) =>
       runWorkflow(projectId, workflowUid, data),
     onSuccess: (_, { projectId }) => {
-      // 刷新运行历史
       queryClient.invalidateQueries({
         queryKey: ['projects', projectId, 'runs'],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['projects', projectId, 'workflows'],
       })
     },
   })

@@ -94,8 +94,9 @@ export function TagSelector({
                 )}
               >
                 {tag.name}
-                <button
-                  type='button'
+                <span
+                  role='button'
+                  tabIndex={0}
                   className='ml-1 ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer'
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
@@ -106,10 +107,13 @@ export function TagSelector({
                     e.preventDefault()
                     e.stopPropagation()
                   }}
-                  onClick={() => handleUnselect(tag)}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleUnselect(tag)
+                  }}
                 >
                   <X className='h-3 w-3 text-muted-foreground hover:text-foreground' />
-                </button>
+                </span>
               </Badge>
             ))}
           </div>
