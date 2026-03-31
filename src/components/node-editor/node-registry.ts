@@ -28,6 +28,7 @@ import {
 import type React from 'react'
 import {
   BashCodeNode,
+  DownstreamSummaryNode,
   PythonCodeNode,
   RCodeNode,
 } from '@/components/node-editor/node/code-node'
@@ -80,6 +81,7 @@ export const nodeTypes: Record<string, React.ComponentType<any>> = {
   code_r: RCodeNode,
   code_python: PythonCodeNode,
   code_bash: BashCodeNode,
+  downstream_summary: DownstreamSummaryNode,
   // note
   note: NoteNode,
 }
@@ -106,9 +108,10 @@ export const nodeDefaultData: Record<string, Record<string, unknown>> = {
   select_file_in_folder: { file_name: '' },
   llm_value_output: { prompt: '', value_name: '', value_type: 'string' },
   bind_param: { parameter: '' },
-  code_r: { description: '', code: '' },
-  code_python: { description: '', code: '' },
-  code_bash: { description: '', code: '' },
+  code_r: { code: '' },
+  code_python: { code: '' },
+  code_bash: { code: '' },
+  downstream_summary: { prompt: '' },
   note: { content: '' },
 }
 
@@ -172,6 +175,7 @@ export const menuData: Record<string, MenuGroup> = {
       { type: 'code_bash', labelKey: 'code_bash', Icon: CodeIcon },
       { type: 'code_r', labelKey: 'code_r', Icon: CodeIcon },
       { type: 'code_python', labelKey: 'code_python', Icon: CodeIcon },
+      { type: 'downstream_summary', labelKey: 'downstream_summary', Icon: CodeIcon },
     ],
   },
   processor: {

@@ -31,6 +31,7 @@
       "code_bash": "Bash",
       "code_python": "Python",
       "code_r": "R",
+      "downstream_summary": "Downstream Summary",
       "reference_genome": "Reference Genome",
       "ncbi_genome": "NCBI Genome",
       "grch38": "GRCh38 (Human)",

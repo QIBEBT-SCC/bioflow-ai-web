@@ -31,6 +31,7 @@
       "code_bash": "Bash",
       "code_python": "Python",
       "code_r": "R",
+      "downstream_summary": "下游汇总",
       "reference_genome": "参考基因组",
       "ncbi_genome": "NCBI 基因组",
       "grch38": "GRCh38（人类）",

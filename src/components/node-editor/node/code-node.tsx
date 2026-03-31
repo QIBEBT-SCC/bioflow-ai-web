@@ -16,13 +16,10 @@ const CodeCard = memo(function CodeCard({ nodeType }: CodeCardProps) {
   const readOnly = useReadOnly()
   const nodeId = useNodeId() ?? ''
   const nodeData =
-    useNodesData<Node<{ description: string; code: string }, typeof nodeType>>(
-      nodeId,
-    )
+    useNodesData<Node<{ code: string }, typeof nodeType>>(nodeId)
   const { updateNodeData } = useReactFlow()
 
   const [code, setCode] = useState<string>(nodeData?.data.code ?? '')
-  const [prompt, setPrompt] = useState<string>(nodeData?.data.description ?? '')
 
   // 同步外部数据变化到本地state
   // biome-ignore lint/correctness/useExhaustiveDependencies: no need
@@ -32,58 +29,22 @@ const CodeCard = memo(function CodeCard({ nodeType }: CodeCardProps) {
     }
   }, [nodeData?.data.code])
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: no need
-  useEffect(() => {
-    if (
-      nodeData?.data.description !== undefined &&
-      nodeData.data.description !== prompt
-    ) {
-      setPrompt(nodeData.data.description)
-    }
-  }, [nodeData?.data.description])
-
-  // onBlur 回调需要用 useCallback，因为它们依赖于多个变量
-  const handlePromptBlur = useCallback(() => {
-    updateNodeData(nodeId, {
-      description: prompt,
-      code: code,
-    })
-  }, [nodeId, prompt, code, updateNodeData])
-
   const handleCodeBlur = useCallback(() => {
-    updateNodeData(nodeId, {
-      description: prompt,
-      code: code,
-    })
-  }, [nodeId, prompt, code, updateNodeData])
+    updateNodeData(nodeId, { code })
+  }, [nodeId, code, updateNodeData])
 
   return (
     <div className='p-3'>
-      <div className='space-y-4'>
-        <div>
-          <Label className='pb-2 font-medium'>Description (AI Prompt):</Label>
-          <Textarea
-            className='h-[80px] w-full resize-none overflow-y-auto border-input text-sm'
-            placeholder='输入代码编写需求，作为AI编程的prompt...'
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            onBlur={handlePromptBlur}
-            disabled={readOnly}
-          />
-        </div>
-        <div>
-          <Label className='pb-2 font-medium'>Code:</Label>
-          <Textarea
-            className='h-[120px] w-full resize-none overflow-y-auto border-input font-mono text-sm'
-            placeholder='在这里编写或粘贴代码...'
-            value={code ?? ''}
-            onChange={(e) => setCode(e.target.value)}
-            onBlur={handleCodeBlur}
-            spellCheck={false}
-            disabled={readOnly}
-          />
-        </div>
-      </div>
+      <Label className='pb-2 font-medium'>Code:</Label>
+      <Textarea
+        className='h-[200px] w-full resize-none overflow-y-auto border-input font-mono text-sm'
+        placeholder='在这里编写或粘贴代码...'
+        value={code ?? ''}
+        onChange={(e) => setCode(e.target.value)}
+        onBlur={handleCodeBlur}
+        spellCheck={false}
+        disabled={readOnly}
+      />
     </div>
   )
 })
@@ -109,7 +70,7 @@ const RCodeNode = memo(function RCodeNode() {
   return (
     <BaseNode
       title='R Code'
-      description='AI编程节点，用于编写和执行代码。包含描述区域（AI prompt）和代码区域。'
+      description='用于编写和执行 R 代码的节点。'
       color={colorSchemes.purple}
       handles={CODE_HANDLES}
       nodeComponent={nodeComponent}
@@ -123,7 +84,7 @@ const PythonCodeNode = memo(function PythonCodeNode() {
   return (
     <BaseNode
       title='Python Code'
-      description='AI编程节点，用于编写和执行代码。包含描述区域（AI prompt）和代码区域。'
+      description='用于编写和执行 Python 代码的节点。'
       color={colorSchemes.purple}
       handles={CODE_HANDLES}
       nodeComponent={nodeComponent}
@@ -137,7 +98,7 @@ const BashCodeNode = memo(function PythonCodeNode() {
   return (
     <BaseNode
       title='Bash Code'
-      description='AI编程节点，用于编写和执行代码。包含描述区域（AI prompt）和代码区域。'
+      description='用于编写和执行 Bash 脚本的节点。'
       color={colorSchemes.purple}
       handles={CODE_HANDLES}
       nodeComponent={nodeComponent}
@@ -145,4 +106,64 @@ const BashCodeNode = memo(function PythonCodeNode() {
   )
 })
 
-export { RCodeNode, PythonCodeNode, BashCodeNode }
+const DOWNSTREAM_SUMMARY_HANDLES = {
+  inputs: [
+    {
+      name: 'input_files',
+      description: 'The input files for downstream summary',
+    },
+  ],
+  outputs: [] as never[],
+}
+
+const DownstreamSummaryCard = memo(function DownstreamSummaryCard() {
+  const readOnly = useReadOnly()
+  const nodeId = useNodeId() ?? ''
+  const nodeData =
+    useNodesData<Node<{ prompt: string }, 'downstream_summary'>>(nodeId)
+  const { updateNodeData } = useReactFlow()
+
+  const [prompt, setPrompt] = useState<string>(nodeData?.data.prompt ?? '')
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: no need
+  useEffect(() => {
+    if (nodeData?.data.prompt !== undefined && nodeData.data.prompt !== prompt) {
+      setPrompt(nodeData.data.prompt)
+    }
+  }, [nodeData?.data.prompt])
+
+  const handleBlur = useCallback(() => {
+    updateNodeData(nodeId, { prompt })
+  }, [nodeId, prompt, updateNodeData])
+
+  return (
+    <div className='p-3'>
+      <Label className='pb-2 font-medium'>Prompt:</Label>
+      <Textarea
+        className='h-[150px] w-full resize-none overflow-y-auto border-input text-sm
+        focus-visible:ring focus-visible:ring-purple-400 focus-visible:ring-offset-2'
+        placeholder='输入 prompt...'
+        value={prompt}
+        onChange={(e) => setPrompt(e.target.value)}
+        onBlur={handleBlur}
+        disabled={readOnly}
+      />
+    </div>
+  )
+})
+
+const DownstreamSummaryNode = memo(function DownstreamSummaryNode() {
+  const nodeComponent = useMemo(() => <DownstreamSummaryCard />, [])
+
+  return (
+    <BaseNode
+      title='Downstream Summary'
+      description='对下游分析结果进行汇总的代码节点。'
+      color={colorSchemes.purple}
+      handles={DOWNSTREAM_SUMMARY_HANDLES}
+      nodeComponent={nodeComponent}
+    />
+  )
+})
+
+export { RCodeNode, PythonCodeNode, BashCodeNode, DownstreamSummaryNode }
