@@ -15,8 +15,7 @@ interface CodeCardProps {
 const CodeCard = memo(function CodeCard({ nodeType }: CodeCardProps) {
   const readOnly = useReadOnly()
   const nodeId = useNodeId() ?? ''
-  const nodeData =
-    useNodesData<Node<{ code: string }, typeof nodeType>>(nodeId)
+  const nodeData = useNodesData<Node<{ code: string }, typeof nodeType>>(nodeId)
   const { updateNodeData } = useReactFlow()
 
   const [code, setCode] = useState<string>(nodeData?.data.code ?? '')
@@ -127,7 +126,10 @@ const DownstreamSummaryCard = memo(function DownstreamSummaryCard() {
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: no need
   useEffect(() => {
-    if (nodeData?.data.prompt !== undefined && nodeData.data.prompt !== prompt) {
+    if (
+      nodeData?.data.prompt !== undefined &&
+      nodeData.data.prompt !== prompt
+    ) {
       setPrompt(nodeData.data.prompt)
     }
   }, [nodeData?.data.prompt])

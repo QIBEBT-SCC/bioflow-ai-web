@@ -44,7 +44,6 @@ import {
 import {
   DBInputNode,
   FileInputNode,
-  GlobalFileNode,
   GRCh38Node,
   GRCm39Node,
   NcbiGenomeNode,
@@ -68,7 +67,6 @@ export const nodeTypes: Record<string, React.ComponentType<any>> = {
   resource_ncbi_genome: NcbiGenomeNode,
   resource_GRCh38: GRCh38Node,
   resource_GRCm39: GRCm39Node,
-  resource_global_file: GlobalFileNode,
   // processor
   copy2folder: Copy2FolderNode,
   gzip: GzipNode,
@@ -175,7 +173,11 @@ export const menuData: Record<string, MenuGroup> = {
       { type: 'code_bash', labelKey: 'code_bash', Icon: CodeIcon },
       { type: 'code_r', labelKey: 'code_r', Icon: CodeIcon },
       { type: 'code_python', labelKey: 'code_python', Icon: CodeIcon },
-      { type: 'downstream_summary', labelKey: 'downstream_summary', Icon: CodeIcon },
+      {
+        type: 'downstream_summary',
+        labelKey: 'downstream_summary',
+        Icon: CodeIcon,
+      },
     ],
   },
   processor: {
