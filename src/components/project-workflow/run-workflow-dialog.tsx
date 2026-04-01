@@ -102,7 +102,7 @@ export function RunWorkflowDialog({
         <DialogHeader>
           <DialogTitle>运行工作流: {workflowName}</DialogTitle>
           <DialogDescription>
-        选择要分析的样本，对已有实例的样本将重新运行分析
+            选择要分析的样本，对已有实例的样本将重新运行分析
           </DialogDescription>
         </DialogHeader>
 
