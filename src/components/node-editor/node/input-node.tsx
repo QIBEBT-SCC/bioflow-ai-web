@@ -45,7 +45,7 @@ const StringInputCard = memo(function StringInputCard() {
     <div className='p-3'>
       <Label className='pb-2 font-medium'>Value:</Label>
       <Input
-        className='w-full border-input focus-visible:ring-ring'
+        className='w-full border-input focus-visible:ring focus-visible:ring-blue-400 focus-visible:ring-offset-2'
         placeholder='Enter string value here...'
         value={args}
         onChange={(e) => setArgs(e.target.value)}
@@ -106,7 +106,7 @@ const FileInputCard = memo(() => {
     <div className='p-3'>
       <Label className='pb-2 font-medium'>File:</Label>
       <Input
-        className='w-full border-input focus-visible:ring-ring'
+        className='w-full border-input focus-visible:ring focus-visible:ring-green-400 focus-visible:ring-offset-2'
         placeholder='Enter file path here...'
         value={args}
         onChange={(e) => setArgs(e.target.value)}
@@ -173,7 +173,7 @@ const SequenceInputCard = memo(function SequenceInputCard() {
     <div className='p-3'>
       <Label className='pb-2 font-medium'>R1 path:</Label>
       <Input
-        className='w-full border-input focus-visible:ring-ring'
+        className='w-full border-input focus-visible:ring focus-visible:ring-green-400 focus-visible:ring-offset-2'
         placeholder='Enter arguments here...'
         value={r1}
         onChange={(e) => setR1(e.target.value)}
@@ -183,7 +183,7 @@ const SequenceInputCard = memo(function SequenceInputCard() {
       />
       <Label className='pt-4 pb-2 font-medium'>R2 path:</Label>
       <Input
-        className='w-full border-input focus-visible:ring-ring'
+        className='w-full border-input focus-visible:ring focus-visible:ring-green-400 focus-visible:ring-offset-2'
         placeholder='Enter arguments here...'
         value={r2}
         onChange={(e) => setR2(e.target.value)}
@@ -382,69 +382,6 @@ const GRCm39Node = memo(function GRCm39Node() {
   )
 })
 
-const GLOBAL_FILE_HANDLES = {
-  inputs: [] as HandleDefine[],
-  outputs: [
-    { name: 'folder_path', description: 'output file' },
-  ] as HandleDefine[],
-}
-
-const GlobalFileCard = memo(() => {
-  const readOnly = useReadOnly()
-  const nodeId = useNodeId() ?? ''
-  const nodeData =
-    useNodesData<Node<{ mark_name: string }, 'resource_global_file'>>(nodeId)
-  const { updateNodeData } = useReactFlow()
-
-  const [markName, setMarkName] = useState<string>(
-    nodeData?.data.mark_name ?? '',
-  )
-
-  // 同步外部数据变化
-  // biome-ignore lint/correctness/useExhaustiveDependencies: no need
-  useEffect(() => {
-    if (
-      nodeData?.data.mark_name !== undefined &&
-      nodeData.data.mark_name !== markName
-    ) {
-      setMarkName(nodeData.data.mark_name)
-    }
-  }, [nodeData?.data.mark_name])
-
-  const handleBlur = useCallback(() => {
-    updateNodeData(nodeId, { mark_name: markName })
-  }, [nodeId, markName, updateNodeData])
-
-  return (
-    <div className='p-3'>
-      <Label className='pb-2 font-medium'>File:</Label>
-      <Input
-        className='w-full border-input focus-visible:ring-ring'
-        placeholder='Enter file path here...'
-        value={markName}
-        onChange={(e) => setMarkName(e.target.value)}
-        onBlur={handleBlur}
-        spellCheck={false}
-        disabled={readOnly}
-      />
-    </div>
-  )
-})
-
-const GlobalFileNode = memo(function FileInputNode() {
-  const nodeComponent = useMemo(() => <GlobalFileCard />, [])
-
-  return (
-    <BaseNode
-      title='Global File Input'
-      description='load file from local path.'
-      handles={GLOBAL_FILE_HANDLES}
-      color={colorSchemes.green}
-      nodeComponent={nodeComponent}
-    />
-  )
-})
-
 export {
   StringInputNode,
   FileInputNode,
@@ -453,5 +390,4 @@ export {
   NcbiGenomeNode,
   GRCh38Node,
   GRCm39Node,
-  GlobalFileNode,
 }
