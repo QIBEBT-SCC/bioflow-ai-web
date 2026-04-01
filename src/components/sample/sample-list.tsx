@@ -77,6 +77,15 @@ const fileTypeColors: Record<SampleFileType, string> = {
   4: 'bg-green-100 text-green-800',
 }
 
+// 默认标签映射
+const defaultTags: Record<SampleFileType, string> = {
+  0: 'r1',
+  1: 'r2',
+  2: 'single',
+  3: 'spectrum',
+  4: 'image',
+}
+
 // 格式化文件大小
 function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 Bytes'
@@ -294,7 +303,7 @@ export function SampleList({ projectId }: SampleListProps) {
                                 <Table>
                                   <TableHeader>
                                     <TableRow>
-                                      <TableHead className='w-[120px]'>
+                                      <TableHead className='w-[180px]'>
                                         文件类型
                                       </TableHead>
                                       <TableHead>文件路径</TableHead>
@@ -316,64 +325,82 @@ export function SampleList({ projectId }: SampleListProps) {
                                     </TableRow>
                                   </TableHeader>
                                   <TableBody>
-                                    {sampleDetails.files.map((file) => (
-                                      <TableRow key={file.uid}>
-                                        <TableCell>
-                                          <Badge
-                                            className={
-                                              fileTypeColors[file.data_type]
-                                            }
-                                          >
-                                            {fileTypeLabels[file.data_type]}
-                                          </Badge>
-                                        </TableCell>
-                                        <TableCell className='font-mono text-xs'>
-                                          {file.file_path}
-                                        </TableCell>
-                                        <TableCell>
-                                          <Badge variant='outline'>
-                                            {file.file_format}
-                                          </Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                          {formatFileSize(file.file_size)}
-                                        </TableCell>
-                                        <TableCell>
-                                          <div className='flex items-center'>
-                                            <CheckIcon className='h-4 w-4 text-green-500 mr-1' />
-                                            <span
-                                              className='text-xs truncate w-16'
-                                              title={file.md5_checksum}
-                                            >
-                                              {file.md5_checksum.substring(
-                                                0,
-                                                8,
+                                    {sampleDetails.files.map((file) => {
+                                      const isDefaultTag =
+                                        file.tag === defaultTags[file.data_type]
+                                      return (
+                                        <TableRow key={file.uid}>
+                                          <TableCell>
+                                            <div className='flex flex-wrap gap-1'>
+                                              <Badge
+                                                className={
+                                                  fileTypeColors[file.data_type]
+                                                }
+                                              >
+                                                {fileTypeLabels[file.data_type]}
+                                              </Badge>
+                                              {file.tag && (
+                                                <Badge
+                                                  variant='outline'
+                                                  className={
+                                                    isDefaultTag
+                                                      ? 'text-muted-foreground'
+                                                      : 'bg-blue-50 text-blue-700 border-blue-200'
+                                                  }
+                                                >
+                                                  {file.tag}
+                                                </Badge>
                                               )}
-                                              ...
-                                            </span>
-                                          </div>
-                                        </TableCell>
-                                        <TableCell className='text-xs'>
-                                          {new Date(
-                                            file.uploaded_time,
-                                          ).toLocaleString('zh-CN')}
-                                        </TableCell>
-                                        <TableCell>
-                                          <Button
-                                            variant='ghost'
-                                            size='icon'
-                                            onClick={() =>
-                                              setDeletingFile({
-                                                sampleUid: sampleDetails.uid,
-                                                fileUid: file.uid,
-                                              })
-                                            }
-                                          >
-                                            <Trash2Icon className='h-4 w-4 text-destructive' />
-                                          </Button>
-                                        </TableCell>
-                                      </TableRow>
-                                    ))}
+                                            </div>
+                                          </TableCell>
+                                          <TableCell className='font-mono text-xs'>
+                                            {file.file_path}
+                                          </TableCell>
+                                          <TableCell>
+                                            <Badge variant='outline'>
+                                              {file.file_format}
+                                            </Badge>
+                                          </TableCell>
+                                          <TableCell>
+                                            {formatFileSize(file.file_size)}
+                                          </TableCell>
+                                          <TableCell>
+                                            <div className='flex items-center'>
+                                              <CheckIcon className='h-4 w-4 text-green-500 mr-1' />
+                                              <span
+                                                className='text-xs truncate w-16'
+                                                title={file.md5_checksum}
+                                              >
+                                                {file.md5_checksum.substring(
+                                                  0,
+                                                  8,
+                                                )}
+                                                ...
+                                              </span>
+                                            </div>
+                                          </TableCell>
+                                          <TableCell className='text-xs'>
+                                            {new Date(
+                                              file.uploaded_time,
+                                            ).toLocaleString('zh-CN')}
+                                          </TableCell>
+                                          <TableCell>
+                                            <Button
+                                              variant='ghost'
+                                              size='icon'
+                                              onClick={() =>
+                                                setDeletingFile({
+                                                  sampleUid: sampleDetails.uid,
+                                                  fileUid: file.uid,
+                                                })
+                                              }
+                                            >
+                                              <Trash2Icon className='h-4 w-4 text-destructive' />
+                                            </Button>
+                                          </TableCell>
+                                        </TableRow>
+                                      )
+                                    })}
                                   </TableBody>
                                 </Table>
                               )}

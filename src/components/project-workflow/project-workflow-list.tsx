@@ -1,6 +1,12 @@
 'use client'
 
-import { ChevronDown, ChevronRight, Loader2, PlayIcon, Trash2Icon } from 'lucide-react'
+import {
+  ChevronDown,
+  ChevronRight,
+  Loader2,
+  PlayIcon,
+  Trash2Icon,
+} from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { WorkflowRunInstances } from '@/components/project-workflow/workflow-run-instances'
