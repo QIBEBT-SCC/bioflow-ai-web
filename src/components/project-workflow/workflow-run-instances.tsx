@@ -185,7 +185,9 @@ export function WorkflowRunInstances({
                       {cfg.label}
                     </Badge>
                   ) : (
-                    <span className='text-xs text-muted-foreground'>未运行</span>
+                    <span className='text-xs text-muted-foreground'>
+                      未运行
+                    </span>
                   )}
                 </TableCell>
 
@@ -216,7 +218,12 @@ export function WorkflowRunInstances({
                 <TableCell className='text-right'>
                   <div className='flex items-center justify-end gap-1'>
                     {run && (
-                      <Button variant='ghost' size='icon' className='h-7 w-7' asChild>
+                      <Button
+                        variant='ghost'
+                        size='icon'
+                        className='h-7 w-7'
+                        asChild
+                      >
                         <Link href={`/project/${projectId}/${run.uid}`}>
                           <ExternalLink className='h-3.5 w-3.5' />
                         </Link>
@@ -227,9 +234,7 @@ export function WorkflowRunInstances({
                       size='sm'
                       className='h-7 text-xs'
                       onClick={() => handleRerun(sample.uid)}
-                      disabled={
-                        isRunning || run?.status === Status.RUNNING
-                      }
+                      disabled={isRunning || run?.status === Status.RUNNING}
                     >
                       {isRunning ? (
                         <Loader2 className='h-3 w-3 animate-spin' />
