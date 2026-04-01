@@ -3,12 +3,14 @@
 import {
   DownloadIcon,
   FileBarChart,
+  FileCode,
   FlaskConical,
   TestTubeDiagonal,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { ProjectDetailCard } from '@/components/project/project-detail-card'
+import { ProjectFileMappings } from '@/components/project/project-file-mappings'
 import { ProjectWorkflowList } from '@/components/project-workflow/project-workflow-list'
 import { SampleList } from '@/components/sample/sample-list'
 import {
@@ -20,12 +22,6 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -91,7 +87,7 @@ export default function ProjectDetailPage() {
 
         {/* 项目内容标签页 */}
         <Tabs defaultValue='samples' className='w-full'>
-          <TabsList className='grid grid-cols-3 md:w-auto md:inline-flex'>
+          <TabsList className='grid grid-cols-4 md:w-auto md:inline-flex'>
             <TabsTrigger value='samples' className='flex items-center'>
               <TestTubeDiagonal className='h-4 w-4 mr-2' />
               样本
@@ -100,15 +96,29 @@ export default function ProjectDetailPage() {
               <FlaskConical className='h-4 w-4 mr-2' />
               工作流
             </TabsTrigger>
+            <TabsTrigger value='file-mappings' className='flex items-center'>
+              <FileCode className='h-4 w-4 mr-2' />
+              全局文件
+            </TabsTrigger>
             <TabsTrigger value='reports' className='flex items-center'>
               <FileBarChart className='h-4 w-4 mr-2' />
               报告
             </TabsTrigger>
           </TabsList>
 
+          {/* 样本标签页内容 */}
+          <TabsContent value='samples' className='mt-6'>
+            <SampleList projectId={projectId} />
+          </TabsContent>
+
           {/* 工作流标签页内容 */}
           <TabsContent value='workflows' className='mt-6'>
             <ProjectWorkflowList projectId={projectId} />
+          </TabsContent>
+
+          {/* 全局文件标签页内容 */}
+          <TabsContent value='file-mappings' className='mt-6'>
+            <ProjectFileMappings projectId={projectId} />
           </TabsContent>
 
           {/* 报告标签页内容 */}
@@ -143,11 +153,6 @@ export default function ProjectDetailPage() {
                 </table>
               </div>
             </div>
-          </TabsContent>
-
-          {/* 文件标签页内容 */}
-          <TabsContent value='samples' className='mt-6'>
-            <SampleList projectId={projectId} />
           </TabsContent>
         </Tabs>
       </div>

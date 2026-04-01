@@ -20,6 +20,7 @@ export interface SampleFile {
   file_format: string
   file_size: number
   md5_checksum: string
+  tag: string
   uploaded_time: string
 }
 
@@ -75,4 +76,35 @@ export interface UpdateSampleRequest {
 export interface AddSampleFileRequest {
   data_type: SampleFileType
   file_path: string
+  tag?: string
+}
+
+/**
+ * 项目文件映射
+ */
+export interface ProjectFileMapping {
+  id: number
+  project_id: number
+  keyword: string
+  file_path: string
+  description: string
+  create_time: string
+  update_time: string
+}
+
+/**
+ * 创建项目文件映射请求
+ */
+export interface CreateProjectFileMappingRequest {
+  keyword: string
+  file_path: string
+  description: string
+}
+
+/**
+ * 更新项目文件映射请求
+ */
+export interface UpdateProjectFileMappingRequest {
+  file_path?: string
+  description?: string
 }

@@ -1,10 +1,13 @@
 import { clientFetch } from '@/lib/api-client'
 import type {
   AddSampleFileRequest,
+  CreateProjectFileMappingRequest,
   CreateSampleRequest,
+  ProjectFileMapping,
   Sample,
   SampleFile,
   SampleListItem,
+  UpdateProjectFileMappingRequest,
   UpdateSampleRequest,
 } from '@/types/sample'
 
@@ -127,6 +130,77 @@ export async function deleteSampleFile(
 ): Promise<{ message: string }> {
   return await clientFetch<{ message: string }>(
     `/projects/${projectId}/samples/${sampleUid}/files/${fileUid}`,
+    {
+      method: 'DELETE',
+    },
+  )
+}
+
+/**
+ * 获取项目的文件映射列表
+ */
+export async function getProjectFileMappings(
+  projectId: string,
+): Promise<ProjectFileMapping[]> {
+  return await clientFetch<ProjectFileMapping[]>(
+    `/projects/${projectId}/file-mappings`,
+  )
+}
+
+/**
+ * 获取特定的文件映射
+ */
+export async function getProjectFileMapping(
+  projectId: string,
+  keyword: string,
+): Promise<ProjectFileMapping> {
+  return await clientFetch<ProjectFileMapping>(
+    `/projects/${projectId}/file-mappings/${keyword}`,
+  )
+}
+
+/**
+ * 创建项目文件映射
+ */
+export async function createProjectFileMapping(
+  projectId: string,
+  data: CreateProjectFileMappingRequest,
+): Promise<ProjectFileMapping> {
+  return await clientFetch<ProjectFileMapping>(
+    `/projects/${projectId}/file-mappings`,
+    {
+      method: 'POST',
+      body: JSON.stringify(data),
+    },
+  )
+}
+
+/**
+ * 更新项目文件映射
+ */
+export async function updateProjectFileMapping(
+  projectId: string,
+  mappingId: number,
+  data: UpdateProjectFileMappingRequest,
+): Promise<ProjectFileMapping> {
+  return await clientFetch<ProjectFileMapping>(
+    `/projects/${projectId}/file-mappings/${mappingId}`,
+    {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    },
+  )
+}
+
+/**
+ * 删除项目文件映射
+ */
+export async function deleteProjectFileMapping(
+  projectId: string,
+  mappingId: number,
+): Promise<{ message: string }> {
+  return await clientFetch<{ message: string }>(
+    `/projects/${projectId}/file-mappings/${mappingId}`,
     {
       method: 'DELETE',
     },

@@ -1,0 +1,40 @@
+{
+  "Sample": {
+    "file": {
+      "tag": "Tag",
+      "tagPlaceholder": "Auto-assign if empty",
+      "tagDuplicate": "Tag already exists, please use another tag",
+      "tagDescription": "Used to reference this file in workflows, e.g., sample:r1_positive. Tags must be unique within the same sample."
+    }
+  },
+  "Project": {
+    "fileMapping": {
+      "title": "Global Files",
+      "keyword": "Keyword",
+      "filePath": "File Path",
+      "description": "Description",
+      "add": "Add File",
+      "edit": "Edit File",
+      "delete": "Delete File",
+      "empty": "No global files yet. Click 'Add File' to create one.",
+      "createSuccess": "Global file created successfully",
+      "createFailed": "Failed to create global file",
+      "updateSuccess": "Global file updated successfully",
+      "updateFailed": "Failed to update global file",
+      "deleteSuccess": "Global file deleted successfully",
+      "deleteFailed": "Failed to delete global file",
+      "keywordPlaceholder": "e.g., reference_genome",
+      "keywordDescription": "Used for workflow references, e.g., proj:reference_genome. Lowercase letters, numbers, and underscores recommended.",
+      "keywordDuplicate": "Keyword already exists, please use another keyword",
+      "keywordImmutable": "Keyword cannot be modified after creation",
+      "filePathPlaceholder": "e.g., /data/genomes/hg38.fa",
+      "descriptionPlaceholder": "e.g., Human reference genome GRCh38",
+      "dialogTitle": "Add Global File",
+      "dialogDescription": "Create a project-level global file that can be referenced in workflows using proj:keyword format",
+      "editDialogTitle": "Edit Global File",
+      "editDialogDescription": "Modify the file path and description (keyword cannot be changed)",
+      "deleteDialogTitle": "Confirm Deletion",
+      "deleteDialogDescription": "Are you sure you want to delete this global file? This action cannot be undone and may affect workflows using this file."
+    }
+  }
+}
