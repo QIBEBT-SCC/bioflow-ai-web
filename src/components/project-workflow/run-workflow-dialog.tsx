@@ -85,7 +85,9 @@ export function RunWorkflowDialog({
       })
 
       toast.success(
-        isProjectLevel ? '项目级工作流已启动' : `成功提交 ${result.count} 个运行实例`,
+        isProjectLevel
+          ? '项目级工作流已启动'
+          : `成功提交 ${result.count} 个运行实例`,
       )
 
       // 重置状态
@@ -127,7 +129,9 @@ export function RunWorkflowDialog({
                   onClick={toggleAll}
                   disabled={!samples || samples.length === 0}
                 >
-                  {selectedSamples.size === samples?.length ? '取消全选' : '全选'}
+                  {selectedSamples.size === samples?.length
+                    ? '取消全选'
+                    : '全选'}
                 </Button>
               </div>
 
@@ -215,21 +219,22 @@ export function RunWorkflowDialog({
           {isProjectLevel ? (
             <div className='rounded-lg bg-muted p-3'>
               <p className='text-sm'>
-                将创建{' '}
-                <span className='font-semibold text-primary'>1</span>{' '}
+                将创建 <span className='font-semibold text-primary'>1</span>{' '}
                 个项目级运行实例
               </p>
             </div>
-          ) : selectedSamples.size > 0 && (
-            <div className='rounded-lg bg-muted p-3'>
-              <p className='text-sm'>
-                将创建{' '}
-                <span className='font-semibold text-primary'>
-                  {selectedSamples.size}
-                </span>{' '}
-                个运行实例
-              </p>
-            </div>
+          ) : (
+            selectedSamples.size > 0 && (
+              <div className='rounded-lg bg-muted p-3'>
+                <p className='text-sm'>
+                  将创建{' '}
+                  <span className='font-semibold text-primary'>
+                    {selectedSamples.size}
+                  </span>{' '}
+                  个运行实例
+                </p>
+              </div>
+            )
           )}
         </div>
 
@@ -240,7 +245,8 @@ export function RunWorkflowDialog({
           <Button
             onClick={handleRun}
             disabled={
-              (!isProjectLevel && selectedSamples.size === 0) || runWorkflowMutation.isPending
+              (!isProjectLevel && selectedSamples.size === 0) ||
+              runWorkflowMutation.isPending
             }
           >
             {runWorkflowMutation.isPending ? (

@@ -175,7 +175,10 @@ export function SaveAsDialog({
           </div>
 
           <div className='grid gap-2'>
-            <Label htmlFor='execution-scope' className='flex items-center gap-2'>
+            <Label
+              htmlFor='execution-scope'
+              className='flex items-center gap-2'
+            >
               <LayersIcon className='h-4 w-4 text-muted-foreground' />
               执行范围
             </Label>

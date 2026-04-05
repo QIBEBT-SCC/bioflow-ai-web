@@ -1,6 +1,5 @@
 import {
   AlertCircle,
-  ArrowLeft,
   CheckCircle2,
   Clock,
   Database,
@@ -8,7 +7,6 @@ import {
   Loader2,
   Star,
 } from 'lucide-react'
-import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -36,12 +34,12 @@ export function ProjectDetailCard() {
             <h1 className='text-2xl font-bold'>{project.name}</h1>
             <div className='flex flex-wrap gap-1 mt-1.5'>
               {project.tags.map((tag) => (
-                  <Badge
-                      key={tag.id}
-                      className={`${colorClassMap[tag.color]} border-0`}
-                  >
-                    {tag.name}
-                  </Badge>
+                <Badge
+                  key={tag.id}
+                  className={`${colorClassMap[tag.color]} border-0`}
+                >
+                  {tag.name}
+                </Badge>
               ))}
             </div>
             <Button
@@ -130,7 +128,9 @@ export function ProjectDetailCard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className='text-2xl font-bold'>{new Date(project.update_time).toLocaleString('zh-CN')}</p>
+            <p className='text-2xl font-bold'>
+              {new Date(project.update_time).toLocaleString('zh-CN')}
+            </p>
           </CardContent>
         </Card>
       </div>

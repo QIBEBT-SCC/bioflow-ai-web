@@ -50,7 +50,11 @@ export async function saveWorkflow(workflow: Workflow): Promise<string> {
  */
 export async function updateWorkflow(
   uid: string,
-  data: { name?: string; workflow?: WorkflowDefinition; execution_scope?: ExecutionScope },
+  data: {
+    name?: string
+    workflow?: WorkflowDefinition
+    execution_scope?: ExecutionScope
+  },
 ): Promise<void> {
   await clientFetch(`/workflows/${uid}`, {
     method: 'PATCH',

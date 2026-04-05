@@ -182,7 +182,9 @@ export function WorkflowRunInstances({
 
               return (
                 <TableRow key={run.uid}>
-                  <TableCell className='font-medium text-sm'>{run.name}</TableCell>
+                  <TableCell className='font-medium text-sm'>
+                    {run.name}
+                  </TableCell>
 
                   <TableCell>
                     <Badge variant={cfg.variant} className='gap-1'>
