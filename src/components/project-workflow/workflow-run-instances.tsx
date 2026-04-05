@@ -27,10 +27,12 @@ import {
 import { useProjectRuns, useRunWorkflow } from '@/hooks/use-project-workflow'
 import { useSamples } from '@/hooks/use-sample'
 import { Status } from '@/types/run'
+import { ExecutionScope } from '@/types/workflow'
 
 interface WorkflowRunInstancesProps {
   projectId: string
   workflowUid: string
+  executionScope?: ExecutionScope
 }
 
 const statusConfig = {
@@ -84,8 +86,10 @@ function calculateDuration(startTime?: string | null, endTime?: string | null) {
 export function WorkflowRunInstances({
   projectId,
   workflowUid,
+  executionScope,
 }: WorkflowRunInstancesProps) {
   const runWorkflowMutation = useRunWorkflow()
+  const isProjectLevel = executionScope === ExecutionScope.PROJECT_LEVEL
 
   const { data: samples, isLoading: samplesLoading } = useSamples(projectId)
 
@@ -106,12 +110,19 @@ export function WorkflowRunInstances({
       .map((r) => [r.sample_uid, r]),
   )
 
-  const handleRerun = async (sampleUid: string) => {
+  // 项目级：筛选 sample_uid 为 null 的运行实例
+  const projectRuns = isProjectLevel
+    ? (allRuns ?? []).filter(
+        (r) => r.workflow_uid === workflowUid && r.sample_uid === null,
+      )
+    : []
+
+  const handleRerun = async (sampleUid?: string) => {
     try {
       await runWorkflowMutation.mutateAsync({
         projectId,
         workflowUid,
-        data: { sample_uids: [sampleUid] },
+        data: sampleUid ? { sample_uids: [sampleUid] } : {},
       })
       toast.success('已重新提交运行')
     } catch (error) {
@@ -134,6 +145,118 @@ export function WorkflowRunInstances({
     )
   }
 
+  // 项目级工作流视图
+  if (isProjectLevel) {
+    if (projectRuns.length === 0) {
+      return (
+        <div className='px-4 pb-4 text-sm text-muted-foreground text-center py-6'>
+          尚未运行，请点击「运行」按钮启动
+        </div>
+      )
+    }
+
+    return (
+      <div className='border-t'>
+        <Table>
+          <TableHeader>
+            <TableRow className='bg-muted/30'>
+              <TableHead>运行名称</TableHead>
+              <TableHead className='w-[110px]'>状态</TableHead>
+              <TableHead className='w-[180px]'>进度</TableHead>
+              <TableHead className='w-[100px]'>开始时间</TableHead>
+              <TableHead className='w-[80px]'>时长</TableHead>
+              <TableHead className='w-[120px] text-right'>操作</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {projectRuns.map((run) => {
+              const cfg = statusConfig[run.status]
+              const Icon = cfg.icon
+              const taskStats = run.task_statistics
+              const progress = taskStats
+                ? ((taskStats.success ?? 0) / taskStats.total) * 100
+                : 0
+              const isRunning =
+                runWorkflowMutation.isPending &&
+                !runWorkflowMutation.variables?.data.sample_uids
+
+              return (
+                <TableRow key={run.uid}>
+                  <TableCell className='font-medium text-sm'>{run.name}</TableCell>
+
+                  <TableCell>
+                    <Badge variant={cfg.variant} className='gap-1'>
+                      <Icon
+                        className={`h-3 w-3 ${cfg.animate ? 'animate-spin' : ''}`}
+                      />
+                      {cfg.label}
+                    </Badge>
+                  </TableCell>
+
+                  <TableCell>
+                    {taskStats ? (
+                      <div className='space-y-1'>
+                        <div className='flex items-center justify-between text-xs text-muted-foreground'>
+                          <span>
+                            {taskStats.success ?? 0}/{taskStats.total}
+                          </span>
+                          <span>{progress.toFixed(0)}%</span>
+                        </div>
+                        <Progress value={progress} className='h-1.5' />
+                      </div>
+                    ) : (
+                      <span className='text-sm text-muted-foreground'>-</span>
+                    )}
+                  </TableCell>
+
+                  <TableCell className='text-sm text-muted-foreground'>
+                    {formatDateTime(run.start_time)}
+                  </TableCell>
+
+                  <TableCell className='text-sm text-muted-foreground'>
+                    {calculateDuration(run.start_time, run.end_time)}
+                  </TableCell>
+
+                  <TableCell className='text-right'>
+                    <div className='flex items-center justify-end gap-1'>
+                      <Button
+                        variant='ghost'
+                        size='icon'
+                        className='h-7 w-7'
+                        asChild
+                      >
+                        <Link href={`/project/${projectId}/${run.uid}`}>
+                          <ExternalLink className='h-3.5 w-3.5' />
+                        </Link>
+                      </Button>
+                      <Button
+                        variant='ghost'
+                        size='sm'
+                        className='h-7 text-xs'
+                        onClick={() => handleRerun()}
+                        disabled={isRunning || run.status === Status.RUNNING}
+                      >
+                        {isRunning ? (
+                          <Loader2 className='h-3 w-3 animate-spin' />
+                        ) : (
+                          <>
+                            <PlayIcon className='h-3 w-3 mr-1' />
+                            重新运行
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )
+            })}
+          </TableBody>
+        </Table>
+      </div>
+    )
+  }
+
+  // 样本级工作流视图
   if (!samples || samples.length === 0) {
     return (
       <div className='px-4 pb-4 text-sm text-muted-foreground text-center py-6'>
@@ -166,7 +289,7 @@ export function WorkflowRunInstances({
               : 0
             const isRunning =
               runWorkflowMutation.isPending &&
-              runWorkflowMutation.variables?.data.sample_uids.includes(
+              runWorkflowMutation.variables?.data.sample_uids?.includes(
                 sample.uid,
               )
 

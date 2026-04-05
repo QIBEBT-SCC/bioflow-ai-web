@@ -4,6 +4,7 @@ import {
   CopyIcon,
   FileTextIcon,
   GlobeIcon,
+  LayersIcon,
   LockIcon,
   SaveIcon,
   TypeIcon,
@@ -31,7 +32,7 @@ import {
 import { Switch } from '@/components/ui/switch'
 import { useSaveWorkflow } from '@/hooks/use-workflow'
 import { useNodeEditorStore } from '@/stores/nodeviewStore'
-import { WorkflowType } from '@/types/workflow'
+import { ExecutionScope, WorkflowType } from '@/types/workflow'
 
 interface SaveAsDialogProps {
   currentWorkflowName?: string
@@ -47,6 +48,9 @@ export function SaveAsDialog({
   const [workflowType, setWorkflowType] = useState<WorkflowType>(
     WorkflowType.TEMPLATE,
   )
+  const [executionScope, setExecutionScope] = useState<ExecutionScope>(
+    ExecutionScope.SAMPLE_LEVEL,
+  )
   const [open, setOpen] = useState(false)
 
   const { nodes, edges, setCurrentWorkflowUid } = useNodeEditorStore()
@@ -60,6 +64,7 @@ export function SaveAsDialog({
       workflow: { nodes, edges },
       public: isPublic,
       wf_type: workflowType,
+      execution_scope: executionScope,
     }
 
     saveWorkflowMutation.mutate(workflow, {
@@ -69,6 +74,7 @@ export function SaveAsDialog({
         setName('')
         setIsPublic(false)
         setWorkflowType(WorkflowType.TEMPLATE)
+        setExecutionScope(ExecutionScope.SAMPLE_LEVEL)
       },
     })
   }
@@ -166,6 +172,29 @@ export function SaveAsDialog({
                 />
               </div>
             </div>
+          </div>
+
+          <div className='grid gap-2'>
+            <Label htmlFor='execution-scope' className='flex items-center gap-2'>
+              <LayersIcon className='h-4 w-4 text-muted-foreground' />
+              执行范围
+            </Label>
+            <Select
+              value={String(executionScope)}
+              onValueChange={(value) => setExecutionScope(Number(value))}
+            >
+              <SelectTrigger id='execution-scope'>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={String(ExecutionScope.SAMPLE_LEVEL)}>
+                  样本级 — 为每个样本独立运行
+                </SelectItem>
+                <SelectItem value={String(ExecutionScope.PROJECT_LEVEL)}>
+                  项目级 — 整个项目运行一次
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 

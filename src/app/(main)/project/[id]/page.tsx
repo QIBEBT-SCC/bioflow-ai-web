@@ -92,13 +92,13 @@ export default function ProjectDetailPage() {
               <TestTubeDiagonal className='h-4 w-4 mr-2' />
               样本
             </TabsTrigger>
-            <TabsTrigger value='workflows' className='flex items-center'>
-              <FlaskConical className='h-4 w-4 mr-2' />
-              工作流
-            </TabsTrigger>
             <TabsTrigger value='file-mappings' className='flex items-center'>
               <FileCode className='h-4 w-4 mr-2' />
               全局文件
+            </TabsTrigger>
+            <TabsTrigger value='workflows' className='flex items-center'>
+              <FlaskConical className='h-4 w-4 mr-2' />
+              工作流
             </TabsTrigger>
             <TabsTrigger value='reports' className='flex items-center'>
               <FileBarChart className='h-4 w-4 mr-2' />
@@ -111,14 +111,14 @@ export default function ProjectDetailPage() {
             <SampleList projectId={projectId} />
           </TabsContent>
 
-          {/* 工作流标签页内容 */}
-          <TabsContent value='workflows' className='mt-6'>
-            <ProjectWorkflowList projectId={projectId} />
-          </TabsContent>
-
           {/* 全局文件标签页内容 */}
           <TabsContent value='file-mappings' className='mt-6'>
             <ProjectFileMappings projectId={projectId} />
+          </TabsContent>
+
+          {/* 工作流标签页内容 */}
+          <TabsContent value='workflows' className='mt-6'>
+            <ProjectWorkflowList projectId={projectId} />
           </TabsContent>
 
           {/* 报告标签页内容 */}

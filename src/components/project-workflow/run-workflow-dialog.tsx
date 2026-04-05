@@ -18,11 +18,13 @@ import { Label } from '@/components/ui/label'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useRunWorkflow } from '@/hooks/use-project-workflow'
 import { useSamples } from '@/hooks/use-sample'
+import { ExecutionScope } from '@/types/workflow'
 
 interface RunWorkflowDialogProps {
   projectId: string
   workflowUid: string
   workflowName: string
+  executionScope: ExecutionScope
   open: boolean
   onOpenChange: (open: boolean) => void
 }
@@ -31,11 +33,14 @@ export function RunWorkflowDialog({
   projectId,
   workflowUid,
   workflowName,
+  executionScope,
   open,
   onOpenChange,
 }: RunWorkflowDialogProps) {
   const [selectedSamples, setSelectedSamples] = useState<Set<string>>(new Set())
   const [runNamePrefix, setRunNamePrefix] = useState('')
+
+  const isProjectLevel = executionScope === ExecutionScope.PROJECT_LEVEL
 
   const { data: samples, isLoading } = useSamples(projectId)
   const runWorkflowMutation = useRunWorkflow()
@@ -64,7 +69,7 @@ export function RunWorkflowDialog({
 
   // 运行工作流
   const handleRun = async () => {
-    if (selectedSamples.size === 0) {
+    if (!isProjectLevel && selectedSamples.size === 0) {
       toast.error('请至少选择一个样本')
       return
     }
@@ -74,12 +79,14 @@ export function RunWorkflowDialog({
         projectId,
         workflowUid,
         data: {
-          sample_uids: Array.from(selectedSamples),
+          sample_uids: isProjectLevel ? undefined : Array.from(selectedSamples),
           run_name_prefix: runNamePrefix || undefined,
         },
       })
 
-      toast.success(`成功提交 ${result.count} 个运行实例`)
+      toast.success(
+        isProjectLevel ? '项目级工作流已启动' : `成功提交 ${result.count} 个运行实例`,
+      )
 
       // 重置状态
       setSelectedSamples(new Set())
@@ -102,87 +109,91 @@ export function RunWorkflowDialog({
         <DialogHeader>
           <DialogTitle>运行工作流: {workflowName}</DialogTitle>
           <DialogDescription>
-            选择要分析的样本，对已有实例的样本将重新运行分析
+            {isProjectLevel
+              ? '此工作流为项目级，将在整个项目上运行一次'
+              : '选择要分析的样本，对已有实例的样本将重新运行分析'}
           </DialogDescription>
         </DialogHeader>
 
         <div className='space-y-4'>
-          {/* 样本选择 */}
-          <div className='space-y-2'>
-            <div className='flex items-center justify-between'>
-              <Label>选择要分析的样本</Label>
-              <Button
-                variant='ghost'
-                size='sm'
-                onClick={toggleAll}
-                disabled={!samples || samples.length === 0}
-              >
-                {selectedSamples.size === samples?.length ? '取消全选' : '全选'}
-              </Button>
-            </div>
+          {/* 样本选择 - 仅样本级工作流显示 */}
+          {!isProjectLevel && (
+            <div className='space-y-2'>
+              <div className='flex items-center justify-between'>
+                <Label>选择要分析的样本</Label>
+                <Button
+                  variant='ghost'
+                  size='sm'
+                  onClick={toggleAll}
+                  disabled={!samples || samples.length === 0}
+                >
+                  {selectedSamples.size === samples?.length ? '取消全选' : '全选'}
+                </Button>
+              </div>
 
-            <ScrollArea className='h-[250px] rounded-md border p-4'>
-              {isLoading ? (
-                <div className='flex items-center justify-center py-12'>
-                  <Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
-                </div>
-              ) : !samples || samples.length === 0 ? (
-                <div className='text-center py-12 text-muted-foreground'>
-                  项目中暂无样本,请先添加样本
-                </div>
-              ) : (
-                <div className='space-y-2'>
-                  {samples.map((sample) => (
-                    <button
-                      key={sample.uid}
-                      type='button'
-                      className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors text-left w-full ${
-                        selectedSamples.has(sample.uid)
-                          ? 'bg-primary/5 border-primary'
-                          : 'hover:bg-muted/50'
-                      }`}
-                      onClick={() => toggleSample(sample.uid)}
-                    >
-                      <div className='flex items-center h-5'>
-                        <input
-                          type='checkbox'
-                          checked={selectedSamples.has(sample.uid)}
-                          onChange={() => toggleSample(sample.uid)}
-                          className='h-4 w-4 rounded border-gray-300'
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      </div>
-                      <div className='flex-1 min-w-0'>
-                        <div className='flex items-center gap-2'>
-                          <h4 className='font-medium text-sm'>
-                            {sample.sample_name}
-                          </h4>
-                          <Badge variant='outline' className='text-xs'>
-                            {sample.file_count} 个文件
-                          </Badge>
+              <ScrollArea className='h-[250px] rounded-md border p-4'>
+                {isLoading ? (
+                  <div className='flex items-center justify-center py-12'>
+                    <Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
+                  </div>
+                ) : !samples || samples.length === 0 ? (
+                  <div className='text-center py-12 text-muted-foreground'>
+                    项目中暂无样本,请先添加样本
+                  </div>
+                ) : (
+                  <div className='space-y-2'>
+                    {samples.map((sample) => (
+                      <button
+                        key={sample.uid}
+                        type='button'
+                        className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors text-left w-full ${
+                          selectedSamples.has(sample.uid)
+                            ? 'bg-primary/5 border-primary'
+                            : 'hover:bg-muted/50'
+                        }`}
+                        onClick={() => toggleSample(sample.uid)}
+                      >
+                        <div className='flex items-center h-5'>
+                          <input
+                            type='checkbox'
+                            checked={selectedSamples.has(sample.uid)}
+                            onChange={() => toggleSample(sample.uid)}
+                            className='h-4 w-4 rounded border-gray-300'
+                            onClick={(e) => e.stopPropagation()}
+                          />
                         </div>
-                        {Object.keys(sample.meta_data || {}).length > 0 && (
-                          <div className='flex flex-wrap gap-1 mt-1'>
-                            {Object.entries(sample.meta_data || {}).map(
-                              ([key, value]) => (
-                                <Badge
-                                  key={key}
-                                  variant='secondary'
-                                  className='text-xs'
-                                >
-                                  {key}: {String(value)}
-                                </Badge>
-                              ),
-                            )}
+                        <div className='flex-1 min-w-0'>
+                          <div className='flex items-center gap-2'>
+                            <h4 className='font-medium text-sm'>
+                              {sample.sample_name}
+                            </h4>
+                            <Badge variant='outline' className='text-xs'>
+                              {sample.file_count} 个文件
+                            </Badge>
                           </div>
-                        )}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </ScrollArea>
-          </div>
+                          {Object.keys(sample.meta_data || {}).length > 0 && (
+                            <div className='flex flex-wrap gap-1 mt-1'>
+                              {Object.entries(sample.meta_data || {}).map(
+                                ([key, value]) => (
+                                  <Badge
+                                    key={key}
+                                    variant='secondary'
+                                    className='text-xs'
+                                  >
+                                    {key}: {String(value)}
+                                  </Badge>
+                                ),
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
+            </div>
+          )}
 
           {/* 运行名称前缀 */}
           <div className='space-y-2'>
@@ -201,7 +212,15 @@ export function RunWorkflowDialog({
           </div>
 
           {/* 运行实例数量提示 */}
-          {selectedSamples.size > 0 && (
+          {isProjectLevel ? (
+            <div className='rounded-lg bg-muted p-3'>
+              <p className='text-sm'>
+                将创建{' '}
+                <span className='font-semibold text-primary'>1</span>{' '}
+                个项目级运行实例
+              </p>
+            </div>
+          ) : selectedSamples.size > 0 && (
             <div className='rounded-lg bg-muted p-3'>
               <p className='text-sm'>
                 将创建{' '}
@@ -221,7 +240,7 @@ export function RunWorkflowDialog({
           <Button
             onClick={handleRun}
             disabled={
-              selectedSamples.size === 0 || runWorkflowMutation.isPending
+              (!isProjectLevel && selectedSamples.size === 0) || runWorkflowMutation.isPending
             }
           >
             {runWorkflowMutation.isPending ? (
