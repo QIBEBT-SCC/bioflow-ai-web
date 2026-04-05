@@ -153,12 +153,14 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
                         <Badge
                           variant='outline'
                           className={`text-xs ${
-                            workflow.execution_scope === ExecutionScope.PROJECT_LEVEL
+                            workflow.execution_scope ===
+                            ExecutionScope.PROJECT_LEVEL
                               ? 'bg-blue-50 text-blue-600 border-blue-200'
                               : 'bg-emerald-50 text-emerald-600 border-emerald-200'
                           }`}
                         >
-                          {workflow.execution_scope === ExecutionScope.PROJECT_LEVEL
+                          {workflow.execution_scope ===
+                          ExecutionScope.PROJECT_LEVEL
                             ? '项目级'
                             : '样本级'}
                         </Badge>
@@ -177,7 +179,9 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
                           setRunningWorkflow({
                             uid: workflow.workflow_uid,
                             name: workflow.workflow_name,
-                            executionScope: workflow.execution_scope ?? ExecutionScope.SAMPLE_LEVEL,
+                            executionScope:
+                              workflow.execution_scope ??
+                              ExecutionScope.SAMPLE_LEVEL,
                           })
                         }
                         disabled={!workflow.enabled}
