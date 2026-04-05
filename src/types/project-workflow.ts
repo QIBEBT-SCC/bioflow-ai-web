@@ -1,5 +1,6 @@
 import type { User } from '@/types/auth'
 import type { Statistics, Status } from '@/types/run'
+import type { ExecutionScope } from '@/types/workflow'
 
 /**
  * 项目工作流信息
@@ -9,6 +10,7 @@ export interface ProjectWorkflow {
   workflow_name: string
   import_time: string
   enabled: boolean
+  execution_scope?: ExecutionScope
 }
 
 /**
@@ -22,7 +24,7 @@ export interface AddWorkflowRequest {
  * 运行工作流请求
  */
 export interface RunWorkflowRequest {
-  sample_uids: string[]
+  sample_uids?: string[]
   run_name_prefix?: string
 }
 

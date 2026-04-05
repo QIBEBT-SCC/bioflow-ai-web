@@ -10,7 +10,7 @@ import {
   saveWorkflow,
   updateWorkflow,
 } from '@/app/actions/workflow'
-import type { Workflow, WorkflowDefinition } from '@/types/workflow'
+import type { Workflow, WorkflowDefinition, ExecutionScope } from '@/types/workflow'
 
 // ============================================
 // Query Hooks (数据查询)
@@ -86,7 +86,7 @@ export const useUpdateWorkflow = () => {
       data,
     }: {
       uid: string
-      data: { name?: string; workflow?: WorkflowDefinition }
+      data: { name?: string; workflow?: WorkflowDefinition; execution_scope?: ExecutionScope }
     }) => updateWorkflow(uid, data),
     onSuccess: (_, { uid }) => {
       toast.success('Workflow更新成功')
