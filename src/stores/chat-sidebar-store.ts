@@ -5,12 +5,12 @@ import { devtools, persist } from 'zustand/middleware'
 
 interface ChatSidebarState {
   isOpen: boolean
-  sessionId: string | null
+  sessions: Record<string, string | null>
   toggle: () => void
   open: () => void
   close: () => void
-  setSessionId: (id: string) => void
-  clearSession: () => void
+  setSessionId: (pageKey: string, id: string) => void
+  clearSession: (pageKey: string) => void
 }
 
 export const useChatSidebarStore = create<ChatSidebarState>()(
@@ -18,12 +18,18 @@ export const useChatSidebarStore = create<ChatSidebarState>()(
     persist(
       (set) => ({
         isOpen: false,
-        sessionId: null,
+        sessions: {},
         toggle: () => set((state) => ({ isOpen: !state.isOpen })),
         open: () => set({ isOpen: true }),
         close: () => set({ isOpen: false }),
-        setSessionId: (id) => set({ sessionId: id }),
-        clearSession: () => set({ sessionId: null }),
+        setSessionId: (pageKey, id) =>
+          set((state) => ({
+            sessions: { ...state.sessions, [pageKey]: id },
+          })),
+        clearSession: (pageKey) =>
+          set((state) => ({
+            sessions: { ...state.sessions, [pageKey]: null },
+          })),
       }),
       {
         name: 'chat-sidebar',

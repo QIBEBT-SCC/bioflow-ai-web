@@ -36,6 +36,9 @@ import { StatusEdge } from '@/components/workflow/status-edge'
 import { useProject } from '@/hooks/use-project'
 import { useRun } from '@/hooks/use-run'
 import { type RunData, Status } from '@/types/run'
+import { ChatSidebar } from '@/components/chat/chat-sidebar'
+import { ChatSidebarToggle } from '@/components/chat/chat-sidebar-toggle'
+import { useChatSidebarStore } from '@/stores/chat-sidebar-store'
 
 const edgeTypes = { default: StatusEdge }
 
@@ -71,6 +74,7 @@ function RunFlowContent({
 }) {
   const { data: project } = useProject(projectId)
   const { data: run } = useRun(runUid, 5000)
+  const isOpen = useChatSidebarStore((s) => s.isOpen)
 
   const [flowNodes, setFlowNodes, onNodesChange] = useNodesState<FlowNode>([])
 
@@ -112,7 +116,7 @@ function RunFlowContent({
   const Icon = cfg?.icon
 
   return (
-    <SidebarInset className='h-screen flex flex-col'>
+    <SidebarInset className='h-screen flex flex-col overflow-hidden'>
       <header className='flex flex-col shrink-0 border-b'>
         <div className='flex h-12 items-center gap-2 bg-background px-4'>
           <SidebarTrigger className='-ml-1' />
@@ -153,42 +157,42 @@ function RunFlowContent({
               </Badge>
             )}
             {taskStats && (
-              <div className='flex items-center gap-2 text-sm text-muted-foreground'>
+              <div className='flex items-center gap-2 text-sm text-muted-foreground pr-5'>
                 <span>
                   {taskStats.success ?? 0}/{taskStats.total}
                 </span>
                 <Progress value={progress} className='w-24 h-1.5' />
               </div>
             )}
-            <Button variant='ghost' size='sm' asChild>
-              <Link href={`/project/${projectId}?tab=workflows`}>
-                <ArrowLeftIcon className='h-4 w-4 mr-1' />
-                返回项目
-              </Link>
-            </Button>
+            <div className='ml-auto'>
+              <ChatSidebarToggle />
+            </div>
           </div>
         </div>
       </header>
 
-      <div className='flex-1 w-full'>
-        <ReadOnlyProvider value={true}>
-          <ReactFlow
-            nodes={flowNodes}
-            edges={edges}
-            onNodesChange={handleNodesChange}
-            nodeTypes={nodeTypes}
-            edgeTypes={edgeTypes}
-            nodesConnectable={false}
-            fitView
-            className='bg-gray-50'
-          >
-            <Background
-              variant={BackgroundVariant.Dots}
-              className='!bg-gray-100'
-            />
-            <Controls />
-          </ReactFlow>
-        </ReadOnlyProvider>
+      <div className='flex flex-1 min-h-0'>
+        <div className='flex-1 w-full'>
+          <ReadOnlyProvider value={true}>
+            <ReactFlow
+              nodes={flowNodes}
+              edges={edges}
+              onNodesChange={handleNodesChange}
+              nodeTypes={nodeTypes}
+              edgeTypes={edgeTypes}
+              nodesConnectable={false}
+              fitView
+              className='bg-gray-50'
+            >
+              <Background
+                variant={BackgroundVariant.Dots}
+                className='!bg-gray-100'
+              />
+              <Controls />
+            </ReactFlow>
+          </ReadOnlyProvider>
+        </div>
+        {isOpen && <ChatSidebar pageKey={`run-${runUid}`} />}
       </div>
     </SidebarInset>
   )
