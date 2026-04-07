@@ -11,11 +11,16 @@ import {
 } from '@xyflow/react'
 import { Status } from '@/types/run'
 
-const getHandleCoords = (node: InternalNode<Node>, pos: Position) => {
+const getHandleCoords = (
+  node: InternalNode<Node>,
+  pos: Position,
+  handleId?: string | null,
+) => {
   const type = pos === Position.Left ? 'target' : 'source'
-  const handle = node.internals.handleBounds?.[type]?.find(
-    (h) => h.position === pos,
-  )
+  const handles = node.internals.handleBounds?.[type] ?? []
+  const handle =
+    (handleId ? handles.find((h) => h.id === handleId) : undefined) ??
+    handles.find((h) => h.position === pos)
   if (!handle) return [0, 0] as const
   let ox = handle.width / 2
   let oy = handle.height / 2
@@ -29,14 +34,21 @@ const getHandleCoords = (node: InternalNode<Node>, pos: Position) => {
   ] as const
 }
 
-export const StatusEdge = ({ id, source, target, markerEnd }: EdgeProps) => {
+export const StatusEdge = ({
+  id,
+  source,
+  target,
+  sourceHandleId,
+  targetHandleId,
+  markerEnd,
+}: EdgeProps) => {
   const sourceNode = useInternalNode(source)
   const targetNode = useInternalNode(target)
 
   if (!(sourceNode && targetNode)) return null
 
-  const [sx, sy] = getHandleCoords(sourceNode, Position.Right)
-  const [tx, ty] = getHandleCoords(targetNode, Position.Left)
+  const [sx, sy] = getHandleCoords(sourceNode, Position.Right, sourceHandleId)
+  const [tx, ty] = getHandleCoords(targetNode, Position.Left, targetHandleId)
 
   const [edgePath] = getBezierPath({
     sourceX: sx,
