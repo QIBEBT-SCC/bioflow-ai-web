@@ -1,8 +1,6 @@
 'use client'
 
 import { ChevronDownIcon, FilterIcon, SearchIcon } from 'lucide-react'
-import { ChatSidebar } from '@/components/chat/chat-sidebar'
-import { ChatSidebarToggle } from '@/components/chat/chat-sidebar-toggle'
 import { NewProjectDialog } from '@/components/project/new-project-dialog'
 import {
   AllProjectTable,
@@ -27,13 +25,10 @@ import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { useChatSidebarStore } from '@/stores/chat-sidebar-store'
 
 export default function ProjectsPage() {
-  const isOpen = useChatSidebarStore((s) => s.isOpen)
-
   return (
-    <SidebarInset className='h-screen flex flex-row'>
+    <SidebarInset>
       <div className='flex-1 flex flex-col min-w-0'>
         <header className='flex flex-col shrink-0 border-b'>
           <div className='flex items-center gap-2 px-4 h-12 bg-background'>
@@ -46,9 +41,6 @@ export default function ProjectsPage() {
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
-            <div className='ml-auto'>
-              <ChatSidebarToggle />
-            </div>
           </div>
         </header>
         <div className='flex-1 overflow-auto'>
@@ -131,7 +123,6 @@ export default function ProjectsPage() {
           </div>
         </div>
       </div>
-      {isOpen && <ChatSidebar />}
     </SidebarInset>
   )
 }

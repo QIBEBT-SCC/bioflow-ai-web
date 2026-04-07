@@ -1,6 +1,12 @@
 'use client'
 
-import { ChevronDown, ChevronRight, Loader2, PlayIcon, Trash2Icon } from 'lucide-react'
+import {
+  ChevronDown,
+  ChevronRight,
+  Loader2,
+  PlayIcon,
+  Trash2Icon,
+} from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { WorkflowRunInstances } from '@/components/project-workflow/workflow-run-instances'
@@ -27,6 +33,7 @@ import {
   useProjectWorkflows,
   useRemoveWorkflowFromProject,
 } from '@/hooks/use-project-workflow'
+import { ExecutionScope } from '@/types/workflow'
 import { ImportWorkflowDialog } from './import-workflow-dialog'
 import { RunWorkflowDialog } from './run-workflow-dialog'
 
@@ -39,6 +46,7 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
   const [runningWorkflow, setRunningWorkflow] = useState<{
     uid: string
     name: string
+    executionScope: ExecutionScope
   } | null>(null)
   const [expandedWorkflows, setExpandedWorkflows] = useState<Set<string>>(
     new Set(),
@@ -142,6 +150,20 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
                             已禁用
                           </Badge>
                         )}
+                        <Badge
+                          variant='outline'
+                          className={`text-xs ${
+                            workflow.execution_scope ===
+                            ExecutionScope.PROJECT_LEVEL
+                              ? 'bg-blue-50 text-blue-600 border-blue-200'
+                              : 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                          }`}
+                        >
+                          {workflow.execution_scope ===
+                          ExecutionScope.PROJECT_LEVEL
+                            ? '项目级'
+                            : '样本级'}
+                        </Badge>
                       </div>
                       <CardDescription className='mt-0.5'>
                         导入时间：
@@ -157,6 +179,9 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
                           setRunningWorkflow({
                             uid: workflow.workflow_uid,
                             name: workflow.workflow_name,
+                            executionScope:
+                              workflow.execution_scope ??
+                              ExecutionScope.SAMPLE_LEVEL,
                           })
                         }
                         disabled={!workflow.enabled}
@@ -183,6 +208,7 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
                   <WorkflowRunInstances
                     projectId={projectId}
                     workflowUid={workflow.workflow_uid}
+                    executionScope={workflow.execution_scope}
                   />
                 )}
               </Card>
@@ -197,6 +223,7 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
           projectId={projectId}
           workflowUid={runningWorkflow.uid}
           workflowName={runningWorkflow.name}
+          executionScope={runningWorkflow.executionScope}
           open={!!runningWorkflow}
           onOpenChange={(open) => !open && setRunningWorkflow(null)}
         />

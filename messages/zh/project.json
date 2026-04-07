@@ -1,0 +1,40 @@
+{
+  "Sample": {
+    "file": {
+      "tag": "标签",
+      "tagPlaceholder": "留空则自动分配",
+      "tagDuplicate": "标签已存在，请使用其他标签",
+      "tagDescription": "用于在工作流中引用此文件，如 sample:r1_positive。同一样本内标签必须唯一。"
+    }
+  },
+  "Project": {
+    "fileMapping": {
+      "title": "全局文件",
+      "keyword": "关键字",
+      "filePath": "文件路径",
+      "description": "描述",
+      "add": "添加文件",
+      "edit": "编辑文件",
+      "delete": "删除文件",
+      "empty": "暂无全局文件，点击\"添加文件\"按钮创建",
+      "createSuccess": "全局文件创建成功",
+      "createFailed": "全局文件创建失败",
+      "updateSuccess": "全局文件更新成功",
+      "updateFailed": "全局文件更新失败",
+      "deleteSuccess": "全局文件删除成功",
+      "deleteFailed": "全局文件删除失败",
+      "keywordPlaceholder": "例如: reference_genome",
+      "keywordDescription": "用于工作流引用，如 proj:reference_genome。建议使用小写字母、数字和下划线。",
+      "keywordDuplicate": "关键字已存在，请使用其他关键字",
+      "keywordImmutable": "关键字创建后不可修改",
+      "filePathPlaceholder": "例如: /data/genomes/hg38.fa",
+      "descriptionPlaceholder": "例如: Human reference genome GRCh38",
+      "dialogTitle": "添加全局文件",
+      "dialogDescription": "创建项目级全局文件，可在工作流中使用 proj:keyword 格式引用",
+      "editDialogTitle": "编辑全局文件",
+      "editDialogDescription": "修改全局文件的路径和描述（关键字不可修改）",
+      "deleteDialogTitle": "确认删除",
+      "deleteDialogDescription": "确定要删除此全局文件吗？此操作无法撤销，使用此文件的工作流可能会受到影响。"
+    }
+  }
+}
