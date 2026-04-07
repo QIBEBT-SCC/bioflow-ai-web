@@ -8,7 +8,7 @@ import {
   HardDriveIcon,
   MemoryStickIcon,
 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import {
   Area,
   AreaChart,
@@ -19,7 +19,6 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useTaskMonitor } from '@/hooks/use-task'
@@ -49,7 +48,6 @@ function formatBytes(
 
 export function TaskMonitor({ taskUid }: TaskMonitorProps) {
   const { data: monitors = [], isLoading } = useTaskMonitor(taskUid)
-  const [smoothCurve, setSmoothCurve] = useState(true)
 
   // 计算平均值和最大值
   const stats = useMemo(() => {
@@ -224,17 +222,6 @@ export function TaskMonitor({ taskUid }: TaskMonitorProps) {
         </Card>
       </div>
 
-      {/* 曲线平滑开关 */}
-      <div className='flex justify-end'>
-        <Button
-          variant='outline'
-          size='sm'
-          onClick={() => setSmoothCurve(!smoothCurve)}
-        >
-          {smoothCurve ? '直线模式' : '平滑模式'}
-        </Button>
-      </div>
-
       {/* CPU 和内存使用率图表 */}
       <div>
         <h3 className='text-sm font-semibold mb-4'>CPU & 内存使用率趋势</h3>
@@ -265,7 +252,7 @@ export function TaskMonitor({ taskUid }: TaskMonitorProps) {
               />
               <Legend />
               <Area
-                type={smoothCurve ? 'monotone' : 'linear'}
+                type='monotone'
                 dataKey='cpu'
                 stroke='#3b82f6'
                 strokeWidth={2}
@@ -275,7 +262,7 @@ export function TaskMonitor({ taskUid }: TaskMonitorProps) {
                 dot={false}
               />
               <Area
-                type={smoothCurve ? 'monotone' : 'linear'}
+                type='monotone'
                 dataKey='memory'
                 stroke='#a855f7'
                 strokeWidth={2}
@@ -320,7 +307,7 @@ export function TaskMonitor({ taskUid }: TaskMonitorProps) {
               />
               <Legend />
               <Area
-                type={smoothCurve ? 'monotone' : 'linear'}
+                type='monotone'
                 dataKey='memUsed'
                 stroke='#10b981'
                 strokeWidth={2}
@@ -364,7 +351,7 @@ export function TaskMonitor({ taskUid }: TaskMonitorProps) {
               />
               <Legend />
               <Area
-                type={smoothCurve ? 'monotone' : 'linear'}
+                type='monotone'
                 dataKey='ioIn'
                 stroke='#f97316'
                 strokeWidth={2}
@@ -374,7 +361,7 @@ export function TaskMonitor({ taskUid }: TaskMonitorProps) {
                 dot={false}
               />
               <Area
-                type={smoothCurve ? 'monotone' : 'linear'}
+                type='monotone'
                 dataKey='ioOut'
                 stroke='#ef4444'
                 strokeWidth={2}
