@@ -51,6 +51,7 @@ import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { StatusEdge } from '@/components/workflow/status-edge'
 import { useProject } from '@/hooks/use-project'
 import { useRun, useRunFiles } from '@/hooks/use-run'
+import { useTaskLog } from '@/hooks/use-task'
 import { useChatSidebarStore } from '@/stores/chat-sidebar-store'
 import { type RunData, type RunFileNode, Status } from '@/types/run'
 
@@ -101,18 +102,6 @@ function renderOutputNode(node: RunFileNode) {
   )
 }
 
-// Mock terminal output
-const MOCK_TERMINAL_OUTPUT = `\x1b[32m[INFO]\x1b[0m 2026-04-07 10:00:01 Starting workflow execution
-\x1b[32m[INFO]\x1b[0m 2026-04-07 10:00:02 Loading input files...
-\x1b[32m[INFO]\x1b[0m 2026-04-07 10:00:05 Running BWA alignment
-\x1b[33m[WARN]\x1b[0m 2026-04-07 10:02:11 Low coverage region detected at chr1:1234567
-\x1b[32m[INFO]\x1b[0m 2026-04-07 10:05:33 BWA alignment completed: 98.7% mapped
-\x1b[32m[INFO]\x1b[0m 2026-04-07 10:05:34 Running SAMtools sort and index
-\x1b[32m[INFO]\x1b[0m 2026-04-07 10:07:12 Running GATK HaplotypeCaller
-\x1b[32m[INFO]\x1b[0m 2026-04-07 10:15:44 Variant calling completed: 24,891 variants called
-\x1b[32m[INFO]\x1b[0m 2026-04-07 10:15:45 Generating QC report
-\x1b[32m[\x1b[1mSUCCESS\x1b[0m\x1b[32m]\x1b[0m 2026-04-07 10:16:02 Workflow completed successfully`
-
 function RunFlowContent({
   projectId,
   runUid,
@@ -121,15 +110,44 @@ function RunFlowContent({
   runUid: string
 }) {
   const { data: project } = useProject(projectId)
-  const { data: run } = useRun(runUid, 5000)
+  const { data: run } = useRun(runUid, (query) => {
+    const status = query.state.data?.status
+    if (status === Status.SUCCESS || status === Status.ERROR) return false
+    return 5000
+  })
   const { data: runFiles } = useRunFiles(runUid)
   const isOpen = useChatSidebarStore((s) => s.isOpen)
   const [flowNodes, setFlowNodes, onNodesChange] = useNodesState<FlowNode>([])
   const [statsOpen, setStatsOpen] = useState(true)
-  const [terminalOutput, setTerminalOutput] = useState(MOCK_TERMINAL_OUTPUT)
   const [selectedFile, setSelectedFile] = useState<string>()
   const [leftPanelOpen, setLeftPanelOpen] = useState(true)
   const [terminalOpen, setTerminalOpen] = useState(true)
+  const [selectedToolNodeId, setSelectedToolNodeId] = useState<
+    string | undefined
+  >(undefined)
+
+  const activeTaskUid = useMemo<string | undefined>(() => {
+    if (selectedToolNodeId) return selectedToolNodeId
+    const runningNode = flowNodes.find(
+      (n) =>
+        n.type === 'tool' &&
+        (n.data?.run_data as RunData | undefined)?.status === Status.RUNNING,
+    )
+    return runningNode?.id
+  }, [selectedToolNodeId, flowNodes])
+
+  const isActiveNodeRunning = useMemo(() => {
+    if (!activeTaskUid) return false
+    const node = flowNodes.find((n) => n.id === activeTaskUid)
+    return (
+      (node?.data?.run_data as RunData | undefined)?.status === Status.RUNNING
+    )
+  }, [activeTaskUid, flowNodes])
+
+  const { data: logData } = useTaskLog(
+    activeTaskUid ?? '',
+    isActiveNodeRunning ? 5000 : false,
+  )
 
   useEffect(() => {
     if (run?.nodes) setFlowNodes(run.nodes)
@@ -144,6 +162,17 @@ function RunFlowContent({
     },
     [onNodesChange],
   )
+
+  const handleNodeClick = useCallback(
+    (_event: React.MouseEvent, node: FlowNode) => {
+      if (node.type === 'tool') setSelectedToolNodeId(node.id)
+    },
+    [],
+  )
+
+  const handlePaneClick = useCallback(() => {
+    setSelectedToolNodeId(undefined)
+  }, [])
 
   const edges = useMemo(() => {
     if (!run?.edges || !run?.nodes) return []
@@ -302,6 +331,8 @@ function RunFlowContent({
                 nodes={flowNodes}
                 edges={edges}
                 onNodesChange={handleNodesChange}
+                onNodeClick={handleNodeClick}
+                onPaneClick={handlePaneClick}
                 nodeTypes={nodeTypes}
                 edgeTypes={edgeTypes}
                 nodesConnectable={false}
@@ -337,8 +368,8 @@ function RunFlowContent({
               className={`transition-all duration-200 overflow-hidden ${terminalOpen ? 'h-48' : 'h-0'}`}
             >
               <Terminal
-                output={terminalOutput}
-                onClear={() => setTerminalOutput('')}
+                output={logData?.content ?? ''}
+                isStreaming={isActiveNodeRunning}
                 className='h-48 rounded-none border-0'
               >
                 <TerminalContent className='max-h-full' />

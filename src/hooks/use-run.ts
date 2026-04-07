@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  type Query,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
 import { toast } from 'sonner'
 import {
   getRun,
@@ -48,7 +53,10 @@ export const useNewRunInstance = () => {
 export const useRuns = (
   offset: number = 0,
   limit: number = 20,
-  refetchInterval?: number | false,
+  refetchInterval?:
+    | number
+    | false
+    | ((query: Query<RunPublic[]>) => number | false | undefined),
 ) => {
   return useQuery<RunPublic[]>({
     queryKey: ['runs', offset, limit],
@@ -61,7 +69,12 @@ export const useRuns = (
 /**
  * 获取运行实例总数
  */
-export const useRunCount = (refetchInterval?: number | false) => {
+export const useRunCount = (
+  refetchInterval?:
+    | number
+    | false
+    | ((query: Query<number>) => number | false | undefined),
+) => {
   return useQuery<number>({
     queryKey: ['runCount'],
     queryFn: () => getRunCount(),
@@ -73,7 +86,12 @@ export const useRunCount = (refetchInterval?: number | false) => {
 /**
  * 获取运行实例统计信息
  */
-export const useRunStats = (refetchInterval?: number | false) => {
+export const useRunStats = (
+  refetchInterval?:
+    | number
+    | false
+    | ((query: Query<Statistics>) => number | false | undefined),
+) => {
   return useQuery<Statistics>({
     queryKey: ['runStats'],
     queryFn: () => getRunStats(),
@@ -85,7 +103,13 @@ export const useRunStats = (refetchInterval?: number | false) => {
 /**
  * 获取单个运行实例详情
  */
-export const useRun = (uid: string, refetchInterval?: number | false) => {
+export const useRun = (
+  uid: string,
+  refetchInterval?:
+    | number
+    | false
+    | ((query: Query<RunPublic>) => number | false | undefined),
+) => {
   return useQuery<RunPublic>({
     queryKey: ['run', uid],
     queryFn: () => getRun(uid),

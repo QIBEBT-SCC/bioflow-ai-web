@@ -95,11 +95,12 @@ export const useTaskMonitor = (uid: string) => {
 /**
  * 获取任务日志
  */
-export const useTaskLog = (uid: string) => {
+export const useTaskLog = (uid: string, refetchInterval?: number | false) => {
   return useQuery<{ content: string }>({
     queryKey: ['tasks', uid, 'log'],
     queryFn: () => getTaskLog(uid),
     enabled: !!uid,
     staleTime: 5 * 60 * 1000,
+    refetchInterval,
   })
 }
