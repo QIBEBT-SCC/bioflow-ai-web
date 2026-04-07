@@ -22,7 +22,7 @@ import {
   XCircleIcon,
 } from 'lucide-react'
 import Link from 'next/link'
-import { use, useCallback, useEffect, useMemo, useState } from 'react'
+import { use, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   FileTree,
   FileTreeFile,
@@ -122,6 +122,39 @@ function RunFlowContent({
   const [selectedFile, setSelectedFile] = useState<string>()
   const [leftPanelOpen, setLeftPanelOpen] = useState(true)
   const [terminalOpen, setTerminalOpen] = useState(true)
+  const [terminalHeight, setTerminalHeight] = useState(192)
+  const isResizing = useRef(false)
+  const startY = useRef(0)
+  const startHeight = useRef(0)
+
+  const handleResizeStart = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault()
+      isResizing.current = true
+      startY.current = e.clientY
+      startHeight.current = terminalHeight
+
+      const onMouseMove = (ev: MouseEvent) => {
+        if (!isResizing.current) return
+        const delta = startY.current - ev.clientY
+        const newHeight = Math.min(
+          600,
+          Math.max(80, startHeight.current + delta),
+        )
+        setTerminalHeight(newHeight)
+      }
+
+      const onMouseUp = () => {
+        isResizing.current = false
+        window.removeEventListener('mousemove', onMouseMove)
+        window.removeEventListener('mouseup', onMouseUp)
+      }
+
+      window.addEventListener('mousemove', onMouseMove)
+      window.addEventListener('mouseup', onMouseUp)
+    },
+    [terminalHeight],
+  )
   const [selectedToolNodeId, setSelectedToolNodeId] = useState<
     string | undefined
   >(undefined)
@@ -348,9 +381,20 @@ function RunFlowContent({
             </ReadOnlyProvider>
           </div>
 
-          {/* 底部终端（VSCode 式折叠） */}
+          {/* 底部终端（VSCode 式折叠 + 拖拽调整高度） */}
           <div className='shrink-0 border-t'>
-            {/* 终端把手：点击展开/收起 */}
+            {/* 拖拽调整把手 */}
+            {terminalOpen && (
+              <hr
+                aria-orientation='horizontal'
+                aria-label='拖拽调整终端高度'
+                tabIndex={0}
+                onMouseDown={handleResizeStart}
+                className='h-1 w-full cursor-row-resize border-none bg-zinc-800 hover:bg-blue-500 transition-colors'
+                title='拖拽调整终端高度'
+              />
+            )}
+            {/* 终端标题栏：点击展开/收起 */}
             <button
               type='button'
               onClick={() => setTerminalOpen(!terminalOpen)}
@@ -365,12 +409,14 @@ function RunFlowContent({
               />
             </button>
             <div
-              className={`transition-all duration-200 overflow-hidden ${terminalOpen ? 'h-48' : 'h-0'}`}
+              className={`overflow-hidden ${terminalOpen ? '' : 'h-0'}`}
+              style={terminalOpen ? { height: terminalHeight } : undefined}
             >
               <Terminal
                 output={logData?.content ?? ''}
                 isStreaming={isActiveNodeRunning}
-                className='h-48 rounded-none border-0'
+                className='rounded-none border-0'
+                style={{ height: terminalHeight }}
               >
                 <TerminalContent className='max-h-full' />
               </Terminal>
