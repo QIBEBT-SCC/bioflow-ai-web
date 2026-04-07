@@ -3,11 +3,12 @@ import { toast } from 'sonner'
 import {
   getRun,
   getRunCount,
+  getRunFiles,
   getRunStats,
   getRuns,
   newRunInstance,
 } from '@/app/actions/run'
-import type { RunPublic, Statistics } from '@/types/run'
+import type { RunFileNode, RunPublic, Statistics } from '@/types/run'
 import type { WorkflowDefinition } from '@/types/workflow'
 
 // ============================================
@@ -91,5 +92,17 @@ export const useRun = (uid: string, refetchInterval?: number | false) => {
     enabled: !!uid,
     staleTime: 30 * 1000,
     refetchInterval,
+  })
+}
+
+/**
+ * 获取运行实例输出文件树
+ */
+export const useRunFiles = (runUid: string) => {
+  return useQuery<RunFileNode[]>({
+    queryKey: ['runFiles', runUid],
+    queryFn: () => getRunFiles(runUid),
+    enabled: !!runUid,
+    staleTime: 60 * 1000,
   })
 }

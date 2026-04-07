@@ -52,9 +52,9 @@ import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { StatusEdge } from '@/components/workflow/status-edge'
 import { useProject } from '@/hooks/use-project'
-import { useRun } from '@/hooks/use-run'
+import { useRun, useRunFiles } from '@/hooks/use-run'
 import { useChatSidebarStore } from '@/stores/chat-sidebar-store'
-import { type RunData, Status } from '@/types/run'
+import { type RunData, type RunFileNode, Status } from '@/types/run'
 
 const edgeTypes = { default: StatusEdge }
 
@@ -81,50 +81,7 @@ const statusConfig = {
   },
 }
 
-// Mock data for file tree (multi-level)
-type OutputFileNode =
-  | { type: 'file'; path: string; name: string; iconType?: 'json' }
-  | { type: 'folder'; path: string; name: string; children: OutputFileNode[] }
-
-const MOCK_OUTPUT_FILES: OutputFileNode[] = [
-  {
-    type: 'folder',
-    path: 'logs',
-    name: 'logs',
-    children: [
-      { type: 'file', path: 'logs/bwa.log', name: 'bwa.log' },
-      { type: 'file', path: 'logs/samtools.log', name: 'samtools.log' },
-      { type: 'file', path: 'logs/gatk.log', name: 'gatk.log' },
-    ],
-  },
-  {
-    type: 'folder',
-    path: 'reports',
-    name: 'reports',
-    children: [
-      {
-        type: 'folder',
-        path: 'reports/qc',
-        name: 'qc',
-        children: [
-          {
-            type: 'file',
-            path: 'reports/qc/qc_report.html',
-            name: 'qc_report.html',
-          },
-        ],
-      },
-      {
-        type: 'file',
-        path: 'reports/summary.json',
-        name: 'summary.json',
-        iconType: 'json',
-      },
-    ],
-  },
-]
-
-function renderOutputNode(node: OutputFileNode) {
+function renderOutputNode(node: RunFileNode) {
   if (node.type === 'folder') {
     return (
       <FileTreeFolder key={node.path} path={node.path} name={node.name}>
@@ -186,6 +143,7 @@ function RunFlowContent({
 }) {
   const { data: project } = useProject(projectId)
   const { data: run } = useRun(runUid, 5000)
+  const { data: runFiles } = useRunFiles(runUid)
   const isOpen = useChatSidebarStore((s) => s.isOpen)
   const [flowNodes, setFlowNodes, onNodesChange] = useNodesState<FlowNode>([])
   const [statsOpen, setStatsOpen] = useState(true)
@@ -366,7 +324,7 @@ function RunFlowContent({
                   onSelect={((path: string) => setSelectedFile(path)) as any}
                   className='border-0 rounded-none'
                 >
-                  {MOCK_OUTPUT_FILES.map(renderOutputNode)}
+                  {(runFiles ?? []).map(renderOutputNode)}
                 </FileTree>
               </div>
             </div>

@@ -1,5 +1,5 @@
 import { clientFetch } from '@/lib/api-client'
-import type { RunPublic, Statistics } from '@/types/run'
+import type { RunFileNode, RunPublic, Statistics } from '@/types/run'
 import type { WorkflowDefinition } from '@/types/workflow'
 
 /**
@@ -53,4 +53,11 @@ export async function getRunStats(): Promise<Statistics> {
  */
 export async function getRun(uid: string): Promise<RunPublic> {
   return await clientFetch<RunPublic>(`/runs/${uid}`)
+}
+
+/**
+ * 获取运行实例输出文件树
+ */
+export async function getRunFiles(runUid: string): Promise<RunFileNode[]> {
+  return await clientFetch<RunFileNode[]>(`/runs/${runUid}/files`)
 }
