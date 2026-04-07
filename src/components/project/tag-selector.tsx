@@ -94,6 +94,7 @@ export function TagSelector({
                 )}
               >
                 {tag.name}
+                {/** biome-ignore lint/a11y/useSemanticElements: no need */}
                 <span
                   role='button'
                   tabIndex={0}

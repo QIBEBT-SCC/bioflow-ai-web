@@ -3,21 +3,29 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   addSampleFile,
+  createProjectFileMapping,
   createSample,
+  deleteProjectFileMapping,
   deleteSample,
   deleteSampleFile,
+  getProjectFileMapping,
+  getProjectFileMappings,
   getSample,
   getSampleCount,
   getSampleFiles,
   getSamples,
+  updateProjectFileMapping,
   updateSample,
 } from '@/app/actions/sample'
 import type {
   AddSampleFileRequest,
+  CreateProjectFileMappingRequest,
   CreateSampleRequest,
+  ProjectFileMapping,
   Sample,
   SampleFile,
   SampleListItem,
+  UpdateProjectFileMappingRequest,
   UpdateSampleRequest,
 } from '@/types/sample'
 
@@ -190,6 +198,99 @@ export function useDeleteSampleFile() {
       })
       queryClient.invalidateQueries({
         queryKey: ['samples', projectId, sampleUid, 'files'],
+      })
+    },
+  })
+}
+
+// ============================================
+// Project File Mapping Hooks (项目文件映射)
+// ============================================
+
+/**
+ * 获取项目的文件映射列表
+ */
+export function useProjectFileMappings(projectId: string) {
+  return useQuery<ProjectFileMapping[]>({
+    queryKey: ['projectFileMappings', projectId],
+    queryFn: () => getProjectFileMappings(projectId),
+    enabled: !!projectId,
+    staleTime: 30 * 1000,
+  })
+}
+
+/**
+ * 获取特定的文件映射
+ */
+export function useProjectFileMapping(projectId: string, keyword: string) {
+  return useQuery<ProjectFileMapping>({
+    queryKey: ['projectFileMappings', projectId, keyword],
+    queryFn: () => getProjectFileMapping(projectId, keyword),
+    enabled: !!projectId && !!keyword,
+    staleTime: 30 * 1000,
+  })
+}
+
+/**
+ * 创建项目文件映射
+ */
+export function useCreateProjectFileMapping() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      projectId,
+      data,
+    }: {
+      projectId: string
+      data: CreateProjectFileMappingRequest
+    }) => createProjectFileMapping(projectId, data),
+    onSuccess: (_, { projectId }) => {
+      queryClient.invalidateQueries({
+        queryKey: ['projectFileMappings', projectId],
+      })
+    },
+  })
+}
+
+/**
+ * 更新项目文件映射
+ */
+export function useUpdateProjectFileMapping() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      projectId,
+      mappingId,
+      data,
+    }: {
+      projectId: string
+      mappingId: number
+      data: UpdateProjectFileMappingRequest
+    }) => updateProjectFileMapping(projectId, mappingId, data),
+    onSuccess: (_, { projectId }) => {
+      queryClient.invalidateQueries({
+        queryKey: ['projectFileMappings', projectId],
+      })
+    },
+  })
+}
+
+/**
+ * 删除项目文件映射
+ */
+export function useDeleteProjectFileMapping() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      projectId,
+      mappingId,
+    }: {
+      projectId: string
+      mappingId: number
+    }) => deleteProjectFileMapping(projectId, mappingId),
+    onSuccess: (_, { projectId }) => {
+      queryClient.invalidateQueries({
+        queryKey: ['projectFileMappings', projectId],
       })
     },
   })

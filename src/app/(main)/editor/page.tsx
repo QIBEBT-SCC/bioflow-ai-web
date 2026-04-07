@@ -243,7 +243,7 @@ function FlowContent() {
           />
         </div>
       </div>
-      {isOpen && <ChatSidebar />}
+      {isOpen && <ChatSidebar pageKey='editor' />}
     </SidebarInset>
   )
 }

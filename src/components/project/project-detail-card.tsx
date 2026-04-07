@@ -1,6 +1,5 @@
 import {
   AlertCircle,
-  ArrowLeft,
   CheckCircle2,
   Clock,
   Database,
@@ -8,7 +7,6 @@ import {
   Loader2,
   Star,
 } from 'lucide-react'
-import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -30,17 +28,20 @@ export function ProjectDetailCard() {
   return (
     <div>
       {/* 返回和项目标题 */}
-      <div className='flex flex-col sm:flex-row gap-4 justify-between items-start'>
+      <div className='flex flex-col sm:flex-row gap-4 justify-between items-start mb-3'>
         <div>
-          <Link
-            href='/project'
-            className='inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-2'
-          >
-            <ArrowLeft className='h-4 w-4 mr-1' />
-            返回项目列表
-          </Link>
           <div className='flex items-start gap-2'>
             <h1 className='text-2xl font-bold'>{project.name}</h1>
+            <div className='flex flex-wrap gap-1 mt-1.5'>
+              {project.tags.map((tag) => (
+                <Badge
+                  key={tag.id}
+                  className={`${colorClassMap[tag.color]} border-0`}
+                >
+                  {tag.name}
+                </Badge>
+              ))}
+            </div>
             <Button
               variant='ghost'
               size='icon'
@@ -53,17 +54,6 @@ export function ProjectDetailCard() {
             </Button>
           </div>
           <p className='text-muted-foreground mt-1'>{project.description}</p>
-
-          <div className='flex flex-wrap gap-1 mt-3'>
-            {project.tags.map((tag) => (
-              <Badge
-                key={tag.id}
-                className={`${colorClassMap[tag.color]} border-0`}
-              >
-                {tag.name}
-              </Badge>
-            ))}
-          </div>
         </div>
       </div>
 
@@ -138,7 +128,9 @@ export function ProjectDetailCard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className='text-2xl font-bold'>{project.update_time}</p>
+            <p className='text-2xl font-bold'>
+              {new Date(project.update_time).toLocaleString('zh-CN')}
+            </p>
           </CardContent>
         </Card>
       </div>

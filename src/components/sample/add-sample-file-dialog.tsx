@@ -41,6 +41,15 @@ const fileTypeOptions = [
   { value: SampleFileType.IMAGE, label: '图像数据' },
 ]
 
+// 默认标签映射
+const defaultTagPlaceholders: Record<SampleFileType, string> = {
+  [SampleFileType.SEQUENCING_R1]: 'r1',
+  [SampleFileType.SEQUENCING_R2]: 'r2',
+  [SampleFileType.SEQUENCING]: 'single',
+  [SampleFileType.SPECTRUM]: 'spectrum',
+  [SampleFileType.IMAGE]: 'image',
+}
+
 export function AddSampleFileDialog({
   projectId,
   sampleUid,
@@ -49,6 +58,7 @@ export function AddSampleFileDialog({
   const [open, setOpen] = useState(false)
   const [dataType, setDataType] = useState<SampleFileType | ''>('')
   const [filePath, setFilePath] = useState('')
+  const [tag, setTag] = useState('')
 
   const addFileMutation = useAddSampleFile()
 
@@ -70,6 +80,7 @@ export function AddSampleFileDialog({
         data: {
           data_type: dataType as SampleFileType,
           file_path: filePath,
+          ...(tag.trim() && { tag: tag.trim() }),
         },
       })
 
@@ -78,9 +89,16 @@ export function AddSampleFileDialog({
       // 重置表单
       setDataType('')
       setFilePath('')
+      setTag('')
       setOpen(false)
-    } catch {
-      toast.error('文件添加失败')
+    } catch (error: unknown) {
+      // 处理 409 冲突错误（标签重复）
+      const err = error as { status?: number; message?: string }
+      if (err?.status === 409 || err?.message?.includes('already exists')) {
+        toast.error('标签已存在，请使用其他标签')
+      } else {
+        toast.error('文件添加失败')
+      }
     }
   }
 
@@ -139,6 +157,25 @@ export function AddSampleFileDialog({
             />
             <p className='text-xs text-muted-foreground'>
               输入服务器上的文件完整路径,后端将自动计算文件大小、格式和MD5校验码
+            </p>
+          </div>
+
+          {/* 文件标签 */}
+          <div className='space-y-2'>
+            <Label htmlFor='tag'>文件标签 (可选)</Label>
+            <Input
+              id='tag'
+              placeholder={
+                dataType !== '' && dataType !== undefined
+                  ? `留空则自动分配为 "${defaultTagPlaceholders[dataType as SampleFileType]}"`
+                  : '留空则自动分配默认标签'
+              }
+              value={tag}
+              onChange={(e) => setTag(e.target.value)}
+            />
+            <p className='text-xs text-muted-foreground'>
+              用于在工作流中引用此文件，如
+              sample:r1_positive。同一样本内标签必须唯一。
             </p>
           </div>
         </div>

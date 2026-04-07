@@ -18,11 +18,11 @@ BioFlow AI Web — a bioinformatics workflow platform built with Next.js 16 (App
 
 ### Stack
 
-- **UI**: Tailwind CSS v4 + shadcn/ui (Radix) + motion
+- **UI**: Tailwind CSS v4 + shadcn/ui (Radix) + ai-element + motion
 - **State**: Zustand (UI state) + TanStack Query v5 (server state)
 - **i18n**: next-intl v4 (server-side mode, locales: `zh`/`en`, default: `zh`)
 - **Node Editor**: @xyflow/react for workflow visualization
-- **AI**: Vercel AI SDK (@ai-sdk/react, @ai-sdk/openai, @ai-sdk/deepseek)
+- **AI**: Vercel AI SDK (@ai-sdk/react with custom backend)
 - **Markdown**: streamdown with code/math/mermaid/cjk plugins
 - **Linter/Formatter**: Biome (no semicolons, single quotes, 2-space indent)
 - **Package Manager**: pnpm
@@ -51,6 +51,7 @@ Tokens stored in both localStorage and cookies (7-day expiry). `clientFetch()` a
 - Zustand stores in `src/stores/`
 - Translation files in `messages/{zh,en}.json`
 - shadcn/ui components in `src/components/ui/`; feature components organized by domain
+- ai-element components in `src/components/ai-elements/`; feature components organized by domain
 - Node types (workflow editor): BaseNode, ToolNode, DataNode, CodeNode, InputNode, NoteNode
 
 ### Environment Variables
