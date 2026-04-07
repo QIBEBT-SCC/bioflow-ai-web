@@ -10,7 +10,6 @@ import {
   useNodesState,
 } from '@xyflow/react'
 import {
-  ArrowLeftIcon,
   CheckCircle2Icon,
   ClockIcon,
   Loader2Icon,
@@ -18,6 +17,8 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { use, useCallback, useEffect, useMemo } from 'react'
+import { ChatSidebar } from '@/components/chat/chat-sidebar'
+import { ChatSidebarToggle } from '@/components/chat/chat-sidebar-toggle'
 import { nodeTypes } from '@/components/node-editor/node-registry'
 import { ReadOnlyProvider } from '@/components/node-editor/read-only-context'
 import { Badge } from '@/components/ui/badge'
@@ -28,17 +29,14 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
-import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { StatusEdge } from '@/components/workflow/status-edge'
 import { useProject } from '@/hooks/use-project'
 import { useRun } from '@/hooks/use-run'
-import { type RunData, Status } from '@/types/run'
-import { ChatSidebar } from '@/components/chat/chat-sidebar'
-import { ChatSidebarToggle } from '@/components/chat/chat-sidebar-toggle'
 import { useChatSidebarStore } from '@/stores/chat-sidebar-store'
+import { type RunData, Status } from '@/types/run'
 
 const edgeTypes = { default: StatusEdge }
 

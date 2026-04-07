@@ -2,7 +2,12 @@
 
 import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport } from 'ai'
-import { HistoryIcon, Loader2Icon, MessageSquareIcon, PlusIcon } from 'lucide-react'
+import {
+  HistoryIcon,
+  Loader2Icon,
+  MessageSquareIcon,
+  PlusIcon,
+} from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   Conversation,
@@ -166,7 +171,8 @@ function ChatSidebarInner({ pageKey }: { pageKey: string }) {
   )
 
   // New Chat is disabled when already on an empty session (no messages yet)
-  const newChatDisabled = isCreating || (sessionId !== null && messages.length === 0)
+  const newChatDisabled =
+    isCreating || (sessionId !== null && messages.length === 0)
   const inputDisabled = sessionId === null
 
   return (
@@ -227,7 +233,11 @@ function ChatSidebarInner({ pageKey }: { pageKey: string }) {
             onChange={(e) => setText(e.target.value)}
             ref={textareaRef}
             value={text}
-            placeholder={inputDisabled ? 'Create or load a conversation to start chatting' : 'Ask a question...'}
+            placeholder={
+              inputDisabled
+                ? 'Create or load a conversation to start chatting'
+                : 'Ask a question...'
+            }
             disabled={inputDisabled}
           />
         </PromptInputBody>

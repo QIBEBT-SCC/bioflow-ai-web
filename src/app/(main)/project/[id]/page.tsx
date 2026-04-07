@@ -9,6 +9,8 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
+import { ChatSidebar } from '@/components/chat/chat-sidebar'
+import { ChatSidebarToggle } from '@/components/chat/chat-sidebar-toggle'
 import { ProjectDetailCard } from '@/components/project/project-detail-card'
 import { ProjectFileMappings } from '@/components/project/project-file-mappings'
 import { ProjectWorkflowList } from '@/components/project-workflow/project-workflow-list'
@@ -26,9 +28,7 @@ import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useProject } from '@/hooks/use-project'
-import { ChatSidebarToggle } from '@/components/chat/chat-sidebar-toggle'
 import { useChatSidebarStore } from '@/stores/chat-sidebar-store'
-import { ChatSidebar } from '@/components/chat/chat-sidebar'
 
 export default function ProjectDetailPage() {
   const params = useParams()
