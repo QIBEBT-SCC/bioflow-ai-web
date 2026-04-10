@@ -90,7 +90,7 @@ export const nodeTypes: Record<string, React.ComponentType<any>> = {
 //    默认值规则：string→''  string[]→[]  number→0  boolean→false
 // ─────────────────────────────────────────────
 export const nodeDefaultData: Record<string, Record<string, unknown>> = {
-  tool: { tool_uid: '', args: '' },
+  tool: { tool_uid: '', modifiable_params: '' },
   value_string: { value: '' },
   resource_file: { file_path: '' },
   resource_sequence: { r1: '', r2: '' },
