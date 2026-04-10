@@ -18,32 +18,39 @@ export const ToolNode = memo(function ToolNode() {
   const t = useTranslations('editor.tool_node')
   const nodeData =
     useNodesData<
-      Node<{ tool_uid: string; args: string; run_data?: RunData }, 'tool'>
+      Node<
+        { tool_uid: string; modifiable_params?: string; run_data?: RunData },
+        'tool'
+      >
     >(nodeId)
 
   const { data: toolData, isLoading } = useToolArg(
     nodeData?.data.tool_uid ?? '',
   )
-  const [args, setArgs] = useState<string>(nodeData?.data.args ?? '')
+  const [args, setArgs] = useState<string>(
+    nodeData?.data.modifiable_params ?? '',
+  )
 
   // 同步外部数据变化到本地state
   // biome-ignore lint/correctness/useExhaustiveDependencies: no need
   useEffect(() => {
-    if (nodeData?.data.args !== undefined && nodeData.data.args !== args) {
-      setArgs(nodeData.data.args)
+    if (
+      nodeData?.data.modifiable_params !== undefined &&
+      nodeData.data.modifiable_params !== args
+    ) {
+      setArgs(nodeData.data.modifiable_params)
     }
-  }, [nodeData?.data.args])
+  }, [nodeData?.data.modifiable_params])
 
-  // 初始化参数：只在工具数据加载完成且当前参数为空时同步可修改的静态参数
+  // 初始化参数：只在工具数据加载完成且节点尚未存储 modifiable_params 时写入默认值
+  // biome-ignore lint/correctness/useExhaustiveDependencies: nodeData.data.modifiable_params intentionally omitted — we only want to run once when toolData first loads
   useEffect(() => {
-    if (toolData && !args) {
+    if (toolData && nodeData?.data.modifiable_params === undefined) {
       const modifiableParams = toolData.modifiable_static_params ?? ''
-      if (modifiableParams) {
-        setArgs(modifiableParams)
-        updateNodeData(nodeId, { modifiable_params: modifiableParams })
-      }
+      setArgs(modifiableParams)
+      updateNodeData(nodeId, { modifiable_params: modifiableParams })
     }
-  }, [toolData, nodeId, updateNodeData, args])
+  }, [toolData, nodeId, updateNodeData])
 
   // 使用 useMemo 缓存 handles 对象，避免每次渲染都创建新对象
   const handles = useMemo(
