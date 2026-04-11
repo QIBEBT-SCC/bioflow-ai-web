@@ -1,6 +1,7 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
 import {
   getRecentTasks,
   getTask,
@@ -10,12 +11,15 @@ import {
   getTaskResult,
   getTasks,
 } from '@/app/actions/task'
+import { getToken } from '@/lib/api-client'
 import type {
   MonitorPublic,
   SimpleTaskPublic,
   TaskPublic,
   ToolOutput,
 } from '@/types/task'
+
+const FASTAPI_URL = process.env.NEXT_PUBLIC_API_URL ?? '/api/v1'
 
 // ============================================
 // Query Hooks (数据查询)
@@ -103,4 +107,67 @@ export const useTaskLog = (uid: string, refetchInterval?: number | false) => {
     staleTime: 5 * 60 * 1000,
     refetchInterval,
   })
+}
+
+/**
+ * 获取任务日志（SSE 实时推送版）
+ * - isRunning 为 false：仅发一次 GET 请求
+ * - isRunning 为 true：GET 获取初始日志后建立 SSE 连接，后端推送直至任务结束
+ */
+export const useTaskLogStream = (uid: string, isRunning: boolean) => {
+  const [content, setContent] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!uid) return
+
+    let controller: AbortController
+
+    async function init() {
+      const initial = await getTaskLog(uid)
+      setContent(initial.content)
+
+      if (!isRunning) return
+
+      controller = new AbortController()
+      const token = getToken()
+      const res = await fetch(`${FASTAPI_URL}/tasks/${uid}/log/stream`, {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        credentials: 'include',
+        signal: controller.signal,
+      })
+
+      if (!res.ok || !res.body) return
+
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true })
+
+        const lines = buffer.split('\n')
+        buffer = lines.pop() ?? ''
+
+        for (const line of lines) {
+          if (line.startsWith('data:')) {
+            const json = line.slice(5).trim()
+            if (!json) continue
+            try {
+              const data = JSON.parse(json) as { content: string }
+              setContent(data.content)
+            } catch {}
+          }
+        }
+      }
+    }
+
+    init().catch(() => {})
+    return () => controller?.abort()
+  }, [uid, isRunning])
+
+  return content
 }
