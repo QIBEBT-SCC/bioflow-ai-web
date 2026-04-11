@@ -47,6 +47,20 @@ const statusConfig = {
   },
 }
 
+function collectFilePaths(
+  nodes: RunFileNode[],
+  result = new Set<string>(),
+): Set<string> {
+  for (const node of nodes) {
+    if (node.type === 'file') {
+      result.add(node.path)
+    } else {
+      collectFilePaths(node.children, result)
+    }
+  }
+  return result
+}
+
 function renderOutputNode(node: RunFileNode) {
   if (node.type === 'folder') {
     return (
@@ -87,6 +101,7 @@ export function RunLeftPanel({
   onToggle,
 }: RunLeftPanelProps) {
   const [statsOpen, setStatsOpen] = useState(true)
+  const filePaths = collectFilePaths(runFiles ?? [])
 
   const Icon = statusConfig[run?.status ?? Status.WAITING].icon
 
@@ -155,8 +170,12 @@ export function RunLeftPanel({
             <FileTree
               defaultExpanded={new Set(['results', 'logs', 'reports'])}
               selectedPath={selectedFile}
-              // biome-ignore lint/suspicious/noExplicitAny: FileTree.onSelect conflicts with HTMLAttributes.onSelect
-              onSelect={((path: string) => onSelectFile(path)) as any}
+              onSelect={
+                ((path: unknown) => {
+                  if (typeof path === 'string' && filePaths.has(path))
+                    onSelectFile(path)
+                }) as never
+              }
               className='border-0 rounded-none'
             >
               {(runFiles ?? []).map(renderOutputNode)}
