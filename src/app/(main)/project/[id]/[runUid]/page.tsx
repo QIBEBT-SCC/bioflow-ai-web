@@ -3,15 +3,48 @@
 import type { Node as FlowNode, NodeChange } from '@xyflow/react'
 import { ReactFlowProvider, useNodesState } from '@xyflow/react'
 import { use, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { getRunFileBlobUrl, getRunFileContent } from '@/app/actions/run'
 import { ChatSidebar } from '@/components/chat/chat-sidebar'
+import { FileViewer } from '@/components/project/run/file-viewer'
 import { RunFlowCanvas } from '@/components/project/run/run-flow-canvas'
 import { RunLeftPanel } from '@/components/project/run/run-left-panel'
 import { RunPageHeader } from '@/components/project/run/run-page-header'
+import {
+  CANVAS_TAB_ID,
+  type FileTab,
+  type FileType,
+  RunTabBar,
+} from '@/components/project/run/run-tab-bar'
+
+const IMAGE_EXTS = new Set([
+  'png',
+  'jpg',
+  'jpeg',
+  'gif',
+  'svg',
+  'webp',
+  'bmp',
+  'tif',
+  'tiff',
+])
+const HTML_EXTS = new Set(['html', 'htm'])
+const PDF_EXTS = new Set(['pdf'])
+
+function getFileType(name: string): FileType {
+  const ext = name.split('.').pop()?.toLowerCase() ?? ''
+  if (IMAGE_EXTS.has(ext)) return 'image'
+  if (PDF_EXTS.has(ext)) return 'pdf'
+  if (HTML_EXTS.has(ext)) return 'html'
+  if (ext === 'json') return 'json'
+  return 'text'
+}
+
 import { RunTerminal } from '@/components/project/run/run-terminal'
 import { SidebarInset } from '@/components/ui/sidebar'
 import { useProject } from '@/hooks/use-project'
 import { useRunFiles, useRunStream } from '@/hooks/use-run'
 import { useTaskLogStream } from '@/hooks/use-task'
+import { cn } from '@/lib/utils'
 import { useChatSidebarStore } from '@/stores/chat-sidebar-store'
 import { type RunData, Status } from '@/types/run'
 
@@ -27,13 +60,16 @@ function RunFlowContent({
   const { data: runFiles } = useRunFiles(runUid)
   const isOpen = useChatSidebarStore((s) => s.isOpen)
   const [flowNodes, setFlowNodes, onNodesChange] = useNodesState<FlowNode>([])
-  const [selectedFile, setSelectedFile] = useState<string>()
   const [leftPanelOpen, setLeftPanelOpen] = useState(true)
   const [terminalOpen, setTerminalOpen] = useState(true)
   const [terminalHeight, setTerminalHeight] = useState(192)
   const isResizing = useRef(false)
   const startY = useRef(0)
   const startHeight = useRef(0)
+
+  // Tab 状态
+  const [openTabs, setOpenTabs] = useState<FileTab[]>([])
+  const [activeTabId, setActiveTabId] = useState<string>(CANVAS_TAB_ID)
 
   const handleResizeStart = useCallback(
     (e: React.MouseEvent) => {
@@ -128,6 +164,76 @@ function RunFlowContent({
     })
   }, [run?.edges, run?.nodes])
 
+  const handleSelectFile = useCallback(
+    async (path: string) => {
+      const name = path.split('/').pop() ?? path
+      // 已开启则直接切换
+      if (openTabs.some((t) => t.id === path)) {
+        setActiveTabId(path)
+        return
+      }
+      const fileType = getFileType(name)
+      // 创建 loading tab
+      setOpenTabs((prev) => [
+        ...prev,
+        { id: path, path, name, fileType, loading: true },
+      ])
+      setActiveTabId(path)
+      try {
+        if (fileType === 'image' || fileType === 'pdf') {
+          const blobUrl = await getRunFileBlobUrl(runUid, path)
+          setOpenTabs((prev) =>
+            prev.map((t) =>
+              t.id === path ? { ...t, loading: false, blobUrl } : t,
+            ),
+          )
+        } else {
+          const content = await getRunFileContent(runUid, path)
+          setOpenTabs((prev) =>
+            prev.map((t) =>
+              t.id === path ? { ...t, loading: false, content } : t,
+            ),
+          )
+        }
+      } catch (err) {
+        setOpenTabs((prev) =>
+          prev.map((t) =>
+            t.id === path ? { ...t, loading: false, error: String(err) } : t,
+          ),
+        )
+      }
+    },
+    [openTabs, runUid],
+  )
+
+  const handleCloseTab = useCallback(
+    (tabId: string) => {
+      setOpenTabs((prev) => {
+        const closing = prev.find((t) => t.id === tabId)
+        if (closing?.blobUrl) URL.revokeObjectURL(closing.blobUrl)
+        const newTabs = prev.filter((t) => t.id !== tabId)
+        if (activeTabId === tabId) {
+          const idx = prev.findIndex((t) => t.id === tabId)
+          const next = newTabs[idx] ?? newTabs[idx - 1]
+          setActiveTabId(next?.id ?? CANVAS_TAB_ID)
+        }
+        return newTabs
+      })
+    },
+    [activeTabId],
+  )
+
+  // 页面卸载时释放所有 blob URL
+  const openTabsRef = useRef(openTabs)
+  openTabsRef.current = openTabs
+  useEffect(() => {
+    return () => {
+      for (const tab of openTabsRef.current) {
+        if (tab.blobUrl) URL.revokeObjectURL(tab.blobUrl)
+      }
+    }
+  }, [])
+
   return (
     <SidebarInset className='h-screen flex flex-col overflow-hidden'>
       <RunPageHeader
@@ -137,35 +243,70 @@ function RunFlowContent({
         runName={run?.name}
       />
 
-      {/* 主内容区：左侧面板 + 右侧画布 */}
+      {/* 主内容区：左侧面板 + 右侧选项卡区域 */}
       <div className='flex flex-1 min-h-0 overflow-hidden'>
         <RunLeftPanel
           run={run}
           runFiles={runFiles}
-          selectedFile={selectedFile}
-          onSelectFile={setSelectedFile}
+          selectedFile={activeTabId !== CANVAS_TAB_ID ? activeTabId : undefined}
+          onSelectFile={handleSelectFile}
           isOpen={leftPanelOpen}
           onToggle={() => setLeftPanelOpen(!leftPanelOpen)}
         />
 
-        {/* 右侧：ReactFlow 画布 + 底部终端 */}
+        {/* 右侧：选项卡栏 + 内容区 */}
         <div className='flex flex-col flex-1 min-w-0 min-h-0'>
-          <RunFlowCanvas
-            nodes={flowNodes}
-            edges={edges}
-            onNodesChange={handleNodesChange}
-            onNodeClick={handleNodeClick}
-            onPaneClick={handlePaneClick}
+          <RunTabBar
+            activeTabId={activeTabId}
+            openTabs={openTabs}
+            onTabSelect={setActiveTabId}
+            onTabClose={handleCloseTab}
           />
 
-          <RunTerminal
-            logContent={logContent ?? ''}
-            isStreaming={isActiveNodeRunning}
-            isOpen={terminalOpen}
-            onToggle={() => setTerminalOpen(!terminalOpen)}
-            height={terminalHeight}
-            onResizeStart={handleResizeStart}
-          />
+          {/* 画布 + 终端（始终 mounted，切换 tab 时隐藏以保持状态） */}
+          <div
+            className={cn(
+              'flex flex-col flex-1 min-h-0',
+              activeTabId !== CANVAS_TAB_ID && 'hidden',
+            )}
+          >
+            <RunFlowCanvas
+              nodes={flowNodes}
+              edges={edges}
+              onNodesChange={handleNodesChange}
+              onNodeClick={handleNodeClick}
+              onPaneClick={handlePaneClick}
+            />
+
+            <RunTerminal
+              logContent={logContent ?? ''}
+              isStreaming={isActiveNodeRunning}
+              isOpen={terminalOpen}
+              onToggle={() => setTerminalOpen(!terminalOpen)}
+              height={terminalHeight}
+              onResizeStart={handleResizeStart}
+            />
+          </div>
+
+          {/* 文件查看器选项卡内容 */}
+          {openTabs.map((tab) => (
+            <div
+              key={tab.id}
+              className={cn(
+                'flex-1 overflow-hidden',
+                activeTabId !== tab.id && 'hidden',
+              )}
+            >
+              <FileViewer
+                fileName={tab.name}
+                fileType={tab.fileType}
+                content={tab.content}
+                blobUrl={tab.blobUrl}
+                loading={tab.loading}
+                error={tab.error}
+              />
+            </div>
+          ))}
         </div>
 
         {isOpen && <ChatSidebar pageKey={`run-${runUid}`} />}
