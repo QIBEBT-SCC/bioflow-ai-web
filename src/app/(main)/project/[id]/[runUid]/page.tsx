@@ -50,8 +50,8 @@ import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { StatusEdge } from '@/components/workflow/status-edge'
 import { useProject } from '@/hooks/use-project'
-import { useRun, useRunFiles } from '@/hooks/use-run'
-import { useTaskLog } from '@/hooks/use-task'
+import { useRunFiles, useRunStream } from '@/hooks/use-run'
+import { useTaskLogStream } from '@/hooks/use-task'
 import { useChatSidebarStore } from '@/stores/chat-sidebar-store'
 import { type RunData, type RunFileNode, Status } from '@/types/run'
 
@@ -110,11 +110,7 @@ function RunFlowContent({
   runUid: string
 }) {
   const { data: project } = useProject(projectId)
-  const { data: run } = useRun(runUid, (query) => {
-    const status = query.state.data?.status
-    if (status === Status.SUCCESS || status === Status.ERROR) return false
-    return 5000
-  })
+  const run = useRunStream(runUid)
   const { data: runFiles } = useRunFiles(runUid)
   const isOpen = useChatSidebarStore((s) => s.isOpen)
   const [flowNodes, setFlowNodes, onNodesChange] = useNodesState<FlowNode>([])
@@ -177,10 +173,7 @@ function RunFlowContent({
     )
   }, [activeTaskUid, flowNodes])
 
-  const { data: logData } = useTaskLog(
-    activeTaskUid ?? '',
-    isActiveNodeRunning ? 5000 : false,
-  )
+  const logContent = useTaskLogStream(activeTaskUid ?? '', isActiveNodeRunning)
 
   useEffect(() => {
     if (run?.nodes) setFlowNodes(run.nodes)
@@ -413,7 +406,7 @@ function RunFlowContent({
               style={terminalOpen ? { height: terminalHeight } : undefined}
             >
               <Terminal
-                output={logData?.content ?? ''}
+                output={logContent ?? ''}
                 isStreaming={isActiveNodeRunning}
                 className='rounded-none border-0'
                 style={{ height: terminalHeight }}
