@@ -61,11 +61,20 @@ function RunFlowContent({
   const isOpen = useChatSidebarStore((s) => s.isOpen)
   const [flowNodes, setFlowNodes, onNodesChange] = useNodesState<FlowNode>([])
   const [leftPanelOpen, setLeftPanelOpen] = useState(true)
+  const [leftPanelWidth, setLeftPanelWidth] = useState(288)
   const [terminalOpen, setTerminalOpen] = useState(true)
   const [terminalHeight, setTerminalHeight] = useState(192)
   const isResizing = useRef(false)
   const startY = useRef(0)
   const startHeight = useRef(0)
+  const isResizingLeft = useRef(false)
+  const startX = useRef(0)
+  const startLeftWidth = useRef(0)
+  const leftPanelDidDrag = useRef(false)
+  const [chatSidebarWidth, setChatSidebarWidth] = useState(400)
+  const isResizingChat = useRef(false)
+  const startXChat = useRef(0)
+  const startChatWidth = useRef(0)
 
   // Tab 状态
   const [openTabs, setOpenTabs] = useState<FileTab[]>([])
@@ -98,6 +107,71 @@ function RunFlowContent({
       window.addEventListener('mouseup', onMouseUp)
     },
     [terminalHeight],
+  )
+
+  const handleLeftPanelResizeStart = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault()
+      isResizingLeft.current = true
+      leftPanelDidDrag.current = false
+      startX.current = e.clientX
+      startLeftWidth.current = leftPanelWidth
+
+      const onMouseMove = (ev: MouseEvent) => {
+        if (!isResizingLeft.current) return
+        const delta = ev.clientX - startX.current
+        if (Math.abs(delta) > 3) leftPanelDidDrag.current = true
+        const newWidth = Math.min(
+          520,
+          Math.max(160, startLeftWidth.current + delta),
+        )
+        setLeftPanelWidth(newWidth)
+      }
+
+      const onMouseUp = () => {
+        isResizingLeft.current = false
+        window.removeEventListener('mousemove', onMouseMove)
+        window.removeEventListener('mouseup', onMouseUp)
+      }
+
+      window.addEventListener('mousemove', onMouseMove)
+      window.addEventListener('mouseup', onMouseUp)
+    },
+    [leftPanelWidth],
+  )
+
+  const handleLeftPanelToggle = useCallback(() => {
+    if (leftPanelDidDrag.current) return
+    setLeftPanelOpen((prev) => !prev)
+  }, [])
+
+  const handleChatResizeStart = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault()
+      isResizingChat.current = true
+      startXChat.current = e.clientX
+      startChatWidth.current = chatSidebarWidth
+
+      const onMouseMove = (ev: MouseEvent) => {
+        if (!isResizingChat.current) return
+        const delta = startXChat.current - ev.clientX
+        const newWidth = Math.min(
+          700,
+          Math.max(280, startChatWidth.current + delta),
+        )
+        setChatSidebarWidth(newWidth)
+      }
+
+      const onMouseUp = () => {
+        isResizingChat.current = false
+        window.removeEventListener('mousemove', onMouseMove)
+        window.removeEventListener('mouseup', onMouseUp)
+      }
+
+      window.addEventListener('mousemove', onMouseMove)
+      window.addEventListener('mouseup', onMouseUp)
+    },
+    [chatSidebarWidth],
   )
 
   const [selectedToolNodeId, setSelectedToolNodeId] = useState<
@@ -251,7 +325,9 @@ function RunFlowContent({
           selectedFile={activeTabId !== CANVAS_TAB_ID ? activeTabId : undefined}
           onSelectFile={handleSelectFile}
           isOpen={leftPanelOpen}
-          onToggle={() => setLeftPanelOpen(!leftPanelOpen)}
+          width={leftPanelWidth}
+          onToggle={handleLeftPanelToggle}
+          onResizeStart={handleLeftPanelResizeStart}
         />
 
         {/* 右侧：选项卡栏 + 内容区 */}
@@ -309,7 +385,13 @@ function RunFlowContent({
           ))}
         </div>
 
-        {isOpen && <ChatSidebar pageKey={`run-${runUid}`} />}
+        {isOpen && (
+          <ChatSidebar
+            pageKey={`run-${runUid}`}
+            width={chatSidebarWidth}
+            onResizeStart={handleChatResizeStart}
+          />
+        )}
       </div>
     </SidebarInset>
   )

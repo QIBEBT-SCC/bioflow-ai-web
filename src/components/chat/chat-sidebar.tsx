@@ -8,6 +8,7 @@ import {
   MessageSquareIcon,
   PlusIcon,
 } from 'lucide-react'
+import type React from 'react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   Conversation,
@@ -120,7 +121,15 @@ function SidebarHistoryMenu({
   )
 }
 
-function ChatSidebarInner({ pageKey }: { pageKey: string }) {
+function ChatSidebarInner({
+  pageKey,
+  width,
+  onResizeStart,
+}: {
+  pageKey: string
+  width: number
+  onResizeStart: (e: React.MouseEvent) => void
+}) {
   const { sessions, setSessionId } = useChatSidebarStore()
   const sessionId = sessions[pageKey] ?? null
 
@@ -176,85 +185,113 @@ function ChatSidebarInner({ pageKey }: { pageKey: string }) {
   const inputDisabled = sessionId === null
 
   return (
-    <div className='w-[400px] shrink-0 border-l flex flex-col h-full bg-background'>
-      {/* Header */}
-      <div className='flex items-center justify-between h-12 px-3 border-b'>
-        <span className='text-sm font-medium'>AI Chat</span>
-        <div className='flex items-center gap-1'>
-          <Button
-            variant='ghost'
-            size='icon'
-            className='size-7'
-            onClick={handleNewChat}
-            disabled={newChatDisabled}
-            title='New Chat'
-          >
-            {isCreating ? (
-              <Loader2Icon className='size-4 animate-spin' />
-            ) : (
-              <PlusIcon className='size-4' />
-            )}
-          </Button>
-          <SidebarHistoryMenu
-            currentSessionId={sessionId}
-            onSelect={handleSelectHistory}
-          />
-        </div>
-      </div>
+    <div className='shrink-0 flex h-full'>
+      {/* 左侧拖拽把手 */}
+      <button
+        type='button'
+        aria-label='拖拽调整宽度'
+        onMouseDown={onResizeStart}
+        className='w-1 shrink-0 border-l hover:bg-primary/40 transition-colors cursor-col-resize bg-background p-0'
+      />
 
-      {/* Conversation */}
-      <Conversation className='flex-1 min-h-0'>
-        <ConversationContent className='px-3'>
-          {messages.length === 0 ? (
-            <ConversationEmptyState
-              title='AI Assistant'
-              description='Ask anything about your project'
+      <div
+        className='flex flex-col h-full bg-background overflow-hidden'
+        style={{ width }}
+      >
+        {/* Header */}
+        <div className='flex items-center justify-between h-12 px-3 border-b'>
+          <span className='text-sm font-medium'>AI Chat</span>
+          <div className='flex items-center gap-1'>
+            <Button
+              variant='ghost'
+              size='icon'
+              className='size-7'
+              onClick={handleNewChat}
+              disabled={newChatDisabled}
+              title='New Chat'
+            >
+              {isCreating ? (
+                <Loader2Icon className='size-4 animate-spin' />
+              ) : (
+                <PlusIcon className='size-4' />
+              )}
+            </Button>
+            <SidebarHistoryMenu
+              currentSessionId={sessionId}
+              onSelect={handleSelectHistory}
             />
-          ) : (
-            messages.map((message, idx) => (
-              <ChatMessageParts
-                key={message.id}
-                message={message}
-                messages={messages}
-                messageIndex={idx}
-                status={status}
-              />
-            ))
-          )}
-          {status === 'submitted' && <Loader />}
-        </ConversationContent>
-        <ConversationScrollButton />
-      </Conversation>
+          </div>
+        </div>
 
-      {/* Input */}
-      <PromptInput onSubmit={handleSubmit} className='px-3 pb-3'>
-        <PromptInputBody>
-          <PromptInputTextarea
-            onChange={(e) => setText(e.target.value)}
-            ref={textareaRef}
-            value={text}
-            placeholder={
-              inputDisabled
-                ? 'Create or load a conversation to start chatting'
-                : 'Ask a question...'
-            }
-            disabled={inputDisabled}
-          />
-        </PromptInputBody>
-        <PromptInputFooter>
-          <div />
-          <PromptInputSubmit
-            disabled={inputDisabled || (!text && !status)}
-            status={status}
-          />
-        </PromptInputFooter>
-      </PromptInput>
+        {/* Conversation */}
+        <Conversation className='flex-1 min-h-0'>
+          <ConversationContent className='px-3'>
+            {messages.length === 0 ? (
+              <ConversationEmptyState
+                title='AI Assistant'
+                description='Ask anything about your project'
+              />
+            ) : (
+              messages.map((message, idx) => (
+                <ChatMessageParts
+                  key={message.id}
+                  message={message}
+                  messages={messages}
+                  messageIndex={idx}
+                  status={status}
+                />
+              ))
+            )}
+            {status === 'submitted' && <Loader />}
+          </ConversationContent>
+          <ConversationScrollButton />
+        </Conversation>
+
+        {/* Input */}
+        <PromptInput onSubmit={handleSubmit} className='px-3 pb-3'>
+          <PromptInputBody>
+            <PromptInputTextarea
+              onChange={(e) => setText(e.target.value)}
+              ref={textareaRef}
+              value={text}
+              placeholder={
+                inputDisabled
+                  ? 'Create or load a conversation to start chatting'
+                  : 'Ask a question...'
+              }
+              disabled={inputDisabled}
+            />
+          </PromptInputBody>
+          <PromptInputFooter>
+            <div />
+            <PromptInputSubmit
+              disabled={inputDisabled || (!text && !status)}
+              status={status}
+            />
+          </PromptInputFooter>
+        </PromptInput>
+      </div>
     </div>
   )
 }
 
-export function ChatSidebar({ pageKey }: { pageKey: string }) {
+export function ChatSidebar({
+  pageKey,
+  width,
+  onResizeStart,
+}: {
+  pageKey: string
+  width: number
+  onResizeStart: (e: React.MouseEvent) => void
+}) {
   const { sessions } = useChatSidebarStore()
   const sessionId = sessions[pageKey] ?? null
-  return <ChatSidebarInner key={sessionId || 'new'} pageKey={pageKey} />
+  return (
+    <ChatSidebarInner
+      key={sessionId || 'new'}
+      pageKey={pageKey}
+      width={width}
+      onResizeStart={onResizeStart}
+    />
+  )
 }
