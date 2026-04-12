@@ -41,6 +41,7 @@ function getFileType(name: string): FileType {
 
 import { RunTerminal } from '@/components/project/run/run-terminal'
 import { SidebarInset } from '@/components/ui/sidebar'
+import { useChatSidebarResize } from '@/hooks/use-chat-sidebar-resize'
 import { useProject } from '@/hooks/use-project'
 import { useRunFiles, useRunStream } from '@/hooks/use-run'
 import { useTaskLogStream } from '@/hooks/use-task'
@@ -71,10 +72,7 @@ function RunFlowContent({
   const startX = useRef(0)
   const startLeftWidth = useRef(0)
   const leftPanelDidDrag = useRef(false)
-  const [chatSidebarWidth, setChatSidebarWidth] = useState(400)
-  const isResizingChat = useRef(false)
-  const startXChat = useRef(0)
-  const startChatWidth = useRef(0)
+  const { chatSidebarWidth, handleChatResizeStart } = useChatSidebarResize()
 
   // Tab 状态
   const [openTabs, setOpenTabs] = useState<FileTab[]>([])
@@ -144,35 +142,6 @@ function RunFlowContent({
     if (leftPanelDidDrag.current) return
     setLeftPanelOpen((prev) => !prev)
   }, [])
-
-  const handleChatResizeStart = useCallback(
-    (e: React.MouseEvent) => {
-      e.preventDefault()
-      isResizingChat.current = true
-      startXChat.current = e.clientX
-      startChatWidth.current = chatSidebarWidth
-
-      const onMouseMove = (ev: MouseEvent) => {
-        if (!isResizingChat.current) return
-        const delta = startXChat.current - ev.clientX
-        const newWidth = Math.min(
-          700,
-          Math.max(280, startChatWidth.current + delta),
-        )
-        setChatSidebarWidth(newWidth)
-      }
-
-      const onMouseUp = () => {
-        isResizingChat.current = false
-        window.removeEventListener('mousemove', onMouseMove)
-        window.removeEventListener('mouseup', onMouseUp)
-      }
-
-      window.addEventListener('mousemove', onMouseMove)
-      window.addEventListener('mouseup', onMouseUp)
-    },
-    [chatSidebarWidth],
-  )
 
   const [selectedToolNodeId, setSelectedToolNodeId] = useState<
     string | undefined
