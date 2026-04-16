@@ -1,10 +1,6 @@
 'use client'
 
-import {
-  FileCode,
-  FlaskConical,
-  TestTubeDiagonal,
-} from 'lucide-react'
+import { FileCode, FlaskConical, TestTubeDiagonal } from 'lucide-react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { ChatSidebar } from '@/components/chat/chat-sidebar'
