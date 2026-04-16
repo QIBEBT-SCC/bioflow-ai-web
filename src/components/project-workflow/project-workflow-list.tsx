@@ -3,6 +3,7 @@
 import {
   ChevronDown,
   ChevronRight,
+  DownloadIcon,
   Loader2,
   PlayIcon,
   Trash2Icon,
@@ -30,6 +31,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import {
+  useDownloadWorkflowPackage,
   useProjectWorkflows,
   useRemoveWorkflowFromProject,
 } from '@/hooks/use-project-workflow'
@@ -54,6 +56,7 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
 
   const { data: workflows, isLoading } = useProjectWorkflows(projectId)
   const removeWorkflowMutation = useRemoveWorkflowFromProject()
+  const downloadMutation = useDownloadWorkflowPackage()
 
   const toggleExpand = (workflowUid: string) => {
     setExpandedWorkflows((prev) => {
@@ -188,6 +191,30 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
                       >
                         <PlayIcon className='h-4 w-4 mr-1' />
                         运行
+                      </Button>
+                      <Button
+                        variant='ghost'
+                        size='icon'
+                        className='text-muted-foreground hover:text-primary'
+                        onClick={() =>
+                          downloadMutation.mutate({
+                            projectId,
+                            workflowUid: workflow.workflow_uid,
+                          })
+                        }
+                        disabled={
+                          downloadMutation.isPending &&
+                          downloadMutation.variables?.workflowUid ===
+                            workflow.workflow_uid
+                        }
+                      >
+                        {downloadMutation.isPending &&
+                        downloadMutation.variables?.workflowUid ===
+                          workflow.workflow_uid ? (
+                          <Loader2 className='h-4 w-4 animate-spin' />
+                        ) : (
+                          <DownloadIcon className='h-4 w-4' />
+                        )}
                       </Button>
                       <Button
                         variant='ghost'
