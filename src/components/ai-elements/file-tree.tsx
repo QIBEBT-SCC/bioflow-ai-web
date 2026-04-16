@@ -7,6 +7,12 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import {
   ChevronRightIcon,
@@ -243,7 +249,14 @@ export const FileTreeFile = ({
             <FileTreeIcon>
               {icon ?? <FileIcon className="size-4 text-muted-foreground" />}
             </FileTreeIcon>
-            <FileTreeName>{name}</FileTreeName>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <FileTreeName>{name}</FileTreeName>
+                </TooltipTrigger>
+                <TooltipContent side="right">{name}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </>
         )}
       </div>

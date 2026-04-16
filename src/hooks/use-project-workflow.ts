@@ -1,8 +1,10 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import {
   addWorkflowToProject,
+  downloadWorkflowPackage,
   getProjectRun,
   getProjectRunCount,
   getProjectRuns,
@@ -104,6 +106,32 @@ export function useRemoveWorkflowFromProject() {
       queryClient.invalidateQueries({
         queryKey: ['projects', projectId, 'workflows'],
       })
+    },
+  })
+}
+
+export function useDownloadWorkflowPackage() {
+  return useMutation({
+    mutationFn: ({
+      projectId,
+      workflowUid,
+    }: {
+      projectId: string
+      workflowUid: string
+    }) => downloadWorkflowPackage(projectId, workflowUid),
+    onSuccess: ({ blob, filename }) => {
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = filename
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      URL.revokeObjectURL(url)
+      toast.success('工作流结果包下载成功')
+    },
+    onError: () => {
+      toast.error('工作流结果包下载失败')
     },
   })
 }

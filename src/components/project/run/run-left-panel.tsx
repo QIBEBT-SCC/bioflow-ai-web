@@ -10,6 +10,7 @@ import {
   Loader2Icon,
   XCircleIcon,
 } from 'lucide-react'
+import type React from 'react'
 import { useState } from 'react'
 import {
   FileTree,
@@ -89,7 +90,9 @@ interface RunLeftPanelProps {
   selectedFile?: string
   onSelectFile: (path: string) => void
   isOpen: boolean
+  width: number
   onToggle: () => void
+  onResizeStart: (e: React.MouseEvent) => void
 }
 
 export function RunLeftPanel({
@@ -98,7 +101,9 @@ export function RunLeftPanel({
   selectedFile,
   onSelectFile,
   isOpen,
+  width,
   onToggle,
+  onResizeStart,
 }: RunLeftPanelProps) {
   const [statsOpen, setStatsOpen] = useState(true)
   const filePaths = collectFilePaths(runFiles ?? [])
@@ -109,7 +114,8 @@ export function RunLeftPanel({
     <div className='flex shrink-0'>
       {/* 面板内容 */}
       <div
-        className={`flex flex-col overflow-y-auto bg-background transition-all duration-200 ${isOpen ? 'w-72 opacity-100' : 'w-0 opacity-0'} overflow-hidden`}
+        className={`flex flex-col overflow-y-auto bg-background overflow-hidden ${isOpen ? 'opacity-100' : 'w-0 opacity-0'}`}
+        style={isOpen ? { width } : undefined}
       >
         {/* 可折叠区块：运行统计 */}
         <Collapsible open={statsOpen} onOpenChange={setStatsOpen}>
@@ -184,12 +190,13 @@ export function RunLeftPanel({
         </div>
       </div>
 
-      {/* VSCode 式折叠把手 */}
+      {/* VSCode 式折叠把手 / 拖拽调宽把手 */}
       <button
         type='button'
         onClick={onToggle}
-        className='w-4 shrink-0 border-r flex items-center justify-center hover:bg-muted/60 transition-colors bg-background group relative'
-        title={isOpen ? '收起面板' : '展开面板'}
+        onMouseDown={onResizeStart}
+        className='w-4 shrink-0 border-r flex items-center justify-center hover:bg-muted/60 transition-colors bg-background group relative cursor-col-resize'
+        title={isOpen ? '拖拽调整宽度 / 点击收起' : '展开面板'}
       >
         <div className='absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity'>
           {isOpen ? (
