@@ -1,4 +1,4 @@
-import { clientFetch } from '@/lib/api-client'
+import { clearToken, clientFetch, getToken } from '@/lib/api-client'
 import type {
   AddWorkflowRequest,
   ProjectWorkflow,
@@ -95,6 +95,38 @@ export async function getProjectRuns(
  */
 export async function getProjectRunCount(projectId: string): Promise<number> {
   return await clientFetch<number>(`/projects/${projectId}/runs/count`)
+}
+
+/**
+ * 下载工作流所有运行结果打包（zip）
+ */
+export async function downloadWorkflowPackage(
+  projectId: string,
+  workflowUid: string,
+): Promise<{ blob: Blob; filename: string }> {
+  const FASTAPI_URL = process.env.NEXT_PUBLIC_API_URL ?? '/api/v1'
+  const token = getToken()
+  const res = await fetch(
+    `${FASTAPI_URL}/projects/${projectId}/workflows/${workflowUid}/package`,
+    {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    },
+  )
+  if (res.status === 401) {
+    clearToken()
+    throw new Error('Unauthorized')
+  }
+  if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`)
+
+  const blob = await res.blob()
+  const disposition = res.headers.get('content-disposition') ?? ''
+  const match = disposition.match(/filename="?([^"]+)"?/)
+  const filename = match?.[1] ?? `${workflowUid}_results.zip`
+  return { blob, filename }
 }
 
 /**
