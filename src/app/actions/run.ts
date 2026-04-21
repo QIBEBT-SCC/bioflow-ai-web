@@ -1,4 +1,4 @@
-import { clearToken, clientFetch, getToken } from '@/lib/api-client'
+import { clientFetch } from '@/lib/api-client'
 import type { RunFileNode, RunPublic, Statistics } from '@/types/run'
 import type { WorkflowDefinition } from '@/types/workflow'
 
@@ -87,20 +87,12 @@ export async function getRunFileBlobUrl(
   path: string,
 ): Promise<string> {
   const FASTAPI_URL = process.env.NEXT_PUBLIC_API_URL ?? '/api/v1'
-  const token = getToken()
   const res = await fetch(`${FASTAPI_URL}/runs/${runUid}/files/content`, {
     method: 'POST',
     credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ path }),
   })
-  if (res.status === 401) {
-    clearToken()
-    throw new Error('Unauthorized')
-  }
   if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`)
   const blob = await res.blob()
   return URL.createObjectURL(blob)

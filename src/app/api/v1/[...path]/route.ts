@@ -14,8 +14,15 @@ async function proxyRequest(
   const headers = new Headers(request.headers)
   headers.delete('host')
 
-  let body: BodyInit | null = null
   const method = request.method
+  if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
+    const csrfToken = request.cookies.get('csrf_token')?.value
+    if (csrfToken) {
+      headers.set('X-CSRF-Token', csrfToken)
+    }
+  }
+
+  let body: BodyInit | null = null
   if (method !== 'GET' && method !== 'HEAD') {
     body = await request.arrayBuffer()
   }
@@ -29,7 +36,6 @@ async function proxyRequest(
   })
 
   const responseHeaders = new Headers(response.headers)
-  // 移除可能导致问题的响应头
   responseHeaders.delete('transfer-encoding')
 
   return new NextResponse(response.body, {
