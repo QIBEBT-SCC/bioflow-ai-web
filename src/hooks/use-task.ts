@@ -11,7 +11,6 @@ import {
   getTaskResult,
   getTasks,
 } from '@/app/actions/task'
-import { getToken } from '@/lib/api-client'
 import type {
   MonitorPublic,
   SimpleTaskPublic,
@@ -129,11 +128,7 @@ export const useTaskLogStream = (uid: string, isRunning: boolean) => {
       if (!isRunning) return
 
       controller = new AbortController()
-      const token = getToken()
       const res = await fetch(`${FASTAPI_URL}/tasks/${uid}/log/stream`, {
-        headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
         credentials: 'include',
         signal: controller.signal,
       })

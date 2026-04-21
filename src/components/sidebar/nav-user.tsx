@@ -33,9 +33,8 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useLogout } from '@/hooks/use-auth-query'
 import { type Locale, localeNames, locales } from '@/i18n/config'
-import { clearToken } from '@/lib/api-client'
-
 import type { User } from '@/types/auth'
 
 interface NavUserProps {
@@ -45,6 +44,7 @@ interface NavUserProps {
 export function NavUser({ user }: NavUserProps) {
   const { isMobile } = useSidebar()
   const currentLocale = useLocale() as Locale
+  const logout = useLogout()
 
   const t = useTranslations()
 
@@ -55,10 +55,7 @@ export function NavUser({ user }: NavUserProps) {
   }
 
   const handleLogout = () => {
-    // 清除本地存储的 token
-    clearToken()
-    // 跳转登录
-    window.location.href = '/login'
+    logout.mutate()
   }
 
   if (!user) {
@@ -169,9 +166,12 @@ export function NavUser({ user }: NavUserProps) {
                 </DropdownMenuSub>
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout}>
+              <DropdownMenuItem
+                onClick={handleLogout}
+                disabled={logout.isPending}
+              >
                 <LogOut />
-                Log out
+                {logout.isPending ? '退出中...' : 'Log out'}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

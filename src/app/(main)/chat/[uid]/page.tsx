@@ -81,7 +81,6 @@ import {
   useChatSession,
   useCreateChatSession,
 } from '@/hooks/use-chat'
-import { getToken } from '@/lib/api-client'
 import { useChatStore } from '@/stores/chat-store'
 
 const AttachmentItem = memo(
@@ -187,9 +186,6 @@ export default function ChatPage() {
   const { messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({
       api: `${process.env.NEXT_PUBLIC_API_URL}/chat/${sessionId}/completions`,
-      headers: {
-        Authorization: `Bearer ${getToken()}`,
-      },
       credentials: 'include',
     }),
     messages: initMessages,
