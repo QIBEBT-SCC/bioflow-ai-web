@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { ClientApiError, clientFetch, setToken } from '@/lib/api-client'
+import { ClientApiError, clientFetch } from '@/lib/api-client'
 import { cn } from '@/lib/utils'
 import type { User } from '@/types/auth'
 
@@ -37,6 +37,7 @@ export function LoginForm({
       // 调用 FastAPI 登录接口
       const res = await fetch(`/api/v1/auth/token`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
@@ -59,24 +60,16 @@ export function LoginForm({
         )
       }
 
-      // 登录成功：保存 token 到 localStorage 和 Cookie
-      const data = await res.json()
-      if (data.access_token) {
-        setToken(data.access_token)
-
-        // 立即获取用户信息并写入 Query 缓存
-        // 这样 GuestGuard 能立即感知到已登录状态，不会把用户打回登录页
-        try {
-          const user = await clientFetch<User>('/auth/me')
-          queryClient.setQueryData(['auth', 'me'], user)
-        } catch {
-          // 即使获取用户信息失败，token 已保存，跳转后 AuthGuard 会正常处理
-        }
-
-        router.push('/chat')
-      } else {
-        setError('登录响应格式错误')
+      // 登录成功：后端已通过 Set-Cookie 设置 HttpOnly Cookie
+      // 立即获取用户信息写入 Query 缓存，使 GuestGuard 能立即感知登录状态
+      try {
+        const user = await clientFetch<User>('/auth/me')
+        queryClient.setQueryData(['auth', 'me'], user)
+      } catch {
+        // 即使失败，cookie 已设置，跳转后 AuthGuard 会正常处理
       }
+
+      router.push('/chat')
     } catch (err) {
       console.error('Login error:', err)
       if (err instanceof ClientApiError) {

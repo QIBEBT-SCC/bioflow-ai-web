@@ -14,7 +14,6 @@ import {
   getRuns,
   newRunInstance,
 } from '@/app/actions/run'
-import { getToken } from '@/lib/api-client'
 import type { RunFileNode, RunPublic, Statistics } from '@/types/run'
 import { Status } from '@/types/run'
 import type { WorkflowDefinition } from '@/types/workflow'
@@ -148,11 +147,7 @@ export const useRunStream = (uid: string) => {
         return
 
       controller = new AbortController()
-      const token = getToken()
       const res = await fetch(`${FASTAPI_URL}/runs/${uid}/stream`, {
-        headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
         credentials: 'include',
         signal: controller.signal,
       })

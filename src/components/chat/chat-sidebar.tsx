@@ -40,7 +40,6 @@ import {
   useInfiniteChats,
 } from '@/hooks/use-chat'
 import { useInView } from '@/hooks/use-in-view'
-import { getToken } from '@/lib/api-client'
 import { useChatSidebarStore } from '@/stores/chat-sidebar-store'
 import type { ChatSessionPublic } from '@/types/chat'
 
@@ -143,7 +142,6 @@ function ChatSidebarInner({
   const transport = sessionId
     ? new DefaultChatTransport({
         api: `${process.env.NEXT_PUBLIC_API_URL}/chat/${sessionId}/completions`,
-        headers: { Authorization: `Bearer ${getToken()}` },
         credentials: 'include',
       })
     : undefined
