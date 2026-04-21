@@ -1,6 +1,16 @@
-# CLAUDE.md
+<!-- BEGIN:nextjs-agent-rules -->
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+# Next.js: ALWAYS read docs before coding
+
+Before any Next.js work, find and read the relevant doc in `node_modules/next/dist/docs/`. Your training data is outdated — the docs are the source of truth.
+
+<!-- END:nextjs-agent-rules -->
+
+# BioFlow AI web
+
+## Architecture
+
+BioFlow AI Web — a bioinformatics workflow platform built with Next.js 16 (App Router), React 19, and TypeScript.
 
 ## Commands
 
@@ -12,18 +22,14 @@ pnpm lint             # Lint with Biome
 pnpm format           # Format with Biome (auto-write)
 ```
 
-## Architecture
-
-BioFlow AI Web — a bioinformatics workflow platform built with Next.js 16 (App Router), React 19, and TypeScript.
-
 ### Stack
 
-- **UI**: Tailwind CSS v4 + shadcn/ui (Radix) + ai-element + motion
+- **UI**: Tailwind CSS v4 + shadcn/ui (Radix)
 - **State**: Zustand (UI state) + TanStack Query v5 (server state)
 - **i18n**: next-intl v4 (server-side mode, locales: `zh`/`en`, default: `zh`)
 - **Node Editor**: @xyflow/react for workflow visualization
 - **AI**: Vercel AI SDK (@ai-sdk/react with custom backend)
-- **Markdown**: streamdown with code/math/mermaid/cjk plugins
+- **AI UI**: Vercel ai-element
 - **Linter/Formatter**: Biome (no semicolons, single quotes, 2-space indent)
 - **Package Manager**: pnpm
 
