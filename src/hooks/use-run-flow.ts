@@ -45,13 +45,24 @@ export function useRunFlow(run: RunPublic | null) {
     })),
   })
 
-  const allToolsLoaded =
-    toolQueries.length === 0 || toolQueries.every((q) => !q.isLoading)
+  // 只有当 run 已加载，并且所有 tool 节点的参数都请求成功后，才认为 handles 就绪。
+  const hasToolNodes = !!run?.nodes?.some((n) => n.type === 'tool')
+  const allToolsLoaded = hasToolNodes
+    ? toolQueries.length > 0 && toolQueries.every((q) => q.isSuccess)
+    : !!run?.nodes
 
-  // 延迟一个 render cycle：等 Handle 组件的 effect commit 完成后再传入 edges，
+  // 延迟到下一帧再放行 edges，确保 ToolNode 重新渲染并把真实 handles commit 到 DOM。
   const [edgesReady, setEdgesReady] = useState(false)
   useEffect(() => {
-    setEdgesReady(allToolsLoaded)
+    if (!allToolsLoaded) {
+      setEdgesReady(false)
+      return
+    }
+    const raf1 = requestAnimationFrame(() => {
+      const raf2 = requestAnimationFrame(() => setEdgesReady(true))
+      return () => cancelAnimationFrame(raf2)
+    })
+    return () => cancelAnimationFrame(raf1)
   }, [allToolsLoaded])
 
   const edges = useMemo<Edge[]>(() => {
