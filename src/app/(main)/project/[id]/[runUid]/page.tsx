@@ -1,7 +1,7 @@
 'use client'
 
-import type { Node as FlowNode, NodeChange } from '@xyflow/react'
-import { ReactFlowProvider, useNodesState } from '@xyflow/react'
+import type { Node as FlowNode } from '@xyflow/react'
+import { ReactFlowProvider } from '@xyflow/react'
 import { use, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { getRunFileBlobUrl, getRunFileContent } from '@/app/actions/run'
 import { ChatSidebar } from '@/components/chat/chat-sidebar'
@@ -15,6 +15,16 @@ import {
   type FileType,
   RunTabBar,
 } from '@/components/project/run/run-tab-bar'
+import { RunTerminal } from '@/components/project/run/run-terminal'
+import { SidebarInset } from '@/components/ui/sidebar'
+import { useChatSidebarResize } from '@/hooks/use-chat-sidebar-resize'
+import { useProject } from '@/hooks/use-project'
+import { useRunFiles, useRunStream } from '@/hooks/use-run'
+import { useRunFlow } from '@/hooks/use-run-flow'
+import { useTaskLogStream } from '@/hooks/use-task'
+import { cn } from '@/lib/utils'
+import { useChatSidebarStore } from '@/stores/chat-sidebar-store'
+import { type RunData, Status } from '@/types/run'
 
 const IMAGE_EXTS = new Set([
   'png',
@@ -39,16 +49,6 @@ function getFileType(name: string): FileType {
   return 'text'
 }
 
-import { RunTerminal } from '@/components/project/run/run-terminal'
-import { SidebarInset } from '@/components/ui/sidebar'
-import { useChatSidebarResize } from '@/hooks/use-chat-sidebar-resize'
-import { useProject } from '@/hooks/use-project'
-import { useRunFiles, useRunStream } from '@/hooks/use-run'
-import { useTaskLogStream } from '@/hooks/use-task'
-import { cn } from '@/lib/utils'
-import { useChatSidebarStore } from '@/stores/chat-sidebar-store'
-import { type RunData, Status } from '@/types/run'
-
 function RunFlowContent({
   projectId,
   runUid,
@@ -60,7 +60,7 @@ function RunFlowContent({
   const run = useRunStream(runUid)
   const { data: runFiles } = useRunFiles(runUid)
   const isOpen = useChatSidebarStore((s) => s.isOpen)
-  const [flowNodes, setFlowNodes, onNodesChange] = useNodesState<FlowNode>([])
+  const { flowNodes, edges, handleNodesChange } = useRunFlow(run)
   const [leftPanelOpen, setLeftPanelOpen] = useState(true)
   const [leftPanelWidth, setLeftPanelWidth] = useState(288)
   const [terminalOpen, setTerminalOpen] = useState(true)
@@ -74,7 +74,6 @@ function RunFlowContent({
   const leftPanelDidDrag = useRef(false)
   const { chatSidebarWidth, handleChatResizeStart } = useChatSidebarResize()
 
-  // Tab 状态
   const [openTabs, setOpenTabs] = useState<FileTab[]>([])
   const [activeTabId, setActiveTabId] = useState<string>(CANVAS_TAB_ID)
 
@@ -167,20 +166,6 @@ function RunFlowContent({
 
   const logContent = useTaskLogStream(activeTaskUid ?? '', isActiveNodeRunning)
 
-  useEffect(() => {
-    if (run?.nodes) setFlowNodes(run.nodes)
-  }, [run?.nodes, setFlowNodes])
-
-  const handleNodesChange = useCallback(
-    (changes: NodeChange<FlowNode>[]) => {
-      const positionChanges = changes.filter(
-        (c) => c.type === 'position' || c.type === 'dimensions',
-      )
-      if (positionChanges.length > 0) onNodesChange(positionChanges)
-    },
-    [onNodesChange],
-  )
-
   const handleNodeClick = useCallback(
     (_event: React.MouseEvent, node: FlowNode) => {
       if (node.type === 'tool') setSelectedToolNodeId(node.id)
@@ -192,31 +177,14 @@ function RunFlowContent({
     setSelectedToolNodeId(undefined)
   }, [])
 
-  const edges = useMemo(() => {
-    if (!run?.edges || !run?.nodes) return []
-    const nodeMap = new Map(run.nodes.map((n) => [n.id, n]))
-    const withAnimate = [Status.RUNNING, Status.WAITING, undefined]
-    return run.edges.map((e) => {
-      const sourceNode = nodeMap.get(e.source)
-      const runData = sourceNode?.data?.run_data as RunData | undefined
-      const status = runData?.status
-      return {
-        ...e,
-        animated: withAnimate.includes(status),
-      }
-    })
-  }, [run?.edges, run?.nodes])
-
   const handleSelectFile = useCallback(
     async (path: string) => {
       const name = path.split('/').pop() ?? path
-      // 已开启则直接切换
       if (openTabs.some((t) => t.id === path)) {
         setActiveTabId(path)
         return
       }
       const fileType = getFileType(name)
-      // 创建 loading tab
       setOpenTabs((prev) => [
         ...prev,
         { id: path, path, name, fileType, loading: true },
@@ -266,7 +234,6 @@ function RunFlowContent({
     [activeTabId],
   )
 
-  // 页面卸载时释放所有 blob URL
   const openTabsRef = useRef(openTabs)
   openTabsRef.current = openTabs
   useEffect(() => {
