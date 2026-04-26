@@ -54,7 +54,7 @@ export interface LLMModelUpdate {
 
 export interface LLMModelPublic {
   id: number
-  provider_id: number
+  provider_name: string
   name: string
   input_price: number
   output_price: number
