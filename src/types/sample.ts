@@ -53,13 +53,6 @@ export interface CreateSampleRequest {
   project_id: string
   sample_name: string
   meta_data?: Record<string, unknown>
-  files?: Array<{
-    data_type: SampleFileType
-    file_path: string
-    file_format: string
-    file_size: number
-    md5_checksum: string
-  }>
 }
 
 /**
