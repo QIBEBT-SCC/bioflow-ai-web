@@ -900,7 +900,10 @@ export default function LLMSettingPage() {
                         {/* Models List */}
                         <div className='space-y-3'>
                           {provider.models.map((model) => (
-                            <Card key={model.id} className='border bg-muted/30'>
+                            <Card
+                              key={model.id}
+                              className='border bg-muted/30 pt-2'
+                            >
                               <div className='p-4'>
                                 <div className='flex items-center justify-between mb-3'>
                                   <div className='flex items-center gap-3'>
@@ -993,7 +996,7 @@ export default function LLMSettingPage() {
                                           htmlFor={`input-price-${model.id}`}
                                           className='text-xs'
                                         >
-                                          Input ($/1k)
+                                          Input ($/1M)
                                         </Label>
                                         <Input
                                           id={`input-price-${model.id}`}
@@ -1014,7 +1017,7 @@ export default function LLMSettingPage() {
                                           htmlFor={`output-price-${model.id}`}
                                           className='text-xs'
                                         >
-                                          Output ($/1k)
+                                          Output ($/1M)
                                         </Label>
                                         <Input
                                           id={`output-price-${model.id}`}
@@ -1035,7 +1038,7 @@ export default function LLMSettingPage() {
                                           htmlFor={`cache-read-price-${model.id}`}
                                           className='text-xs'
                                         >
-                                          Cache Read ($/1k)
+                                          Cache Read ($/1M)
                                         </Label>
                                         <Input
                                           id={`cache-read-price-${model.id}`}
@@ -1081,7 +1084,7 @@ export default function LLMSettingPage() {
                                         Input Price
                                       </p>
                                       <p className='font-medium'>
-                                        ${model.input_price}/1K tokens
+                                        ${model.input_price}/1M tokens
                                       </p>
                                     </div>
                                     <div className='space-y-1'>
@@ -1089,7 +1092,7 @@ export default function LLMSettingPage() {
                                         Output Price
                                       </p>
                                       <p className='font-medium'>
-                                        ${model.output_price}/1K tokens
+                                        ${model.output_price}/1M tokens
                                       </p>
                                     </div>
                                     <div className='space-y-1'>
@@ -1097,7 +1100,7 @@ export default function LLMSettingPage() {
                                         Cache Read Price
                                       </p>
                                       <p className='font-medium'>
-                                        ${model.cache_read_price}/1K tokens
+                                        ${model.cache_read_price}/1M tokens
                                       </p>
                                     </div>
                                   </div>
