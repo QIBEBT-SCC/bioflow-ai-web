@@ -4,7 +4,6 @@ import {
   Bot,
   EditIcon,
   FolderOpenIcon,
-  HouseIcon,
   NetworkIcon,
   TvMinimalIcon,
 } from 'lucide-react'
@@ -68,15 +67,6 @@ export function NavMain() {
   return (
     <SidebarGroup>
       <SidebarMenu>
-        {/* Homepage entry */}
-        <SidebarMenuItem>
-          <SidebarMenuButton asChild isActive={false} tooltip={t('homepage')}>
-            <Link href='/'>
-              <HouseIcon />
-              <span>{t('homepage')}</span>
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
         <SidebarSeparator />
         {projects.map((item) => (
           <SidebarMenuItem key={item.name}>
