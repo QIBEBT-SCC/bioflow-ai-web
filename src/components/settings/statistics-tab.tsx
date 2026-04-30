@@ -8,6 +8,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   CpuIcon,
+  DownloadIcon,
   LayersIcon,
   SettingsIcon,
   TrendingUpIcon,
@@ -42,6 +43,7 @@ import {
 } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
+  useDownloadLLMStatisticsDetails,
   useLLMStatisticsDetails,
   useLLMStatisticsOverview,
 } from '@/hooks/use-setting'
@@ -76,6 +78,23 @@ export function StatisticsTab() {
 
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
+
+  const { mutateAsync: downloadStatistics, isPending: isExporting } =
+    useDownloadLLMStatisticsDetails()
+
+  const handleExport = async () => {
+    const { content, filename } = await downloadStatistics({
+      start_date: dateRange.from?.toISOString(),
+      end_date: dateRange.to?.toISOString(),
+    })
+    const blob = new Blob([content], { type: 'text/csv' })
+    const objectUrl = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = objectUrl
+    a.download = filename
+    a.click()
+    URL.revokeObjectURL(objectUrl)
+  }
 
   const { data: statsData = defaultStats } = useLLMStatisticsOverview({
     start_date: dateRange.from?.toISOString(),
@@ -515,6 +534,16 @@ export function StatisticsTab() {
             <Badge variant='secondary'>
               {t('total_records', { total: usageRecordsRes?.total || 0 })}
             </Badge>
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={handleExport}
+              disabled={isExporting}
+              className='gap-2'
+            >
+              <DownloadIcon className='h-4 w-4' />
+              {isExporting ? t('exporting') : t('export_csv')}
+            </Button>
           </div>
         </div>
 

@@ -24,9 +24,19 @@ async function refreshToken(): Promise<void> {
 
 export async function clientFetch<T = unknown>(
   endpoint: string,
-  options?: RequestInit & { params?: Record<string, string> },
+  options?: RequestInit & { params?: Record<string, string>; raw?: false },
+  _isRetry?: boolean,
+): Promise<T>
+export async function clientFetch(
+  endpoint: string,
+  options: RequestInit & { params?: Record<string, string>; raw: true },
+  _isRetry?: boolean,
+): Promise<Response>
+export async function clientFetch<T = unknown>(
+  endpoint: string,
+  options?: RequestInit & { params?: Record<string, string>; raw?: boolean },
   _isRetry = false,
-): Promise<T> {
+): Promise<T | Response> {
   let url = `${FASTAPI_URL}${endpoint}`
   if (options?.params) {
     const searchParams = new URLSearchParams(options.params).toString()
@@ -81,6 +91,10 @@ export async function clientFetch<T = unknown>(
       res.status,
       errorData,
     )
+  }
+
+  if (options?.raw) {
+    return res
   }
 
   if (res.status === 204) {
