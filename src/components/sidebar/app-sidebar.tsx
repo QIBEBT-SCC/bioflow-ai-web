@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import Link from 'next/link'
 import type * as React from 'react'
 import { NavMain } from '@/components/sidebar/nav-main'
 import { NavSecond } from '@/components/sidebar/nav-second'
@@ -23,7 +24,7 @@ function SidebarLogo() {
   const { state } = useSidebar()
   const collapsed = state === 'collapsed'
   return (
-    <div className='flex items-center justify-center px-0 py-0'>
+    <Link href='/' className='flex items-center justify-center px-0 py-0'>
       <Image
         src={collapsed ? '/logo_only.svg' : '/logo_and_text.svg'}
         alt='BioFlow AI'
@@ -32,7 +33,7 @@ function SidebarLogo() {
         className='w-[80%] h-auto'
         priority
       />
-    </div>
+    </Link>
   )
 }
 
