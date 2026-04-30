@@ -8,5 +8,26 @@
     "signup": "Sign up",
     "title": "Welcome Back",
     "username": "Username"
+  },
+  "Register": {
+    "title": "Create an account",
+    "email": "Email",
+    "email_placeholder": "user@example.com",
+    "username": "Username",
+    "username_optional": "(optional)",
+    "password": "Password",
+    "confirm_password": "Confirm Password",
+    "password_mismatch": "Passwords do not match",
+    "invalid_params": "Invalid request parameters",
+    "register_failed": "Registration failed",
+    "network_error": "Network error, please try again later",
+    "registering": "Registering...",
+    "register": "Sign up",
+    "have_account": "Already have an account?",
+    "login": "Sign in",
+    "strength_weak": "Weak",
+    "strength_fair": "Fair",
+    "strength_good": "Good",
+    "strength_strong": "Strong"
   }
 }
