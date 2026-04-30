@@ -1,0 +1,19 @@
+{
+  "Home": {
+    "lang_toggle": "Switch language",
+    "login": "Sign in",
+    "register": "Sign up",
+    "subtitle": "An intelligent bioinformatics analysis platform powered by visual node workflows",
+    "desc1": "BioFlow AI is a next-generation platform for bioinformatics researchers. Through an intuitive <highlight>visual node editor</highlight>, complex analysis pipelines are decomposed into reusable modules — drag-and-drop to build RNA-seq, WGS, single-cell, and more.",
+    "desc2": "The platform comes with a built-in <highlight>AI agent</highlight> that understands natural-language instructions, automatically plans analysis steps, assists with parameter tuning and result interpretation — making bioinformatics smarter and faster.",
+    "badge_workflow": "Node Workflows",
+    "badge_ai": "AI Agent",
+    "badge_omics": "Multi-omics",
+    "badge_viz": "Visual Results",
+    "badge_ext": "Open Extension",
+    "loading": "Loading...",
+    "cta_start": "Get Started →",
+    "cta_register": "Sign up free",
+    "footer": "© {year} BioFlow AI. Built for bioinformatics researchers."
+  }
+}
