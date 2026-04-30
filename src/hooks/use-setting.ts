@@ -154,6 +154,7 @@ export function useCreateLLMModel() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['llm-models'] })
       queryClient.invalidateQueries({ queryKey: ['llm-provider-models'] })
+      queryClient.invalidateQueries({ queryKey: ['llm-providers'] })
     },
   })
 }
@@ -166,6 +167,7 @@ export function useUpdateLLMModel() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['llm-models'] })
       queryClient.invalidateQueries({ queryKey: ['llm-provider-models'] })
+      queryClient.invalidateQueries({ queryKey: ['llm-providers'] })
     },
   })
 }
@@ -177,6 +179,7 @@ export function useDeleteLLMModel() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['llm-models'] })
       queryClient.invalidateQueries({ queryKey: ['llm-provider-models'] })
+      queryClient.invalidateQueries({ queryKey: ['llm-providers'] })
     },
   })
 }
