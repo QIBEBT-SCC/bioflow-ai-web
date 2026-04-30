@@ -67,7 +67,7 @@ export async function clientFetch<T = unknown>(
     } catch {
       if (typeof window !== 'undefined') {
         // 公开页面（/login 等）不执行跳转：useAuth 直接返回 null 即可，
-        const isPublicPage = ['/login', '/register'].some(
+        const isPublicPage = ['/', '/login', '/register'].some(
           (p) =>
             window.location.pathname === p ||
             window.location.pathname.startsWith(`${p}/`),
