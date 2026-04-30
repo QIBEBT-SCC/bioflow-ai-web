@@ -32,11 +32,11 @@ export function useLogout() {
     },
     onSuccess: () => {
       queryClient.clear()
-      window.location.href = '/login'
+      window.location.href = '/'
     },
     onError: () => {
       queryClient.clear()
-      window.location.href = '/login'
+      window.location.href = '/'
     },
   })
 }
