@@ -6,6 +6,7 @@ import {
   createLLMProvider,
   deleteLLMModel,
   deleteLLMProvider,
+  downloadLLMStatisticsDetails,
   getLLMModel,
   getLLMModels,
   getLLMProvider,
@@ -105,6 +106,13 @@ export function useLLMStatisticsDetails(params: {
   return useQuery({
     queryKey: ['llm-statistics-details', params],
     queryFn: () => getLLMStatisticsDetails(params),
+  })
+}
+
+export function useDownloadLLMStatisticsDetails() {
+  return useMutation({
+    mutationFn: (params?: { start_date?: string; end_date?: string }) =>
+      downloadLLMStatisticsDetails(params),
   })
 }
 

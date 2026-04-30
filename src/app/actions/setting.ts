@@ -144,3 +144,22 @@ export async function getLLMStatisticsDetails(params: {
 
   return await clientFetch<LLMStatisticDetailsResponse>(url)
 }
+
+export async function downloadLLMStatisticsDetails(params?: {
+  start_date?: string
+  end_date?: string
+}): Promise<{ content: string; filename: string }> {
+  const searchParams = new URLSearchParams()
+  if (params?.start_date) searchParams.set('start_date', params.start_date)
+  if (params?.end_date) searchParams.set('end_date', params.end_date)
+
+  const queryString = searchParams.toString()
+  const url = `/settings/statistics/details/download${queryString ? `?${queryString}` : ''}`
+
+  const res = await clientFetch(url, { raw: true })
+  const disposition = res.headers.get('content-disposition')
+  const filename =
+    disposition?.match(/filename="(.+)"/)?.[1] ?? 'statistics.csv'
+  const content = await res.text()
+  return { content, filename }
+}

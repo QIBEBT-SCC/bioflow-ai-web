@@ -94,6 +94,8 @@
       "pagination_info": "显示第 {start} - {end} 条，共 {total} 条",
       "prev_page": "上一页",
       "next_page": "下一页",
+      "export_csv": "导出 CSV",
+      "exporting": "导出中...",
       "model_type_chat": "对话模型",
       "model_type_vision": "视觉模型",
       "model_type_agent": "智能体模型",

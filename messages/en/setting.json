@@ -94,6 +94,8 @@
       "pagination_info": "Showing {start} - {end} of {total}",
       "prev_page": "Previous",
       "next_page": "Next",
+      "export_csv": "Export CSV",
+      "exporting": "Exporting...",
       "model_type_chat": "Chat Model",
       "model_type_vision": "Vision Model",
       "model_type_agent": "Agent Model",
