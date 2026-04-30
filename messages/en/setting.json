@@ -40,7 +40,11 @@
       "enable_model_desc": "Whether to activate this model",
       "no_models": "No models configured, click the button above to add a model",
       "no_providers": "No Provider configured",
-      "no_providers_desc": "Start by adding your first AI model provider"
+      "no_providers_desc": "Start by adding your first AI model provider",
+      "extra_body": "Extra Body",
+      "extra_body_desc": "Additional parameters appended to the request in JSON format",
+      "extra_body_invalid": "Invalid JSON format",
+      "extra_body_empty": "None"
     },
     "llm_statistic": {
       "breadcrumb": "Task Monitor",
