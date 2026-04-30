@@ -1,6 +1,10 @@
 import { type NextRequest, NextResponse } from 'next/server'
 
-const PUBLIC_PATHS = ['/login', '/register']
+// 无需登录即可访问，已登录用户访问时重定向到首页
+const GUEST_ONLY_PATHS = ['/login', '/register']
+
+// 无需登录即可访问，已登录/未登录均放行
+const OPEN_PATHS = ['/']
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -11,13 +15,17 @@ export function proxy(request: NextRequest) {
   const hasSession =
     request.cookies.has('access_token') || request.cookies.has('refresh_token')
 
-  const isPublicPath = PUBLIC_PATHS.some(
+  if (OPEN_PATHS.some((p) => pathname === p)) {
+    return NextResponse.next()
+  }
+
+  const isGuestOnly = GUEST_ONLY_PATHS.some(
     (p) => pathname === p || pathname.startsWith(`${p}/`),
   )
 
-  if (isPublicPath) {
+  if (isGuestOnly) {
     return hasSession
-      ? NextResponse.redirect(new URL('/chat', request.url))
+      ? NextResponse.redirect(new URL('/', request.url))
       : NextResponse.next()
   }
 
@@ -29,5 +37,7 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon\\.ico|api/).*)'],
+  matcher: [
+    '/((?!_next/static|_next/image|favicon\\.ico|api/|.*\\.svg|.*\\.png|.*\\.jpg|.*\\.jpeg|.*\\.gif|.*\\.ico|.*\\.webp).*)',
+  ],
 }
