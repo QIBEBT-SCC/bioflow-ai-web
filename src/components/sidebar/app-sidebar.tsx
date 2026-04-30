@@ -29,8 +29,7 @@ function SidebarLogo() {
         alt='BioFlow AI'
         width={collapsed ? 32 : 140}
         height={32}
-        className='w-[95%]'
-        style={{ height: 'auto' }}
+        className='w-[80%] h-auto'
         priority
       />
     </div>

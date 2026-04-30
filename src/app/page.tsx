@@ -1,16 +1,11 @@
 'use client'
 
-import {
-  BookOpenIcon,
-  GithubIcon,
-  Languages,
-  Loader2Icon,
-  LogInIcon,
-} from 'lucide-react'
+import { BookOpenIcon, Languages, Loader2Icon, LogInIcon } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
 import { setUserLocale } from '@/app/actions/locale'
+import { ParticleNetwork } from '@/components/home/particle-network'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
@@ -74,12 +69,31 @@ function NavBar({
           alt='BioFlow AI'
           width={140}
           height={32}
+          className='h-10 w-auto'
           priority
         />
       </div>
       <div className='flex items-center gap-3'>
-        <Button variant='ghost' size='icon' aria-label='GitHub' title='GitHub'>
-          <GithubIcon className='h-5 w-5' />
+        <Button
+          variant='ghost'
+          size='icon'
+          aria-label='GitHub'
+          title='GitHub'
+          asChild
+        >
+          <Link
+            href='https://github.com/QIBEBT-SCC/bioflow-ai'
+            target='_blank'
+            rel='noopener noreferrer'
+          >
+            <Image
+              src='/github.svg'
+              alt='GitHub'
+              width={20}
+              height={20}
+              className='dark:invert h-5 w-auto'
+            />
+          </Link>
         </Button>
         <Button
           variant='ghost'
@@ -134,7 +148,8 @@ export default function HomePage() {
   ]
 
   return (
-    <div className='min-h-screen flex flex-col bg-background'>
+    <div className='relative min-h-screen flex flex-col bg-background overflow-hidden'>
+      <ParticleNetwork />
       <NavBar user={loading ? null : user} />
 
       <main className='flex-1 flex flex-col items-center justify-center px-4 pt-20 pb-16'>
@@ -147,8 +162,7 @@ export default function HomePage() {
               alt='BioFlow AI Logo'
               width={96}
               height={96}
-              className='relative drop-shadow-lg'
-              style={{ width: 96, height: 'auto' }}
+              className='relative drop-shadow-lg h-30 w-auto'
               priority
             />
           </div>
