@@ -4,6 +4,7 @@ import { defaultLocale, type Locale } from './config'
 
 const namespaces = [
   'common',
+  'home',
   'login',
   'chat',
   'editor',

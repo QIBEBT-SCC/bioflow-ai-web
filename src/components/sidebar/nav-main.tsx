@@ -3,7 +3,8 @@
 import {
   Bot,
   EditIcon,
-  HomeIcon,
+  FolderOpenIcon,
+  HouseIcon,
   NetworkIcon,
   TvMinimalIcon,
 } from 'lucide-react'
@@ -16,6 +17,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarSeparator,
 } from '@/components/ui/sidebar'
 import { useSidebarStore } from '@/stores/sidebar-store'
 
@@ -28,7 +30,7 @@ const projects = [
   {
     name: 'projects',
     url: '/project',
-    icon: HomeIcon,
+    icon: FolderOpenIcon,
   },
   {
     name: 'editor',
@@ -54,7 +56,6 @@ export function NavMain() {
 
   const t = useTranslations('Sidebar')
 
-  // 根据当前路径自动设置活动页面
   useEffect(() => {
     if (pathname) {
       const currentPage = projects.find((p) => pathname.startsWith(p.url))
@@ -67,6 +68,16 @@ export function NavMain() {
   return (
     <SidebarGroup>
       <SidebarMenu>
+        {/* Homepage entry */}
+        <SidebarMenuItem>
+          <SidebarMenuButton asChild isActive={false} tooltip={t('homepage')}>
+            <Link href='/'>
+              <HouseIcon />
+              <span>{t('homepage')}</span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+        <SidebarSeparator />
         {projects.map((item) => (
           <SidebarMenuItem key={item.name}>
             <SidebarMenuButton

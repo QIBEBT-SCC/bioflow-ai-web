@@ -33,7 +33,7 @@ export function GuestGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!loading && user) {
-      router.push('/chat')
+      router.push('/')
     }
   }, [loading, user, router])
 

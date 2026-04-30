@@ -69,7 +69,7 @@ export function LoginForm({
         // 即使失败，cookie 已设置，跳转后 AuthGuard 会正常处理
       }
 
-      router.push('/chat')
+      router.push('/')
     } catch (err) {
       console.error('Login error:', err)
       if (err instanceof ClientApiError) {
