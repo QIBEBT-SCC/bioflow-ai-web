@@ -27,13 +27,14 @@ function getGroupPath(
   allGroups: ToolGroup[],
 ): ToolGroup[] {
   if (!currentGroupId) return []
+  const groupById = new Map(allGroups.map((g) => [g.id, g]))
   const path: ToolGroup[] = []
-  const currentGroup = allGroups.find((g) => g.id === currentGroupId)
+  const currentGroup = groupById.get(currentGroupId)
   if (!currentGroup) return path
   let group = currentGroup
   path.unshift(group)
   while (group.parent_id !== undefined && group.parent_id !== null) {
-    const parentGroup = allGroups.find((g) => g.id === group.parent_id)
+    const parentGroup = groupById.get(group.parent_id)
     if (!parentGroup) break
     path.unshift(parentGroup)
     group = parentGroup
