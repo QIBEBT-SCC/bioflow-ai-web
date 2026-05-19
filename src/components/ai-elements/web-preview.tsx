@@ -258,6 +258,7 @@ export const WebPreviewConsole = ({
             <p className="text-muted-foreground">No console output</p>
           ) : (
             logs.map((log, index) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: log entries may share identical timestamps
               <div
                 className={cn(
                   "text-xs",

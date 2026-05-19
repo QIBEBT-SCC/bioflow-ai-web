@@ -75,8 +75,8 @@ export function ChatMessageParts({
             />
             {message.parts
               .filter((part) => part.type === 'source-url')
-              .map((part, i) => (
-                <SourcesContent key={`${message.id}-${i}`}>
+              .map((part) => (
+                <SourcesContent key={part.url}>
                   <Source href={part.url} title={part.url} />
                 </SourcesContent>
               ))}
@@ -88,6 +88,7 @@ export function ChatMessageParts({
             case 'text': {
               const isLastMessage = messageIndex === messages.length - 1
               return (
+                // biome-ignore lint/suspicious/noArrayIndexKey: message parts have no unique ID
                 <Fragment key={`${message.id}-${i}`}>
                   <MessageResponse>{part.text}</MessageResponse>
                   {message.role === 'assistant' && isLastMessage && (
@@ -108,6 +109,7 @@ export function ChatMessageParts({
             }
             case 'reasoning':
               return (
+                // biome-ignore lint/suspicious/noArrayIndexKey: message parts have no unique ID
                 <Reasoning
                   key={`${message.id}-${i}`}
                   className='w-full'

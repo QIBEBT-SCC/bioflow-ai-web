@@ -481,6 +481,7 @@ export const StackTraceFrames = memo(
     return (
       <div className={cn("space-y-1 p-3", className)} {...props}>
         {framesToShow.map((frame, index) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: frames may duplicate in recursive stack traces
           <div
             className={cn(
               "text-xs",
