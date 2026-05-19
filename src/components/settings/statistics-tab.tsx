@@ -608,7 +608,10 @@ export function StatisticsTab() {
                   <TableCell className='text-right font-mono text-sm font-medium text-primary'>
                     ${record.price}
                   </TableCell>
-                  <TableCell className='text-sm text-muted-foreground' suppressHydrationWarning>
+                  <TableCell
+                    className='text-sm text-muted-foreground'
+                    suppressHydrationWarning
+                  >
                     {format(new Date(record.time), 'yyyy-MM-dd HH:mm:ss')}
                   </TableCell>
                 </TableRow>

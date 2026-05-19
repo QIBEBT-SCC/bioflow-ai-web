@@ -48,9 +48,7 @@ export function ChatMessageParts({
   status,
 }: ChatMessagePartsProps) {
   const fileParts = message.parts.filter((part) => part.type === 'file')
-  const sourceParts = message.parts.filter(
-    (part) => part.type === 'source-url',
-  )
+  const sourceParts = message.parts.filter((part) => part.type === 'source-url')
   return (
     <MessageComponent from={message.role}>
       {/* Attachments */}

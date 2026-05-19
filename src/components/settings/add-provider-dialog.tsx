@@ -102,7 +102,10 @@ export function AddProviderDialog() {
               id='new-provider-baseurl'
               value={newProvider.base_url}
               onChange={(e) =>
-                setNewProvider((prev) => ({ ...prev, base_url: e.target.value }))
+                setNewProvider((prev) => ({
+                  ...prev,
+                  base_url: e.target.value,
+                }))
               }
               placeholder='https://api.provider.com/v1'
               className='font-mono text-sm'

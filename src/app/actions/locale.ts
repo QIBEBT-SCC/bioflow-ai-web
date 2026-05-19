@@ -1,7 +1,7 @@
 'use server'
 
 import { cookies } from 'next/headers'
-import { locales, type Locale } from '@/i18n/config'
+import { type Locale, locales } from '@/i18n/config'
 
 // No auth check: locale is a UI preference settable by anyone, including
 // unauthenticated visitors on the public landing page.

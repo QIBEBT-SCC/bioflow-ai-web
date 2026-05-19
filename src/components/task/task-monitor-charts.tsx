@@ -29,7 +29,10 @@ function formatBytes(
   const dm = decimals < 0 ? 0 : decimals
   const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
   const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return { value: Number.parseFloat((bytes / k ** i).toFixed(dm)), unit: sizes[i] }
+  return {
+    value: Number.parseFloat((bytes / k ** i).toFixed(dm)),
+    unit: sizes[i],
+  }
 }
 
 const tooltipStyle = {
@@ -38,7 +41,11 @@ const tooltipStyle = {
   borderRadius: '6px',
 }
 
-export function TaskMonitorCharts({ chartData }: { chartData: ChartDataPoint[] }) {
+export function TaskMonitorCharts({
+  chartData,
+}: {
+  chartData: ChartDataPoint[]
+}) {
   return (
     <>
       <div>
@@ -47,16 +54,42 @@ export function TaskMonitorCharts({ chartData }: { chartData: ChartDataPoint[] }
           <ResponsiveContainer width='100%' height={300}>
             <AreaChart data={chartData}>
               <CartesianGrid strokeDasharray='3 3' className='stroke-muted' />
-              <XAxis dataKey='time' className='text-xs' tick={{ fill: 'currentColor' }} />
+              <XAxis
+                dataKey='time'
+                className='text-xs'
+                tick={{ fill: 'currentColor' }}
+              />
               <YAxis
                 className='text-xs'
                 tick={{ fill: 'currentColor' }}
-                label={{ value: '使用率 (%)', angle: -90, position: 'insideLeft' }}
+                label={{
+                  value: '使用率 (%)',
+                  angle: -90,
+                  position: 'insideLeft',
+                }}
               />
               <Tooltip contentStyle={tooltipStyle} />
               <Legend />
-              <Area type='monotone' dataKey='cpu' stroke='#3b82f6' strokeWidth={2} fill='#3b82f6' fillOpacity={0.2} name='CPU使用率' dot={false} />
-              <Area type='monotone' dataKey='memory' stroke='#a855f7' strokeWidth={2} fill='#a855f7' fillOpacity={0.2} name='内存使用率' dot={false} />
+              <Area
+                type='monotone'
+                dataKey='cpu'
+                stroke='#3b82f6'
+                strokeWidth={2}
+                fill='#3b82f6'
+                fillOpacity={0.2}
+                name='CPU使用率'
+                dot={false}
+              />
+              <Area
+                type='monotone'
+                dataKey='memory'
+                stroke='#a855f7'
+                strokeWidth={2}
+                fill='#a855f7'
+                fillOpacity={0.2}
+                name='内存使用率'
+                dot={false}
+              />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -68,15 +101,35 @@ export function TaskMonitorCharts({ chartData }: { chartData: ChartDataPoint[] }
           <ResponsiveContainer width='100%' height={250}>
             <AreaChart data={chartData}>
               <CartesianGrid strokeDasharray='3 3' className='stroke-muted' />
-              <XAxis dataKey='time' className='text-xs' tick={{ fill: 'currentColor' }} />
+              <XAxis
+                dataKey='time'
+                className='text-xs'
+                tick={{ fill: 'currentColor' }}
+              />
               <YAxis
                 className='text-xs'
                 tick={{ fill: 'currentColor' }}
-                label={{ value: '内存 (GB)', angle: -90, position: 'insideLeft' }}
+                label={{
+                  value: '内存 (GB)',
+                  angle: -90,
+                  position: 'insideLeft',
+                }}
               />
-              <Tooltip contentStyle={tooltipStyle} formatter={(value: number) => `${value.toFixed(2)} GB`} />
+              <Tooltip
+                contentStyle={tooltipStyle}
+                formatter={(value: number) => `${value.toFixed(2)} GB`}
+              />
               <Legend />
-              <Area type='monotone' dataKey='memUsed' stroke='#10b981' strokeWidth={2} fill='#10b981' fillOpacity={0.2} name='内存用量' dot={false} />
+              <Area
+                type='monotone'
+                dataKey='memUsed'
+                stroke='#10b981'
+                strokeWidth={2}
+                fill='#10b981'
+                fillOpacity={0.2}
+                name='内存用量'
+                dot={false}
+              />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -88,7 +141,11 @@ export function TaskMonitorCharts({ chartData }: { chartData: ChartDataPoint[] }
           <ResponsiveContainer width='100%' height={250}>
             <AreaChart data={chartData}>
               <CartesianGrid strokeDasharray='3 3' className='stroke-muted' />
-              <XAxis dataKey='time' className='text-xs' tick={{ fill: 'currentColor' }} />
+              <XAxis
+                dataKey='time'
+                className='text-xs'
+                tick={{ fill: 'currentColor' }}
+              />
               <YAxis
                 className='text-xs'
                 tick={{ fill: 'currentColor' }}
@@ -102,8 +159,26 @@ export function TaskMonitorCharts({ chartData }: { chartData: ChartDataPoint[] }
                 }}
               />
               <Legend />
-              <Area type='monotone' dataKey='ioIn' stroke='#f97316' strokeWidth={2} fill='#f97316' fillOpacity={0.2} name='IO输入' dot={false} />
-              <Area type='monotone' dataKey='ioOut' stroke='#ef4444' strokeWidth={2} fill='#ef4444' fillOpacity={0.2} name='IO输出' dot={false} />
+              <Area
+                type='monotone'
+                dataKey='ioIn'
+                stroke='#f97316'
+                strokeWidth={2}
+                fill='#f97316'
+                fillOpacity={0.2}
+                name='IO输入'
+                dot={false}
+              />
+              <Area
+                type='monotone'
+                dataKey='ioOut'
+                stroke='#ef4444'
+                strokeWidth={2}
+                fill='#ef4444'
+                fillOpacity={0.2}
+                name='IO输出'
+                dot={false}
+              />
             </AreaChart>
           </ResponsiveContainer>
         </div>

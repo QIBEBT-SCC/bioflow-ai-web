@@ -168,7 +168,10 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
                             : '样本级'}
                         </Badge>
                       </div>
-                      <CardDescription className='mt-0.5' suppressHydrationWarning>
+                      <CardDescription
+                        className='mt-0.5'
+                        suppressHydrationWarning
+                      >
                         导入时间：
                         {new Date(workflow.import_time).toLocaleString('zh-CN')}
                       </CardDescription>
