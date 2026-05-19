@@ -421,6 +421,7 @@ export function SampleList({ projectId }: SampleListProps) {
       {/* 编辑对话框 */}
       {editingSample && editingSampleData && (
         <EditSampleDialog
+          key={editingSampleData.uid}
           projectId={projectId}
           sample={editingSampleData}
           open={!!editingSample}

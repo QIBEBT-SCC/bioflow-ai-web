@@ -4,7 +4,7 @@ import { CopyIcon, MoreHorizontalIcon, Trash2Icon } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -76,6 +76,13 @@ export function ToolList({
 }: ToolListProps) {
   const t = useTranslations('tool.List')
   const [currentPage, setCurrentPage] = useState(1)
+  const [prevSearchQuery, setPrevSearchQuery] = useState(searchQuery)
+  const [prevSelectedGroupId, setPrevSelectedGroupId] = useState(selectedGroupId)
+  if (searchQuery !== prevSearchQuery || selectedGroupId !== prevSelectedGroupId) {
+    setPrevSearchQuery(searchQuery)
+    setPrevSelectedGroupId(selectedGroupId)
+    setCurrentPage(1)
+  }
   const [deleteConfirmTool, setDeleteConfirmTool] = useState<{
     uid: string
     name: string
@@ -143,12 +150,6 @@ export function ToolList({
     : isFiltering
       ? Math.ceil(allGroupTools.length / pageSize)
       : Math.ceil(toolCounts / pageSize)
-
-  // 当搜索查询或分组选择变化时，重置到第一页
-  // biome-ignore lint/correctness/useExhaustiveDependencies: 当搜索或分组变化时需要重置页码
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [searchQuery, selectedGroupId])
 
   // 生成页码数组
   const getPageNumbers = () => {
