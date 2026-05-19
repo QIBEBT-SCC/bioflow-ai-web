@@ -122,16 +122,11 @@ function AddToolPageContent() {
 
   // 处理下一步
   const handleNext = () => {
-    if (currentStep < steps.length) {
-      setCurrentStep(currentStep + 1)
-    }
+    setCurrentStep((prev) => (prev < steps.length ? prev + 1 : prev))
   }
 
-  // 处理上一步
   const handlePrev = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1)
-    }
+    setCurrentStep((prev) => (prev > 1 ? prev - 1 : prev))
   }
 
   // 处理工具创建
