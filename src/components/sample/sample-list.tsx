@@ -249,6 +249,7 @@ export function SampleList({ projectId }: SampleListProps) {
                         </TableCell>
                         <TableCell
                           onClick={() => toggleSampleExpand(sample.uid)}
+                          suppressHydrationWarning
                         >
                           {new Date(sample.create_time).toLocaleString('zh-CN')}
                         </TableCell>
@@ -379,7 +380,7 @@ export function SampleList({ projectId }: SampleListProps) {
                                               </span>
                                             </div>
                                           </TableCell>
-                                          <TableCell className='text-xs'>
+                                          <TableCell className='text-xs' suppressHydrationWarning>
                                             {new Date(
                                               file.uploaded_time,
                                             ).toLocaleString('zh-CN')}

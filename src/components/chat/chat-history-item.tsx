@@ -163,7 +163,7 @@ export function ChatHistoryItem({
         <span className='font-medium text-sm truncate'>
           {chat.description || 'New Conversation'}
         </span>
-        <span className='text-[10px] text-muted-foreground'>
+        <span className='text-[10px] text-muted-foreground' suppressHydrationWarning>
           {formatDistanceToNow(new Date(chat.create_time), {
             addSuffix: true,
           })}
