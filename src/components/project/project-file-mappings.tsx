@@ -140,7 +140,7 @@ export function ProjectFileMappings({ projectId }: ProjectFileMappingsProps) {
                     <TableCell className='text-sm'>
                       {mapping.description}
                     </TableCell>
-                    <TableCell className='text-xs'>
+                    <TableCell className='text-xs' suppressHydrationWarning>
                       {new Date(mapping.create_time).toLocaleString('zh-CN')}
                     </TableCell>
                     <TableCell>

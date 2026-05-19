@@ -206,6 +206,7 @@ export function TaskTimeline() {
           {/* 当前时间线 */}
           <div
             className='absolute top-8 bottom-4 w-0.5 bg-primary'
+            suppressHydrationWarning
             style={{
               left: `${((Date.now() - timelineData.minTime) / (timelineData.maxTime - timelineData.minTime)) * 100}%`,
             }}

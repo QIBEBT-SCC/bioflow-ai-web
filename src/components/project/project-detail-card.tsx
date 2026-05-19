@@ -128,7 +128,7 @@ export function ProjectDetailCard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className='text-2xl font-bold'>
+            <p className='text-2xl font-bold' suppressHydrationWarning>
               {new Date(project.update_time).toLocaleString('zh-CN')}
             </p>
           </CardContent>
