@@ -36,7 +36,7 @@ export function ChatHistoryItem({
   isActive,
   onSelect,
 }: ChatHistoryItemProps) {
-  const router = useRouter()
+  const { push } = useRouter()
   const [isEditing, setIsEditing] = useState(false)
   const [inputValue, setInputValue] = useState(chat.description)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -76,7 +76,7 @@ export function ChatHistoryItem({
       await deleteChat(chat.uid)
       // 如果删除的是当前正在查看的对话，重定向到 /chat
       if (isActive) {
-        router.push('/chat')
+        push('/chat')
       }
     } catch (error) {
       console.error('Failed to delete chat session', error)
@@ -124,7 +124,7 @@ export function ChatHistoryItem({
         <Button
           size='icon'
           variant='ghost'
-          className='h-7 w-7 shrink-0 hover:bg-green-500/10 hover:text-green-500'
+          className='size-7 shrink-0 hover:bg-green-500/10 hover:text-green-500'
           onClick={handleSave}
           disabled={isUpdating}
         >
@@ -137,7 +137,7 @@ export function ChatHistoryItem({
         <Button
           size='icon'
           variant='ghost'
-          className='h-7 w-7 shrink-0 hover:bg-red-500/10 hover:text-red-500'
+          className='size-7 shrink-0 hover:bg-red-500/10 hover:text-red-500'
           onClick={handleCancel}
           disabled={isUpdating}
         >
@@ -173,7 +173,7 @@ export function ChatHistoryItem({
       <div className='opacity-0 group-hover:opacity-100 transition-opacity flex items-center'>
         <DropdownMenu>
           <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-            <Button variant='ghost' size='icon' className='h-6 w-6'>
+            <Button variant='ghost' size='icon' className='size-6'>
               <MoreHorizontalIcon className='size-3' />
             </Button>
           </DropdownMenuTrigger>

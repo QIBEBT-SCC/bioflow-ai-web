@@ -83,7 +83,7 @@ export function TagSelector({
           <div className='flex flex-wrap gap-1'>
             {value.length === 0 && (
               <span className='text-muted-foreground ml-2 font-normal'>
-                Select tags...
+                Select tags…
               </span>
             )}
             {value.map((tag) => (
@@ -115,12 +115,12 @@ export function TagSelector({
                     handleUnselect(tag)
                   }}
                 >
-                  <X className='h-3 w-3 text-muted-foreground hover:text-foreground' />
+                  <X className='size-3 text-muted-foreground hover:text-foreground' />
                 </span>
               </Badge>
             ))}
           </div>
-          <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50 mr-2' />
+          <ChevronsUpDown className='ml-2 size-4 shrink-0 opacity-50 mr-2' />
         </Button>
       </PopoverTrigger>
       <PopoverContent className='w-[400px] p-0' align='start'>
@@ -138,7 +138,7 @@ export function TagSelector({
                   className='flex w-full justify-center items-center gap-2 p-2 cursor-pointer hover:bg-accent rounded-sm text-sm'
                   onClick={handleCreate}
                 >
-                  <Plus className='h-4 w-4' />
+                  <Plus className='size-4' />
                   Create tag "{inputValue}"
                 </button>
               ) : (
@@ -156,14 +156,14 @@ export function TagSelector({
                   >
                     <Check
                       className={cn(
-                        'mr-2 h-4 w-4',
+                        'mr-2 size-4',
                         isSelected ? 'opacity-100' : 'opacity-0',
                       )}
                     />
                     <div className='flex items-center gap-2'>
                       <span
                         className={cn(
-                          'w-3 h-3 rounded-full',
+                          'size-3 rounded-full',
                           colorClassMap[tag.color] || 'bg-slate-400',
                         )}
                       ></span>
@@ -186,7 +186,7 @@ export function TagSelector({
                       onSelect={handleCreate}
                       value={`create-${inputValue}`}
                     >
-                      <Plus className='mr-2 h-4 w-4' />
+                      <Plus className='mr-2 size-4' />
                       Create tag "{inputValue}"
                     </CommandItem>
                   </CommandGroup>
