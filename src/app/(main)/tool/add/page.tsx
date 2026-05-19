@@ -289,7 +289,7 @@ export default function AddToolPage() {
               <ArrowLeft className='size-4 mr-1' />
               {t('back')}
             </Link>
-            <h1 className='text-2xl font-bold'>{t('title')}</h1>
+            <h1 className='text-2xl font-semibold'>{t('title')}</h1>
             <p className='text-muted-foreground mt-1'>{t('subtitle')}</p>
           </div>
 

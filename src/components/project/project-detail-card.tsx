@@ -31,7 +31,7 @@ export function ProjectDetailCard() {
       <div className='flex flex-col sm:flex-row gap-4 justify-between items-start mb-3'>
         <div>
           <div className='flex items-start gap-2'>
-            <h1 className='text-2xl font-bold'>{project.name}</h1>
+            <h1 className='text-2xl font-semibold'>{project.name}</h1>
             <div className='flex flex-wrap gap-1 mt-1.5'>
               {project.tags.map((tag) => (
                 <Badge

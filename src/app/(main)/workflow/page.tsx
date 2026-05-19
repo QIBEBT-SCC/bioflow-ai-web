@@ -91,7 +91,7 @@ export default function WorkflowPage() {
           {/* Header */}
           <div className='flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center mb-8'>
             <div>
-              <h1 className='text-3xl font-bold tracking-tight'>
+              <h1 className='text-3xl font-semibold tracking-tight'>
                 工作流运行监控
               </h1>
               <p className='text-muted-foreground mt-1'>

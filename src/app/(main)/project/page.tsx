@@ -53,7 +53,7 @@ export default function ProjectsPage() {
               <main className='flex-1 space-y-6'>
                 {/* 顶部操作栏 */}
                 <div className='flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center'>
-                  <h1 className='text-2xl font-bold'>项目</h1>
+                  <h1 className='text-2xl font-semibold'>项目</h1>
                   <div className='flex gap-2 w-full sm:w-auto'>
                     <div className='relative flex-1 sm:flex-initial'>
                       <SearchIcon className='absolute left-2.5 top-2.5 size-4 text-muted-foreground' />

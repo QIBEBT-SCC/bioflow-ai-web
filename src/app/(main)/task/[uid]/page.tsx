@@ -157,7 +157,7 @@ export default function TaskDetailPage() {
               <div className='flex items-start justify-between gap-6'>
                 <div className='flex-1 min-w-0 space-y-3'>
                   <div className='flex items-center gap-3'>
-                    <h1 className='text-2xl font-bold'>{task.name}</h1>
+                    <h1 className='text-2xl font-semibold'>{task.name}</h1>
                     <Badge variant={config.variant} className='gap-1.5'>
                       <StatusIcon
                         className={`size-3.5 ${
