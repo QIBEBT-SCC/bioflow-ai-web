@@ -367,7 +367,7 @@ export function ToolConfigForm({
                       return (
                         <div
                           key={tag.id}
-                          className='flex items-center space-x-2'
+                          className='flex items-center gap-x-2'
                         >
                           <Checkbox
                             id={`tag-${tag.id}`}

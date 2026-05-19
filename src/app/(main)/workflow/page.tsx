@@ -133,7 +133,7 @@ export default function WorkflowPage() {
           {/* 统计信息卡片 */}
           <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8'>
             <Card>
-              <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+              <CardHeader className='flex flex-row items-center justify-between gap-y-0 pb-2'>
                 <CardTitle className='text-sm font-medium'>总工作流</CardTitle>
                 <Activity className='size-4 text-muted-foreground' />
               </CardHeader>
@@ -146,7 +146,7 @@ export default function WorkflowPage() {
             </Card>
 
             <Card>
-              <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+              <CardHeader className='flex flex-row items-center justify-between gap-y-0 pb-2'>
                 <CardTitle className='text-sm font-medium'>等待中</CardTitle>
                 <Clock className='size-4 text-yellow-500' />
               </CardHeader>
@@ -159,7 +159,7 @@ export default function WorkflowPage() {
             </Card>
 
             <Card>
-              <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+              <CardHeader className='flex flex-row items-center justify-between gap-y-0 pb-2'>
                 <CardTitle className='text-sm font-medium'>运行中</CardTitle>
                 <Play className='size-4 text-blue-500' />
               </CardHeader>
@@ -172,7 +172,7 @@ export default function WorkflowPage() {
             </Card>
 
             <Card>
-              <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+              <CardHeader className='flex flex-row items-center justify-between gap-y-0 pb-2'>
                 <CardTitle className='text-sm font-medium'>已完成</CardTitle>
                 <CheckCircle className='size-4 text-green-500' />
               </CardHeader>
@@ -185,7 +185,7 @@ export default function WorkflowPage() {
             </Card>
 
             <Card>
-              <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+              <CardHeader className='flex flex-row items-center justify-between gap-y-0 pb-2'>
                 <CardTitle className='text-sm font-medium'>失败</CardTitle>
                 <XCircle className='size-4 text-red-500' />
               </CardHeader>

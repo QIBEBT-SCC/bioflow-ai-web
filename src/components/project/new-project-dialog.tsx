@@ -70,9 +70,9 @@ export function NewProjectDialog() {
           <DialogTitle>New Tag</DialogTitle>
           <DialogDescription>Create new tag</DialogDescription>
         </DialogHeader>
-        <div className='flex-row space-y-3'>
-          <div className='flex space-y-2 pt-2'>
-            <div className='flex-1/2 space-y-2 pt-2'>
+        <div className='flex-row gap-y-3'>
+          <div className='flex gap-y-2 pt-2'>
+            <div className='flex-1/2 gap-y-2 pt-2'>
               <Label htmlFor='name'>Project Name</Label>
               <Input
                 id='name'
