@@ -77,8 +77,12 @@ export function ToolList({
   const t = useTranslations('tool.List')
   const [currentPage, setCurrentPage] = useState(1)
   const [prevSearchQuery, setPrevSearchQuery] = useState(searchQuery)
-  const [prevSelectedGroupId, setPrevSelectedGroupId] = useState(selectedGroupId)
-  if (searchQuery !== prevSearchQuery || selectedGroupId !== prevSelectedGroupId) {
+  const [prevSelectedGroupId, setPrevSelectedGroupId] =
+    useState(selectedGroupId)
+  if (
+    searchQuery !== prevSearchQuery ||
+    selectedGroupId !== prevSelectedGroupId
+  ) {
     setPrevSearchQuery(searchQuery)
     setPrevSelectedGroupId(selectedGroupId)
     setCurrentPage(1)

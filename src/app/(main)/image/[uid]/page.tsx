@@ -228,7 +228,10 @@ export default function ImageDetailPage() {
                       id='name'
                       value={formData.name || ''}
                       onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, name: e.target.value }))
+                        setFormData((prev) => ({
+                          ...prev,
+                          name: e.target.value,
+                        }))
                       }
                     />
                   </div>
@@ -238,7 +241,10 @@ export default function ImageDetailPage() {
                       id='version'
                       value={formData.version || ''}
                       onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, version: e.target.value }))
+                        setFormData((prev) => ({
+                          ...prev,
+                          version: e.target.value,
+                        }))
                       }
                     />
                   </div>
@@ -263,7 +269,10 @@ export default function ImageDetailPage() {
                       type='url'
                       value={formData.homepage || ''}
                       onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, homepage: e.target.value }))
+                        setFormData((prev) => ({
+                          ...prev,
+                          homepage: e.target.value,
+                        }))
                       }
                     />
                   </div>
@@ -274,7 +283,10 @@ export default function ImageDetailPage() {
                       type='url'
                       value={formData.paper_link || ''}
                       onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, paper_link: e.target.value }))
+                        setFormData((prev) => ({
+                          ...prev,
+                          paper_link: e.target.value,
+                        }))
                       }
                     />
                   </div>

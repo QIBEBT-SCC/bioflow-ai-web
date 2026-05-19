@@ -380,7 +380,10 @@ export function SampleList({ projectId }: SampleListProps) {
                                               </span>
                                             </div>
                                           </TableCell>
-                                          <TableCell className='text-xs' suppressHydrationWarning>
+                                          <TableCell
+                                            className='text-xs'
+                                            suppressHydrationWarning
+                                          >
                                             {new Date(
                                               file.uploaded_time,
                                             ).toLocaleString('zh-CN')}

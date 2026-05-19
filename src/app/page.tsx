@@ -222,7 +222,9 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className='py-6 text-center text-sm text-muted-foreground border-t border-border/40'>
-        <p suppressHydrationWarning>{t('footer', { year: new Date().getFullYear() })}</p>
+        <p suppressHydrationWarning>
+          {t('footer', { year: new Date().getFullYear() })}
+        </p>
       </footer>
     </div>
   )

@@ -59,11 +59,7 @@ export function FileViewer({
 
   if (fileType === 'pdf' && blobUrl) {
     return (
-      <iframe
-        src={blobUrl}
-        title={fileName}
-        className='size-full border-0'
-      />
+      <iframe src={blobUrl} title={fileName} className='size-full border-0' />
     )
   }
 

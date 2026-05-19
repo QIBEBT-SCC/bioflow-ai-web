@@ -16,7 +16,9 @@ import { useTaskMonitor } from '@/hooks/use-task'
 
 const TaskMonitorCharts = dynamic(
   () =>
-    import('./task-monitor-charts').then((m) => ({ default: m.TaskMonitorCharts })),
+    import('./task-monitor-charts').then((m) => ({
+      default: m.TaskMonitorCharts,
+    })),
   { ssr: false },
 )
 

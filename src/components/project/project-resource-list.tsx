@@ -295,7 +295,10 @@ export function ProjectResourcesList() {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell onClick={() => toggleSampleExpand(sample.uid)} suppressHydrationWarning>
+                    <TableCell
+                      onClick={() => toggleSampleExpand(sample.uid)}
+                      suppressHydrationWarning
+                    >
                       {new Date(sample.create_time).toLocaleString()}
                     </TableCell>
                     <TableCell onClick={() => toggleSampleExpand(sample.uid)}>
@@ -376,7 +379,10 @@ export function ProjectResourcesList() {
                                       </span>
                                     </div>
                                   </TableCell>
-                                  <TableCell className='text-xs' suppressHydrationWarning>
+                                  <TableCell
+                                    className='text-xs'
+                                    suppressHydrationWarning
+                                  >
                                     {new Date(
                                       file.uploaded_time,
                                     ).toLocaleString()}
