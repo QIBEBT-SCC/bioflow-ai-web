@@ -109,7 +109,7 @@ function FlowContent() {
       setNodes((prev) => [...prev, newNode])
       toast.success('节点已添加')
     },
-    [nodes, clickPosition, screenToFlowPosition, setNodes],
+    [clickPosition, screenToFlowPosition, setNodes],
   )
 
   // 保存workflow

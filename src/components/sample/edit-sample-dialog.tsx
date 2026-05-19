@@ -1,7 +1,7 @@
 'use client'
 
 import { PlusIcon, XIcon } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
@@ -31,23 +31,14 @@ export function EditSampleDialog({
   onOpenChange,
 }: EditSampleDialogProps) {
   const [sampleName, setSampleName] = useState(sample.sample_name)
-  const [metaData, setMetaData] = useState<
-    Array<{ key: string; value: string }>
-  >([])
+  const [metaData, setMetaData] = useState(() =>
+    Object.entries(sample.meta_data || {}).map(([key, value]) => ({
+      key,
+      value: String(value),
+    })),
+  )
 
   const updateSampleMutation = useUpdateSample()
-
-  // 初始化元数据
-  useEffect(() => {
-    setSampleName(sample.sample_name)
-    const metaDataArray = Object.entries(sample.meta_data || {}).map(
-      ([key, value]) => ({
-        key,
-        value: String(value),
-      }),
-    )
-    setMetaData(metaDataArray)
-  }, [sample])
 
   const handleAddMetaData = () => {
     setMetaData((prev) => [...prev, { key: '', value: '' }])

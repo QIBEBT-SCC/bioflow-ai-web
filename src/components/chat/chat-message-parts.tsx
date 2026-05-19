@@ -79,7 +79,6 @@ export function ChatMessageParts({
             case 'text': {
               const isLastMessage = messageIndex === messages.length - 1
               return (
-                // biome-ignore lint/suspicious/noArrayIndexKey: message parts have no unique ID
                 <Fragment key={`${message.id}-${i}`}>
                   <MessageResponse>{part.text}</MessageResponse>
                   {message.role === 'assistant' && isLastMessage && (
@@ -100,7 +99,6 @@ export function ChatMessageParts({
             }
             case 'reasoning':
               return (
-                // biome-ignore lint/suspicious/noArrayIndexKey: message parts have no unique ID
                 <Reasoning
                   key={`${message.id}-${i}`}
                   className='w-full'

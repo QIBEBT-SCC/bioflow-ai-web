@@ -67,9 +67,9 @@ function AddToolPageContent() {
     },
   ]
   const { push } = useRouter()
-  const searchParams = useSearchParams()
-  const initialStep = Number(searchParams.get('step')) || 1
-  const copyUid = searchParams.get('copy')
+  const { get } = useSearchParams()
+  const initialStep = Number(get('step')) || 1
+  const copyUid = get('copy')
   const [currentStep, setCurrentStep] = useState(initialStep)
   const [searchQuery, setSearchQuery] = useState('')
 

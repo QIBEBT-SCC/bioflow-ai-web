@@ -4,7 +4,7 @@ import { CopyIcon, MoreHorizontalIcon, Trash2Icon } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -76,15 +76,14 @@ export function ToolList({
 }: ToolListProps) {
   const t = useTranslations('tool.List')
   const [currentPage, setCurrentPage] = useState(1)
-  const [prevSearchQuery, setPrevSearchQuery] = useState(searchQuery)
-  const [prevSelectedGroupId, setPrevSelectedGroupId] =
-    useState(selectedGroupId)
+  const prevSearchQueryRef = useRef(searchQuery)
+  const prevSelectedGroupIdRef = useRef(selectedGroupId)
   if (
-    searchQuery !== prevSearchQuery ||
-    selectedGroupId !== prevSelectedGroupId
+    searchQuery !== prevSearchQueryRef.current ||
+    selectedGroupId !== prevSelectedGroupIdRef.current
   ) {
-    setPrevSearchQuery(searchQuery)
-    setPrevSelectedGroupId(selectedGroupId)
+    prevSearchQueryRef.current = searchQuery
+    prevSelectedGroupIdRef.current = selectedGroupId
     setCurrentPage(1)
   }
   const [deleteConfirmTool, setDeleteConfirmTool] = useState<{
