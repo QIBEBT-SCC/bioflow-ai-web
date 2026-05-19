@@ -46,6 +46,8 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({
   const menuRef = useRef<HTMLDivElement>(null)
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const subCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const onCloseRef = useRef(onClose)
+  onCloseRef.current = onClose
 
   const cancelClose = useCallback(() => {
     if (closeTimerRef.current) {
@@ -88,12 +90,12 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({
     if (!isOpen) return
     const handler = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        onClose()
+        onCloseRef.current()
       }
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
-  }, [isOpen, onClose])
+  }, [isOpen])
 
   // Reset submenu state when parent closes
   useEffect(() => {
