@@ -11,7 +11,7 @@ import {
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import type React from 'react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -39,6 +39,13 @@ export function ChatHistoryItem({
   const router = useRouter()
   const [isEditing, setIsEditing] = useState(false)
   const [inputValue, setInputValue] = useState(chat.description)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (isEditing) {
+      inputRef.current?.focus()
+    }
+  }, [isEditing])
 
   const { mutateAsync: updateChat, isPending: isUpdating } =
     useUpdateChatSession()
@@ -107,12 +114,12 @@ export function ChatHistoryItem({
     return (
       <div className='flex items-center gap-1 p-2 rounded-md bg-muted/50'>
         <Input
+          ref={inputRef}
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onClick={handleInputClick}
           onKeyDown={handleInputKeyDown}
           className='h-7 text-sm px-2 bg-background'
-          autoFocus
         />
         <Button
           size='icon'

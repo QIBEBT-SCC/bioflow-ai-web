@@ -37,6 +37,7 @@ export function TagSelector({
 }: TagSelectorProps) {
   const [open, setOpen] = useState(false)
   const [inputValue, setInputValue] = useState('')
+  const listboxId = 'tag-selector-listbox'
 
   const handleUnselect = (tagToRemove: ProjectTag) => {
     onChange(value.filter((tag) => tag.name !== tagToRemove.name))
@@ -73,6 +74,7 @@ export function TagSelector({
           variant='outline'
           role='combobox'
           aria-expanded={open}
+          aria-controls={listboxId}
           className={cn(
             'w-full justify-between h-auto min-h-10 p-1',
             className,
@@ -128,7 +130,7 @@ export function TagSelector({
             value={inputValue}
             onValueChange={setInputValue}
           />
-          <CommandList>
+          <CommandList id={listboxId}>
             <CommandEmpty>
               {allowCreate && inputValue ? (
                 <button
