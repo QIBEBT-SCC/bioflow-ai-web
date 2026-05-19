@@ -106,7 +106,7 @@ function FlowContent() {
         zIndex: nodeType === 'note' ? -10 : 20,
       }
 
-      setNodes([...nodes, newNode])
+      setNodes((prev) => [...prev, newNode])
       toast.success('节点已添加')
     },
     [nodes, clickPosition, screenToFlowPosition, setNodes],

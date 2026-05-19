@@ -178,18 +178,18 @@ export default function AddToolPage() {
 
   // 添加动态参数
   const addDynamicParam = () => {
-    setToolConfig({
-      ...toolConfig,
+    setToolConfig((prev) => ({
+      ...prev,
       dynamic_params: [
-        ...toolConfig.dynamic_params,
+        ...prev.dynamic_params,
         {
           description: '',
           command: '',
           is_position: false,
-          index: toolConfig.dynamic_params.length,
+          index: prev.dynamic_params.length,
         },
       ],
-    })
+    }))
   }
 
   // 更新动态参数
@@ -200,7 +200,7 @@ export default function AddToolPage() {
   ) => {
     const updatedParams = [...toolConfig.dynamic_params]
     updatedParams[index] = { ...updatedParams[index], [field]: value }
-    setToolConfig({ ...toolConfig, dynamic_params: updatedParams })
+    setToolConfig((prev) => ({ ...prev, dynamic_params: updatedParams }))
   }
 
   // 删除动态参数
@@ -211,15 +211,15 @@ export default function AddToolPage() {
     updatedParams.forEach((param, idx) => {
       param.index = idx
     })
-    setToolConfig({ ...toolConfig, dynamic_params: updatedParams })
+    setToolConfig((prev) => ({ ...prev, dynamic_params: updatedParams }))
   }
 
   // 添加文件挂载
   const addFileMount = () => {
-    setToolConfig({
-      ...toolConfig,
+    setToolConfig((prev) => ({
+      ...prev,
       file_mounts: [
-        ...toolConfig.file_mounts,
+        ...prev.file_mounts,
         {
           name: '',
           description: '',
@@ -230,7 +230,7 @@ export default function AddToolPage() {
           mount_path: '',
         },
       ],
-    })
+    }))
   }
 
   // 更新文件挂载
@@ -241,21 +241,21 @@ export default function AddToolPage() {
   ) => {
     const updatedFiles = [...toolConfig.file_mounts]
     updatedFiles[index] = { ...updatedFiles[index], [field]: value }
-    setToolConfig({ ...toolConfig, file_mounts: updatedFiles })
+    setToolConfig((prev) => ({ ...prev, file_mounts: updatedFiles }))
   }
 
   // 删除文件挂载
   const removeFileMount = (index: number) => {
     const updatedFiles = [...toolConfig.file_mounts]
     updatedFiles.splice(index, 1)
-    setToolConfig({ ...toolConfig, file_mounts: updatedFiles })
+    setToolConfig((prev) => ({ ...prev, file_mounts: updatedFiles }))
   }
 
   const reorderDynamicParams = (newParams: ParamDefine[]) =>
-    setToolConfig({ ...toolConfig, dynamic_params: newParams })
+    setToolConfig((prev) => ({ ...prev, dynamic_params: newParams }))
 
   const reorderFileMounts = (newMounts: FileMount[]) =>
-    setToolConfig({ ...toolConfig, file_mounts: newMounts })
+    setToolConfig((prev) => ({ ...prev, file_mounts: newMounts }))
 
   return (
     <SidebarInset className='h-screen flex flex-col'>

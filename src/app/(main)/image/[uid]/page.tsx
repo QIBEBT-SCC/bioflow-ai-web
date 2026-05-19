@@ -228,7 +228,7 @@ export default function ImageDetailPage() {
                       id='name'
                       value={formData.name || ''}
                       onChange={(e) =>
-                        setFormData({ ...formData, name: e.target.value })
+                        setFormData((prev) => ({ ...prev, name: e.target.value }))
                       }
                     />
                   </div>
@@ -238,7 +238,7 @@ export default function ImageDetailPage() {
                       id='version'
                       value={formData.version || ''}
                       onChange={(e) =>
-                        setFormData({ ...formData, version: e.target.value })
+                        setFormData((prev) => ({ ...prev, version: e.target.value }))
                       }
                     />
                   </div>
@@ -249,10 +249,10 @@ export default function ImageDetailPage() {
                       rows={4}
                       value={formData.description || ''}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
+                        setFormData((prev) => ({
+                          ...prev,
                           description: e.target.value,
-                        })
+                        }))
                       }
                     />
                   </div>
@@ -263,7 +263,7 @@ export default function ImageDetailPage() {
                       type='url'
                       value={formData.homepage || ''}
                       onChange={(e) =>
-                        setFormData({ ...formData, homepage: e.target.value })
+                        setFormData((prev) => ({ ...prev, homepage: e.target.value }))
                       }
                     />
                   </div>
@@ -274,7 +274,7 @@ export default function ImageDetailPage() {
                       type='url'
                       value={formData.paper_link || ''}
                       onChange={(e) =>
-                        setFormData({ ...formData, paper_link: e.target.value })
+                        setFormData((prev) => ({ ...prev, paper_link: e.target.value }))
                       }
                     />
                   </div>
@@ -290,17 +290,17 @@ export default function ImageDetailPage() {
                           id='registry'
                           value={formData.image?.registry || ''}
                           onChange={(e) =>
-                            setFormData({
-                              ...formData,
+                            setFormData((prev) => ({
+                              ...prev,
                               image: {
-                                ...(formData.image || {
+                                ...(prev.image || {
                                   namespace: '',
                                   repository: '',
                                   tag: '',
                                 }),
                                 registry: e.target.value,
                               },
-                            })
+                            }))
                           }
                           placeholder={t('registryPlaceholder')}
                         />
@@ -311,17 +311,17 @@ export default function ImageDetailPage() {
                           id='namespace'
                           value={formData.image?.namespace || ''}
                           onChange={(e) =>
-                            setFormData({
-                              ...formData,
+                            setFormData((prev) => ({
+                              ...prev,
                               image: {
-                                ...(formData.image || {
+                                ...(prev.image || {
                                   registry: '',
                                   repository: '',
                                   tag: '',
                                 }),
                                 namespace: e.target.value,
                               },
-                            })
+                            }))
                           }
                           placeholder={t('namespacePlaceholder')}
                         />
@@ -332,17 +332,17 @@ export default function ImageDetailPage() {
                           id='repository'
                           value={formData.image?.repository || ''}
                           onChange={(e) =>
-                            setFormData({
-                              ...formData,
+                            setFormData((prev) => ({
+                              ...prev,
                               image: {
-                                ...(formData.image || {
+                                ...(prev.image || {
                                   registry: '',
                                   namespace: '',
                                   tag: '',
                                 }),
                                 repository: e.target.value,
                               },
-                            })
+                            }))
                           }
                           placeholder={t('repositoryPlaceholder')}
                         />
@@ -353,17 +353,17 @@ export default function ImageDetailPage() {
                           id='tag'
                           value={formData.image?.tag || ''}
                           onChange={(e) =>
-                            setFormData({
-                              ...formData,
+                            setFormData((prev) => ({
+                              ...prev,
                               image: {
-                                ...(formData.image || {
+                                ...(prev.image || {
                                   registry: '',
                                   namespace: '',
                                   repository: '',
                                 }),
                                 tag: e.target.value,
                               },
-                            })
+                            }))
                           }
                           placeholder={t('tagPlaceholder')}
                         />
