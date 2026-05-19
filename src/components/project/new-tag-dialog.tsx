@@ -46,7 +46,7 @@ export function NewTagDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant='outline' className='w-full' size='sm'>
-          <PlusIcon className='h-4 w-4 mr-2' />
+          <PlusIcon className='size-4 mr-2' />
           添加新标签
         </Button>
       </DialogTrigger>
@@ -76,7 +76,7 @@ export function NewTagDialog() {
                 <button
                   key={presetColor}
                   type='button'
-                  className={`h-5 w-5 rounded-full border border-gray-200 ${colorClassMap[presetColor]} transition-all hover:scale-110`}
+                  className={`size-5 rounded-full border border-gray-200 ${colorClassMap[presetColor]} transition-all hover:scale-110`}
                   onClick={() => setColor(presetColor)}
                 />
               ))}

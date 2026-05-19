@@ -84,7 +84,7 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
     return (
       <Card>
         <CardContent className='flex items-center justify-center py-12'>
-          <Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
+          <Loader2 className='size-8 animate-spin text-muted-foreground' />
         </CardContent>
       </Card>
     )
@@ -125,9 +125,9 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
                       className='text-muted-foreground hover:text-foreground transition-colors shrink-0'
                     >
                       {isExpanded ? (
-                        <ChevronDown className='h-4 w-4' />
+                        <ChevronDown className='size-4' />
                       ) : (
-                        <ChevronRight className='h-4 w-4' />
+                        <ChevronRight className='size-4' />
                       )}
                     </button>
 
@@ -189,7 +189,7 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
                         }
                         disabled={!workflow.enabled}
                       >
-                        <PlayIcon className='h-4 w-4 mr-1' />
+                        <PlayIcon className='size-4 mr-1' />
                         运行
                       </Button>
                       <Button
@@ -211,9 +211,9 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
                         {downloadMutation.isPending &&
                         downloadMutation.variables?.workflowUid ===
                           workflow.workflow_uid ? (
-                          <Loader2 className='h-4 w-4 animate-spin' />
+                          <Loader2 className='size-4 animate-spin' />
                         ) : (
-                          <DownloadIcon className='h-4 w-4' />
+                          <DownloadIcon className='size-4' />
                         )}
                       </Button>
                       <Button
@@ -224,7 +224,7 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
                           setRemovingWorkflow(workflow.workflow_uid)
                         }
                       >
-                        <Trash2Icon className='h-4 w-4' />
+                        <Trash2Icon className='size-4' />
                       </Button>
                     </div>
                   </div>

@@ -37,7 +37,7 @@ export default function ResourcePage() {
           {/* Header */}
           <div className='mb-8'>
             <div className='flex items-center gap-3 mb-2'>
-              <DnaIcon className='h-8 w-8 text-primary' />
+              <DnaIcon className='size-8 text-primary' />
               <h1 className='text-4xl font-bold text-balance'>
                 参考基因组管理
               </h1>

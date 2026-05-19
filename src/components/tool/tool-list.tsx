@@ -195,7 +195,7 @@ export function ToolList({
     return (
       <div className='flex items-center justify-center py-12'>
         <div className='text-center'>
-          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2'></div>
+          <div className='animate-spin rounded-full size-8 border-b-2 border-primary mx-auto mb-2'></div>
           <p className='text-muted-foreground'>{t('loading')}</p>
         </div>
       </div>
@@ -265,8 +265,8 @@ export function ToolList({
                 <TableCell className='text-center'>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant='ghost' size='icon' className='h-8 w-8'>
-                        <MoreHorizontalIcon className='h-4 w-4' />
+                      <Button variant='ghost' size='icon' className='size-8'>
+                        <MoreHorizontalIcon className='size-4' />
                         <span className='sr-only'>{t('moreOptions')}</span>
                       </Button>
                     </DropdownMenuTrigger>
@@ -274,7 +274,7 @@ export function ToolList({
                       <DropdownMenuItem
                         onClick={() => handleCopyTool(tool.uid)}
                       >
-                        <CopyIcon className='h-4 w-4 mr-2' />
+                        <CopyIcon className='size-4 mr-2' />
                         {t('copyTool')}
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
@@ -287,7 +287,7 @@ export function ToolList({
                           })
                         }
                       >
-                        <Trash2Icon className='h-4 w-4 mr-2' />
+                        <Trash2Icon className='size-4 mr-2' />
                         {t('deleteTool')}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -370,15 +370,15 @@ export function ToolList({
                   </Link>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant='ghost' size='icon' className='h-8 w-8'>
-                        <MoreHorizontalIcon className='h-4 w-4' />
+                      <Button variant='ghost' size='icon' className='size-8'>
+                        <MoreHorizontalIcon className='size-4' />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align='end'>
                       <DropdownMenuItem
                         onClick={() => handleCopyTool(tool.uid)}
                       >
-                        <CopyIcon className='h-4 w-4 mr-2' />
+                        <CopyIcon className='size-4 mr-2' />
                         复制工具
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
@@ -391,7 +391,7 @@ export function ToolList({
                           })
                         }
                       >
-                        <Trash2Icon className='h-4 w-4 mr-2' />
+                        <Trash2Icon className='size-4 mr-2' />
                         删除工具
                       </DropdownMenuItem>
                     </DropdownMenuContent>

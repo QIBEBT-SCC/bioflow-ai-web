@@ -77,7 +77,7 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
 
   const defaultTrigger = (
     <Button>
-      <Plus className='h-4 w-4 mr-2' />
+      <Plus className='size-4 mr-2' />
       新建镜像
     </Button>
   )
@@ -88,7 +88,7 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
       <DialogContent className='max-w-2xl max-h-[90vh] overflow-y-auto'>
         <DialogHeader>
           <DialogTitle className='flex items-center gap-2'>
-            <Package className='h-5 w-5' />
+            <Package className='size-5' />
             创建新镜像
           </DialogTitle>
           <DialogDescription>

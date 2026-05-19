@@ -129,7 +129,7 @@ export function EditSampleDialog({
                 size='sm'
                 onClick={handleAddMetaData}
               >
-                <PlusIcon className='h-4 w-4 mr-2' />
+                <PlusIcon className='size-4 mr-2' />
                 添加字段
               </Button>
             </div>
@@ -163,7 +163,7 @@ export function EditSampleDialog({
                       size='icon'
                       onClick={() => handleRemoveMetaData(index)}
                     >
-                      <XIcon className='h-4 w-4' />
+                      <XIcon className='size-4' />
                     </Button>
                   </div>
                 ))}

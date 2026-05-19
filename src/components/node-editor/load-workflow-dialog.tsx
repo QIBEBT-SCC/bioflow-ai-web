@@ -100,7 +100,7 @@ export function LoadWorkflowDialog() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           <Button variant='ghost' size='sm'>
-            <FolderOpenIcon className='h-4 w-4 mr-2' />
+            <FolderOpenIcon className='size-4 mr-2' />
             加载
           </Button>
         </DialogTrigger>
@@ -108,7 +108,7 @@ export function LoadWorkflowDialog() {
           <DialogHeader className='shrink-0'>
             <div className='flex items-center gap-2'>
               <div className='p-2 bg-primary/10 rounded-full'>
-                <FolderOpenIcon className='h-5 w-5 text-primary' />
+                <FolderOpenIcon className='size-5 text-primary' />
               </div>
               <DialogTitle>加载工作流</DialogTitle>
             </div>
@@ -120,11 +120,11 @@ export function LoadWorkflowDialog() {
           <div className='flex flex-col min-h-0 flex-1 gap-3 overflow-hidden'>
             {isLoading ? (
               <div className='flex items-center justify-center py-10'>
-                <Loader2Icon className='h-6 w-6 animate-spin text-muted-foreground' />
+                <Loader2Icon className='size-6 animate-spin text-muted-foreground' />
               </div>
             ) : workflows.length === 0 ? (
               <div className='flex flex-col items-center justify-center py-10 text-muted-foreground'>
-                <FileTextIcon className='h-12 w-12 mb-2 opacity-50' />
+                <FileTextIcon className='size-12 mb-2 opacity-50' />
                 <p>暂无工作流</p>
               </div>
             ) : (
@@ -144,7 +144,7 @@ export function LoadWorkflowDialog() {
                         }`}
                       >
                         <FileTextIcon
-                          className={`h-4 w-4 shrink-0 ${
+                          className={`size-4 shrink-0 ${
                             isActive ? 'text-primary' : 'text-muted-foreground'
                           }`}
                         />
@@ -164,23 +164,23 @@ export function LoadWorkflowDialog() {
                             <Button
                               size='icon'
                               variant='ghost'
-                              className='h-7 w-7 shrink-0'
+                              className='size-7 shrink-0'
                               onClick={handleRenameConfirm}
                               disabled={updateWorkflowMutation.isPending}
                             >
                               {updateWorkflowMutation.isPending ? (
-                                <Loader2Icon className='h-3.5 w-3.5 animate-spin' />
+                                <Loader2Icon className='size-3.5 animate-spin' />
                               ) : (
-                                <CheckIcon className='h-3.5 w-3.5' />
+                                <CheckIcon className='size-3.5' />
                               )}
                             </Button>
                             <Button
                               size='icon'
                               variant='ghost'
-                              className='h-7 w-7 shrink-0'
+                              className='size-7 shrink-0'
                               onClick={() => setRenamingUid(null)}
                             >
-                              <XIcon className='h-3.5 w-3.5' />
+                              <XIcon className='size-3.5' />
                             </Button>
                           </div>
                         ) : (
@@ -216,10 +216,10 @@ export function LoadWorkflowDialog() {
                               <Button
                                 size='icon'
                                 variant='ghost'
-                                className='h-7 w-7 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity'
+                                className='size-7 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity'
                                 onClick={(e) => e.stopPropagation()}
                               >
-                                <MoreHorizontalIcon className='h-4 w-4' />
+                                <MoreHorizontalIcon className='size-4' />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align='end'>
@@ -228,14 +228,14 @@ export function LoadWorkflowDialog() {
                                   handleRenameStart(workflow.uid, workflow.name)
                                 }
                               >
-                                <PencilIcon className='h-4 w-4 mr-2' />
+                                <PencilIcon className='size-4 mr-2' />
                                 重命名
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 className='text-destructive'
                                 onClick={() => setDeletingUid(workflow.uid)}
                               >
-                                <Trash2Icon className='h-4 w-4 mr-2' />
+                                <Trash2Icon className='size-4 mr-2' />
                                 删除
                               </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -260,7 +260,7 @@ export function LoadWorkflowDialog() {
                     onClick={() => setPage((p) => Math.max(0, p - 1))}
                     disabled={page === 0}
                   >
-                    <ChevronLeftIcon className='h-4 w-4' />
+                    <ChevronLeftIcon className='size-4' />
                   </Button>
                   <Button
                     variant='outline'
@@ -270,7 +270,7 @@ export function LoadWorkflowDialog() {
                     }
                     disabled={page >= totalPages - 1}
                   >
-                    <ChevronRightIcon className='h-4 w-4' />
+                    <ChevronRightIcon className='size-4' />
                   </Button>
                 </div>
               </div>

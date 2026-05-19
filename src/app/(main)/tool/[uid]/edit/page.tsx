@@ -226,7 +226,7 @@ export default function EditToolPage() {
     return (
       <SidebarInset className='h-screen flex items-center justify-center'>
         <div className='flex flex-col items-center gap-2 text-muted-foreground'>
-          <Loader2 className='h-6 w-6 animate-spin' />
+          <Loader2 className='size-6 animate-spin' />
           <span>加载工具信息...</span>
         </div>
       </SidebarInset>
@@ -268,7 +268,7 @@ export default function EditToolPage() {
               href={`/tool/${tool?.uid}`}
               className='inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-2'
             >
-              <ArrowLeft className='h-4 w-4 mr-1' />
+              <ArrowLeft className='size-4 mr-1' />
               返回工具详情
             </Link>
             <h1 className='text-2xl font-bold'>编辑工具</h1>
@@ -307,12 +307,12 @@ export default function EditToolPage() {
             >
               {isRefreshing ? (
                 <>
-                  <Loader2 className='h-4 w-4 mr-2 animate-spin' />
+                  <Loader2 className='size-4 mr-2 animate-spin' />
                   刷新中...
                 </>
               ) : (
                 <>
-                  <RefreshCw className='h-4 w-4 mr-2' />
+                  <RefreshCw className='size-4 mr-2' />
                   刷新文档
                 </>
               )}

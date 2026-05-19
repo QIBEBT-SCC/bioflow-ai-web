@@ -62,7 +62,7 @@ export function GenomeBuildIndexDialog({
       <DialogContent className='sm:max-w-[480px]'>
         <DialogHeader>
           <DialogTitle className='flex items-center gap-2'>
-            <Hammer className='h-5 w-5' />
+            <Hammer className='size-5' />
             构建比对索引
           </DialogTitle>
           <DialogDescription>
@@ -136,7 +136,7 @@ export function GenomeBuildIndexDialog({
             onClick={handleSubmit}
             disabled={selected.length === 0 || buildMutation.isPending}
           >
-            <Hammer className='h-4 w-4 mr-1.5' />
+            <Hammer className='size-4 mr-1.5' />
             {buildMutation.isPending
               ? '提交中...'
               : `提交构建（${selected.length} 个）`}

@@ -64,7 +64,7 @@ export function DatabaseDetail({ databaseId, onDelete }: DatabaseDetailProps) {
             onClick={() => setIsDeleteDialogOpen(true)}
             disabled={deleteMutation.isPending}
           >
-            <Trash2Icon className='mr-2 h-4 w-4' />
+            <Trash2Icon className='mr-2 size-4' />
             {deleteMutation.isPending ? '删除中...' : '删除'}
           </Button>
         </div>

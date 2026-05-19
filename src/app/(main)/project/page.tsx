@@ -56,7 +56,7 @@ export default function ProjectsPage() {
                   <h1 className='text-2xl font-bold'>项目</h1>
                   <div className='flex gap-2 w-full sm:w-auto'>
                     <div className='relative flex-1 sm:flex-initial'>
-                      <SearchIcon className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
+                      <SearchIcon className='absolute left-2.5 top-2.5 size-4 text-muted-foreground' />
                       <Input
                         type='search'
                         placeholder='搜索项目...'
@@ -80,14 +80,14 @@ export default function ProjectsPage() {
 
                         <div className='flex items-center gap-2'>
                           <Button variant='outline' size='sm'>
-                            <FilterIcon className='h-4 w-4 mr-2' />
+                            <FilterIcon className='size-4 mr-2' />
                             筛选
                           </Button>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant='outline' size='sm'>
                                 最近更新
-                                <ChevronDownIcon className='ml-2 h-4 w-4' />
+                                <ChevronDownIcon className='ml-2 size-4' />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align='end'>

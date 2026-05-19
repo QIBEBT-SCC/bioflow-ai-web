@@ -87,7 +87,7 @@ export function ImportWorkflowDialog({ projectId }: ImportWorkflowDialogProps) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>
-          <PlusIcon className='h-4 w-4 mr-2' />
+          <PlusIcon className='size-4 mr-2' />
           导入工作流
         </Button>
       </DialogTrigger>
@@ -101,7 +101,7 @@ export function ImportWorkflowDialog({ projectId }: ImportWorkflowDialogProps) {
 
         {/* 搜索框 */}
         <div className='relative'>
-          <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
+          <Search className='absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground' />
           <Input
             placeholder='搜索工作流...'
             value={searchQuery}
@@ -114,7 +114,7 @@ export function ImportWorkflowDialog({ projectId }: ImportWorkflowDialogProps) {
         <ScrollArea className='h-[400px] rounded-md border p-4'>
           {isLoading ? (
             <div className='flex items-center justify-center py-12'>
-              <Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
+              <Loader2 className='size-8 animate-spin text-muted-foreground' />
             </div>
           ) : !filteredWorkflows || filteredWorkflows.length === 0 ? (
             <div className='text-center py-12 text-muted-foreground'>
@@ -138,7 +138,7 @@ export function ImportWorkflowDialog({ projectId }: ImportWorkflowDialogProps) {
                       type='checkbox'
                       checked={selectedWorkflows.has(workflow.uid)}
                       onChange={() => toggleWorkflow(workflow.uid)}
-                      className='h-4 w-4 rounded border-gray-300'
+                      className='size-4 rounded border-gray-300'
                       onClick={(e) => e.stopPropagation()}
                     />
                   </div>
@@ -166,7 +166,7 @@ export function ImportWorkflowDialog({ projectId }: ImportWorkflowDialogProps) {
           >
             {addWorkflowMutation.isPending ? (
               <>
-                <Loader2 className='h-4 w-4 mr-2 animate-spin' />
+                <Loader2 className='size-4 mr-2 animate-spin' />
                 导入中...
               </>
             ) : (

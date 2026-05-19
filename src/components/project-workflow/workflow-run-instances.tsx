@@ -189,7 +189,7 @@ export function WorkflowRunInstances({
                   <TableCell>
                     <Badge variant={cfg.variant} className='gap-1'>
                       <Icon
-                        className={`h-3 w-3 ${cfg.animate ? 'animate-spin' : ''}`}
+                        className={`size-3 ${cfg.animate ? 'animate-spin' : ''}`}
                       />
                       {cfg.label}
                     </Badge>
@@ -224,11 +224,11 @@ export function WorkflowRunInstances({
                       <Button
                         variant='ghost'
                         size='icon'
-                        className='h-7 w-7'
+                        className='size-7'
                         asChild
                       >
                         <Link href={`/project/${projectId}/${run.uid}`}>
-                          <ExternalLink className='h-3.5 w-3.5' />
+                          <ExternalLink className='size-3.5' />
                         </Link>
                       </Button>
                       <Button
@@ -239,10 +239,10 @@ export function WorkflowRunInstances({
                         disabled={isRunning || run.status === Status.RUNNING}
                       >
                         {isRunning ? (
-                          <Loader2 className='h-3 w-3 animate-spin' />
+                          <Loader2 className='size-3 animate-spin' />
                         ) : (
                           <>
-                            <PlayIcon className='h-3 w-3 mr-1' />
+                            <PlayIcon className='size-3 mr-1' />
                             重新运行
                           </>
                         )}
@@ -305,7 +305,7 @@ export function WorkflowRunInstances({
                   {cfg && Icon ? (
                     <Badge variant={cfg.variant} className='gap-1'>
                       <Icon
-                        className={`h-3 w-3 ${cfg.animate ? 'animate-spin' : ''}`}
+                        className={`size-3 ${cfg.animate ? 'animate-spin' : ''}`}
                       />
                       {cfg.label}
                     </Badge>
@@ -346,11 +346,11 @@ export function WorkflowRunInstances({
                       <Button
                         variant='ghost'
                         size='icon'
-                        className='h-7 w-7'
+                        className='size-7'
                         asChild
                       >
                         <Link href={`/project/${projectId}/${run.uid}`}>
-                          <ExternalLink className='h-3.5 w-3.5' />
+                          <ExternalLink className='size-3.5' />
                         </Link>
                       </Button>
                     )}
@@ -362,10 +362,10 @@ export function WorkflowRunInstances({
                       disabled={isRunning || run?.status === Status.RUNNING}
                     >
                       {isRunning ? (
-                        <Loader2 className='h-3 w-3 animate-spin' />
+                        <Loader2 className='size-3 animate-spin' />
                       ) : (
                         <>
-                          <PlayIcon className='h-3 w-3 mr-1' />
+                          <PlayIcon className='size-3 mr-1' />
                           {run ? '重新运行' : '运行'}
                         </>
                       )}

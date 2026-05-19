@@ -172,7 +172,7 @@ export function JsonViewer({ content }: JsonViewerProps) {
   } catch {
     // 解析失败则降级为纯文本
     return (
-      <ScrollArea className='h-full w-full'>
+      <ScrollArea className='size-full'>
         <pre className='p-4 font-mono text-sm leading-relaxed whitespace-pre-wrap break-words'>
           {content}
         </pre>
@@ -181,7 +181,7 @@ export function JsonViewer({ content }: JsonViewerProps) {
   }
 
   return (
-    <ScrollArea className='h-full w-full'>
+    <ScrollArea className='size-full'>
       <div className='p-4 font-mono text-sm leading-relaxed'>
         <JsonNode value={parsed} depth={0} />
       </div>

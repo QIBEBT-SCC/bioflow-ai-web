@@ -101,11 +101,11 @@ export function ProviderCard({ provider }: ProviderCardProps) {
           <div className='flex items-center justify-between mb-4'>
             <div className='flex items-center gap-3 flex-1'>
               <CollapsibleTrigger asChild>
-                <Button variant='ghost' size='sm' className='h-8 w-8 p-0'>
+                <Button variant='ghost' size='sm' className='size-8 p-0'>
                   {isOpen ? (
-                    <ChevronDownIcon className='h-4 w-4' />
+                    <ChevronDownIcon className='size-4' />
                   ) : (
-                    <ChevronRightIcon className='h-4 w-4' />
+                    <ChevronRightIcon className='size-4' />
                   )}
                 </Button>
               </CollapsibleTrigger>
@@ -157,7 +157,7 @@ export function ProviderCard({ provider }: ProviderCardProps) {
                     onClick={saveProvider}
                     className='gap-2 bg-transparent'
                   >
-                    <SaveIcon className='h-4 w-4' />
+                    <SaveIcon className='size-4' />
                     {t('save')}
                   </Button>
                   <Button
@@ -166,7 +166,7 @@ export function ProviderCard({ provider }: ProviderCardProps) {
                     onClick={cancelEdit}
                     className='gap-2 bg-transparent'
                   >
-                    <XIcon className='h-4 w-4' />
+                    <XIcon className='size-4' />
                     {t('cancel')}
                   </Button>
                 </>
@@ -177,7 +177,7 @@ export function ProviderCard({ provider }: ProviderCardProps) {
                   onClick={startEditing}
                   className='gap-2'
                 >
-                  <Edit2Icon className='h-4 w-4' />
+                  <Edit2Icon className='size-4' />
                   {t('edit')}
                 </Button>
               )}
@@ -187,7 +187,7 @@ export function ProviderCard({ provider }: ProviderCardProps) {
                 onClick={deleteProvider}
                 className='text-destructive hover:text-destructive'
               >
-                <Trash2Icon className='h-4 w-4' />
+                <Trash2Icon className='size-4' />
               </Button>
             </div>
           </div>
@@ -250,13 +250,13 @@ export function ProviderCard({ provider }: ProviderCardProps) {
                           type='button'
                           variant='ghost'
                           size='sm'
-                          className='absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0'
+                          className='absolute right-1 top-1/2 -translate-y-1/2 size-7 p-0'
                           onClick={() => setShowApiKey((v) => !v)}
                         >
                           {showApiKey ? (
-                            <EyeOffIcon className='h-4 w-4' />
+                            <EyeOffIcon className='size-4' />
                           ) : (
-                            <EyeIcon className='h-4 w-4' />
+                            <EyeIcon className='size-4' />
                           )}
                         </Button>
                       </div>

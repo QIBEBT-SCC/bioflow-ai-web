@@ -129,7 +129,7 @@ export function StatisticsTab() {
       <Card className='border-border bg-card p-4'>
         <div className='flex items-center justify-between'>
           <div className='flex items-center gap-2'>
-            <CalendarIcon className='h-4 w-4 text-muted-foreground' />
+            <CalendarIcon className='size-4 text-muted-foreground' />
             <span className='text-sm font-medium'>{t('date_range_label')}</span>
           </div>
           <div className='flex items-center gap-3'>
@@ -142,7 +142,7 @@ export function StatisticsTab() {
                     !dateRange.from && !dateRange.to && 'text-muted-foreground',
                   )}
                 >
-                  <CalendarIcon className='mr-2 h-4 w-4' />
+                  <CalendarIcon className='mr-2 size-4' />
                   {dateRange.from ? (
                     dateRange.to ? (
                       <>
@@ -220,7 +220,7 @@ export function StatisticsTab() {
         <Card className='border-border bg-card p-6'>
           <div className='flex items-center gap-3 mb-2'>
             <div className='p-2 bg-primary/10 rounded-lg'>
-              <TrendingUpIcon className='h-5 w-5 text-primary' />
+              <TrendingUpIcon className='size-5 text-primary' />
             </div>
             <p className='text-sm text-muted-foreground'>{t('total_cost')}</p>
           </div>
@@ -232,7 +232,7 @@ export function StatisticsTab() {
         <Card className='border-border bg-card p-6'>
           <div className='flex items-center gap-3 mb-2'>
             <div className='p-2 bg-chart-2/10 rounded-lg'>
-              <BarChart3Icon className='h-5 w-5 text-chart-2' />
+              <BarChart3Icon className='size-5 text-chart-2' />
             </div>
             <p className='text-sm text-muted-foreground'>{t('input_tokens')}</p>
           </div>
@@ -244,7 +244,7 @@ export function StatisticsTab() {
         <Card className='border-border bg-card p-6'>
           <div className='flex items-center gap-3 mb-2'>
             <div className='p-2 bg-chart-3/10 rounded-lg'>
-              <BarChart3Icon className='h-5 w-5 text-chart-3' />
+              <BarChart3Icon className='size-5 text-chart-3' />
             </div>
             <p className='text-sm text-muted-foreground'>
               {t('output_tokens')}
@@ -258,7 +258,7 @@ export function StatisticsTab() {
         <Card className='border-border bg-card p-6'>
           <div className='flex items-center gap-3 mb-2'>
             <div className='p-2 bg-chart-4/10 rounded-lg'>
-              <BarChart3Icon className='h-5 w-5 text-chart-4' />
+              <BarChart3Icon className='size-5 text-chart-4' />
             </div>
             <p className='text-sm text-muted-foreground'>{t('cache_read')}</p>
           </div>
@@ -276,19 +276,19 @@ export function StatisticsTab() {
         <Tabs defaultValue='by_agent' className='space-y-4'>
           <TabsList className='grid w-full grid-cols-4'>
             <TabsTrigger value='by_agent' className='gap-2'>
-              <LayersIcon className='h-4 w-4' />
+              <LayersIcon className='size-4' />
               {t('by_module')}
             </TabsTrigger>
             <TabsTrigger value='by_model' className='gap-2'>
-              <CpuIcon className='h-4 w-4' />
+              <CpuIcon className='size-4' />
               {t('by_model')}
             </TabsTrigger>
             <TabsTrigger value='by_type' className='gap-2'>
-              <SettingsIcon className='h-4 w-4' />
+              <SettingsIcon className='size-4' />
               {t('by_type')}
             </TabsTrigger>
             <TabsTrigger value='by_user' className='gap-2'>
-              <UsersIcon className='h-4 w-4' />
+              <UsersIcon className='size-4' />
               {t('by_user')}
             </TabsTrigger>
           </TabsList>
@@ -458,8 +458,8 @@ export function StatisticsTab() {
                   <div className='flex items-center justify-between'>
                     <div className='flex items-center gap-3'>
                       <div className='flex items-center gap-2'>
-                        <div className='h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center'>
-                          <UsersIcon className='h-4 w-4 text-primary' />
+                        <div className='size-8 rounded-full bg-primary/10 flex items-center justify-center'>
+                          <UsersIcon className='size-4 text-primary' />
                         </div>
                         <span className='font-medium'>{stats.user_name}</span>
                       </div>
@@ -541,7 +541,7 @@ export function StatisticsTab() {
               disabled={isExporting}
               className='gap-2'
             >
-              <DownloadIcon className='h-4 w-4' />
+              <DownloadIcon className='size-4' />
               {isExporting ? t('exporting') : t('export_csv')}
             </Button>
           </div>
@@ -632,7 +632,7 @@ export function StatisticsTab() {
               onClick={() => setCurrentPage(currentPage - 1)}
               disabled={currentPage === 1}
             >
-              <ChevronLeftIcon className='h-4 w-4' />
+              <ChevronLeftIcon className='size-4' />
               {t('prev_page')}
             </Button>
             <div className='flex items-center gap-1'>
@@ -667,7 +667,7 @@ export function StatisticsTab() {
               disabled={currentPage === totalPages}
             >
               {t('next_page')}
-              <ChevronRightIcon className='h-4 w-4' />
+              <ChevronRightIcon className='size-4' />
             </Button>
           </div>
         </div>

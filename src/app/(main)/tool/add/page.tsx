@@ -286,7 +286,7 @@ export default function AddToolPage() {
               href='/tool'
               className='inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-2'
             >
-              <ArrowLeft className='h-4 w-4 mr-1' />
+              <ArrowLeft className='size-4 mr-1' />
               {t('back')}
             </Link>
             <h1 className='text-2xl font-bold'>{t('title')}</h1>
@@ -301,7 +301,7 @@ export default function AddToolPage() {
                   <div key={step.id} className='flex items-center'>
                     <div className='flex flex-col items-center'>
                       <div
-                        className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-medium ${
+                        className={`size-9 rounded-full flex items-center justify-center text-sm font-medium ${
                           currentStep > step.id
                             ? 'bg-green-500 text-white'
                             : currentStep === step.id
@@ -310,7 +310,7 @@ export default function AddToolPage() {
                         }`}
                       >
                         {currentStep > step.id ? (
-                          <Check className='h-5 w-5' />
+                          <Check className='size-5' />
                         ) : (
                           step.id
                         )}
@@ -522,7 +522,7 @@ export default function AddToolPage() {
               onClick={handlePrev}
               disabled={currentStep === 1}
             >
-              <ArrowLeft className='h-4 w-4 mr-2' />
+              <ArrowLeft className='size-4 mr-2' />
               {t('prevStep')}
             </Button>
 
@@ -533,7 +533,7 @@ export default function AddToolPage() {
             {currentStep < steps.length ? (
               <Button onClick={handleNext} disabled={!canProceed()}>
                 {t('nextStep')}
-                <ArrowRight className='h-4 w-4 ml-2' />
+                <ArrowRight className='size-4 ml-2' />
               </Button>
             ) : (
               <Button

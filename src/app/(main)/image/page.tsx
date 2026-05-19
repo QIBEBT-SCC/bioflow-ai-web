@@ -97,7 +97,7 @@ export default function ImagePage() {
           <div className='mb-8'>
             <div className='flex items-center justify-between gap-4'>
               <div className='relative flex-1 max-w-2xl'>
-                <SearchIcon className='absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground' />
+                <SearchIcon className='absolute left-3 top-1/2 -translate-y-1/2 size-5 text-muted-foreground' />
                 <Input
                   type='text'
                   placeholder={t('searchPlaceholder')}
@@ -109,11 +109,11 @@ export default function ImagePage() {
                   <Button
                     variant='ghost'
                     size='icon'
-                    className='absolute right-1.5 top-1/2 -translate-y-1/2 h-8 w-8'
+                    className='absolute right-1.5 top-1/2 -translate-y-1/2 size-8'
                     aria-label={t('searchClear')}
                     onClick={() => handleSearchChange('')}
                   >
-                    <XIcon className='h-4 w-4 text-muted-foreground' />
+                    <XIcon className='size-4 text-muted-foreground' />
                   </Button>
                 )}
               </div>
@@ -136,7 +136,7 @@ export default function ImagePage() {
             <Empty className='border'>
               <EmptyHeader>
                 <EmptyMedia>
-                  <PackageIcon className='h-12 w-12' />
+                  <PackageIcon className='size-12' />
                 </EmptyMedia>
                 <EmptyTitle>{t('loadFail')}</EmptyTitle>
                 <EmptyDescription>
@@ -162,7 +162,7 @@ export default function ImagePage() {
             <Empty className='border'>
               <EmptyHeader>
                 <EmptyMedia>
-                  <PackageIcon className='h-12 w-12' />
+                  <PackageIcon className='size-12' />
                 </EmptyMedia>
                 <EmptyTitle>{t('noImagesTitle')}</EmptyTitle>
                 <EmptyDescription>{t('noImagesDesc')}</EmptyDescription>
@@ -171,7 +171,7 @@ export default function ImagePage() {
                 <CreateImageDialog
                   trigger={
                     <Button>
-                      <PlusIcon className='h-4 w-4 mr-2' />
+                      <PlusIcon className='size-4 mr-2' />
                       {t('createFirstBtn')}
                     </Button>
                   }

@@ -61,7 +61,7 @@ export default function ToolDetailPage() {
     return (
       <SidebarInset className='h-screen flex items-center justify-center'>
         <div className='text-center'>
-          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2'></div>
+          <div className='animate-spin rounded-full size-8 border-b-2 border-primary mx-auto mb-2'></div>
           <p className='text-muted-foreground'>加载中...</p>
         </div>
       </SidebarInset>
@@ -118,7 +118,7 @@ export default function ToolDetailPage() {
             </div>
             <Link href={`/tool/${tool.uid}/edit`}>
               <Button variant='outline' className='gap-2'>
-                <Pencil className='h-4 w-4' />
+                <Pencil className='size-4' />
                 编辑工具
               </Button>
             </Link>
@@ -131,7 +131,7 @@ export default function ToolDetailPage() {
               <Card>
                 <CardHeader>
                   <div className='flex items-center gap-2'>
-                    <TerminalIcon className='h-5 w-5 text-primary' />
+                    <TerminalIcon className='size-5 text-primary' />
                     <CardTitle>Command Template</CardTitle>
                   </div>
                   <CardDescription>
@@ -234,11 +234,11 @@ export default function ToolDetailPage() {
                   <Tabs defaultValue='input' className='w-full'>
                     <TabsList className='grid w-full grid-cols-2'>
                       <TabsTrigger value='input' className='gap-2'>
-                        <FileInput className='h-4 w-4' />
+                        <FileInput className='size-4' />
                         Input Files ({inputFiles.length})
                       </TabsTrigger>
                       <TabsTrigger value='output' className='gap-2'>
-                        <FileOutput className='h-4 w-4' />
+                        <FileOutput className='size-4' />
                         Output Files ({outputFiles.length})
                       </TabsTrigger>
                     </TabsList>
@@ -330,7 +330,7 @@ export default function ToolDetailPage() {
               <Card>
                 <CardHeader>
                   <div className='flex items-center gap-2'>
-                    <BookOpen className='h-5 w-5 text-primary' />
+                    <BookOpen className='size-5 text-primary' />
                     <CardTitle>Documentation</CardTitle>
                   </div>
                 </CardHeader>
@@ -381,7 +381,7 @@ export default function ToolDetailPage() {
               <Card>
                 <CardHeader>
                   <div className='flex items-center gap-2'>
-                    <Container className='h-5 w-5 text-primary' />
+                    <Container className='size-5 text-primary' />
                     <CardTitle>Tool Information</CardTitle>
                   </div>
                 </CardHeader>
@@ -464,7 +464,7 @@ export default function ToolDetailPage() {
                         target='_blank'
                         rel='noopener noreferrer'
                       >
-                        <ExternalLink className='h-4 w-4' />
+                        <ExternalLink className='size-4' />
                         Homepage
                       </a>
                     </Button>
@@ -479,7 +479,7 @@ export default function ToolDetailPage() {
                         target='_blank'
                         rel='noopener noreferrer'
                       >
-                        <ExternalLink className='h-4 w-4' />
+                        <ExternalLink className='size-4' />
                         Publication
                       </a>
                     </Button>

@@ -172,7 +172,7 @@ export function TaskTable() {
               <TableRow>
                 <TableCell colSpan={7} className='h-32 text-center'>
                   <div className='flex flex-col items-center justify-center text-muted-foreground'>
-                    <ClockIcon className='h-8 w-8 mb-2' />
+                    <ClockIcon className='size-8 mb-2' />
                     <p>暂无任务记录</p>
                   </div>
                 </TableCell>
@@ -211,7 +211,7 @@ export function TaskTable() {
                     <TableCell>
                       <Badge variant={config.variant} className='gap-1'>
                         <Icon
-                          className={`h-3 w-3 ${
+                          className={`size-3 ${
                             config.icon === Loader2Icon ? 'animate-spin' : ''
                           }`}
                         />
@@ -259,7 +259,7 @@ export function TaskTable() {
               onClick={() => setPage(Math.max(0, page - 1))}
               disabled={page === 0}
             >
-              <ChevronLeftIcon className='h-4 w-4 mr-1' />
+              <ChevronLeftIcon className='size-4 mr-1' />
               上一页
             </Button>
             <Button
@@ -269,7 +269,7 @@ export function TaskTable() {
               disabled={page >= totalPages - 1}
             >
               下一页
-              <ChevronRightIcon className='h-4 w-4 ml-1' />
+              <ChevronRightIcon className='size-4 ml-1' />
             </Button>
           </div>
         </div>

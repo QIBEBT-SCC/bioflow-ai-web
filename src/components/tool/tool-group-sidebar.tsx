@@ -108,16 +108,16 @@ export function ToolGroupSidebar({
                   onClick={() => onSelectGroup(group.id)}
                 >
                   {isGroupExpanded(group.id) ? (
-                    <FolderOpen className='h-4 w-4 mr-2 shrink-0' />
+                    <FolderOpen className='size-4 mr-2 shrink-0' />
                   ) : (
-                    <Folder className='h-4 w-4 mr-2 shrink-0' />
+                    <Folder className='size-4 mr-2 shrink-0' />
                   )}
                   <span className='flex-1 truncate'>{group.name}</span>
                   <Badge className='ml-2 shrink-0'>
                     {calculateTotalToolCount(group)}
                   </Badge>
                   <ChevronRight
-                    className={`h-4 w-4 ml-2 shrink-0 transition-transform ${
+                    className={`size-4 ml-2 shrink-0 transition-transform ${
                       isGroupExpanded(group.id) ? 'rotate-90' : ''
                     }`}
                   />
@@ -134,7 +134,7 @@ export function ToolGroupSidebar({
               size='sm'
               onClick={() => onSelectGroup(group.id)}
             >
-              <Folder className='h-4 w-4 mr-2 shrink-0' />
+              <Folder className='size-4 mr-2 shrink-0' />
               <span className='flex-1 truncate'>{group.name}</span>
               <Badge className='ml-2 shrink-0'>
                 {calculateTotalToolCount(group)}
@@ -152,8 +152,8 @@ export function ToolGroupSidebar({
         <CardContent className='p-4'>
           <div className='flex justify-between items-center mb-4'>
             <h2 className='text-md font-medium'>{t('title')}</h2>
-            <Button variant='ghost' size='icon' className='h-8 w-8'>
-              <FolderPlus className='h-4 w-4' />
+            <Button variant='ghost' size='icon' className='size-8'>
+              <FolderPlus className='size-4' />
             </Button>
           </div>
 

@@ -90,7 +90,7 @@ export function SaveAsDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button variant='ghost' size='sm' disabled={disabled}>
-          <SaveIcon className='h-4 w-4 mr-2' />
+          <SaveIcon className='size-4 mr-2' />
           另存为
         </Button>
       </DialogTrigger>
@@ -98,7 +98,7 @@ export function SaveAsDialog({
         <DialogHeader>
           <div className='flex items-center gap-2'>
             <div className='p-2 bg-primary/10 rounded-full'>
-              <CopyIcon className='h-5 w-5 text-primary' />
+              <CopyIcon className='size-5 text-primary' />
             </div>
             <DialogTitle>另存为副本</DialogTitle>
           </div>
@@ -110,7 +110,7 @@ export function SaveAsDialog({
         <div className='grid gap-6 py-4'>
           <div className='grid gap-2'>
             <Label htmlFor='name' className='flex items-center gap-2'>
-              <FileTextIcon className='h-4 w-4 text-muted-foreground' />
+              <FileTextIcon className='size-4 text-muted-foreground' />
               工作流名称
             </Label>
             <Input
@@ -131,7 +131,7 @@ export function SaveAsDialog({
           <div className='grid grid-cols-2 gap-4'>
             <div className='grid gap-2'>
               <Label htmlFor='type' className='flex items-center gap-2'>
-                <TypeIcon className='h-4 w-4 text-muted-foreground' />
+                <TypeIcon className='size-4 text-muted-foreground' />
                 类型
               </Label>
               <Select
@@ -155,9 +155,9 @@ export function SaveAsDialog({
             <div className='grid gap-2'>
               <Label htmlFor='public' className='flex items-center gap-2'>
                 {isPublic ? (
-                  <GlobeIcon className='h-4 w-4 text-primary' />
+                  <GlobeIcon className='size-4 text-primary' />
                 ) : (
-                  <LockIcon className='h-4 w-4 text-muted-foreground' />
+                  <LockIcon className='size-4 text-muted-foreground' />
                 )}
                 公开状态
               </Label>
@@ -179,7 +179,7 @@ export function SaveAsDialog({
               htmlFor='execution-scope'
               className='flex items-center gap-2'
             >
-              <LayersIcon className='h-4 w-4 text-muted-foreground' />
+              <LayersIcon className='size-4 text-muted-foreground' />
               执行范围
             </Label>
             <Select

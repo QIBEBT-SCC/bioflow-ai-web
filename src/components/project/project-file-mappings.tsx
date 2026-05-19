@@ -81,7 +81,7 @@ export function ProjectFileMappings({ projectId }: ProjectFileMappingsProps) {
     return (
       <Card>
         <CardContent className='flex items-center justify-center py-12'>
-          <Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
+          <Loader2 className='size-8 animate-spin text-muted-foreground' />
         </CardContent>
       </Card>
     )
@@ -111,7 +111,7 @@ export function ProjectFileMappings({ projectId }: ProjectFileMappingsProps) {
                 projectId={projectId}
                 trigger={
                   <Button>
-                    <PlusIcon className='h-4 w-4 mr-2' />
+                    <PlusIcon className='size-4 mr-2' />
                     添加文件
                   </Button>
                 }
@@ -147,21 +147,21 @@ export function ProjectFileMappings({ projectId }: ProjectFileMappingsProps) {
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant='ghost' size='icon'>
-                            <MoreHorizontal className='h-4 w-4' />
+                            <MoreHorizontal className='size-4' />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align='end'>
                           <DropdownMenuItem
                             onClick={() => setEditingMapping(mapping)}
                           >
-                            <EditIcon className='h-4 w-4 mr-2' />
+                            <EditIcon className='size-4 mr-2' />
                             编辑
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className='text-destructive'
                             onClick={() => setDeletingMapping(mapping)}
                           >
-                            <Trash2Icon className='h-4 w-4 mr-2' />
+                            <Trash2Icon className='size-4 mr-2' />
                             删除
                           </DropdownMenuItem>
                         </DropdownMenuContent>

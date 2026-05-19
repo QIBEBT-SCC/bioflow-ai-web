@@ -139,13 +139,13 @@ export default function ImageDetailPage() {
         </header>
         <div className='flex-1 overflow-y-auto flex items-center justify-center'>
           <div className='text-center'>
-            <PackageIcon className='h-12 w-12 mx-auto mb-4 text-muted-foreground' />
+            <PackageIcon className='size-12 mx-auto mb-4 text-muted-foreground' />
             <h2 className='text-xl font-semibold mb-2'>{t('notFoundTitle')}</h2>
             <p className='text-muted-foreground mb-4'>
               {error?.message || t('notFoundDesc')}
             </p>
             <Button onClick={() => router.push('/image')} variant='outline'>
-              <ArrowLeftIcon className='h-4 w-4 mr-2' />
+              <ArrowLeftIcon className='size-4 mr-2' />
               {t('backToList')}
             </Button>
           </div>
@@ -183,7 +183,7 @@ export default function ImageDetailPage() {
             <CardHeader>
               <div className='flex items-start justify-between'>
                 <div className='flex items-center gap-3'>
-                  <PackageIcon className='h-8 w-8 text-primary' />
+                  <PackageIcon className='size-8 text-primary' />
                   <div>
                     <CardTitle className='text-2xl'>{image.name}</CardTitle>
                     <CardDescription>
@@ -193,7 +193,7 @@ export default function ImageDetailPage() {
                 </div>
                 {!isEditing ? (
                   <Button onClick={handleEdit} variant='outline' size='sm'>
-                    <EditIcon className='h-4 w-4 mr-2' />
+                    <EditIcon className='size-4 mr-2' />
                     {t('edit')}
                   </Button>
                 ) : (
@@ -204,7 +204,7 @@ export default function ImageDetailPage() {
                       size='sm'
                       disabled={updateImageMutation.isPending}
                     >
-                      <XIcon className='h-4 w-4 mr-2' />
+                      <XIcon className='size-4 mr-2' />
                       {t('cancel')}
                     </Button>
                     <Button
@@ -212,7 +212,7 @@ export default function ImageDetailPage() {
                       size='sm'
                       disabled={updateImageMutation.isPending}
                     >
-                      <SaveIcon className='h-4 w-4 mr-2' />
+                      <SaveIcon className='size-4 mr-2' />
                       {t('save')}
                     </Button>
                   </div>
@@ -399,9 +399,9 @@ export default function ImageDetailPage() {
                         className='shrink-0'
                       >
                         {copied ? (
-                          <CheckIcon className='h-4 w-4 text-green-600' />
+                          <CheckIcon className='size-4 text-green-600' />
                         ) : (
-                          <CopyIcon className='h-4 w-4' />
+                          <CopyIcon className='size-4' />
                         )}
                       </Button>
                     </div>
@@ -415,7 +415,7 @@ export default function ImageDetailPage() {
                           target='_blank'
                           rel='noopener noreferrer'
                         >
-                          <ExternalLinkIcon className='h-4 w-4 mr-2' />
+                          <ExternalLinkIcon className='size-4 mr-2' />
                           Homepage
                         </a>
                       </Button>
@@ -427,7 +427,7 @@ export default function ImageDetailPage() {
                           target='_blank'
                           rel='noopener noreferrer'
                         >
-                          <FileTextIcon className='h-4 w-4 mr-2' />
+                          <FileTextIcon className='size-4 mr-2' />
                           Paper
                         </a>
                       </Button>

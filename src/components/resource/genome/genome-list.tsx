@@ -48,7 +48,7 @@ function IndexStatusBadge({
   if (status === 'ready') {
     return (
       <Badge className='bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 gap-1'>
-        <CheckCircle2 className='h-3 w-3' />
+        <CheckCircle2 className='size-3' />
         {label}
       </Badge>
     )
@@ -56,14 +56,14 @@ function IndexStatusBadge({
   if (status === 'building') {
     return (
       <Badge className='bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/20 gap-1'>
-        <Loader2 className='h-3 w-3 animate-spin' />
+        <Loader2 className='size-3 animate-spin' />
         {label}
       </Badge>
     )
   }
   return (
     <Badge variant='outline' className='text-muted-foreground gap-1'>
-      <MinusCircle className='h-3 w-3' />
+      <MinusCircle className='size-3' />
       {label}
     </Badge>
   )
@@ -171,7 +171,7 @@ export function GenomeList({
                   onClick={() => setOffset(offset - pageSize)}
                   disabled={offset === 0}
                 >
-                  <ChevronLeftIcon className='h-4 w-4' />
+                  <ChevronLeftIcon className='size-4' />
                   上一页
                 </Button>
                 <Button
@@ -181,7 +181,7 @@ export function GenomeList({
                   disabled={offset + pageSize >= totalCount}
                 >
                   下一页
-                  <ChevronRightIcon className='h-4 w-4' />
+                  <ChevronRightIcon className='size-4' />
                 </Button>
               </div>
             </div>

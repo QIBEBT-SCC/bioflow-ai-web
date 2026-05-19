@@ -83,7 +83,7 @@ export function GenomeDownloadDialog({
       <DialogContent className='sm:max-w-[520px]'>
         <DialogHeader>
           <DialogTitle className='flex items-center gap-2'>
-            <Download className='h-5 w-5' />
+            <Download className='size-5' />
             下载参考基因组
           </DialogTitle>
           <DialogDescription>
@@ -96,7 +96,7 @@ export function GenomeDownloadDialog({
           /* 成功结果展示 */
           <div className='py-4 space-y-4'>
             <div className='flex items-start gap-3 p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20'>
-              <CheckCircle2 className='h-5 w-5 text-emerald-500 shrink-0 mt-0.5' />
+              <CheckCircle2 className='size-5 text-emerald-500 shrink-0 mt-0.5' />
               <div>
                 <div className='font-medium text-sm text-emerald-700 dark:text-emerald-400'>
                   {result.task_id ? '下载任务已提交' : '基因组已存在'}
@@ -158,7 +158,7 @@ export function GenomeDownloadDialog({
                 <div className='space-y-1.5'>
                   <Label htmlFor='species-name'>物种名称</Label>
                   <div className='relative'>
-                    <FlaskConical className='absolute left-3 top-2.5 h-4 w-4 text-muted-foreground' />
+                    <FlaskConical className='absolute left-3 top-2.5 size-4 text-muted-foreground' />
                     <Input
                       id='species-name'
                       className='pl-9'
@@ -242,7 +242,7 @@ export function GenomeDownloadDialog({
                 onClick={handleSubmit}
                 disabled={!isValid || downloadMutation.isPending}
               >
-                <Download className='h-4 w-4 mr-1.5' />
+                <Download className='size-4 mr-1.5' />
                 {downloadMutation.isPending ? '查询 NCBI 中...' : '开始下载'}
               </Button>
             </>
