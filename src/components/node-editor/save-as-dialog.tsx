@@ -124,7 +124,6 @@ export function SaveAsDialog({
                   handleSaveAs()
                 }
               }}
-              autoFocus
             />
           </div>
 

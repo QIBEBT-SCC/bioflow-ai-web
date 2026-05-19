@@ -159,7 +159,6 @@ export function LoadWorkflowDialog() {
                                 if (e.key === 'Enter') handleRenameConfirm()
                                 if (e.key === 'Escape') setRenamingUid(null)
                               }}
-                              autoFocus
                             />
                             <Button
                               size='icon'
