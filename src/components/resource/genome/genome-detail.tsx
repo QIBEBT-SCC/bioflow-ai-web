@@ -98,7 +98,7 @@ export function GenomeDetail({ genomeId, onDelete }: GenomeDetailProps) {
       {/* 标题栏 */}
       <div className='flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between'>
         <div>
-          <h2 className='text-xl font-bold'>{genome.name}</h2>
+          <h2 className='text-xl font-semibold'>{genome.name}</h2>
           <code className='text-xs text-muted-foreground'>
             {genome.accession}
           </code>

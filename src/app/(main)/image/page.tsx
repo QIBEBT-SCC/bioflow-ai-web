@@ -83,7 +83,7 @@ export default function ImagePage() {
           <div className='mb-12'>
             <div className='flex items-start justify-between gap-4 mb-3'>
               <div>
-                <h1 className='text-4xl font-bold text-balance'>
+                <h1 className='text-4xl font-semibold text-balance'>
                   {t('headerTitle')}
                 </h1>
               </div>

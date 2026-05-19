@@ -271,7 +271,7 @@ export default function EditToolPage() {
               <ArrowLeft className='size-4 mr-1' />
               返回工具详情
             </Link>
-            <h1 className='text-2xl font-bold'>编辑工具</h1>
+            <h1 className='text-2xl font-semibold'>编辑工具</h1>
             <p className='text-muted-foreground mt-1'>
               更新工具参数与文件挂载配置
             </p>
