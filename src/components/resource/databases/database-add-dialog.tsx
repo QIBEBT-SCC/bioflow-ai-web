@@ -1,7 +1,7 @@
 'use client'
 
 import type React from 'react'
-import { useState } from 'react'
+import { useReducer } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -21,35 +21,64 @@ interface DatabaseAddDialogProps {
   onOpenChange: (open: boolean) => void
 }
 
+type FormState = {
+  name: string
+  description: string
+  path: string
+  lastUpdate: string
+  nameError: string
+  pathError: string
+}
+
+type FormAction =
+  | {
+      type: 'SET_FIELD'
+      field: keyof Pick<
+        FormState,
+        'name' | 'description' | 'path' | 'lastUpdate'
+      >
+      value: string
+    }
+  | { type: 'SET_ERROR'; field: 'nameError' | 'pathError'; value: string }
+  | { type: 'CLEAR_ERRORS' }
+  | { type: 'RESET' }
+
+const INITIAL_STATE: FormState = {
+  name: '',
+  description: '',
+  path: '',
+  lastUpdate: '',
+  nameError: '',
+  pathError: '',
+}
+
+function formReducer(state: FormState, action: FormAction): FormState {
+  switch (action.type) {
+    case 'SET_FIELD':
+      return { ...state, [action.field]: action.value }
+    case 'SET_ERROR':
+      return { ...state, [action.field]: action.value }
+    case 'CLEAR_ERRORS':
+      return { ...state, nameError: '', pathError: '' }
+    case 'RESET':
+      return INITIAL_STATE
+  }
+}
+
 export function DatabaseAddDialog({
   open,
   onOpenChange,
 }: DatabaseAddDialogProps) {
-  const [name, setName] = useState('')
-  const [description, setDescription] = useState('')
-  const [path, setPath] = useState('')
-  const [lastUpdate, setLastUpdate] = useState('')
-  const [nameError, setNameError] = useState('')
-  const [pathError, setPathError] = useState('')
+  const [
+    { name, description, path, lastUpdate, nameError, pathError },
+    dispatch,
+  ] = useReducer(formReducer, INITIAL_STATE)
 
   const createMutation = useCreateDB()
 
-  const clearErrors = () => {
-    setNameError('')
-    setPathError('')
-  }
-
-  const resetForm = () => {
-    setName('')
-    setDescription('')
-    setPath('')
-    setLastUpdate('')
-    clearErrors()
-  }
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    clearErrors()
+    dispatch({ type: 'CLEAR_ERRORS' })
 
     const newDb = {
       name,
@@ -61,16 +90,24 @@ export function DatabaseAddDialog({
     createMutation.mutate(newDb, {
       onSuccess: () => {
         onOpenChange(false)
-        resetForm()
+        dispatch({ type: 'RESET' })
       },
       onError: (error: Error & { status?: number }) => {
         const status = error.status
         switch (status) {
           case 409:
-            setNameError('数据库名称已存在，请使用其他名称')
+            dispatch({
+              type: 'SET_ERROR',
+              field: 'nameError',
+              value: '数据库名称已存在，请使用其他名称',
+            })
             break
           case 404:
-            setPathError('文件路径不存在，请检查路径是否正确')
+            dispatch({
+              type: 'SET_ERROR',
+              field: 'pathError',
+              value: '文件路径不存在，请检查路径是否正确',
+            })
             break
           default:
             // toast 已在 hook 中处理
@@ -99,8 +136,17 @@ export function DatabaseAddDialog({
                 id='name'
                 value={name}
                 onChange={(e) => {
-                  setName(e.target.value)
-                  if (nameError) setNameError('')
+                  dispatch({
+                    type: 'SET_FIELD',
+                    field: 'name',
+                    value: e.target.value,
+                  })
+                  if (nameError)
+                    dispatch({
+                      type: 'SET_ERROR',
+                      field: 'nameError',
+                      value: '',
+                    })
                 }}
                 required
                 disabled={createMutation.isPending}
@@ -118,7 +164,13 @@ export function DatabaseAddDialog({
               <Textarea
                 id='description'
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={(e) =>
+                  dispatch({
+                    type: 'SET_FIELD',
+                    field: 'description',
+                    value: e.target.value,
+                  })
+                }
                 disabled={createMutation.isPending}
                 className='min-h-[100px]'
               />
@@ -132,8 +184,17 @@ export function DatabaseAddDialog({
                 id='path'
                 value={path}
                 onChange={(e) => {
-                  setPath(e.target.value)
-                  if (pathError) setPathError('')
+                  dispatch({
+                    type: 'SET_FIELD',
+                    field: 'path',
+                    value: e.target.value,
+                  })
+                  if (pathError)
+                    dispatch({
+                      type: 'SET_ERROR',
+                      field: 'pathError',
+                      value: '',
+                    })
                 }}
                 required
                 disabled={createMutation.isPending}
@@ -151,7 +212,13 @@ export function DatabaseAddDialog({
               <Input
                 id='version'
                 value={lastUpdate}
-                onChange={(e) => setLastUpdate(e.target.value)}
+                onChange={(e) =>
+                  dispatch({
+                    type: 'SET_FIELD',
+                    field: 'lastUpdate',
+                    value: e.target.value,
+                  })
+                }
                 disabled={createMutation.isPending}
               />
             </div>
@@ -162,7 +229,7 @@ export function DatabaseAddDialog({
               variant='outline'
               onClick={() => {
                 onOpenChange(false)
-                clearErrors()
+                dispatch({ type: 'CLEAR_ERRORS' })
               }}
               disabled={createMutation.isPending}
             >

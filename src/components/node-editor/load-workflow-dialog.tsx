@@ -12,7 +12,7 @@ import {
   Trash2Icon,
   XIcon,
 } from 'lucide-react'
-import { useState } from 'react'
+import { useReducer, useState } from 'react'
 import { toast } from 'sonner'
 import {
   AlertDialog,
@@ -49,14 +49,52 @@ import {
 } from '@/hooks/use-workflow'
 import { useNodeEditorStore } from '@/stores/nodeviewStore'
 
+type InteractionState = {
+  deletingUid: string | null
+  renamingUid: string | null
+  renameValue: string
+}
+
+type InteractionAction =
+  | { type: 'START_RENAME'; uid: string; name: string }
+  | { type: 'SET_RENAME_VALUE'; value: string }
+  | { type: 'CANCEL_RENAME' }
+  | { type: 'START_DELETE'; uid: string }
+  | { type: 'CANCEL_DELETE' }
+
+const INITIAL_INTERACTION: InteractionState = {
+  deletingUid: null,
+  renamingUid: null,
+  renameValue: '',
+}
+
+function interactionReducer(
+  state: InteractionState,
+  action: InteractionAction,
+): InteractionState {
+  switch (action.type) {
+    case 'START_RENAME':
+      return { ...state, renamingUid: action.uid, renameValue: action.name }
+    case 'SET_RENAME_VALUE':
+      return { ...state, renameValue: action.value }
+    case 'CANCEL_RENAME':
+      return { ...state, renamingUid: null, renameValue: '' }
+    case 'START_DELETE':
+      return { ...state, deletingUid: action.uid }
+    case 'CANCEL_DELETE':
+      return { ...state, deletingUid: null }
+  }
+}
+
 export function LoadWorkflowDialog() {
   const [open, setOpen] = useState(false)
   const [page, setPage] = useState(0)
   const pageSize = 8
 
-  const [deletingUid, setDeletingUid] = useState<string | null>(null)
-  const [renamingUid, setRenamingUid] = useState<string | null>(null)
-  const [renameValue, setRenameValue] = useState('')
+  const [{ deletingUid, renamingUid, renameValue }, dispatch] = useReducer(
+    interactionReducer,
+    INITIAL_INTERACTION,
+  )
 
   const { currentWorkflowUid, setCurrentWorkflowUid } = useNodeEditorStore()
   const { data: workflows = [], isLoading } = useWorkflows(page * pageSize)
@@ -73,8 +111,7 @@ export function LoadWorkflowDialog() {
   }
 
   const handleRenameStart = (uid: string, currentName: string) => {
-    setRenamingUid(uid)
-    setRenameValue(currentName)
+    dispatch({ type: 'START_RENAME', uid, name: currentName })
   }
 
   const handleRenameConfirm = async () => {
@@ -83,7 +120,7 @@ export function LoadWorkflowDialog() {
       uid: renamingUid,
       data: { name: renameValue.trim() },
     })
-    setRenamingUid(null)
+    dispatch({ type: 'CANCEL_RENAME' })
   }
 
   const handleDeleteConfirm = async () => {
@@ -92,7 +129,7 @@ export function LoadWorkflowDialog() {
     if (deletingUid === currentWorkflowUid) {
       setCurrentWorkflowUid('')
     }
-    setDeletingUid(null)
+    dispatch({ type: 'CANCEL_DELETE' })
   }
 
   return (
@@ -154,10 +191,16 @@ export function LoadWorkflowDialog() {
                             <Input
                               className='h-7 text-sm'
                               value={renameValue}
-                              onChange={(e) => setRenameValue(e.target.value)}
+                              onChange={(e) =>
+                                dispatch({
+                                  type: 'SET_RENAME_VALUE',
+                                  value: e.target.value,
+                                })
+                              }
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter') handleRenameConfirm()
-                                if (e.key === 'Escape') setRenamingUid(null)
+                                if (e.key === 'Escape')
+                                  dispatch({ type: 'CANCEL_RENAME' })
                               }}
                             />
                             <Button
@@ -177,7 +220,9 @@ export function LoadWorkflowDialog() {
                               size='icon'
                               variant='ghost'
                               className='size-7 shrink-0'
-                              onClick={() => setRenamingUid(null)}
+                              onClick={() =>
+                                dispatch({ type: 'CANCEL_RENAME' })
+                              }
                             >
                               <XIcon className='size-3.5' />
                             </Button>
@@ -232,7 +277,12 @@ export function LoadWorkflowDialog() {
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 className='text-destructive'
-                                onClick={() => setDeletingUid(workflow.uid)}
+                                onClick={() =>
+                                  dispatch({
+                                    type: 'START_DELETE',
+                                    uid: workflow.uid,
+                                  })
+                                }
                               >
                                 <Trash2Icon className='size-4 mr-2' />
                                 删除
@@ -280,7 +330,7 @@ export function LoadWorkflowDialog() {
 
       <AlertDialog
         open={!!deletingUid}
-        onOpenChange={(open) => !open && setDeletingUid(null)}
+        onOpenChange={(open) => !open && dispatch({ type: 'CANCEL_DELETE' })}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
