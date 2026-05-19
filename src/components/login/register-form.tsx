@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import type React from 'react'
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -45,7 +45,7 @@ export function RegisterForm({
   ...props
 }: React.ComponentPropsWithoutRef<'div'>) {
   const [error, setError] = useState<string>('')
-  const [isLoading, setIsLoading] = useState(false)
+  const [isPending, startTransition] = useTransition()
   const [email, setEmail] = useState('')
   const [emailTouched, setEmailTouched] = useState(false)
   const [password, setPassword] = useState('')
@@ -58,7 +58,7 @@ export function RegisterForm({
   const canSubmit =
     emailValid && password !== '' && password === confirmPassword
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError('')
 
@@ -66,40 +66,38 @@ export function RegisterForm({
     const username =
       (formData.get('username') as string).trim() || email.split('@')[0]
 
-    setIsLoading(true)
+    startTransition(async () => {
+      try {
+        const res = await fetch('/api/v1/user', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, username, password }),
+        })
 
-    try {
-      const res = await fetch('/api/v1/user', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, username, password }),
-      })
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => null)
-        if (res.status === 422) {
-          setError(t('invalid_params'))
-          return
+        if (!res.ok) {
+          const data = await res.json().catch(() => null)
+          if (res.status === 422) {
+            setError(t('invalid_params'))
+            return
+          }
+          throw new ClientApiError(
+            data?.detail || `${t('register_failed')} (${res.status})`,
+            res.status,
+            data,
+          )
         }
-        throw new ClientApiError(
-          data?.detail || `${t('register_failed')} (${res.status})`,
-          res.status,
-          data,
-        )
-      }
 
-      router.push('/login')
-    } catch (err) {
-      console.error('Register error:', err)
-      if (err instanceof ClientApiError) {
-        setError(err.message)
-      } else {
-        setError(t('network_error'))
+        router.push('/login')
+      } catch (err) {
+        console.error('Register error:', err)
+        if (err instanceof ClientApiError) {
+          setError(err.message)
+        } else {
+          setError(t('network_error'))
+        }
       }
-    } finally {
-      setIsLoading(false)
-    }
+    })
   }
 
   return (
@@ -120,7 +118,7 @@ export function RegisterForm({
                     type='email'
                     placeholder={t('email_placeholder')}
                     required
-                    disabled={isLoading}
+                    disabled={isPending}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     onBlur={() => setEmailTouched(true)}
@@ -144,7 +142,7 @@ export function RegisterForm({
                     name='username'
                     type='text'
                     placeholder={email ? email.split('@')[0] : t('username')}
-                    disabled={isLoading}
+                    disabled={isPending}
                   />
                 </div>
                 <div className='grid gap-2'>
@@ -154,7 +152,7 @@ export function RegisterForm({
                     name='password'
                     type='password'
                     required
-                    disabled={isLoading}
+                    disabled={isPending}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className={cn(
@@ -176,7 +174,7 @@ export function RegisterForm({
                     name='confirmPassword'
                     type='password'
                     required
-                    disabled={isLoading}
+                    disabled={isPending}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className={cn(
@@ -197,9 +195,9 @@ export function RegisterForm({
                 <Button
                   type='submit'
                   className='w-full'
-                  disabled={isLoading || !canSubmit}
+                  disabled={isPending || !canSubmit}
                 >
-                  {isLoading ? t('registering') : t('register')}
+                  {isPending ? t('registering') : t('register')}
                 </Button>
               </div>
               <div className='text-center text-sm'>
