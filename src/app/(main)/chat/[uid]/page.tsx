@@ -265,47 +265,37 @@ export default function ChatPage() {
                   description='Type a message below to begin'
                 />
               ) : (
-                messages.map((message, messageIndex) => (
+                messages.map((message, messageIndex) => {
+                  const fileParts = message.parts.filter(
+                    (part) => part.type === 'file',
+                  )
+                  const sourceParts = message.parts.filter(
+                    (part) => part.type === 'source-url',
+                  )
+                  return (
                   <MessageComponent key={message.id} from={message.role}>
                     {/*Attachments*/}
-                    {message.parts.filter((part) => part.type === 'file')
-                      .length > 0 && (
+                    {fileParts.length > 0 && (
                       <Attachments className='mb-2' variant='grid'>
-                        {message.parts
-                          .filter((part) => part.type === 'file')
-                          .map((attachment) => (
-                            // @ts-expect-error
-                            <Attachment data={attachment} key={attachment.url}>
-                              <AttachmentPreview />
-                            </Attachment>
-                          ))}
+                        {fileParts.map((attachment) => (
+                          // @ts-expect-error
+                          <Attachment data={attachment} key={attachment.url}>
+                            <AttachmentPreview />
+                          </Attachment>
+                        ))}
                       </Attachments>
                     )}
                     {/*Sources*/}
-                    {message.role === 'assistant' &&
-                      message.parts.filter((part) => part.type === 'source-url')
-                        .length > 0 && (
-                        <Sources>
-                          <SourcesTrigger
-                            count={
-                              message.parts.filter(
-                                (part) => part.type === 'source-url',
-                              ).length
-                            }
-                          />
-                          {message.parts
-                            .filter((part) => part.type === 'source-url')
-                            .map((part) => (
-                              <SourcesContent key={part.url}>
-                                <Source
-                                  key={part.url}
-                                  href={part.url}
-                                  title={part.url}
-                                />
-                              </SourcesContent>
-                            ))}
-                        </Sources>
-                      )}
+                    {message.role === 'assistant' && sourceParts.length > 0 && (
+                      <Sources>
+                        <SourcesTrigger count={sourceParts.length} />
+                        {sourceParts.map((part) => (
+                          <SourcesContent key={part.url}>
+                            <Source href={part.url} title={part.url} />
+                          </SourcesContent>
+                        ))}
+                      </Sources>
+                    )}
                     <MessageContent>
                       {message.parts.map((part, i) => {
                         switch (part.type) {
@@ -384,7 +374,7 @@ export default function ChatPage() {
                       })}
                     </MessageContent>
                   </MessageComponent>
-                ))
+                )})
               )}
               {status === 'submitted' && <Loader />}
             </ConversationContent>

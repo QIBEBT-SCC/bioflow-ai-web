@@ -129,9 +129,13 @@ export default function EditToolPage() {
   const removeDynamicParam = (index: number) => {
     setFormState((prev) => {
       if (!prev) return prev
-      const updated = prev.dynamic_params
-        .filter((_, idx) => idx !== index)
-        .map((param, idx) => ({ ...param, index: idx }))
+      const updated = prev.dynamic_params.reduce<typeof prev.dynamic_params>(
+        (acc, param, idx) => {
+          if (idx !== index) acc.push({ ...param, index: acc.length })
+          return acc
+        },
+        [],
+      )
       return {
         ...prev,
         dynamic_params: updated,
