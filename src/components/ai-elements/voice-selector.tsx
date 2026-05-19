@@ -34,7 +34,7 @@ import {
   VenusAndMarsIcon,
   VenusIcon,
 } from "lucide-react";
-import { createContext, useCallback, useContext, useMemo } from "react";
+import { createContext, use, useCallback, useMemo } from "react";
 
 interface VoiceSelectorContextValue {
   value: string | undefined;
@@ -48,7 +48,7 @@ const VoiceSelectorContext = createContext<VoiceSelectorContextValue | null>(
 );
 
 export const useVoiceSelector = () => {
-  const context = useContext(VoiceSelectorContext);
+  const context = use(VoiceSelectorContext);
   if (!context) {
     throw new Error(
       "VoiceSelector components must be used within VoiceSelector"
