@@ -94,7 +94,7 @@ export function AddModelDialog({
               id='new-model-name'
               value={newModel.name}
               onChange={(e) =>
-                setNewModel({ ...newModel, name: e.target.value })
+                setNewModel((prev) => ({ ...prev, name: e.target.value }))
               }
               placeholder='gpt-4, claude-3-opus, etc.'
             />
@@ -108,10 +108,10 @@ export function AddModelDialog({
                 step='0.0001'
                 value={newModel.input_price}
                 onChange={(e) =>
-                  setNewModel({
-                    ...newModel,
+                  setNewModel((prev) => ({
+                    ...prev,
                     input_price: Number(e.target.value),
-                  })
+                  }))
                 }
               />
             </div>
@@ -123,10 +123,10 @@ export function AddModelDialog({
                 step='0.0001'
                 value={newModel.output_price}
                 onChange={(e) =>
-                  setNewModel({
-                    ...newModel,
+                  setNewModel((prev) => ({
+                    ...prev,
                     output_price: Number(e.target.value),
-                  })
+                  }))
                 }
               />
             </div>
@@ -138,10 +138,10 @@ export function AddModelDialog({
                 step='0.0001'
                 value={newModel.cache_read_price}
                 onChange={(e) =>
-                  setNewModel({
-                    ...newModel,
+                  setNewModel((prev) => ({
+                    ...prev,
                     cache_read_price: Number(e.target.value),
-                  })
+                  }))
                 }
               />
             </div>
@@ -178,7 +178,7 @@ export function AddModelDialog({
               id='new-model-active'
               checked={newModel.is_active}
               onCheckedChange={(checked) =>
-                setNewModel({ ...newModel, is_active: checked })
+                setNewModel((prev) => ({ ...prev, is_active: checked }))
               }
             />
           </div>

@@ -629,7 +629,7 @@ export function StatisticsTab() {
             <Button
               variant='outline'
               size='sm'
-              onClick={() => setCurrentPage(currentPage - 1)}
+              onClick={() => setCurrentPage((prev) => prev - 1)}
               disabled={currentPage === 1}
             >
               <ChevronLeftIcon className='size-4' />
@@ -663,7 +663,7 @@ export function StatisticsTab() {
             <Button
               variant='outline'
               size='sm'
-              onClick={() => setCurrentPage(currentPage + 1)}
+              onClick={() => setCurrentPage((prev) => prev + 1)}
               disabled={currentPage === totalPages}
             >
               {t('next_page')}

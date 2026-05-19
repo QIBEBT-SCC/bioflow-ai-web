@@ -38,13 +38,13 @@ export function DatabasesList({
 
   const handlePrevPage = () => {
     if (offset > 0) {
-      setOffset(offset - pageSize)
+      setOffset((prev) => prev - pageSize)
     }
   }
 
   const handleNextPage = () => {
     if (offset + pageSize < totalCount) {
-      setOffset(offset + pageSize)
+      setOffset((prev) => prev + pageSize)
     }
   }
 

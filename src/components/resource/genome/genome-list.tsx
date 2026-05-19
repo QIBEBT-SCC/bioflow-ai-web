@@ -168,7 +168,7 @@ export function GenomeList({
                 <Button
                   variant='outline'
                   size='sm'
-                  onClick={() => setOffset(offset - pageSize)}
+                  onClick={() => setOffset((prev) => prev - pageSize)}
                   disabled={offset === 0}
                 >
                   <ChevronLeftIcon className='size-4' />
@@ -177,7 +177,7 @@ export function GenomeList({
                 <Button
                   variant='outline'
                   size='sm'
-                  onClick={() => setOffset(offset + pageSize)}
+                  onClick={() => setOffset((prev) => prev + pageSize)}
                   disabled={offset + pageSize >= totalCount}
                 >
                   下一页

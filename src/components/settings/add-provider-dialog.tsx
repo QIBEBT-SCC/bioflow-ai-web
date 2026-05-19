@@ -70,7 +70,7 @@ export function AddProviderDialog() {
               id='new-provider-name'
               value={newProvider.name}
               onChange={(e) =>
-                setNewProvider({ ...newProvider, name: e.target.value })
+                setNewProvider((prev) => ({ ...prev, name: e.target.value }))
               }
               placeholder='OpenAI, Anthropic, etc.'
             />
@@ -80,10 +80,10 @@ export function AddProviderDialog() {
             <Select
               value={newProvider.provider_type}
               onValueChange={(value) =>
-                setNewProvider({
-                  ...newProvider,
+                setNewProvider((prev) => ({
+                  ...prev,
                   provider_type: value as ProviderType,
-                })
+                }))
               }
             >
               <SelectTrigger id='new-provider-type'>
@@ -102,7 +102,7 @@ export function AddProviderDialog() {
               id='new-provider-baseurl'
               value={newProvider.base_url}
               onChange={(e) =>
-                setNewProvider({ ...newProvider, base_url: e.target.value })
+                setNewProvider((prev) => ({ ...prev, base_url: e.target.value }))
               }
               placeholder='https://api.provider.com/v1'
               className='font-mono text-sm'
@@ -115,7 +115,7 @@ export function AddProviderDialog() {
               type='password'
               value={newProvider.api_key || ''}
               onChange={(e) =>
-                setNewProvider({ ...newProvider, api_key: e.target.value })
+                setNewProvider((prev) => ({ ...prev, api_key: e.target.value }))
               }
               placeholder='sk-...'
               className='font-mono text-sm'
@@ -132,7 +132,7 @@ export function AddProviderDialog() {
               id='new-provider-proxy'
               checked={newProvider.use_proxy}
               onCheckedChange={(checked) =>
-                setNewProvider({ ...newProvider, use_proxy: checked })
+                setNewProvider((prev) => ({ ...prev, use_proxy: checked }))
               }
             />
           </div>
@@ -149,7 +149,7 @@ export function AddProviderDialog() {
               id='new-provider-active'
               checked={newProvider.is_active}
               onCheckedChange={(checked) =>
-                setNewProvider({ ...newProvider, is_active: checked })
+                setNewProvider((prev) => ({ ...prev, is_active: checked }))
               }
             />
           </div>

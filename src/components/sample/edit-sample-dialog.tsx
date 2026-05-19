@@ -50,7 +50,7 @@ export function EditSampleDialog({
   }, [sample])
 
   const handleAddMetaData = () => {
-    setMetaData([...metaData, { key: '', value: '' }])
+    setMetaData((prev) => [...prev, { key: '', value: '' }])
   }
 
   const handleRemoveMetaData = (index: number) => {
