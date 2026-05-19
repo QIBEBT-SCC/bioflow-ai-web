@@ -132,7 +132,7 @@ export function GenomeDownloadDialog({
                     </code>
                   ) : (
                     <span className='text-muted-foreground text-xs'>
-                      —（无需下载）
+                      （无需下载）
                     </span>
                   )}
                 </dd>

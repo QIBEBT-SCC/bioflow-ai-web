@@ -76,11 +76,11 @@ export function RegisterForm({
         })
 
         if (!res.ok) {
-          const data = await res.json().catch(() => null)
           if (res.status === 422) {
             setError(t('invalid_params'))
             return
           }
+          const data = await res.json().catch(() => null)
           throw new ClientApiError(
             data?.detail || `${t('register_failed')} (${res.status})`,
             res.status,
