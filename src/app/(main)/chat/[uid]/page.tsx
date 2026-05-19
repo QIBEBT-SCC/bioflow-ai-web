@@ -81,7 +81,6 @@ import {
   useChatSession,
   useCreateChatSession,
 } from '@/hooks/use-chat'
-import { useChatStore } from '@/stores/chat-store'
 
 const AttachmentItem = memo(
   ({
@@ -177,8 +176,6 @@ export default function ChatPage() {
   const [useRebuildMode, setUseRebuildMode] = useState<boolean>(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  const { setDebugMessages } = useChatStore()
-
   const { data: chatSession, error: sessionError } = useChatSession(sessionId)
   const { data: initMessages } = useChatHistory(sessionId)
   const { mutateAsync: createChatSession } = useCreateChatSession()
@@ -224,11 +221,6 @@ export default function ChatPage() {
     )
     setText('')
   }
-
-  // Sync messages for debug store
-  useEffect(() => {
-    setDebugMessages(messages)
-  }, [messages, setDebugMessages])
 
   return (
     <SidebarInset className='h-screen flex flex-col'>

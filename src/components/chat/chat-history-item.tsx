@@ -38,7 +38,7 @@ export function ChatHistoryItem({
 }: ChatHistoryItemProps) {
   const { push } = useRouter()
   const [isEditing, setIsEditing] = useState(false)
-  const [inputValue, setInputValue] = useState(chat.description)
+  const [inputValue, setInputValue] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -181,6 +181,7 @@ export function ChatHistoryItem({
             <DropdownMenuItem
               onClick={(e) => {
                 e.stopPropagation()
+                setInputValue(chat.description)
                 setIsEditing(true)
               }}
             >

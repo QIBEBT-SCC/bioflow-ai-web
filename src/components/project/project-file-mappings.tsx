@@ -178,6 +178,7 @@ export function ProjectFileMappings({ projectId }: ProjectFileMappingsProps) {
       {/* 编辑对话框 */}
       {editingMapping && (
         <EditProjectFileMappingDialog
+          key={editingMapping.id}
           projectId={projectId}
           mapping={editingMapping}
           open={!!editingMapping}
