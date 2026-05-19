@@ -190,10 +190,10 @@ export function SaveAsDialog({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={String(ExecutionScope.SAMPLE_LEVEL)}>
-                  样本级 — 为每个样本独立运行
+                  样本级: 为每个样本独立运行
                 </SelectItem>
                 <SelectItem value={String(ExecutionScope.PROJECT_LEVEL)}>
-                  项目级 — 整个项目运行一次
+                  项目级: 整个项目运行一次
                 </SelectItem>
               </SelectContent>
             </Select>
