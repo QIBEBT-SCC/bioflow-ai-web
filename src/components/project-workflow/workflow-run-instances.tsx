@@ -104,10 +104,12 @@ export function WorkflowRunInstances({
   const isLoading = samplesLoading || runsLoading
 
   // 按此工作流过滤运行实例，并以 sample_uid 为 key
-  const runMap = new Map(
-    (allRuns ?? [])
-      .filter((r) => r.workflow_uid === workflowUid)
-      .map((r) => [r.sample_uid, r]),
+  const runMap = (allRuns ?? []).reduce<Map<string | null, typeof allRuns[0]>>(
+    (acc, r) => {
+      if (r.workflow_uid === workflowUid) acc.set(r.sample_uid, r)
+      return acc
+    },
+    new Map(),
   )
 
   // 项目级：筛选 sample_uid 为 null 的运行实例

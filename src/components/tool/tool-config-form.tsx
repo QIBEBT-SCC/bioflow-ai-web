@@ -182,9 +182,11 @@ export function ToolConfigForm({
     if (!selectedGroup) return
 
     // 找到所有分组对应的标签(用于移除)
-    const groupTagIds = toolGroups
-      .map((g) => availableTags.find((t) => t.name === g.name)?.id)
-      .filter((id): id is number => id !== undefined)
+    const groupTagIds = toolGroups.reduce<number[]>((acc, g) => {
+      const id = availableTags.find((t) => t.name === g.name)?.id
+      if (id !== undefined) acc.push(id)
+      return acc
+    }, [])
 
     // 移除所有分组相关的标签
     const tagsWithoutGroupTags = value.tags.filter(
