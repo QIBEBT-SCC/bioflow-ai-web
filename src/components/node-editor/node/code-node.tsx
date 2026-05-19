@@ -134,7 +134,7 @@ const DownstreamSummaryCard = memo(function DownstreamSummaryCard() {
     }
   }, [nodeData?.data.prompt])
 
-  const handleBlur = useCallback(() => {
+  const saveNodeData = useCallback(() => {
     updateNodeData(nodeId, { prompt })
   }, [nodeId, prompt, updateNodeData])
 
@@ -147,7 +147,7 @@ const DownstreamSummaryCard = memo(function DownstreamSummaryCard() {
         placeholder='输入 prompt...'
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
-        onBlur={handleBlur}
+        onBlur={saveNodeData}
         disabled={readOnly}
       />
     </div>
