@@ -4,7 +4,7 @@ import { ArrowLeft, ArrowRight, Check } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { getTool } from '@/app/actions/tool'
 import {
@@ -39,6 +39,14 @@ import type {
   ToolTag,
 } from '@/types/tool'
 export default function AddToolPage() {
+  return (
+    <Suspense>
+      <AddToolPageContent />
+    </Suspense>
+  )
+}
+
+function AddToolPageContent() {
   const t = useTranslations('tool.AddPage')
   const tPage = useTranslations('tool.Page')
   const steps = [

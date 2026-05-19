@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import type React from 'react'
@@ -203,9 +204,9 @@ export function RegisterForm({
               </div>
               <div className='text-center text-sm'>
                 {t('have_account')}{' '}
-                <a href='/login' className='underline'>
+                <Link href='/login' className='underline'>
                   {t('login')}
-                </a>
+                </Link>
               </div>
             </div>
           </form>

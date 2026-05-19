@@ -1,6 +1,7 @@
 'use client'
 
 import { useQueryClient } from '@tanstack/react-query'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import type React from 'react'
@@ -106,12 +107,12 @@ export function LoginForm({
                 <div className='grid gap-2'>
                   <div className='flex items-center'>
                     <Label htmlFor='password'>{t('password')}</Label>
-                    <a
+                    <Link
                       href='/'
                       className='ml-auto text-sm underline-offset-4 hover:underline'
                     >
                       {t('forgot_password')}
-                    </a>
+                    </Link>
                   </div>
                   <Input
                     id='password'
@@ -130,9 +131,9 @@ export function LoginForm({
               </div>
               <div className='text-center text-sm'>
                 {t('no_account')}{' '}
-                <a href='/register' className='underline'>
+                <Link href='/register' className='underline'>
                   {t('signup')}
-                </a>
+                </Link>
               </div>
             </div>
           </form>

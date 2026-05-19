@@ -50,6 +50,7 @@ export function FileViewer({
           alt={fileName}
           fill
           unoptimized
+          sizes='100vw'
           className='object-contain'
         />
       </div>
