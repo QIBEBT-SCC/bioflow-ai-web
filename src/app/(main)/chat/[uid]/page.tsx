@@ -303,10 +303,10 @@ export default function ChatPage() {
                           />
                           {message.parts
                             .filter((part) => part.type === 'source-url')
-                            .map((part, i) => (
-                              <SourcesContent key={`${message.id}-${i}`}>
+                            .map((part) => (
+                              <SourcesContent key={part.url}>
                                 <Source
-                                  key={`${message.id}-${i}`}
+                                  key={part.url}
                                   href={part.url}
                                   title={part.url}
                                 />
@@ -321,6 +321,7 @@ export default function ChatPage() {
                             const isLastMessage =
                               messageIndex === messages.length - 1
                             return (
+                              // biome-ignore lint/suspicious/noArrayIndexKey: message parts have no unique ID
                               <Fragment key={`${message.id}-${i}`}>
                                 <MessageResponse>{part.text}</MessageResponse>
                                 {message.role === 'assistant' &&
@@ -349,6 +350,7 @@ export default function ChatPage() {
                           }
                           case 'reasoning':
                             return (
+                              // biome-ignore lint/suspicious/noArrayIndexKey: message parts have no unique ID
                               <Reasoning
                                 key={`${message.id}-${i}`}
                                 className='w-full'

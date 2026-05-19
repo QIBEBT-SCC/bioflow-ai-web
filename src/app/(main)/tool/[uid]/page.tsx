@@ -170,9 +170,9 @@ export default function ToolDetailPage() {
                       Dynamic Parameters
                     </h4>
                     <div className='space-y-3'>
-                      {tool.dynamic_params.map((param, index) => (
+                      {tool.dynamic_params.map((param) => (
                         <div
-                          key={`param-${index}-${param.command}`}
+                          key={param.command}
                           className='border border-border rounded-lg p-4 space-y-2'
                         >
                           <code className='text-sm font-mono bg-muted px-2 py-1 rounded'>
@@ -243,9 +243,9 @@ export default function ToolDetailPage() {
                       </TabsTrigger>
                     </TabsList>
                     <TabsContent value='input' className='space-y-3 mt-4'>
-                      {inputFiles.map((file, index) => (
+                      {inputFiles.map((file) => (
                         <div
-                          key={`file-${index}-${file.name}`}
+                          key={file.name}
                           className='border border-border rounded-lg p-4 space-y-2'
                         >
                           <h4 className='font-semibold text-sm'>{file.name}</h4>
@@ -275,9 +275,9 @@ export default function ToolDetailPage() {
                       ))}
                     </TabsContent>
                     <TabsContent value='output' className='space-y-3 mt-4'>
-                      {outputFiles.map((file, index) => (
+                      {outputFiles.map((file) => (
                         <div
-                          key={`file-${index}-${file.name}`}
+                          key={file.name}
                           className='border border-border rounded-lg p-4 space-y-2'
                         >
                           <div className='flex items-center justify-between'>

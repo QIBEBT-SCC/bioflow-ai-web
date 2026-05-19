@@ -292,6 +292,7 @@ export const SpeechInput = ({
       {/* Animated pulse rings */}
       {isListening &&
         [0, 1, 2].map((index) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: static list of 3 animation rings
           <div
             className="absolute inset-0 animate-ping rounded-full border-2 border-red-400/30"
             key={index}

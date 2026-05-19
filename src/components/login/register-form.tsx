@@ -229,6 +229,7 @@ function PasswordStrengthBar({
     <div className='grid gap-1'>
       <div className='flex gap-1'>
         {([0, 1, 2, 3] as const).map((i) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: static list of 4 fixed items
           <div
             key={i}
             className={cn(
