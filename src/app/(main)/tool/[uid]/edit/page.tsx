@@ -35,7 +35,7 @@ import type {
 
 export default function EditToolPage() {
   const params = useParams()
-  const router = useRouter()
+  const { push } = useRouter()
   const toolUid = params.uid as string
   const { data: tool, isLoading } = useTool(toolUid)
   const { data: toolGroups = [] } = useToolGroupList()
@@ -216,7 +216,7 @@ export default function EditToolPage() {
       { uid: tool.uid, tool: requestData },
       {
         onSuccess: () => {
-          router.push(`/tool/${tool.uid}`)
+          push(`/tool/${tool.uid}`)
         },
       },
     )
@@ -320,7 +320,7 @@ export default function EditToolPage() {
             <div className='flex gap-3'>
               <Button
                 variant='outline'
-                onClick={() => router.push(`/tool/${tool?.uid}`)}
+                onClick={() => push(`/tool/${tool?.uid}`)}
                 disabled={isUpdating}
               >
                 取消

@@ -45,7 +45,7 @@ import type { ToolImage } from '@/types/tool'
 export default function ImageDetailPage() {
   const t = useTranslations('image.detail')
   const params = useParams()
-  const router = useRouter()
+  const { push } = useRouter()
   const uid = params.uid as string
   const [isEditing, setIsEditing] = useState(false)
 
@@ -144,7 +144,7 @@ export default function ImageDetailPage() {
             <p className='text-muted-foreground mb-4'>
               {error?.message || t('notFoundDesc')}
             </p>
-            <Button onClick={() => router.push('/image')} variant='outline'>
+            <Button onClick={() => push('/image')} variant='outline'>
               <ArrowLeftIcon className='size-4 mr-2' />
               {t('backToList')}
             </Button>
