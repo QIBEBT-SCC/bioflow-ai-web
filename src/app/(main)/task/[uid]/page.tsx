@@ -150,7 +150,7 @@ export default function TaskDetailPage() {
       </header>
 
       <main className='flex-1 overflow-y-auto'>
-        <div className='container mx-auto px-6 py-6 max-w-7xl'>
+        <div className='container mx-auto p-6 max-w-7xl'>
           {/* 任务标题卡片 - 简约扁平化 */}
           <Card className='mb-6'>
             <CardContent className='pt-6'>

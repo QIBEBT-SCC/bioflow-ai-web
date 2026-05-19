@@ -154,7 +154,7 @@ export function ToolParamCard({
         </div>
 
         <div className='flex gap-4'>
-          <div className='flex items-center space-x-2'>
+          <div className='flex items-center gap-x-2'>
             <Checkbox
               id={`param-position-${index}`}
               checked={param.is_position}
@@ -332,7 +332,7 @@ export function ToolFileCard({
         </div>
 
         <div className='flex gap-4'>
-          <div className='flex items-center space-x-2'>
+          <div className='flex items-center gap-x-2'>
             <Checkbox
               id={`file-report-${index}`}
               checked={file.is_report}
@@ -342,7 +342,7 @@ export function ToolFileCard({
             />
             <Label htmlFor={`file-report-${index}`}>{t('reportFile')}</Label>
           </div>
-          <div className='flex items-center space-x-2'>
+          <div className='flex items-center gap-x-2'>
             <Checkbox
               id={`file-log-${index}`}
               checked={file.is_log}
