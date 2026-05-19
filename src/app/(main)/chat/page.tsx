@@ -63,13 +63,13 @@ const PromptInputAttachmentsDisplay = () => {
 }
 
 export default function ChatPage() {
-  const router = useRouter()
+  const { push } = useRouter()
 
   const { mutateAsync: createChatSession } = useCreateChatSession()
 
   const handleNewChat = async () => {
     const session = await createChatSession()
-    router.push(`/chat/${session.uid}`)
+    push(`/chat/${session.uid}`)
   }
 
   return (

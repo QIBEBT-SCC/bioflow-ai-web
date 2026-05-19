@@ -66,7 +66,7 @@ function AddToolPageContent() {
       description: t('steps.step3.description'),
     },
   ]
-  const router = useRouter()
+  const { push } = useRouter()
   const searchParams = useSearchParams()
   const initialStep = Number(searchParams.get('step')) || 1
   const copyUid = searchParams.get('copy')
@@ -142,7 +142,7 @@ function AddToolPageContent() {
     createTool(requestData, {
       onSuccess: () => {
         toast.success(t('createSuccess'))
-        router.push('/tool')
+        push('/tool')
       },
     })
   }

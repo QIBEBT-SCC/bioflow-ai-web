@@ -17,7 +17,7 @@ import type { ChatSessionPublic } from '@/types/chat'
 
 export function ChatHistoryMenu() {
   const params = useParams()
-  const router = useRouter()
+  const { push } = useRouter()
   const currentSessionId = params.uid as string
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
@@ -37,7 +37,7 @@ export function ChatHistoryMenu() {
 
   const handleSelectChat = async (chat: ChatSessionPublic) => {
     setOpen(false)
-    router.push(`/chat/${chat.uid}`)
+    push(`/chat/${chat.uid}`)
   }
 
   return (

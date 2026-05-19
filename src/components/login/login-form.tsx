@@ -20,7 +20,7 @@ export function LoginForm({
 }: React.ComponentPropsWithoutRef<'div'>) {
   const [error, setError] = useState<string>('')
   const [isPending, startTransition] = useTransition()
-  const router = useRouter()
+  const { push } = useRouter()
   const queryClient = useQueryClient()
 
   const t = useTranslations('Login')
@@ -67,7 +67,7 @@ export function LoginForm({
           // 即使失败，cookie 已设置，跳转后 AuthGuard 会正常处理
         }
 
-        router.push('/')
+        push('/')
       } catch (err) {
         console.error('Login error:', err)
         if (err instanceof ClientApiError) {

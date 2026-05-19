@@ -169,7 +169,7 @@ const PromptInputAttachmentsDisplay = () => {
 
 export default function ChatPage() {
   const params = useParams()
-  const router = useRouter()
+  const { push, replace } = useRouter()
   const sessionId = params.uid as string
 
   const [text, setText] = useState<string>('')
@@ -192,13 +192,13 @@ export default function ChatPage() {
   useEffect(() => {
     if (sessionError) {
       console.warn('Chat session not found, redirecting to /chat')
-      router.replace('/chat')
+      replace('/chat')
     }
   }, [sessionError, router])
 
   const handleNewChat = async () => {
     const session = await createChatSession()
-    router.push(`/chat/${session.uid}`)
+    push(`/chat/${session.uid}`)
   }
 
   const handleSubmit = async (message: PromptInputMessage) => {

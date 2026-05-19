@@ -50,7 +50,7 @@ export function RegisterForm({
   const [emailTouched, setEmailTouched] = useState(false)
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const router = useRouter()
+  const { push } = useRouter()
   const t = useTranslations('Register')
 
   const emailValid = isValidEmail(email)
@@ -88,7 +88,7 @@ export function RegisterForm({
           )
         }
 
-        router.push('/login')
+        push('/login')
       } catch (err) {
         console.error('Register error:', err)
         if (err instanceof ClientApiError) {
