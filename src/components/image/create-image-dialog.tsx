@@ -18,6 +18,13 @@ import { Textarea } from '@/components/ui/textarea'
 import { useCreateImage } from '@/hooks/use-tool'
 import type { ToolImage } from '@/types/tool'
 
+const DEFAULT_TRIGGER = (
+  <Button>
+    <Plus className='size-4 mr-2' />
+    新建镜像
+  </Button>
+)
+
 interface CreateImageDialogProps {
   trigger?: React.ReactNode
 }
@@ -75,16 +82,9 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
     })
   }
 
-  const defaultTrigger = (
-    <Button>
-      <Plus className='size-4 mr-2' />
-      新建镜像
-    </Button>
-  )
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{trigger || defaultTrigger}</DialogTrigger>
+      <DialogTrigger asChild>{trigger || DEFAULT_TRIGGER}</DialogTrigger>
       <DialogContent className='max-w-2xl max-h-[90vh] overflow-y-auto'>
         <DialogHeader>
           <DialogTitle className='flex items-center gap-2'>

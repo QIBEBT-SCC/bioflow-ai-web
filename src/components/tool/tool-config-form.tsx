@@ -63,6 +63,8 @@ export type ToolConfigValues = Omit<
   modifiable_static_params: string | null // UI 层面允许 null
 }
 
+const EMPTY_TAGS: ToolTag[] = []
+
 interface ToolConfigFormProps {
   value: ToolConfigValues
   toolGroups: ToolGroup[]
@@ -107,7 +109,7 @@ interface ToolConfigFormProps {
 export function ToolConfigForm({
   value,
   toolGroups,
-  availableTags = [],
+  availableTags = EMPTY_TAGS,
   onFieldChange,
   onAddDynamicParam,
   onUpdateDynamicParam,
