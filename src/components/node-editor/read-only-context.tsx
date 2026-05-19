@@ -1,9 +1,9 @@
 'use client'
 
-import { createContext, useContext } from 'react'
+import { createContext, use } from 'react'
 
 const ReadOnlyContext = createContext(false)
 
 export const ReadOnlyProvider = ReadOnlyContext.Provider
 
-export const useReadOnly = () => useContext(ReadOnlyContext)
+export const useReadOnly = () => use(ReadOnlyContext)
