@@ -156,11 +156,11 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({
                     )}
                   >
                     <span className='flex items-center'>
-                      <GroupIcon className='h-4 w-4 mr-2' />
+                      <GroupIcon className='size-4 mr-2' />
                       {t(group.labelKey)}
                     </span>
                     {hasInlineSubmenu && (
-                      <ChevronRightIcon className='h-4 w-4' />
+                      <ChevronRightIcon className='size-4' />
                     )}
                   </button>
 
@@ -192,11 +192,11 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({
                               )}
                             >
                               <span className='flex items-center'>
-                                <ItemIcon className='h-4 w-4 mr-2' />
+                                <ItemIcon className='size-4 mr-2' />
                                 {t(item.labelKey)}
                               </span>
                               {hasSubItems && (
-                                <ChevronRightIcon className='h-4 w-4' />
+                                <ChevronRightIcon className='size-4' />
                               )}
                             </button>
 
@@ -218,7 +218,7 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({
                                       }
                                       className='w-full text-left px-4 py-2 text-sm hover:bg-accent flex items-center transition-colors'
                                     >
-                                      <SubIcon className='h-4 w-4 mr-2' />
+                                      <SubIcon className='size-4 mr-2' />
                                       {t(sub.labelKey)}
                                     </button>
                                   )

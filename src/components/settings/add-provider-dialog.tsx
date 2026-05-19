@@ -54,7 +54,7 @@ export function AddProviderDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button className='gap-2'>
-          <PlusIcon className='h-4 w-4' />
+          <PlusIcon className='size-4' />
           {t('add_provider')}
         </Button>
       </DialogTrigger>

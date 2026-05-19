@@ -72,7 +72,7 @@ export function ToolParamCard({
               {...listeners}
               className='cursor-grab text-muted-foreground hover:text-foreground active:cursor-grabbing'
             >
-              <GripVertical className='h-4 w-4' />
+              <GripVertical className='size-4' />
             </button>
             <CardTitle className='text-base'>
               {t('param', { index: index + 1 })}
@@ -90,7 +90,7 @@ export function ToolParamCard({
             className='text-muted-foreground hover:text-destructive'
             onClick={() => onRemoveAction(index)}
           >
-            <Trash2 className='h-4 w-4' />
+            <Trash2 className='size-4' />
           </Button>
         </div>
       </CardHeader>
@@ -134,7 +134,7 @@ export function ToolParamCard({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <HelpCircle className='h-4 w-4 inline-block ml-1 text-muted-foreground' />
+                  <HelpCircle className='size-4 inline-block ml-1 text-muted-foreground' />
                 </TooltipTrigger>
                 <TooltipContent>
                   <p className='max-w-xs'>
@@ -219,7 +219,7 @@ export function ToolFileCard({
               {...listeners}
               className='cursor-grab text-muted-foreground hover:text-foreground active:cursor-grabbing'
             >
-              <GripVertical className='h-4 w-4' />
+              <GripVertical className='size-4' />
             </button>
             <CardTitle className='text-base'>
               {t('file', { index: index + 1, name: file.name || t('unnamed') })}
@@ -247,7 +247,7 @@ export function ToolFileCard({
             className='text-muted-foreground hover:text-destructive'
             onClick={() => onRemoveAction(index)}
           >
-            <Trash2 className='h-4 w-4' />
+            <Trash2 className='size-4' />
           </Button>
         </div>
       </CardHeader>

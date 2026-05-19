@@ -42,7 +42,7 @@ export function RunTerminal({
           终端
         </span>
         <ChevronDownIcon
-          className={`h-3 w-3 text-zinc-500 transition-transform duration-200 ${isOpen ? '' : 'rotate-180'}`}
+          className={`size-3 text-zinc-500 transition-transform duration-200 ${isOpen ? '' : 'rotate-180'}`}
         />
       </button>
       <div

@@ -320,9 +320,9 @@ export function ToolConfigForm({
                       title={isRunning ? t('testHelpRunning') : t('testHelp')}
                     >
                       {isRunning ? (
-                        <Loader2Icon className='h-4 w-4 animate-spin' />
+                        <Loader2Icon className='size-4 animate-spin' />
                       ) : (
-                        <PlayIcon className='h-4 w-4' />
+                        <PlayIcon className='size-4' />
                       )}
                     </Button>
                   )}
@@ -400,7 +400,7 @@ export function ToolConfigForm({
               {showAIGeneratePlaceholder && (
                 <div className='flex justify-end pt-4 border-t'>
                   <Button variant='outline' disabled>
-                    <SparklesIcon className='h-4 w-4 mr-2' />
+                    <SparklesIcon className='size-4 mr-2' />
                     {t('aiGenerate')}
                     <Badge variant='secondary' className='ml-2'>
                       {t('comingSoon')}

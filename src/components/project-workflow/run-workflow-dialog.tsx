@@ -138,7 +138,7 @@ export function RunWorkflowDialog({
               <ScrollArea className='h-[250px] rounded-md border p-4'>
                 {isLoading ? (
                   <div className='flex items-center justify-center py-12'>
-                    <Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
+                    <Loader2 className='size-8 animate-spin text-muted-foreground' />
                   </div>
                 ) : !samples || samples.length === 0 ? (
                   <div className='text-center py-12 text-muted-foreground'>
@@ -162,7 +162,7 @@ export function RunWorkflowDialog({
                             type='checkbox'
                             checked={selectedSamples.has(sample.uid)}
                             onChange={() => toggleSample(sample.uid)}
-                            className='h-4 w-4 rounded border-gray-300'
+                            className='size-4 rounded border-gray-300'
                             onClick={(e) => e.stopPropagation()}
                           />
                         </div>
@@ -251,7 +251,7 @@ export function RunWorkflowDialog({
           >
             {runWorkflowMutation.isPending ? (
               <>
-                <Loader2 className='h-4 w-4 mr-2 animate-spin' />
+                <Loader2 className='size-4 mr-2 animate-spin' />
                 运行中...
               </>
             ) : (

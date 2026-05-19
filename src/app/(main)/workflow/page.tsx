@@ -100,7 +100,7 @@ export default function WorkflowPage() {
             </div>
             <div className='flex items-center gap-2'>
               <div className='flex items-center text-sm text-muted-foreground bg-muted/50 px-3 py-2 rounded-md'>
-                <Clock className='mr-2 h-4 w-4' />
+                <Clock className='mr-2 size-4' />
                 更新于 {format(lastRefreshTime, 'HH:mm:ss')}
               </div>
               <Select
@@ -125,7 +125,7 @@ export default function WorkflowPage() {
                 onClick={handleForceRefresh}
                 title='手动刷新'
               >
-                <RefreshCw className='h-4 w-4' />
+                <RefreshCw className='size-4' />
               </Button>
             </div>
           </div>
@@ -135,7 +135,7 @@ export default function WorkflowPage() {
             <Card>
               <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
                 <CardTitle className='text-sm font-medium'>总工作流</CardTitle>
-                <Activity className='h-4 w-4 text-muted-foreground' />
+                <Activity className='size-4 text-muted-foreground' />
               </CardHeader>
               <CardContent>
                 <div className='text-2xl font-bold'>{runStats?.total ?? 0}</div>
@@ -148,7 +148,7 @@ export default function WorkflowPage() {
             <Card>
               <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
                 <CardTitle className='text-sm font-medium'>等待中</CardTitle>
-                <Clock className='h-4 w-4 text-yellow-500' />
+                <Clock className='size-4 text-yellow-500' />
               </CardHeader>
               <CardContent>
                 <div className='text-2xl font-bold text-yellow-600'>
@@ -161,7 +161,7 @@ export default function WorkflowPage() {
             <Card>
               <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
                 <CardTitle className='text-sm font-medium'>运行中</CardTitle>
-                <Play className='h-4 w-4 text-blue-500' />
+                <Play className='size-4 text-blue-500' />
               </CardHeader>
               <CardContent>
                 <div className='text-2xl font-bold text-blue-600'>
@@ -174,7 +174,7 @@ export default function WorkflowPage() {
             <Card>
               <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
                 <CardTitle className='text-sm font-medium'>已完成</CardTitle>
-                <CheckCircle className='h-4 w-4 text-green-500' />
+                <CheckCircle className='size-4 text-green-500' />
               </CardHeader>
               <CardContent>
                 <div className='text-2xl font-bold text-green-600'>
@@ -187,7 +187,7 @@ export default function WorkflowPage() {
             <Card>
               <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
                 <CardTitle className='text-sm font-medium'>失败</CardTitle>
-                <XCircle className='h-4 w-4 text-red-500' />
+                <XCircle className='size-4 text-red-500' />
               </CardHeader>
               <CardContent>
                 <div className='text-2xl font-bold text-red-600'>

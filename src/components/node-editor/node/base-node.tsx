@@ -111,7 +111,7 @@ const BaseNode = memo(function BaseNode({
                   type='target'
                   position={Position.Left}
                   className={cn(
-                    '!left-3 h-2.5 w-2.5 rounded-full border !border-border !bg-background shadow-xs transition-all duration-200',
+                    '!left-3 size-2.5 rounded-full border !border-border !bg-background shadow-xs transition-all duration-200',
                     'hover:!border-primary/50 hover:!bg-primary/10 hover:!scale-110',
                     isConnected(`${nodeId}-in-${input.name}`) &&
                       '!border-teal-500 !bg-teal-100',
@@ -147,7 +147,7 @@ const BaseNode = memo(function BaseNode({
                   type='source'
                   position={Position.Right}
                   className={cn(
-                    '!right-3 h-2.5 w-2.5 rounded-full border border-border !bg-background shadow-xs transition-all duration-200',
+                    '!right-3 size-2.5 rounded-full border border-border !bg-background shadow-xs transition-all duration-200',
                     'hover:!border-primary/50 hover:!bg-primary/10 hover:!scale-110',
                     isConnected(`${nodeId}-out-${output.name}`) &&
                       '!border-indigo-500 !bg-indigo-100',
@@ -178,7 +178,7 @@ const BaseNode = memo(function BaseNode({
         <Sheet>
           <SheetTrigger asChild>
             <Button className='text-muted-foreground/70 transition-colors !bg-transparent hover:text-foreground'>
-              <InfoIcon className='h-3.5 w-3.5' />
+              <InfoIcon className='size-3.5' />
             </Button>
           </SheetTrigger>
           <SheetContent>
@@ -318,7 +318,7 @@ const RunStatusBar = memo(function RunStatusBar({
       <div className='flex items-center gap-1.5 font-medium'>
         <Icon
           className={cn(
-            'h-3 w-3',
+            'size-3',
             runData.status === Status.RUNNING && 'animate-spin',
           )}
         />

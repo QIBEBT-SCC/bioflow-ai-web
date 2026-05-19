@@ -132,7 +132,7 @@ export function ParticleNetwork() {
   return (
     <canvas
       ref={canvasRef}
-      className='absolute inset-0 w-full h-full pointer-events-none'
+      className='absolute inset-0 size-full pointer-events-none'
       aria-hidden
     />
   )

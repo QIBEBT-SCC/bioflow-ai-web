@@ -14,7 +14,7 @@ export function ProviderList() {
   if (providers.length === 0) {
     return (
       <Card className='p-12 text-center'>
-        <SettingsIcon className='h-12 w-12 mx-auto mb-4 text-muted-foreground' />
+        <SettingsIcon className='size-12 mx-auto mb-4 text-muted-foreground' />
         <h3 className='text-lg font-semibold mb-2'>{t('no_providers')}</h3>
         <p className='text-muted-foreground mb-4'>{t('no_providers_desc')}</p>
         <AddProviderDialog />

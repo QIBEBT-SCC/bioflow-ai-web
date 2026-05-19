@@ -41,7 +41,7 @@ export function GuestGuard({ children }: { children: React.ReactNode }) {
     return (
       <div className='flex h-screen items-center justify-center'>
         <div className='flex flex-col items-center gap-4'>
-          <Loader2Icon className='h-8 w-8 animate-spin text-primary' />
+          <Loader2Icon className='size-8 animate-spin text-primary' />
           <p className='text-sm text-muted-foreground'>验证身份中...</p>
         </div>
       </div>

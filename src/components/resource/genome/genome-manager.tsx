@@ -18,7 +18,7 @@ export function GenomeManager() {
       {/* 工具栏 */}
       <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
         <div className='relative flex-1 max-w-sm'>
-          <Search className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
+          <Search className='absolute left-2.5 top-2.5 size-4 text-muted-foreground' />
           <Input
             placeholder='搜索物种名或别名...'
             className='pl-9'
@@ -27,7 +27,7 @@ export function GenomeManager() {
           />
         </div>
         <Button onClick={() => setIsDownloadOpen(true)}>
-          <Download className='h-4 w-4 mr-2' />
+          <Download className='size-4 mr-2' />
           下载基因组
         </Button>
       </div>
@@ -52,7 +52,7 @@ export function GenomeManager() {
             />
           ) : (
             <div className='flex h-full min-h-[400px] flex-col items-center justify-center gap-2 text-center text-muted-foreground'>
-              <Search className='h-8 w-8 opacity-30' />
+              <Search className='size-8 opacity-30' />
               <p className='text-sm'>点击左侧列表中的基因组查看详情</p>
             </div>
           )}

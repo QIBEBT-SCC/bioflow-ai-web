@@ -164,7 +164,7 @@ export function SampleList({ projectId }: SampleListProps) {
     return (
       <Card>
         <CardContent className='flex items-center justify-center py-12'>
-          <Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
+          <Loader2 className='size-8 animate-spin text-muted-foreground' />
         </CardContent>
       </Card>
     )
@@ -219,9 +219,9 @@ export function SampleList({ projectId }: SampleListProps) {
                           onClick={() => toggleSampleExpand(sample.uid)}
                         >
                           {isExpanded ? (
-                            <ChevronDownIcon className='h-4 w-4' />
+                            <ChevronDownIcon className='size-4' />
                           ) : (
-                            <ChevronRightIcon className='h-4 w-4' />
+                            <ChevronRightIcon className='size-4' />
                           )}
                         </TableCell>
                         <TableCell
@@ -261,21 +261,21 @@ export function SampleList({ projectId }: SampleListProps) {
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant='ghost' size='icon'>
-                                <MoreHorizontal className='h-4 w-4' />
+                                <MoreHorizontal className='size-4' />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align='end'>
                               <DropdownMenuItem
                                 onClick={() => setEditingSample(sample.uid)}
                               >
-                                <EditIcon className='h-4 w-4 mr-2' />
+                                <EditIcon className='size-4 mr-2' />
                                 编辑
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 className='text-destructive'
                                 onClick={() => setDeletingSample(sample.uid)}
                               >
-                                <Trash2Icon className='h-4 w-4 mr-2' />
+                                <Trash2Icon className='size-4 mr-2' />
                                 删除
                               </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -366,7 +366,7 @@ export function SampleList({ projectId }: SampleListProps) {
                                           </TableCell>
                                           <TableCell>
                                             <div className='flex items-center'>
-                                              <CheckIcon className='h-4 w-4 text-green-500 mr-1' />
+                                              <CheckIcon className='size-4 text-green-500 mr-1' />
                                               <span
                                                 className='text-xs truncate w-16'
                                                 title={file.md5_checksum}
@@ -395,7 +395,7 @@ export function SampleList({ projectId }: SampleListProps) {
                                                 })
                                               }
                                             >
-                                              <Trash2Icon className='h-4 w-4 text-destructive' />
+                                              <Trash2Icon className='size-4 text-destructive' />
                                             </Button>
                                           </TableCell>
                                         </TableRow>

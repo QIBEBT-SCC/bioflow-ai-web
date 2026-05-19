@@ -269,9 +269,9 @@ export function ProjectResourcesList() {
                   >
                     <TableCell onClick={() => toggleSampleExpand(sample.uid)}>
                       {expandedSamples[sample.uid] ? (
-                        <ChevronDownIcon className='h-4 w-4' />
+                        <ChevronDownIcon className='size-4' />
                       ) : (
-                        <ChevronRightIcon className='h-4 w-4' />
+                        <ChevronRightIcon className='size-4' />
                       )}
                     </TableCell>
                     <TableCell
@@ -311,7 +311,7 @@ export function ProjectResourcesList() {
                     </TableCell>
                     <TableCell>
                       <Button variant='ghost' size='icon'>
-                        <DownloadIcon className='h-4 w-4' />
+                        <DownloadIcon className='size-4' />
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -367,7 +367,7 @@ export function ProjectResourcesList() {
                                   </TableCell>
                                   <TableCell>
                                     <div className='flex items-center'>
-                                      <CheckIcon className='h-4 w-4 text-green-500 mr-1' />
+                                      <CheckIcon className='size-4 text-green-500 mr-1' />
                                       <span
                                         className='text-xs truncate w-16'
                                         title={file.md5_checksum}
@@ -383,7 +383,7 @@ export function ProjectResourcesList() {
                                   </TableCell>
                                   <TableCell>
                                     <Button variant='ghost' size='icon'>
-                                      <DownloadIcon className='h-4 w-4' />
+                                      <DownloadIcon className='size-4' />
                                     </Button>
                                   </TableCell>
                                 </TableRow>

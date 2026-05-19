@@ -106,7 +106,7 @@ export default function TaskDetailPage() {
     return (
       <SidebarInset className='h-screen flex items-center justify-center'>
         <div className='text-center'>
-          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2'></div>
+          <div className='animate-spin rounded-full size-8 border-b-2 border-primary mx-auto mb-2'></div>
           <p className='text-muted-foreground'>加载中...</p>
         </div>
       </SidebarInset>
@@ -117,7 +117,7 @@ export default function TaskDetailPage() {
     return (
       <SidebarInset className='h-screen flex items-center justify-center'>
         <div className='text-center'>
-          <XCircleIcon className='h-12 w-12 text-muted-foreground mx-auto mb-3' />
+          <XCircleIcon className='size-12 text-muted-foreground mx-auto mb-3' />
           <p className='text-muted-foreground'>任务不存在</p>
         </div>
       </SidebarInset>
@@ -160,7 +160,7 @@ export default function TaskDetailPage() {
                     <h1 className='text-2xl font-bold'>{task.name}</h1>
                     <Badge variant={config.variant} className='gap-1.5'>
                       <StatusIcon
-                        className={`h-3.5 w-3.5 ${
+                        className={`size-3.5 ${
                           config.icon === Loader2Icon ? 'animate-spin' : ''
                         }`}
                       />
@@ -257,7 +257,7 @@ export default function TaskDetailPage() {
                       </div>
                     ) : (
                       <div className='text-center text-muted-foreground py-12'>
-                        <TerminalIcon className='h-12 w-12 mx-auto mb-3 opacity-50' />
+                        <TerminalIcon className='size-12 mx-auto mb-3 opacity-50' />
                         <p>暂无输出结果</p>
                       </div>
                     )}

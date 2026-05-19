@@ -79,7 +79,7 @@ export function AddProjectFileMappingDialog({
       <DialogTrigger asChild>
         {trigger || (
           <Button size='sm' variant='outline'>
-            <PlusIcon className='h-4 w-4 mr-2' />
+            <PlusIcon className='size-4 mr-2' />
             添加文件
           </Button>
         )}

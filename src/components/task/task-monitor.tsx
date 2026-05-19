@@ -121,7 +121,7 @@ export function TaskMonitor({ taskUid }: TaskMonitorProps) {
   if (monitors.length === 0) {
     return (
       <div className='text-center text-muted-foreground py-12'>
-        <ActivityIcon className='h-12 w-12 mx-auto mb-3 opacity-50' />
+        <ActivityIcon className='size-12 mx-auto mb-3 opacity-50' />
         <p>暂无监控数据</p>
       </div>
     )
@@ -135,7 +135,7 @@ export function TaskMonitor({ taskUid }: TaskMonitorProps) {
         <Card className='bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800'>
           <CardHeader className='pb-3'>
             <CardTitle className='text-sm font-medium flex items-center gap-2 text-blue-700 dark:text-blue-300'>
-              <CpuIcon className='h-4 w-4' />
+              <CpuIcon className='size-4' />
               CPU使用率
             </CardTitle>
           </CardHeader>
@@ -153,7 +153,7 @@ export function TaskMonitor({ taskUid }: TaskMonitorProps) {
         <Card className='bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900 border-purple-200 dark:border-purple-800'>
           <CardHeader className='pb-3'>
             <CardTitle className='text-sm font-medium flex items-center gap-2 text-purple-700 dark:text-purple-300'>
-              <MemoryStickIcon className='h-4 w-4' />
+              <MemoryStickIcon className='size-4' />
               内存使用率
             </CardTitle>
           </CardHeader>
@@ -171,7 +171,7 @@ export function TaskMonitor({ taskUid }: TaskMonitorProps) {
         <Card className='bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border-green-200 dark:border-green-800'>
           <CardHeader className='pb-3'>
             <CardTitle className='text-sm font-medium flex items-center gap-2 text-green-700 dark:text-green-300'>
-              <MemoryStickIcon className='h-4 w-4' />
+              <MemoryStickIcon className='size-4' />
               内存用量
             </CardTitle>
           </CardHeader>
@@ -189,7 +189,7 @@ export function TaskMonitor({ taskUid }: TaskMonitorProps) {
         <Card className='bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950 dark:to-orange-900 border-orange-200 dark:border-orange-800'>
           <CardHeader className='pb-3'>
             <CardTitle className='text-sm font-medium flex items-center gap-2 text-orange-700 dark:text-orange-300'>
-              <HardDriveIcon className='h-4 w-4' />
+              <HardDriveIcon className='size-4' />
               IO统计
             </CardTitle>
           </CardHeader>

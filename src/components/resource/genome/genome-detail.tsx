@@ -35,10 +35,10 @@ interface GenomeDetailProps {
 
 function IndexStatusIcon({ status }: { status: IndexStatus }) {
   if (status === 'ready')
-    return <CheckCircle2 className='h-4 w-4 text-emerald-500' />
+    return <CheckCircle2 className='size-4 text-emerald-500' />
   if (status === 'building')
-    return <Loader2 className='h-4 w-4 text-amber-500 animate-spin' />
-  return <MinusCircle className='h-4 w-4 text-muted-foreground' />
+    return <Loader2 className='size-4 text-amber-500 animate-spin' />
+  return <MinusCircle className='size-4 text-muted-foreground' />
 }
 
 function IndexStatusLabel({ status }: { status: IndexStatus }) {
@@ -119,7 +119,7 @@ export function GenomeDetail({ genomeId, onDelete }: GenomeDetailProps) {
               size='sm'
               onClick={() => setIsBuildIndexOpen(true)}
             >
-              <Hammer className='h-4 w-4 mr-1' />
+              <Hammer className='size-4 mr-1' />
               构建索引
             </Button>
           )}
@@ -129,7 +129,7 @@ export function GenomeDetail({ genomeId, onDelete }: GenomeDetailProps) {
             onClick={() => setIsDeleteDialogOpen(true)}
             disabled={deleteMutation.isPending}
           >
-            <Trash2 className='h-4 w-4 mr-1' />
+            <Trash2 className='size-4 mr-1' />
             {deleteMutation.isPending ? '删除中...' : '删除'}
           </Button>
         </div>
@@ -168,7 +168,7 @@ export function GenomeDetail({ genomeId, onDelete }: GenomeDetailProps) {
       <Card>
         <CardHeader className='pb-2'>
           <CardTitle className='text-sm font-medium text-muted-foreground flex items-center gap-1'>
-            <FileText className='h-4 w-4' />
+            <FileText className='size-4' />
             文件路径
           </CardTitle>
         </CardHeader>

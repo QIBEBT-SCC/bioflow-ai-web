@@ -76,7 +76,7 @@ export function AddModelDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant='outline' size='sm' className='gap-2'>
-          <PlusIcon className='h-3 w-3' />
+          <PlusIcon className='size-3' />
           {t('add_model')}
         </Button>
       </DialogTrigger>

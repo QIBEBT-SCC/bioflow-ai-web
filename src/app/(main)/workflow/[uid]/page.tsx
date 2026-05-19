@@ -130,7 +130,7 @@ function RunFlowContent({ uid }: { uid: string }) {
             {cfg && Icon && (
               <Badge variant={cfg.variant} className='gap-1'>
                 <Icon
-                  className={`h-3 w-3 ${run?.status === Status.RUNNING ? 'animate-spin' : ''}`}
+                  className={`size-3 ${run?.status === Status.RUNNING ? 'animate-spin' : ''}`}
                 />
                 {cfg.label}
               </Badge>
@@ -145,7 +145,7 @@ function RunFlowContent({ uid }: { uid: string }) {
             )}
             <Button variant='ghost' size='sm' asChild>
               <Link href='/workflow'>
-                <ArrowLeftIcon className='h-4 w-4 mr-1' />
+                <ArrowLeftIcon className='size-4 mr-1' />
                 返回
               </Link>
             </Button>

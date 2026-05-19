@@ -94,7 +94,7 @@ export function CreateSampleDialog({
       <DialogTrigger asChild>
         {trigger || (
           <Button size='sm'>
-            <PlusIcon className='h-4 w-4 mr-2' />
+            <PlusIcon className='size-4 mr-2' />
             添加样本
           </Button>
         )}
@@ -129,7 +129,7 @@ export function CreateSampleDialog({
                 size='sm'
                 onClick={handleAddMetaData}
               >
-                <PlusIcon className='h-4 w-4 mr-2' />
+                <PlusIcon className='size-4 mr-2' />
                 添加字段
               </Button>
             </div>
@@ -163,7 +163,7 @@ export function CreateSampleDialog({
                       size='icon'
                       onClick={() => handleRemoveMetaData(index)}
                     >
-                      <XIcon className='h-4 w-4' />
+                      <XIcon className='size-4' />
                     </Button>
                   </div>
                 ))}
