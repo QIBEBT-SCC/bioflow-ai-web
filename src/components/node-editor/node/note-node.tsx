@@ -32,7 +32,7 @@ export const NoteNode = memo(function NoteNode() {
     }
   }, [nodeData?.data.content])
 
-  const handleBlur = useCallback(() => {
+  const saveNodeData = useCallback(() => {
     updateNodeData(nodeId, { content: args })
   }, [nodeId, args, updateNodeData])
 
@@ -54,7 +54,7 @@ export const NoteNode = memo(function NoteNode() {
           placeholder='Enter notes here...'
           value={args}
           onChange={(e) => setArgs(e.target.value)}
-          onBlur={handleBlur}
+          onBlur={saveNodeData}
           disabled={readOnly}
         />
       </NodeCardContent>

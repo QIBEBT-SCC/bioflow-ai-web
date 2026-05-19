@@ -62,7 +62,7 @@ export const ToolNode = memo(function ToolNode() {
   )
 
   // 使用 useCallback 缓存 onBlur 回调
-  const handleBlur = useCallback(() => {
+  const saveNodeData = useCallback(() => {
     updateNodeData(nodeId, { modifiable_params: args })
   }, [nodeId, args, updateNodeData])
 
@@ -138,7 +138,7 @@ export const ToolNode = memo(function ToolNode() {
               placeholder={t('args_placeholder')}
               value={args}
               onChange={(e) => setArgs(e.target.value)}
-              onBlur={handleBlur}
+              onBlur={saveNodeData}
               spellCheck={false}
               disabled={readOnly}
             />

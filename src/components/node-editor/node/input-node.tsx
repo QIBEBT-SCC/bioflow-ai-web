@@ -37,7 +37,7 @@ const StringInputCard = memo(function StringInputCard() {
     }
   }, [nodeData?.data.value])
 
-  const handleBlur = useCallback(() => {
+  const saveNodeData = useCallback(() => {
     updateNodeData(nodeId, { value: args })
   }, [nodeId, args, updateNodeData])
 
@@ -49,7 +49,7 @@ const StringInputCard = memo(function StringInputCard() {
         placeholder='Enter string value here...'
         value={args}
         onChange={(e) => setArgs(e.target.value)}
-        onBlur={handleBlur}
+        onBlur={saveNodeData}
         spellCheck={false}
         disabled={readOnly}
       />
@@ -98,7 +98,7 @@ const FileInputCard = memo(() => {
     }
   }, [nodeData?.data.file_path])
 
-  const handleBlur = useCallback(() => {
+  const saveNodeData = useCallback(() => {
     updateNodeData(nodeId, { file_path: args })
   }, [nodeId, args, updateNodeData])
 
@@ -110,7 +110,7 @@ const FileInputCard = memo(() => {
         placeholder='Enter file path here...'
         value={args}
         onChange={(e) => setArgs(e.target.value)}
-        onBlur={handleBlur}
+        onBlur={saveNodeData}
         spellCheck={false}
         disabled={readOnly}
       />
@@ -165,7 +165,7 @@ const SequenceInputCard = memo(function SequenceInputCard() {
     }
   }, [nodeData?.data.r2])
 
-  const handleBlur = useCallback(() => {
+  const saveNodeData = useCallback(() => {
     updateNodeData(nodeId, { r1: r1, r2: r2 })
   }, [nodeId, r1, r2, updateNodeData])
 
@@ -177,7 +177,7 @@ const SequenceInputCard = memo(function SequenceInputCard() {
         placeholder='Enter arguments here...'
         value={r1}
         onChange={(e) => setR1(e.target.value)}
-        onBlur={handleBlur}
+        onBlur={saveNodeData}
         spellCheck={false}
         disabled={readOnly}
       />
@@ -187,7 +187,7 @@ const SequenceInputCard = memo(function SequenceInputCard() {
         placeholder='Enter arguments here...'
         value={r2}
         onChange={(e) => setR2(e.target.value)}
-        onBlur={handleBlur}
+        onBlur={saveNodeData}
         spellCheck={false}
         disabled={readOnly}
       />
