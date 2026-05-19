@@ -9,7 +9,6 @@ import {
   XCircleIcon,
 } from 'lucide-react'
 import React, {
-  forwardRef,
   type HTMLAttributes,
   memo,
   useCallback,
@@ -205,24 +204,25 @@ const BaseNode = memo(function BaseNode({
   )
 })
 
-const NodeCard = memo(
-  forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
-    ({ className, ...props }, ref) => (
-      <div
-        ref={ref}
-        className={cn(
-          'relative min-h-[150px] w-[300px] font-sans',
-          'rounded-xl border-x border-b border-border bg-white shadow-sm transition-shadow duration-200',
-          'hover:shadow-md',
-          // 选中样式优化：使用高对比度的中性色 ring + shadow，不改变 border 颜色
-          '[&.selected]:ring-1 [&.selected]:ring-foreground [&.selected]:shadow-lg',
-          className,
-        )}
-        {...props}
-      />
-    ),
-  ),
-)
+const NodeCard = memo(function NodeCard({
+  className,
+  ref,
+  ...props
+}: HTMLAttributes<HTMLDivElement> & { ref?: React.Ref<HTMLDivElement> }) {
+  return (
+    <div
+      ref={ref}
+      className={cn(
+        'relative min-h-[150px] w-[300px] font-sans',
+        'rounded-xl border-x border-b border-border bg-white shadow-sm transition-shadow duration-200',
+        'hover:shadow-md',
+        '[&.selected]:ring-1 [&.selected]:ring-foreground [&.selected]:shadow-lg',
+        className,
+      )}
+      {...props}
+    />
+  )
+})
 
 const NodeCardHeader = memo(function NodeCardHeader({
   className,
