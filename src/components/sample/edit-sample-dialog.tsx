@@ -45,11 +45,9 @@ export function EditSampleDialog({
   open,
   onOpenChange,
 }: EditSampleDialogProps) {
-  const [sampleName, setSampleName] = useState(sample.sample_name)
-  const [metaData, setMetaData] = useState<MetaEntry[]>(() =>
-    toEntries(sample.meta_data),
-  )
-  const nextId = useRef(Object.keys(sample.meta_data || {}).length)
+  const [sampleName, setSampleName] = useState('')
+  const [metaData, setMetaData] = useState<MetaEntry[]>([])
+  const nextId = useRef(0)
 
   useEffect(() => {
     if (open) {

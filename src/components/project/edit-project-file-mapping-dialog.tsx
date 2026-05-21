@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
@@ -30,8 +30,15 @@ export function EditProjectFileMappingDialog({
   open,
   onOpenChange,
 }: EditProjectFileMappingDialogProps) {
-  const [filePath, setFilePath] = useState(mapping.file_path)
-  const [description, setDescription] = useState(mapping.description)
+  const [filePath, setFilePath] = useState('')
+  const [description, setDescription] = useState('')
+
+  useEffect(() => {
+    if (open) {
+      setFilePath(mapping.file_path)
+      setDescription(mapping.description)
+    }
+  }, [open, mapping])
 
   const updateMutation = useUpdateProjectFileMapping()
 
