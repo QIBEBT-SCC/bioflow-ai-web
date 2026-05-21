@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import type React from 'react'
-import { useState, useTransition } from 'react'
+import { useReducer, useTransition } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -40,16 +40,50 @@ function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 }
 
+type FormState = {
+  error: string
+  email: string
+  emailTouched: boolean
+  password: string
+  confirmPassword: string
+}
+type FormAction =
+  | { type: 'SET_ERROR'; value: string }
+  | { type: 'SET_EMAIL'; value: string }
+  | { type: 'TOUCH_EMAIL' }
+  | { type: 'SET_PASSWORD'; value: string }
+  | { type: 'SET_CONFIRM'; value: string }
+
+const INITIAL_FORM: FormState = {
+  error: '',
+  email: '',
+  emailTouched: false,
+  password: '',
+  confirmPassword: '',
+}
+
+function formReducer(state: FormState, action: FormAction): FormState {
+  switch (action.type) {
+    case 'SET_ERROR':
+      return { ...state, error: action.value }
+    case 'SET_EMAIL':
+      return { ...state, email: action.value }
+    case 'TOUCH_EMAIL':
+      return { ...state, emailTouched: true }
+    case 'SET_PASSWORD':
+      return { ...state, password: action.value }
+    case 'SET_CONFIRM':
+      return { ...state, confirmPassword: action.value }
+  }
+}
+
 export function RegisterForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<'div'>) {
-  const [error, setError] = useState<string>('')
+  const [{ error, email, emailTouched, password, confirmPassword }, dispatch] =
+    useReducer(formReducer, INITIAL_FORM)
   const [isPending, startTransition] = useTransition()
-  const [email, setEmail] = useState('')
-  const [emailTouched, setEmailTouched] = useState(false)
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
   const { push } = useRouter()
   const t = useTranslations('Register')
 
@@ -60,7 +94,7 @@ export function RegisterForm({
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setError('')
+    dispatch({ type: 'SET_ERROR', value: '' })
 
     const formData = new FormData(e.currentTarget)
     const username =
@@ -77,7 +111,7 @@ export function RegisterForm({
 
         if (!res.ok) {
           if (res.status === 422) {
-            setError(t('invalid_params'))
+            dispatch({ type: 'SET_ERROR', value: t('invalid_params') })
             return
           }
           const data = await res.json().catch(() => null)
@@ -92,9 +126,9 @@ export function RegisterForm({
       } catch (err) {
         console.error('Register error:', err)
         if (err instanceof ClientApiError) {
-          setError(err.message)
+          dispatch({ type: 'SET_ERROR', value: err.message })
         } else {
-          setError(t('network_error'))
+          dispatch({ type: 'SET_ERROR', value: t('network_error') })
         }
       }
     })
@@ -120,8 +154,10 @@ export function RegisterForm({
                     required
                     disabled={isPending}
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    onBlur={() => setEmailTouched(true)}
+                    onChange={(e) =>
+                      dispatch({ type: 'SET_EMAIL', value: e.target.value })
+                    }
+                    onBlur={() => dispatch({ type: 'TOUCH_EMAIL' })}
                     className={cn(
                       emailTouched &&
                         email &&
@@ -154,7 +190,9 @@ export function RegisterForm({
                     required
                     disabled={isPending}
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) =>
+                      dispatch({ type: 'SET_PASSWORD', value: e.target.value })
+                    }
                     className={cn(
                       password &&
                         getPasswordStrength(password) <= 1 &&
@@ -176,7 +214,9 @@ export function RegisterForm({
                     required
                     disabled={isPending}
                     value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    onChange={(e) =>
+                      dispatch({ type: 'SET_CONFIRM', value: e.target.value })
+                    }
                     className={cn(
                       confirmPassword &&
                         !passwordsMatch &&
