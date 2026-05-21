@@ -3,11 +3,7 @@
 import { ArrowLeft, Loader2, RefreshCw } from 'lucide-react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
-import { useEffect, useMemo, useState } from 'react'
-import {
-  ToolConfigForm,
-  type ToolConfigValues,
-} from '@/components/tool/tool-config-form'
+import { ToolConfigForm } from '@/components/tool/tool-config-form'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -26,12 +22,8 @@ import {
   useToolTagList,
   useUpdateTool,
 } from '@/hooks/use-tool'
-import type {
-  DockerToolCreate,
-  FileMount,
-  ParamDefine,
-  ToolTag,
-} from '@/types/tool'
+import { useToolFormState } from '@/hooks/use-tool-form-state'
+import type { DockerToolCreate } from '@/types/tool'
 
 export default function EditToolPage() {
   const params = useParams()
@@ -43,186 +35,31 @@ export default function EditToolPage() {
   const { mutate: updateTool, isPending: isUpdating } = useUpdateTool()
   const { mutate: refreshDoc, isPending: isRefreshing } = useRefreshDocument()
 
-  const [formState, setFormState] = useState<ToolConfigValues | null>(null)
-
-  const defaultGroupId = useMemo(() => {
-    return tool?.group_id ?? toolGroups[0]?.id ?? 1
-  }, [tool?.group_id, toolGroups])
-
-  useEffect(() => {
-    if (tool) {
-      setFormState({
-        name: tool.name,
-        image_uid: tool.image.uid || '',
-        description: tool.description,
-        help_command: tool.help_doc.help_command,
-        group_id: defaultGroupId,
-        command_template: tool.command_template,
-        dynamic_params: tool.dynamic_params.map((param, idx) => ({
-          ...param,
-          index: param.index ?? idx,
-        })),
-        immutable_static_params: tool.immutable_static_params ?? null,
-        modifiable_static_params: tool.modifiable_static_params ?? null,
-        file_mounts: tool.file_mounts.map((file) => ({ ...file })),
-        tags: tool.tags || [],
-      })
-    }
-  }, [tool, defaultGroupId])
-
-  const updateFormField = (
-    field: keyof ToolConfigValues,
-    value:
-      | string
-      | number
-      | boolean
-      | null
-      | ParamDefine[]
-      | FileMount[]
-      | ToolTag[],
-  ) => {
-    setFormState((prev) => {
-      if (!prev) return prev
-      return {
-        ...prev,
-        [field]: value,
-      }
-    })
-  }
-
-  const addDynamicParam = () => {
-    setFormState((prev) => {
-      if (!prev) return prev
-      return {
-        ...prev,
-        dynamic_params: [
-          ...prev.dynamic_params,
-          {
-            description: '',
-            command: '',
-            is_position: false,
-            index: prev.dynamic_params.length,
-            required: true,
-          },
-        ],
-      }
-    })
-  }
-
-  const updateDynamicParam = (
-    index: number,
-    field: keyof ParamDefine,
-    value: string | number | boolean,
-  ) => {
-    setFormState((prev) => {
-      if (!prev) return prev
-      const updated = prev.dynamic_params.map((param, idx) =>
-        idx === index ? { ...param, [field]: value } : param,
-      )
-      return {
-        ...prev,
-        dynamic_params: updated,
-      }
-    })
-  }
-
-  const removeDynamicParam = (index: number) => {
-    setFormState((prev) => {
-      if (!prev) return prev
-      const updated = prev.dynamic_params.reduce<typeof prev.dynamic_params>(
-        (acc, param, idx) => {
-          if (idx !== index) acc.push({ ...param, index: acc.length })
-          return acc
-        },
-        [],
-      )
-      return {
-        ...prev,
-        dynamic_params: updated,
-      }
-    })
-  }
-
-  const addFileMount = () => {
-    setFormState((prev) => {
-      if (!prev) return prev
-      return {
-        ...prev,
-        file_mounts: [
-          ...prev.file_mounts,
-          {
-            name: '',
-            description: '',
-            file_path: '',
-            file_type: 'OUTPUT',
-            is_report: false,
-            is_log: false,
-            mount_path: '',
-          },
-        ],
-      }
-    })
-  }
-
-  const updateFileMount = (
-    index: number,
-    field: keyof FileMount,
-    value: string | boolean,
-  ) => {
-    setFormState((prev) => {
-      if (!prev) return prev
-      const updated = prev.file_mounts.map((file, idx) =>
-        idx === index ? { ...file, [field]: value } : file,
-      )
-      return {
-        ...prev,
-        file_mounts: updated,
-      }
-    })
-  }
-
-  const removeFileMount = (index: number) => {
-    setFormState((prev) => {
-      if (!prev) return prev
-      const updated = prev.file_mounts.filter((_, idx) => idx !== index)
-      return {
-        ...prev,
-        file_mounts: updated,
-      }
-    })
-  }
-
-  const reorderDynamicParams = (newParams: ParamDefine[]) =>
-    setFormState((prev) =>
-      prev ? { ...prev, dynamic_params: newParams } : prev,
-    )
-
-  const reorderFileMounts = (newMounts: FileMount[]) =>
-    setFormState((prev) => (prev ? { ...prev, file_mounts: newMounts } : prev))
-
-  const canSave =
-    !!formState &&
-    formState.name.trim().length > 0 &&
-    formState.command_template.trim().length > 0
+  const {
+    formState,
+    canSave,
+    updateFormField,
+    addDynamicParam,
+    updateDynamicParam,
+    removeDynamicParam,
+    addFileMount,
+    updateFileMount,
+    removeFileMount,
+    reorderDynamicParams,
+    reorderFileMounts,
+  } = useToolFormState(tool, toolGroups)
 
   const handleSaveChanges = () => {
     if (!tool || !formState || !canSave) return
-
-    // 将 ToolConfigValues 转换为 DockerToolCreate
     const requestData: Partial<DockerToolCreate> = {
       ...formState,
       tag_ids: formState.tags.map((tag) => tag.id),
       immutable_static_params: formState.immutable_static_params ?? '',
       modifiable_static_params: formState.modifiable_static_params ?? '',
     }
-
     updateTool(
       { uid: tool.uid, tool: requestData },
-      {
-        onSuccess: () => {
-          push(`/tool/${tool.uid}`)
-        },
-      },
+      { onSuccess: () => push(`/tool/${tool.uid}`) },
     )
   }
 

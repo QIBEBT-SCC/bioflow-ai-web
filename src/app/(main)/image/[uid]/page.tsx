@@ -40,7 +40,7 @@ import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { Textarea } from '@/components/ui/textarea'
 import { useImage, useUpdateImage } from '@/hooks/use-tool'
 import { formatImageTag } from '@/lib/image-utils'
-import type { ToolImage } from '@/types/tool'
+import type { ToolImagePublic } from '@/types/tool'
 
 export default function ImageDetailPage() {
   const t = useTranslations('image.detail')
@@ -450,63 +450,68 @@ export default function ImageDetailPage() {
             </CardContent>
           </Card>
 
-          {/* 工具列表 */}
-          <div className='mt-8'>
-            <h2 className='text-xl font-semibold mb-4'>
-              {t('relatedTools', { count: image.tools?.length || 0 })}
-            </h2>
-            {!image.tools || image.tools.length === 0 ? (
-              <Card>
-                <CardContent className='py-12 text-center text-muted-foreground'>
-                  {t('noTools')}
-                </CardContent>
-              </Card>
-            ) : (
-              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-                {image.tools.map((tool) => (
-                  <Link key={tool.uid} href={`/tool/${tool.uid}`}>
-                    <Card className='h-full hover:shadow-lg transition-shadow cursor-pointer'>
-                      <CardHeader>
-                        <CardTitle className='text-lg'>{tool.name}</CardTitle>
-                        <CardDescription className='line-clamp-2'>
-                          {tool.description || t('noDesc')}
-                        </CardDescription>
-                      </CardHeader>
-                      {tool.tags && tool.tags.length > 0 && (
-                        <CardContent>
-                          <div className='flex flex-wrap gap-1'>
-                            {tool.tags.map((tag) => {
-                              const getTagStyle = (tagName: string) => {
-                                switch (tagName) {
-                                  case 'AI Checked':
-                                    return 'bg-green-50 text-green-600 border-green-200'
-                                  case 'AI Unchecked':
-                                    return 'bg-yellow-50 text-yellow-600 border-yellow-200'
-                                  default:
-                                    return 'bg-blue-50 text-blue-600 border-blue-200'
-                                }
-                              }
-                              return (
-                                <Badge
-                                  key={tag.id}
-                                  variant='outline'
-                                  className={`${getTagStyle(tag.name)} text-xs`}
-                                >
-                                  {tag.name}
-                                </Badge>
-                              )
-                            })}
-                          </div>
-                        </CardContent>
-                      )}
-                    </Card>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
+          <ImageRelatedTools image={image} />
         </div>
       </div>
     </SidebarInset>
+  )
+}
+
+function ImageRelatedTools({ image }: { image: ToolImagePublic }) {
+  const t = useTranslations('image.detail')
+  const getTagStyle = (tagName: string) => {
+    switch (tagName) {
+      case 'AI Checked':
+        return 'bg-green-50 text-green-600 border-green-200'
+      case 'AI Unchecked':
+        return 'bg-yellow-50 text-yellow-600 border-yellow-200'
+      default:
+        return 'bg-blue-50 text-blue-600 border-blue-200'
+    }
+  }
+
+  return (
+    <div className='mt-8'>
+      <h2 className='text-xl font-semibold mb-4'>
+        {t('relatedTools', { count: image.tools?.length || 0 })}
+      </h2>
+      {!image.tools || image.tools.length === 0 ? (
+        <Card>
+          <CardContent className='py-12 text-center text-muted-foreground'>
+            {t('noTools')}
+          </CardContent>
+        </Card>
+      ) : (
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
+          {image.tools.map((tool) => (
+            <Link key={tool.uid} href={`/tool/${tool.uid}`}>
+              <Card className='h-full hover:shadow-lg transition-shadow cursor-pointer'>
+                <CardHeader>
+                  <CardTitle className='text-lg'>{tool.name}</CardTitle>
+                  <CardDescription className='line-clamp-2'>
+                    {tool.description || t('noDesc')}
+                  </CardDescription>
+                </CardHeader>
+                {tool.tags && tool.tags.length > 0 && (
+                  <CardContent>
+                    <div className='flex flex-wrap gap-1'>
+                      {tool.tags.map((tag) => (
+                        <Badge
+                          key={tag.id}
+                          variant='outline'
+                          className={`${getTagStyle(tag.name)} text-xs`}
+                        >
+                          {tag.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  </CardContent>
+                )}
+              </Card>
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
