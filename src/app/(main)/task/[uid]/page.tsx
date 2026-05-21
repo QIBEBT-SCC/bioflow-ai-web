@@ -36,6 +36,7 @@ import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { useTask } from '@/hooks/use-task'
 import { Status } from '@/types/run'
+import type { TaskPublic } from '@/types/task'
 
 // 状态配置
 const statusConfig = {
@@ -198,7 +199,7 @@ export default function TaskDetailPage() {
             </CardContent>
           </Card>
 
-          {/* 主内容区 - 左右布局 */}
+          {/* 主内容区 */}
           <div className='grid grid-cols-1 lg:grid-cols-4 gap-6'>
             {/* 左侧主要内容 */}
             <div className='lg:col-span-3 space-y-6'>
@@ -230,82 +231,10 @@ export default function TaskDetailPage() {
                 </Button>
               </div>
 
-              {/* 运行结果 */}
-              {activeView === 'result' && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>运行结果</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {task.tool_output?.result ? (
-                      <div className='space-y-2'>
-                        {Object.entries(task.tool_output.result).map(
-                          ([key, value]) => (
-                            <div
-                              key={key}
-                              className='flex justify-between items-start py-2 px-3 rounded border'
-                            >
-                              <span className='text-sm font-medium text-muted-foreground'>
-                                {key}
-                              </span>
-                              <span className='font-mono text-sm text-right break-all max-w-2xl'>
-                                {String(value)}
-                              </span>
-                            </div>
-                          ),
-                        )}
-                      </div>
-                    ) : (
-                      <div className='text-center text-muted-foreground py-12'>
-                        <TerminalIcon className='size-12 mx-auto mb-3 opacity-50' />
-                        <p>暂无输出结果</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* 任务日志 */}
+              {activeView === 'result' && <TaskResultView task={task} />}
               {activeView === 'log' && (
-                <div className='space-y-4'>
-                  {/* 执行命令 */}
-                  {task.commands && (
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className='text-base'>执行命令</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        {/*<pre className='bg-muted p-3 rounded text-xs font-mono overflow-x-auto'>*/}
-                        {/*  {task.commands}*/}
-                        {/*</pre>*/}
-                        <Snippet
-                          className='py-5 bg-muted text-sm font-mono'
-                          code={task.commands}
-                        >
-                          <SnippetAddon className='pl-1'>
-                            <SnippetText>$</SnippetText>
-                          </SnippetAddon>
-                          <SnippetInput />
-                          <SnippetAddon align='inline-end' className='pr-2'>
-                            <CopyButton code={task.commands} />
-                          </SnippetAddon>
-                        </Snippet>
-                      </CardContent>
-                    </Card>
-                  )}
-                  {/* 日志内容 */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>任务日志</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <TaskLog taskUid={taskUid} />
-                    </CardContent>
-                  </Card>
-                </div>
+                <TaskLogView task={task} taskUid={taskUid} />
               )}
-
-              {/* 系统监控 */}
               {activeView === 'monitor' && (
                 <Card>
                   <CardHeader>
@@ -318,96 +247,154 @@ export default function TaskDetailPage() {
               )}
             </div>
 
-            {/* 右侧信息栏 */}
-            <div className='space-y-4'>
-              {/* 基本信息 */}
-              <Card>
-                <CardHeader className='pb-3'>
-                  <CardTitle className='text-sm'>基本信息</CardTitle>
-                </CardHeader>
-                <CardContent className='space-y-3 text-sm'>
-                  <div>
-                    <p className='text-xs text-muted-foreground mb-1'>工具</p>
-                    <p className='font-medium'>{task.tool.name}</p>
-                  </div>
-                  <Separator />
-                  <div>
-                    <p className='text-xs text-muted-foreground mb-1'>创建者</p>
-                    <p className='font-medium'>{task.owner.username}</p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* 时间信息 */}
-              <Card>
-                <CardHeader className='pb-3'>
-                  <CardTitle className='text-sm'>时间信息</CardTitle>
-                </CardHeader>
-                <CardContent className='space-y-3 text-sm'>
-                  <div>
-                    <p className='text-xs text-muted-foreground mb-1'>
-                      创建时间
-                    </p>
-                    <p className='font-mono text-xs'>
-                      {formatDateTime(task.create_time)}
-                    </p>
-                  </div>
-                  <Separator />
-                  <div>
-                    <p className='text-xs text-muted-foreground mb-1'>
-                      开始时间
-                    </p>
-                    <p className='font-mono text-xs'>
-                      {formatDateTime(task.start_time)}
-                    </p>
-                  </div>
-                  <Separator />
-                  <div>
-                    <p className='text-xs text-muted-foreground mb-1'>
-                      结束时间
-                    </p>
-                    <p className='font-mono text-xs'>
-                      {formatDateTime(task.end_time)}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* 系统信息 */}
-              {(task.system || task.hostname) && (
-                <Card>
-                  <CardHeader className='pb-3'>
-                    <CardTitle className='text-sm'>系统信息</CardTitle>
-                  </CardHeader>
-                  <CardContent className='space-y-3 text-sm'>
-                    {task.hostname && (
-                      <>
-                        <div>
-                          <p className='text-xs text-muted-foreground mb-1'>
-                            主机
-                          </p>
-                          <p className='font-mono text-xs'>{task.hostname}</p>
-                        </div>
-                        {task.system && <Separator />}
-                      </>
-                    )}
-                    {task.system && (
-                      <div>
-                        <p className='text-xs text-muted-foreground mb-1'>
-                          系统
-                        </p>
-                        <p className='font-mono text-xs break-all'>
-                          {task.system}
-                        </p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
-            </div>
+            <TaskSidebar task={task} />
           </div>
         </div>
       </main>
     </SidebarInset>
+  )
+}
+
+function TaskResultView({ task }: { task: TaskPublic }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>运行结果</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {task.tool_output?.result ? (
+          <div className='space-y-2'>
+            {Object.entries(task.tool_output.result).map(([key, value]) => (
+              <div
+                key={key}
+                className='flex justify-between items-start py-2 px-3 rounded border'
+              >
+                <span className='text-sm font-medium text-muted-foreground'>
+                  {key}
+                </span>
+                <span className='font-mono text-sm text-right break-all max-w-2xl'>
+                  {String(value)}
+                </span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className='text-center text-muted-foreground py-12'>
+            <TerminalIcon className='size-12 mx-auto mb-3 opacity-50' />
+            <p>暂无输出结果</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+function TaskLogView({ task, taskUid }: { task: TaskPublic; taskUid: string }) {
+  return (
+    <div className='space-y-4'>
+      {task.commands && (
+        <Card>
+          <CardHeader>
+            <CardTitle className='text-base'>执行命令</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Snippet
+              className='py-5 bg-muted text-sm font-mono'
+              code={task.commands}
+            >
+              <SnippetAddon className='pl-1'>
+                <SnippetText>$</SnippetText>
+              </SnippetAddon>
+              <SnippetInput />
+              <SnippetAddon align='inline-end' className='pr-2'>
+                <CopyButton code={task.commands} />
+              </SnippetAddon>
+            </Snippet>
+          </CardContent>
+        </Card>
+      )}
+      <Card>
+        <CardHeader>
+          <CardTitle>任务日志</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <TaskLog taskUid={taskUid} />
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+function TaskSidebar({ task }: { task: TaskPublic }) {
+  return (
+    <div className='space-y-4'>
+      <Card>
+        <CardHeader className='pb-3'>
+          <CardTitle className='text-sm'>基本信息</CardTitle>
+        </CardHeader>
+        <CardContent className='space-y-3 text-sm'>
+          <div>
+            <p className='text-xs text-muted-foreground mb-1'>工具</p>
+            <p className='font-medium'>{task.tool.name}</p>
+          </div>
+          <Separator />
+          <div>
+            <p className='text-xs text-muted-foreground mb-1'>创建者</p>
+            <p className='font-medium'>{task.owner.username}</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className='pb-3'>
+          <CardTitle className='text-sm'>时间信息</CardTitle>
+        </CardHeader>
+        <CardContent className='space-y-3 text-sm'>
+          <div>
+            <p className='text-xs text-muted-foreground mb-1'>创建时间</p>
+            <p className='font-mono text-xs'>
+              {formatDateTime(task.create_time)}
+            </p>
+          </div>
+          <Separator />
+          <div>
+            <p className='text-xs text-muted-foreground mb-1'>开始时间</p>
+            <p className='font-mono text-xs'>
+              {formatDateTime(task.start_time)}
+            </p>
+          </div>
+          <Separator />
+          <div>
+            <p className='text-xs text-muted-foreground mb-1'>结束时间</p>
+            <p className='font-mono text-xs'>{formatDateTime(task.end_time)}</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {(task.system || task.hostname) && (
+        <Card>
+          <CardHeader className='pb-3'>
+            <CardTitle className='text-sm'>系统信息</CardTitle>
+          </CardHeader>
+          <CardContent className='space-y-3 text-sm'>
+            {task.hostname && (
+              <>
+                <div>
+                  <p className='text-xs text-muted-foreground mb-1'>主机</p>
+                  <p className='font-mono text-xs'>{task.hostname}</p>
+                </div>
+                {task.system && <Separator />}
+              </>
+            )}
+            {task.system && (
+              <div>
+                <p className='text-xs text-muted-foreground mb-1'>系统</p>
+                <p className='font-mono text-xs break-all'>{task.system}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+    </div>
   )
 }

@@ -45,6 +45,7 @@ import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useTool } from '@/hooks/use-tool'
+import type { ToolInfo } from '@/types/tool'
 
 export default function ToolDetailPage() {
   const params = useParams()
@@ -375,121 +376,123 @@ export default function ToolDetailPage() {
               </Card>
             </div>
 
-            {/* Right Column - Sidebar */}
-            <div className='space-y-6'>
-              {/* Tool Information */}
-              <Card>
-                <CardHeader>
-                  <div className='flex items-center gap-2'>
-                    <Container className='size-5 text-primary' />
-                    <CardTitle>Tool Information</CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent className='space-y-4'>
-                  <div>
-                    <h4 className='text-sm font-semibold mb-2'>About</h4>
-                    <p className='text-sm text-muted-foreground leading-relaxed'>
-                      {tool.image.description}
-                    </p>
-                  </div>
-                  <Separator />
-                  <div className='space-y-2 text-sm'>
-                    <div className='flex justify-between'>
-                      <span className='text-muted-foreground'>Version:</span>
-                      <span className='font-semibold'>
-                        {tool.image.version}
-                      </span>
-                    </div>
-                    <div className='flex justify-between'>
-                      <span className='text-muted-foreground'>Tool Type:</span>
-                      <span>{tool.tool_type}</span>
-                    </div>
-                  </div>
-                  {tool.tags && tool.tags.length > 0 && (
-                    <>
-                      <Separator />
-                      <div>
-                        <h4 className='text-sm font-semibold mb-2'>标签</h4>
-                        <div className='flex flex-wrap gap-1.5'>
-                          {tool.tags.map((tag) => {
-                            const getTagStyle = (tagName: string) => {
-                              switch (tagName) {
-                                case 'AI Checked':
-                                  return 'bg-green-50 text-green-600 border-green-200'
-                                case 'AI Unchecked':
-                                  return 'bg-yellow-50 text-yellow-600 border-yellow-200'
-                                default:
-                                  return 'bg-blue-50 text-blue-600 border-blue-200'
-                              }
-                            }
-                            return (
-                              <Badge
-                                key={tag.id}
-                                variant='outline'
-                                className={`${getTagStyle(tag.name)} text-xs`}
-                              >
-                                {tag.name}
-                              </Badge>
-                            )
-                          })}
-                        </div>
-                      </div>
-                    </>
-                  )}
-                  <Separator />
-                  <div>
-                    <h4 className='text-sm font-semibold mb-2'>Docker Image</h4>
-                    <div className='relative'>
-                      <Snippet
-                        className='!text-xs bg-muted py-2'
-                        code={dockerImage}
-                      >
-                        <SnippetInput />
-                        <SnippetAddon align='inline-end' className='pr-2'>
-                          <CopyButton code={dockerImage} />
-                        </SnippetAddon>
-                      </Snippet>
-                    </div>
-                  </div>
-                  <Separator />
-                  <div className='space-y-2'>
-                    <Button
-                      variant='outline'
-                      size='sm'
-                      className='w-full gap-2 bg-transparent'
-                      asChild
-                    >
-                      <a
-                        href={tool.image.homepage}
-                        target='_blank'
-                        rel='noopener noreferrer'
-                      >
-                        <ExternalLink className='size-4' />
-                        Homepage
-                      </a>
-                    </Button>
-                    <Button
-                      variant='outline'
-                      size='sm'
-                      className='w-full gap-2 bg-transparent'
-                      asChild
-                    >
-                      <a
-                        href={tool.image.paper_link}
-                        target='_blank'
-                        rel='noopener noreferrer'
-                      >
-                        <ExternalLink className='size-4' />
-                        Publication
-                      </a>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <ToolInfoSidebar tool={tool} dockerImage={dockerImage} />
           </div>
         </div>
       </main>
     </SidebarInset>
+  )
+}
+
+function ToolInfoSidebar({
+  tool,
+  dockerImage,
+}: {
+  tool: ToolInfo
+  dockerImage: string
+}) {
+  const getTagStyle = (tagName: string) => {
+    switch (tagName) {
+      case 'AI Checked':
+        return 'bg-green-50 text-green-600 border-green-200'
+      case 'AI Unchecked':
+        return 'bg-yellow-50 text-yellow-600 border-yellow-200'
+      default:
+        return 'bg-blue-50 text-blue-600 border-blue-200'
+    }
+  }
+
+  return (
+    <div className='space-y-6'>
+      <Card>
+        <CardHeader>
+          <div className='flex items-center gap-2'>
+            <Container className='size-5 text-primary' />
+            <CardTitle>Tool Information</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className='space-y-4'>
+          <div>
+            <h4 className='text-sm font-semibold mb-2'>About</h4>
+            <p className='text-sm text-muted-foreground leading-relaxed'>
+              {tool.image.description}
+            </p>
+          </div>
+          <Separator />
+          <div className='space-y-2 text-sm'>
+            <div className='flex justify-between'>
+              <span className='text-muted-foreground'>Version:</span>
+              <span className='font-semibold'>{tool.image.version}</span>
+            </div>
+            <div className='flex justify-between'>
+              <span className='text-muted-foreground'>Tool Type:</span>
+              <span>{tool.tool_type}</span>
+            </div>
+          </div>
+          {tool.tags && tool.tags.length > 0 && (
+            <>
+              <Separator />
+              <div>
+                <h4 className='text-sm font-semibold mb-2'>标签</h4>
+                <div className='flex flex-wrap gap-1.5'>
+                  {tool.tags.map((tag) => (
+                    <Badge
+                      key={tag.id}
+                      variant='outline'
+                      className={`${getTagStyle(tag.name)} text-xs`}
+                    >
+                      {tag.name}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+          <Separator />
+          <div>
+            <h4 className='text-sm font-semibold mb-2'>Docker Image</h4>
+            <Snippet className='!text-xs bg-muted py-2' code={dockerImage}>
+              <SnippetInput />
+              <SnippetAddon align='inline-end' className='pr-2'>
+                <CopyButton code={dockerImage} />
+              </SnippetAddon>
+            </Snippet>
+          </div>
+          <Separator />
+          <div className='space-y-2'>
+            <Button
+              variant='outline'
+              size='sm'
+              className='w-full gap-2 bg-transparent'
+              asChild
+            >
+              <a
+                href={tool.image.homepage}
+                target='_blank'
+                rel='noopener noreferrer'
+              >
+                <ExternalLink className='size-4' />
+                Homepage
+              </a>
+            </Button>
+            <Button
+              variant='outline'
+              size='sm'
+              className='w-full gap-2 bg-transparent'
+              asChild
+            >
+              <a
+                href={tool.image.paper_link}
+                target='_blank'
+                rel='noopener noreferrer'
+              >
+                <ExternalLink className='size-4' />
+                Publication
+              </a>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   )
 }

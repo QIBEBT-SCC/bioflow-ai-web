@@ -50,13 +50,114 @@ import {
   useSample,
   useSamples,
 } from '@/hooks/use-sample'
-import type { SampleFileType } from '@/types/sample'
+import type { Sample, SampleFileType } from '@/types/sample'
 import { AddSampleFileDialog } from './add-sample-file-dialog'
 import { CreateSampleDialog } from './create-sample-dialog'
 import { EditSampleDialog } from './edit-sample-dialog'
 
+interface SampleFilesSectionProps {
+  projectId: string
+  sampleDetails: Sample
+  onDeleteFile: (fileUid: string) => void
+}
+
 interface SampleListProps {
   projectId: string
+}
+
+function SampleFilesSection({
+  projectId,
+  sampleDetails,
+  onDeleteFile,
+}: SampleFilesSectionProps) {
+  return (
+    <div className='p-4'>
+      <div className='flex items-center justify-between mb-2'>
+        <h4 className='text-sm font-semibold'>样本文件</h4>
+        <AddSampleFileDialog
+          projectId={projectId}
+          sampleUid={sampleDetails.uid}
+        />
+      </div>
+      {sampleDetails.files.length === 0 ? (
+        <p className='text-sm text-muted-foreground'>
+          该样本暂无文件,点击"添加文件"按钮添加
+        </p>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className='w-[180px]'>文件类型</TableHead>
+              <TableHead>文件路径</TableHead>
+              <TableHead className='w-[100px]'>格式</TableHead>
+              <TableHead className='w-[100px]'>大小</TableHead>
+              <TableHead className='w-[120px]'>MD5校验</TableHead>
+              <TableHead className='w-[180px]'>上传时间</TableHead>
+              <TableHead className='w-[80px]'>操作</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {sampleDetails.files.map((file) => {
+              const isDefaultTag = file.tag === defaultTags[file.data_type]
+              return (
+                <TableRow key={file.uid}>
+                  <TableCell>
+                    <div className='flex flex-wrap gap-1'>
+                      <Badge className={fileTypeColors[file.data_type]}>
+                        {fileTypeLabels[file.data_type]}
+                      </Badge>
+                      {file.tag && (
+                        <Badge
+                          variant='outline'
+                          className={
+                            isDefaultTag
+                              ? 'text-muted-foreground'
+                              : 'bg-blue-50 text-blue-700 border-blue-200'
+                          }
+                        >
+                          {file.tag}
+                        </Badge>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className='font-mono text-xs'>
+                    {file.file_path}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant='outline'>{file.file_format}</Badge>
+                  </TableCell>
+                  <TableCell>{formatFileSize(file.file_size)}</TableCell>
+                  <TableCell>
+                    <div className='flex items-center'>
+                      <CheckIcon className='size-4 text-green-500 mr-1' />
+                      <span
+                        className='text-xs truncate w-16'
+                        title={file.md5_checksum}
+                      >
+                        {file.md5_checksum.substring(0, 8)}...
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className='text-xs' suppressHydrationWarning>
+                    {new Date(file.uploaded_time).toLocaleString('zh-CN')}
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      onClick={() => onDeleteFile(file.uid)}
+                    >
+                      <Trash2Icon className='size-4 text-destructive' />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              )
+            })}
+          </TableBody>
+        </Table>
+      )}
+    </div>
+  )
 }
 
 // 文件类型标签映射
@@ -286,129 +387,16 @@ export function SampleList({ projectId }: SampleListProps) {
                       {isExpanded && sampleDetails && (
                         <TableRow className='bg-muted/30'>
                           <TableCell colSpan={6} className='p-0'>
-                            <div className='p-4'>
-                              <div className='flex items-center justify-between mb-2'>
-                                <h4 className='text-sm font-semibold'>
-                                  样本文件
-                                </h4>
-                                <AddSampleFileDialog
-                                  projectId={projectId}
-                                  sampleUid={sampleDetails.uid}
-                                />
-                              </div>
-                              {sampleDetails.files.length === 0 ? (
-                                <p className='text-sm text-muted-foreground'>
-                                  该样本暂无文件,点击"添加文件"按钮添加
-                                </p>
-                              ) : (
-                                <Table>
-                                  <TableHeader>
-                                    <TableRow>
-                                      <TableHead className='w-[180px]'>
-                                        文件类型
-                                      </TableHead>
-                                      <TableHead>文件路径</TableHead>
-                                      <TableHead className='w-[100px]'>
-                                        格式
-                                      </TableHead>
-                                      <TableHead className='w-[100px]'>
-                                        大小
-                                      </TableHead>
-                                      <TableHead className='w-[120px]'>
-                                        MD5校验
-                                      </TableHead>
-                                      <TableHead className='w-[180px]'>
-                                        上传时间
-                                      </TableHead>
-                                      <TableHead className='w-[80px]'>
-                                        操作
-                                      </TableHead>
-                                    </TableRow>
-                                  </TableHeader>
-                                  <TableBody>
-                                    {sampleDetails.files.map((file) => {
-                                      const isDefaultTag =
-                                        file.tag === defaultTags[file.data_type]
-                                      return (
-                                        <TableRow key={file.uid}>
-                                          <TableCell>
-                                            <div className='flex flex-wrap gap-1'>
-                                              <Badge
-                                                className={
-                                                  fileTypeColors[file.data_type]
-                                                }
-                                              >
-                                                {fileTypeLabels[file.data_type]}
-                                              </Badge>
-                                              {file.tag && (
-                                                <Badge
-                                                  variant='outline'
-                                                  className={
-                                                    isDefaultTag
-                                                      ? 'text-muted-foreground'
-                                                      : 'bg-blue-50 text-blue-700 border-blue-200'
-                                                  }
-                                                >
-                                                  {file.tag}
-                                                </Badge>
-                                              )}
-                                            </div>
-                                          </TableCell>
-                                          <TableCell className='font-mono text-xs'>
-                                            {file.file_path}
-                                          </TableCell>
-                                          <TableCell>
-                                            <Badge variant='outline'>
-                                              {file.file_format}
-                                            </Badge>
-                                          </TableCell>
-                                          <TableCell>
-                                            {formatFileSize(file.file_size)}
-                                          </TableCell>
-                                          <TableCell>
-                                            <div className='flex items-center'>
-                                              <CheckIcon className='size-4 text-green-500 mr-1' />
-                                              <span
-                                                className='text-xs truncate w-16'
-                                                title={file.md5_checksum}
-                                              >
-                                                {file.md5_checksum.substring(
-                                                  0,
-                                                  8,
-                                                )}
-                                                ...
-                                              </span>
-                                            </div>
-                                          </TableCell>
-                                          <TableCell
-                                            className='text-xs'
-                                            suppressHydrationWarning
-                                          >
-                                            {new Date(
-                                              file.uploaded_time,
-                                            ).toLocaleString('zh-CN')}
-                                          </TableCell>
-                                          <TableCell>
-                                            <Button
-                                              variant='ghost'
-                                              size='icon'
-                                              onClick={() =>
-                                                setDeletingFile({
-                                                  sampleUid: sampleDetails.uid,
-                                                  fileUid: file.uid,
-                                                })
-                                              }
-                                            >
-                                              <Trash2Icon className='size-4 text-destructive' />
-                                            </Button>
-                                          </TableCell>
-                                        </TableRow>
-                                      )
-                                    })}
-                                  </TableBody>
-                                </Table>
-                              )}
-                            </div>
+                            <SampleFilesSection
+                              projectId={projectId}
+                              sampleDetails={sampleDetails}
+                              onDeleteFile={(fileUid) =>
+                                setDeletingFile({
+                                  sampleUid: sampleDetails.uid,
+                                  fileUid,
+                                })
+                              }
+                            />
                           </TableCell>
                         </TableRow>
                       )}
@@ -456,7 +444,6 @@ export function SampleList({ projectId }: SampleListProps) {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* 删除文件确认对话框 */}
       <AlertDialog
         open={!!deletingFile}
         onOpenChange={(open) => !open && setDeletingFile(null)}
