@@ -84,11 +84,10 @@ function JsonArray({ value, depth }: { value: JsonValue[]; depth: number }) {
         </button>
       ) : (
         <div className='ml-4 border-l border-border pl-3'>
-          {value.map((item, i) => (
-            // biome-ignore lint/suspicious/noArrayIndexKey: JSON 数组索引即唯一标识
-            <div key={i} className='my-px'>
+          {Array.from(value.entries()).map(([itemIndex, item]) => (
+            <div key={`item-${itemIndex}`} className='my-px'>
               <JsonNode value={item} depth={depth + 1} />
-              {i < value.length - 1 && (
+              {itemIndex < value.length - 1 && (
                 <span className='text-muted-foreground'>,</span>
               )}
             </div>

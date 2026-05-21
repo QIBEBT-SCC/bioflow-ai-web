@@ -142,10 +142,9 @@ export function TaskTimeline() {
         <div className='relative bg-muted/30 rounded-lg p-4'>
           {/* 时间刻度 */}
           <div className='relative h-6 mb-2 border-b'>
-            {timelineData.timeLabels.map((label, i) => (
+            {timelineData.timeLabels.map((label) => (
               <div
-                // biome-ignore lint/suspicious/noArrayIndexKey: no need
-                key={i}
+                key={label.time}
                 className='absolute top-0 text-xs text-muted-foreground'
                 style={{
                   left: `${label.percent}%`,

@@ -154,9 +154,8 @@ export function RunTables({
           <TableBody>
             {isLoading ? (
               // 加载骨架屏
-              [...Array(5)].map((_, i) => (
-                // biome-ignore lint/suspicious/noArrayIndexKey: no need
-                <TableRow key={i}>
+              ['sk-0', 'sk-1', 'sk-2', 'sk-3', 'sk-4'].map((key) => (
+                <TableRow key={key}>
                   <TableCell>
                     <Skeleton className='h-5 w-[200px]' />
                   </TableCell>

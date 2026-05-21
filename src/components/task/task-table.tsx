@@ -142,9 +142,19 @@ export function TaskTable() {
           <TableBody>
             {isLoading ? (
               // 加载骨架屏
-              [...Array(10)].map((_, i) => (
-                // biome-ignore lint/suspicious/noArrayIndexKey: skeleton loading
-                <TableRow key={i}>
+              [
+                'sk-0',
+                'sk-1',
+                'sk-2',
+                'sk-3',
+                'sk-4',
+                'sk-5',
+                'sk-6',
+                'sk-7',
+                'sk-8',
+                'sk-9',
+              ].map((key) => (
+                <TableRow key={key}>
                   <TableCell>
                     <Skeleton className='h-5 w-[160px]' />
                   </TableCell>

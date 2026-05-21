@@ -74,12 +74,12 @@ export function ChatMessageParts({
         </Sources>
       )}
       <MessageContent>
-        {message.parts.map((part, i) => {
+        {message.parts.map((part) => {
           switch (part.type) {
             case 'text': {
               const isLastMessage = messageIndex === messages.length - 1
               return (
-                <Fragment key={`${message.id}-${i}`}>
+                <Fragment key={`${message.id}-text`}>
                   <MessageResponse>{part.text}</MessageResponse>
                   {message.role === 'assistant' && isLastMessage && (
                     <MessageActions>
@@ -100,11 +100,11 @@ export function ChatMessageParts({
             case 'reasoning':
               return (
                 <Reasoning
-                  key={`${message.id}-${i}`}
+                  key={`${message.id}-reasoning`}
                   className='w-full'
                   isStreaming={
                     status === 'streaming' &&
-                    i === message.parts.length - 1 &&
+                    message.parts.at(-1) === part &&
                     message.id === messages.at(-1)?.id
                   }
                 >
@@ -114,7 +114,7 @@ export function ChatMessageParts({
               )
             case 'tool-getWeather':
               return (
-                <Tool key={part.toolCallId || `${message.id}-${i}`}>
+                <Tool key={part.toolCallId}>
                   <ToolHeader type={part.type} state={part.state} />
                   <ToolContent>
                     <ToolInput input={part.input} />

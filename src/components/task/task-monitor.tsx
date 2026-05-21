@@ -105,9 +105,8 @@ export function TaskMonitor({ taskUid }: TaskMonitorProps) {
   if (isLoading) {
     return (
       <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
-        {[...Array(4)].map((_, i) => (
-          // biome-ignore lint/suspicious/noArrayIndexKey: skeleton loading
-          <div key={i} className='space-y-2'>
+        {['sk-0', 'sk-1', 'sk-2', 'sk-3'].map((key) => (
+          <div key={key} className='space-y-2'>
             <Skeleton className='h-4 w-20' />
             <Skeleton className='h-8 w-full' />
             <Skeleton className='h-3 w-16' />

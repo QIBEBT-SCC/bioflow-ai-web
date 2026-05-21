@@ -267,12 +267,12 @@ function PasswordStrengthBar({
   return (
     <div className='grid gap-1'>
       <div className='flex gap-1'>
-        {([0, 1, 2, 3] as const).map((i) => (
+        {([0, 1, 2, 3] as const).map((barLevel) => (
           <div
-            key={i}
+            key={barLevel}
             className={cn(
               'h-1 flex-1 rounded-full transition-colors duration-300',
-              i < bars ? color : 'bg-muted',
+              barLevel < bars ? color : 'bg-muted',
             )}
           />
         ))}
