@@ -11,6 +11,7 @@ interface CreateToolStore {
 
   setCurrentImage: (image: ToolImage) => void
   setToolConfig: (toolConfig: ToolConfigValues) => void
+  initFromCopy: (image: ToolImage, toolConfig: ToolConfigValues) => void
   updateToolConfigField: <K extends keyof ToolConfigValues>(
     field: K,
     value: ToolConfigValues[K],
@@ -64,6 +65,9 @@ export const useCreateToolStore = create<CreateToolStore>()(
       },
       setToolConfig: (toolConfig: ToolConfigValues) => {
         set({ toolConfig })
+      },
+      initFromCopy: (image: ToolImage, toolConfig: ToolConfigValues) => {
+        set({ currentImage: image, toolConfig })
       },
       updateToolConfigField: (field, value) => {
         set((state) => ({
