@@ -205,6 +205,202 @@ function UsageDetailTable({
   )
 }
 
+interface DateRange {
+  from: Date | undefined
+  to: Date | undefined
+}
+
+function DateRangeFilter({
+  dateRange,
+  onChange,
+}: {
+  dateRange: DateRange
+  onChange: (range: DateRange) => void
+}) {
+  const t = useTranslations('setting.llm_statistic')
+  const locale = useLocale()
+  const dateFnsLocale = locale === 'zh' ? zhCN : enUS
+
+  return (
+    <Card className='border-border bg-card p-4'>
+      <div className='flex items-center justify-between'>
+        <div className='flex items-center gap-2'>
+          <CalendarIcon className='size-4 text-muted-foreground' />
+          <span className='text-sm font-medium'>{t('date_range_label')}</span>
+        </div>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant='outline'
+              className={cn(
+                'justify-start text-left font-normal min-w-[280px]',
+                !dateRange.from && !dateRange.to && 'text-muted-foreground',
+              )}
+            >
+              <CalendarIcon className='mr-2 size-4' />
+              {dateRange.from ? (
+                dateRange.to ? (
+                  <>
+                    {format(dateRange.from, 'PPP', { locale: dateFnsLocale })} -{' '}
+                    {format(dateRange.to, 'PPP', { locale: dateFnsLocale })}
+                  </>
+                ) : (
+                  format(dateRange.from, 'PPP', { locale: dateFnsLocale })
+                )
+              ) : (
+                <span>{t('select_date_range')}</span>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className='w-auto p-0' align='end'>
+            <Calendar
+              mode='range'
+              selected={{ from: dateRange.from, to: dateRange.to }}
+              onSelect={(range) =>
+                onChange({ from: range?.from, to: range?.to })
+              }
+              numberOfMonths={2}
+              locale={dateFnsLocale}
+            />
+            <div className='flex items-center justify-between gap-2 p-3 border-t'>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={() =>
+                  onChange({
+                    from: new Date(
+                      new Date().setDate(new Date().getDate() - 7),
+                    ),
+                    to: new Date(),
+                  })
+                }
+              >
+                {t('last_7_days')}
+              </Button>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={() =>
+                  onChange({
+                    from: new Date(
+                      new Date().setDate(new Date().getDate() - 30),
+                    ),
+                    to: new Date(),
+                  })
+                }
+              >
+                {t('last_30_days')}
+              </Button>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={() => onChange({ from: undefined, to: undefined })}
+              >
+                {t('all')}
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
+    </Card>
+  )
+}
+
+function DetailStatsCard({
+  statsData,
+  modelTypeLabels,
+}: {
+  statsData: LLMStatisticOverview
+  modelTypeLabels: Record<string, string>
+}) {
+  const t = useTranslations('setting.llm_statistic')
+  return (
+    <Card className='border-border bg-card p-6'>
+      <h3 className='text-lg font-semibold mb-4'>{t('detail_stats_title')}</h3>
+      <Tabs defaultValue='by_agent' className='space-y-4'>
+        <TabsList className='grid w-full grid-cols-4'>
+          <TabsTrigger value='by_agent' className='gap-2'>
+            <LayersIcon className='size-4' />
+            {t('by_module')}
+          </TabsTrigger>
+          <TabsTrigger value='by_model' className='gap-2'>
+            <CpuIcon className='size-4' />
+            {t('by_model')}
+          </TabsTrigger>
+          <TabsTrigger value='by_type' className='gap-2'>
+            <SettingsIcon className='size-4' />
+            {t('by_type')}
+          </TabsTrigger>
+          <TabsTrigger value='by_user' className='gap-2'>
+            <UsersIcon className='size-4' />
+            {t('by_user')}
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value='by_agent'>
+          <StatsBreakdownList
+            items={statsData.by_agent.map((s) => ({
+              name: s.agent_name,
+              count: s.count,
+              total_price: s.total_price,
+              total_input_tokens: s.total_input_tokens,
+              total_output_tokens: s.total_output_tokens,
+              total_cache_read: s.total_cache_read,
+            }))}
+            totalPrice={statsData.total.total_price}
+            barColor='bg-chart-1'
+            t={t}
+          />
+        </TabsContent>
+        <TabsContent value='by_model'>
+          <StatsBreakdownList
+            items={statsData.by_model.map((s) => ({
+              name: s.model_name,
+              count: s.count,
+              total_price: s.total_price,
+              total_input_tokens: s.total_input_tokens,
+              total_output_tokens: s.total_output_tokens,
+              total_cache_read: s.total_cache_read,
+            }))}
+            totalPrice={statsData.total.total_price}
+            barColor='bg-chart-2'
+            t={t}
+          />
+        </TabsContent>
+        <TabsContent value='by_type'>
+          <StatsBreakdownList
+            items={statsData.by_type.map((s) => ({
+              name: modelTypeLabels[s.setting_key as string] || s.setting_key,
+              count: s.count,
+              total_price: s.total_price,
+              total_input_tokens: s.total_input_tokens,
+              total_output_tokens: s.total_output_tokens,
+              total_cache_read: s.total_cache_read,
+            }))}
+            totalPrice={statsData.total.total_price}
+            barColor='bg-chart-3'
+            t={t}
+          />
+        </TabsContent>
+        <TabsContent value='by_user'>
+          <StatsBreakdownList
+            items={statsData.by_user.map((s) => ({
+              name: s.user_name,
+              count: s.count,
+              total_price: s.total_price,
+              total_input_tokens: s.total_input_tokens,
+              total_output_tokens: s.total_output_tokens,
+              total_cache_read: s.total_cache_read,
+            }))}
+            totalPrice={statsData.total.total_price}
+            barColor='bg-chart-4'
+            t={t}
+          />
+        </TabsContent>
+      </Tabs>
+    </Card>
+  )
+}
+
 const defaultStats: LLMStatisticOverview = {
   total: {
     total_input_tokens: 0,
@@ -220,8 +416,6 @@ const defaultStats: LLMStatisticOverview = {
 
 export function StatisticsTab() {
   const t = useTranslations('setting.llm_statistic')
-  const locale = useLocale()
-  const dateFnsLocale = locale === 'zh' ? zhCN : enUS
 
   const [dateRange, setDateRange] = useState<{
     from: Date | undefined
@@ -285,94 +479,7 @@ export function StatisticsTab() {
   return (
     <div className='space-y-6'>
       {/* Date Range Picker */}
-      <Card className='border-border bg-card p-4'>
-        <div className='flex items-center justify-between'>
-          <div className='flex items-center gap-2'>
-            <CalendarIcon className='size-4 text-muted-foreground' />
-            <span className='text-sm font-medium'>{t('date_range_label')}</span>
-          </div>
-          <div className='flex items-center gap-3'>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant='outline'
-                  className={cn(
-                    'justify-start text-left font-normal min-w-[280px]',
-                    !dateRange.from && !dateRange.to && 'text-muted-foreground',
-                  )}
-                >
-                  <CalendarIcon className='mr-2 size-4' />
-                  {dateRange.from ? (
-                    dateRange.to ? (
-                      <>
-                        {format(dateRange.from, 'PPP', {
-                          locale: dateFnsLocale,
-                        })}{' '}
-                        -{' '}
-                        {format(dateRange.to, 'PPP', { locale: dateFnsLocale })}
-                      </>
-                    ) : (
-                      format(dateRange.from, 'PPP', { locale: dateFnsLocale })
-                    )
-                  ) : (
-                    <span>{t('select_date_range')}</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className='w-auto p-0' align='end'>
-                <Calendar
-                  mode='range'
-                  selected={{ from: dateRange.from, to: dateRange.to }}
-                  onSelect={(range) => {
-                    setDateRange({ from: range?.from, to: range?.to })
-                  }}
-                  numberOfMonths={2}
-                  locale={dateFnsLocale}
-                />
-                <div className='flex items-center justify-between gap-2 p-3 border-t'>
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    onClick={() => {
-                      setDateRange({
-                        from: new Date(
-                          new Date().setDate(new Date().getDate() - 7),
-                        ),
-                        to: new Date(),
-                      })
-                    }}
-                  >
-                    {t('last_7_days')}
-                  </Button>
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    onClick={() => {
-                      setDateRange({
-                        from: new Date(
-                          new Date().setDate(new Date().getDate() - 30),
-                        ),
-                        to: new Date(),
-                      })
-                    }}
-                  >
-                    {t('last_30_days')}
-                  </Button>
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    onClick={() => {
-                      setDateRange({ from: undefined, to: undefined })
-                    }}
-                  >
-                    {t('all')}
-                  </Button>
-                </div>
-              </PopoverContent>
-            </Popover>
-          </div>
-        </div>
-      </Card>
+      <DateRangeFilter dateRange={dateRange} onChange={setDateRange} />
 
       {/* Summary Cards */}
       <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
@@ -428,95 +535,10 @@ export function StatisticsTab() {
       </div>
 
       {/* Detail Stats */}
-      <Card className='border-border bg-card p-6'>
-        <h3 className='text-lg font-semibold mb-4'>
-          {t('detail_stats_title')}
-        </h3>
-        <Tabs defaultValue='by_agent' className='space-y-4'>
-          <TabsList className='grid w-full grid-cols-4'>
-            <TabsTrigger value='by_agent' className='gap-2'>
-              <LayersIcon className='size-4' />
-              {t('by_module')}
-            </TabsTrigger>
-            <TabsTrigger value='by_model' className='gap-2'>
-              <CpuIcon className='size-4' />
-              {t('by_model')}
-            </TabsTrigger>
-            <TabsTrigger value='by_type' className='gap-2'>
-              <SettingsIcon className='size-4' />
-              {t('by_type')}
-            </TabsTrigger>
-            <TabsTrigger value='by_user' className='gap-2'>
-              <UsersIcon className='size-4' />
-              {t('by_user')}
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value='by_agent'>
-            <StatsBreakdownList
-              items={statsData.by_agent.map((s) => ({
-                name: s.agent_name,
-                count: s.count,
-                total_price: s.total_price,
-                total_input_tokens: s.total_input_tokens,
-                total_output_tokens: s.total_output_tokens,
-                total_cache_read: s.total_cache_read,
-              }))}
-              totalPrice={statsData.total.total_price}
-              barColor='bg-chart-1'
-              t={t}
-            />
-          </TabsContent>
-
-          <TabsContent value='by_model'>
-            <StatsBreakdownList
-              items={statsData.by_model.map((s) => ({
-                name: s.model_name,
-                count: s.count,
-                total_price: s.total_price,
-                total_input_tokens: s.total_input_tokens,
-                total_output_tokens: s.total_output_tokens,
-                total_cache_read: s.total_cache_read,
-              }))}
-              totalPrice={statsData.total.total_price}
-              barColor='bg-chart-2'
-              t={t}
-            />
-          </TabsContent>
-
-          <TabsContent value='by_type'>
-            <StatsBreakdownList
-              items={statsData.by_type.map((s) => ({
-                name: modelTypeLabels[s.setting_key as string] || s.setting_key,
-                count: s.count,
-                total_price: s.total_price,
-                total_input_tokens: s.total_input_tokens,
-                total_output_tokens: s.total_output_tokens,
-                total_cache_read: s.total_cache_read,
-              }))}
-              totalPrice={statsData.total.total_price}
-              barColor='bg-chart-3'
-              t={t}
-            />
-          </TabsContent>
-
-          <TabsContent value='by_user'>
-            <StatsBreakdownList
-              items={statsData.by_user.map((s) => ({
-                name: s.user_name,
-                count: s.count,
-                total_price: s.total_price,
-                total_input_tokens: s.total_input_tokens,
-                total_output_tokens: s.total_output_tokens,
-                total_cache_read: s.total_cache_read,
-              }))}
-              totalPrice={statsData.total.total_price}
-              barColor='bg-chart-4'
-              t={t}
-            />
-          </TabsContent>
-        </Tabs>
-      </Card>
+      <DetailStatsCard
+        statsData={statsData}
+        modelTypeLabels={modelTypeLabels}
+      />
 
       {/* Usage Detail Table */}
       <Card className='border-border bg-card p-6'>

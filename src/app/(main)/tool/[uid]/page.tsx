@@ -45,7 +45,217 @@ import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useTool } from '@/hooks/use-tool'
-import type { ToolInfo } from '@/types/tool'
+import type { FileMount, ToolInfo } from '@/types/tool'
+
+function ToolCommandCard({ command }: { command: string }) {
+  return (
+    <Card>
+      <CardHeader>
+        <div className='flex items-center gap-2'>
+          <TerminalIcon className='size-5 text-primary' />
+          <CardTitle>Command Template</CardTitle>
+        </div>
+        <CardDescription>Complete command with all parameters</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Snippet className='py-5 bg-muted text-sm font-mono' code={command}>
+          <SnippetAddon className='pl-1'>
+            <SnippetText>$</SnippetText>
+          </SnippetAddon>
+          <SnippetInput />
+          <SnippetAddon align='inline-end' className='pr-2'>
+            <CopyButton code={command} />
+          </SnippetAddon>
+        </Snippet>
+      </CardContent>
+    </Card>
+  )
+}
+
+function ToolParametersCard({ tool }: { tool: ToolInfo }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Parameters</CardTitle>
+        <CardDescription>Configure tool execution parameters</CardDescription>
+      </CardHeader>
+      <CardContent className='space-y-6'>
+        <div className='space-y-3'>
+          <h4 className='text-sm font-semibold'>Dynamic Parameters</h4>
+          <div className='space-y-3'>
+            {tool.dynamic_params.map((param) => (
+              <div
+                key={param.command}
+                className='border border-border rounded-lg p-4 space-y-2'
+              >
+                <code className='text-sm font-mono bg-muted px-2 py-1 rounded'>
+                  {param.command}
+                </code>
+                <p className='text-sm text-muted-foreground'>
+                  {param.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+        <Separator />
+        <div className='space-y-3'>
+          <h4 className='text-sm font-semibold'>Static Parameters</h4>
+          {tool.immutable_static_params && (
+            <div className='space-y-2'>
+              <div className='text-xs text-muted-foreground'>
+                不可变静态参数:
+              </div>
+              <div className='border border-border rounded-lg p-4'>
+                <code className='text-sm font-mono'>
+                  {tool.immutable_static_params}
+                </code>
+              </div>
+            </div>
+          )}
+          {tool.modifiable_static_params && (
+            <div className='space-y-2'>
+              <div className='text-xs text-muted-foreground'>
+                可修改静态参数:
+              </div>
+              <div className='border border-border rounded-lg p-4'>
+                <code className='text-sm font-mono'>
+                  {tool.modifiable_static_params}
+                </code>
+              </div>
+            </div>
+          )}
+          {!tool.immutable_static_params && !tool.modifiable_static_params && (
+            <div className='border border-border rounded-lg p-4 text-sm text-muted-foreground'>
+              暂无静态参数
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function FileMountItem({ file }: { file: FileMount }) {
+  return (
+    <div className='border border-border rounded-lg p-4 space-y-2'>
+      <div className='flex items-center justify-between'>
+        <h4 className='font-semibold text-sm'>{file.name}</h4>
+        <div className='flex gap-2'>
+          {file.is_log && (
+            <Badge variant='secondary' className='text-xs'>
+              LOG
+            </Badge>
+          )}
+          {file.is_report && (
+            <Badge variant='secondary' className='text-xs'>
+              REPORT
+            </Badge>
+          )}
+        </div>
+      </div>
+      <p className='text-sm text-muted-foreground'>{file.description}</p>
+      <Separator className='my-2' />
+      <div className='grid grid-cols-2 gap-2 text-xs'>
+        <div>
+          <span className='text-muted-foreground'>File Path:</span>
+          <code className='ml-2 bg-muted px-1 py-0.5 rounded'>
+            {file.file_path}
+          </code>
+        </div>
+        <div>
+          <span className='text-muted-foreground'>Mount Path:</span>
+          <code className='ml-2 bg-muted px-1 py-0.5 rounded'>
+            {file.mount_path}
+          </code>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function FileMountsCard({
+  inputFiles,
+  outputFiles,
+}: {
+  inputFiles: FileMount[]
+  outputFiles: FileMount[]
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>File Mounts</CardTitle>
+        <CardDescription>Input and output file specifications</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Tabs defaultValue='input' className='w-full'>
+          <TabsList className='grid w-full grid-cols-2'>
+            <TabsTrigger value='input' className='gap-2'>
+              <FileInput className='size-4' />
+              Input Files ({inputFiles.length})
+            </TabsTrigger>
+            <TabsTrigger value='output' className='gap-2'>
+              <FileOutput className='size-4' />
+              Output Files ({outputFiles.length})
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value='input' className='space-y-3 mt-4'>
+            {inputFiles.map((file) => (
+              <FileMountItem key={file.name} file={file} />
+            ))}
+          </TabsContent>
+          <TabsContent value='output' className='space-y-3 mt-4'>
+            {outputFiles.map((file) => (
+              <FileMountItem key={file.name} file={file} />
+            ))}
+          </TabsContent>
+        </Tabs>
+      </CardContent>
+    </Card>
+  )
+}
+
+function ToolDocumentationCard({ tool }: { tool: ToolInfo }) {
+  return (
+    <Card>
+      <CardHeader>
+        <div className='flex items-center gap-2'>
+          <BookOpen className='size-5 text-primary' />
+          <CardTitle>Documentation</CardTitle>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className='space-y-4'>
+          <div>
+            <h4 className='text-sm font-semibold mb-2'>Help Command</h4>
+            <Snippet
+              className='py-2 bg-muted text-sm font-mono'
+              code={tool.help_doc.help_command}
+            >
+              <SnippetAddon className='pl-1'>
+                <SnippetText>$</SnippetText>
+              </SnippetAddon>
+              <SnippetInput />
+              <SnippetAddon align='inline-end' className='pr-2'>
+                <CopyButton code={tool.help_doc.help_command} />
+              </SnippetAddon>
+            </Snippet>
+          </div>
+          <Separator />
+          <div>
+            <h4 className='text-sm font-semibold mb-2'>Command Output</h4>
+            <Terminal output={tool.help_doc.content} autoScroll={false}>
+              <TerminalHeader>
+                <TerminalTitle>{tool.help_doc.help_command}</TerminalTitle>
+              </TerminalHeader>
+              <TerminalContent />
+            </Terminal>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
 
 export default function ToolDetailPage() {
   const params = useParams()
@@ -129,251 +339,19 @@ export default function ToolDetailPage() {
             {/* Left Column - Main Content */}
             <div className='lg:col-span-2 space-y-6'>
               {/* Command Section */}
-              <Card>
-                <CardHeader>
-                  <div className='flex items-center gap-2'>
-                    <TerminalIcon className='size-5 text-primary' />
-                    <CardTitle>Command Template</CardTitle>
-                  </div>
-                  <CardDescription>
-                    Complete command with all parameters
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className='relative'>
-                    <Snippet
-                      className='py-5 bg-muted text-sm font-mono'
-                      code={tool.complete_command}
-                    >
-                      <SnippetAddon className='pl-1'>
-                        <SnippetText>$</SnippetText>
-                      </SnippetAddon>
-                      <SnippetInput />
-                      <SnippetAddon align='inline-end' className='pr-2'>
-                        <CopyButton code={tool.complete_command} />
-                      </SnippetAddon>
-                    </Snippet>
-                  </div>
-                </CardContent>
-              </Card>
+              <ToolCommandCard command={tool.complete_command} />
 
-              {/* Parameters Tabs */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Parameters</CardTitle>
-                  <CardDescription>
-                    Configure tool execution parameters
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className='space-y-6'>
-                  <div className='space-y-3'>
-                    <h4 className='text-sm font-semibold'>
-                      Dynamic Parameters
-                    </h4>
-                    <div className='space-y-3'>
-                      {tool.dynamic_params.map((param) => (
-                        <div
-                          key={param.command}
-                          className='border border-border rounded-lg p-4 space-y-2'
-                        >
-                          <code className='text-sm font-mono bg-muted px-2 py-1 rounded'>
-                            {param.command}
-                          </code>
-                          <p className='text-sm text-muted-foreground'>
-                            {param.description}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <Separator />
-                  <div className='space-y-3'>
-                    <h4 className='text-sm font-semibold'>Static Parameters</h4>
-                    {tool.immutable_static_params && (
-                      <div className='space-y-2'>
-                        <div className='text-xs text-muted-foreground'>
-                          不可变静态参数:
-                        </div>
-                        <div className='border border-border rounded-lg p-4'>
-                          <code className='text-sm font-mono'>
-                            {tool.immutable_static_params}
-                          </code>
-                        </div>
-                      </div>
-                    )}
-                    {tool.modifiable_static_params && (
-                      <div className='space-y-2'>
-                        <div className='text-xs text-muted-foreground'>
-                          可修改静态参数:
-                        </div>
-                        <div className='border border-border rounded-lg p-4'>
-                          <code className='text-sm font-mono'>
-                            {tool.modifiable_static_params}
-                          </code>
-                        </div>
-                      </div>
-                    )}
-                    {!tool.immutable_static_params &&
-                      !tool.modifiable_static_params && (
-                        <div className='border border-border rounded-lg p-4 text-sm text-muted-foreground'>
-                          暂无静态参数
-                        </div>
-                      )}
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Parameters */}
+              <ToolParametersCard tool={tool} />
 
               {/* File Mounts */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>File Mounts</CardTitle>
-                  <CardDescription>
-                    Input and output file specifications
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Tabs defaultValue='input' className='w-full'>
-                    <TabsList className='grid w-full grid-cols-2'>
-                      <TabsTrigger value='input' className='gap-2'>
-                        <FileInput className='size-4' />
-                        Input Files ({inputFiles.length})
-                      </TabsTrigger>
-                      <TabsTrigger value='output' className='gap-2'>
-                        <FileOutput className='size-4' />
-                        Output Files ({outputFiles.length})
-                      </TabsTrigger>
-                    </TabsList>
-                    <TabsContent value='input' className='space-y-3 mt-4'>
-                      {inputFiles.map((file) => (
-                        <div
-                          key={file.name}
-                          className='border border-border rounded-lg p-4 space-y-2'
-                        >
-                          <h4 className='font-semibold text-sm'>{file.name}</h4>
-                          <p className='text-sm text-muted-foreground'>
-                            {file.description}
-                          </p>
-                          <Separator className='my-2' />
-                          <div className='grid grid-cols-2 gap-2 text-xs'>
-                            <div>
-                              <span className='text-muted-foreground'>
-                                File Path:
-                              </span>
-                              <code className='ml-2 bg-muted px-1 py-0.5 rounded'>
-                                {file.file_path}
-                              </code>
-                            </div>
-                            <div>
-                              <span className='text-muted-foreground'>
-                                Mount Path:
-                              </span>
-                              <code className='ml-2 bg-muted px-1 py-0.5 rounded'>
-                                {file.mount_path}
-                              </code>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </TabsContent>
-                    <TabsContent value='output' className='space-y-3 mt-4'>
-                      {outputFiles.map((file) => (
-                        <div
-                          key={file.name}
-                          className='border border-border rounded-lg p-4 space-y-2'
-                        >
-                          <div className='flex items-center justify-between'>
-                            <h4 className='font-semibold text-sm'>
-                              {file.name}
-                            </h4>
-                            <div className='flex gap-2'>
-                              {file.is_log && (
-                                <Badge variant='secondary' className='text-xs'>
-                                  LOG
-                                </Badge>
-                              )}
-                              {file.is_report && (
-                                <Badge variant='secondary' className='text-xs'>
-                                  REPORT
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                          <p className='text-sm text-muted-foreground'>
-                            {file.description}
-                          </p>
-                          <Separator className='my-2' />
-                          <div className='grid grid-cols-2 gap-2 text-xs'>
-                            <div>
-                              <span className='text-muted-foreground'>
-                                File Path:
-                              </span>
-                              <code className='ml-2 bg-muted px-1 py-0.5 rounded'>
-                                {file.file_path}
-                              </code>
-                            </div>
-                            <div>
-                              <span className='text-muted-foreground'>
-                                Mount Path:
-                              </span>
-                              <code className='ml-2 bg-muted px-1 py-0.5 rounded'>
-                                {file.mount_path}
-                              </code>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </TabsContent>
-                  </Tabs>
-                </CardContent>
-              </Card>
+              <FileMountsCard
+                inputFiles={inputFiles}
+                outputFiles={outputFiles}
+              />
 
-              {/* Help Documentation */}
-              <Card>
-                <CardHeader>
-                  <div className='flex items-center gap-2'>
-                    <BookOpen className='size-5 text-primary' />
-                    <CardTitle>Documentation</CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className='space-y-4'>
-                    <div>
-                      <h4 className='text-sm font-semibold mb-2'>
-                        Help Command
-                      </h4>
-                      <Snippet
-                        className='py-2 bg-muted text-sm font-mono'
-                        code={tool.help_doc.help_command}
-                      >
-                        <SnippetAddon className='pl-1'>
-                          <SnippetText>$</SnippetText>
-                        </SnippetAddon>
-                        <SnippetInput />
-                        <SnippetAddon align='inline-end' className='pr-2'>
-                          <CopyButton code={tool.help_doc.help_command} />
-                        </SnippetAddon>
-                      </Snippet>
-                    </div>
-                    <Separator />
-                    <div>
-                      <h4 className='text-sm font-semibold mb-2'>
-                        Command Output
-                      </h4>
-                      <Terminal
-                        output={tool.help_doc.content}
-                        autoScroll={false}
-                      >
-                        <TerminalHeader>
-                          <TerminalTitle>
-                            {tool.help_doc.help_command}
-                          </TerminalTitle>
-                        </TerminalHeader>
-                        <TerminalContent />
-                      </Terminal>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Documentation */}
+              <ToolDocumentationCard tool={tool} />
             </div>
 
             <ToolInfoSidebar tool={tool} dockerImage={dockerImage} />

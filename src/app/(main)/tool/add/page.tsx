@@ -36,8 +36,116 @@ import type {
   DockerToolCreate,
   FileMount,
   ParamDefine,
+  ToolImagePublic,
   ToolTag,
 } from '@/types/tool'
+
+function ImageSelectionStep({
+  searchQuery,
+  onSearchChange,
+  searchResults,
+  currentImageUid,
+  onSelect,
+}: {
+  searchQuery: string
+  onSearchChange: (q: string) => void
+  searchResults: ToolImagePublic[]
+  currentImageUid: string | undefined
+  onSelect: (image: ToolImagePublic) => void
+}) {
+  const t = useTranslations('tool.AddPage')
+  return (
+    <div>
+      <h2 className='text-xl font-semibold mb-2'>{t('selectImage')}</h2>
+      <p className='text-muted-foreground mb-6'>{t('searchImage')}</p>
+      <div className='mb-6'>
+        <Input
+          placeholder={t('searchPlaceholder')}
+          value={searchQuery}
+          onChange={(e) => onSearchChange(e.target.value)}
+        />
+      </div>
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+        {searchResults.map((image) => (
+          <Card
+            key={image.uid}
+            className={`pt-2 cursor-pointer transition-all hover:shadow-md border-2 ${
+              currentImageUid === image.uid
+                ? 'border-primary bg-primary/5'
+                : 'border-border hover:border-primary/50'
+            }`}
+            onClick={() => onSelect(image)}
+          >
+            <CardContent className='p-4'>
+              <h3 className='font-semibold'>{image.name}</h3>
+              <Badge variant='secondary' className='mt-2'>
+                {image.version}
+              </Badge>
+              <p className='text-sm text-muted-foreground mt-2 line-clamp-2'>
+                {image.description}
+              </p>
+              <code className='text-xs bg-muted px-2 py-1 rounded block overflow-x-auto mt-2'>
+                {image.image.registry}/{image.image.namespace}/
+                {image.image.repository}:{image.image.tag}
+              </code>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      {searchQuery && searchResults.length === 0 && (
+        <div className='text-center py-12 text-muted-foreground'>
+          <p>{t('noImageFound')}</p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function StepNavigation({
+  currentStep,
+  totalSteps,
+  canProceed,
+  isCreating,
+  onPrev,
+  onNext,
+  onCreate,
+}: {
+  currentStep: number
+  totalSteps: number
+  canProceed: boolean
+  isCreating: boolean
+  onPrev: () => void
+  onNext: () => void
+  onCreate: () => void
+}) {
+  const t = useTranslations('tool.AddPage')
+  return (
+    <div className='flex justify-between items-center pt-4 border-t'>
+      <Button variant='outline' onClick={onPrev} disabled={currentStep === 1}>
+        <ArrowLeft className='size-4 mr-2' />
+        {t('prevStep')}
+      </Button>
+      <div className='text-sm text-muted-foreground'>
+        {t('stepProgress', { current: currentStep, total: totalSteps })}
+      </div>
+      {currentStep < totalSteps ? (
+        <Button onClick={onNext} disabled={!canProceed}>
+          {t('nextStep')}
+          <ArrowRight className='size-4 ml-2' />
+        </Button>
+      ) : (
+        <Button
+          onClick={onCreate}
+          className='bg-green-600 hover:bg-green-700'
+          disabled={!canProceed || isCreating}
+        >
+          {isCreating ? t('creating') : t('createTool')}
+        </Button>
+      )}
+    </div>
+  )
+}
+
 export default function AddToolPage() {
   return (
     <Suspense>
@@ -300,59 +408,15 @@ function AddToolPageContent() {
 
           {/* 步骤内容 */}
           <div className='mb-8'>
-            {/* 步骤1: 选择镜像 */}
             {currentStep === 1 && (
-              <div>
-                <h2 className='text-xl font-semibold mb-2'>
-                  {t('selectImage')}
-                </h2>
-                <p className='text-muted-foreground mb-6'>{t('searchImage')}</p>
-
-                <div className='mb-6'>
-                  <Input
-                    placeholder={t('searchPlaceholder')}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                  {searchResults.map((image) => (
-                    <Card
-                      key={image.uid}
-                      className={`pt-2 cursor-pointer transition-all hover:shadow-md border-2 ${
-                        currentImage?.uid === image.uid
-                          ? 'border-primary bg-primary/5'
-                          : 'border-border hover:border-primary/50'
-                      }`}
-                      onClick={() => setCurrentImage(image)}
-                    >
-                      <CardContent className='p-4'>
-                        <h3 className='font-semibold'>{image.name}</h3>
-                        <Badge variant='secondary' className='mt-2'>
-                          {image.version}
-                        </Badge>
-                        <p className='text-sm text-muted-foreground mt-2 line-clamp-2'>
-                          {image.description}
-                        </p>
-                        <code className='text-xs bg-muted px-2 py-1 rounded block overflow-x-auto mt-2'>
-                          {image.image.registry}/{image.image.namespace}/
-                          {image.image.repository}:{image.image.tag}
-                        </code>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-
-                {searchQuery && searchResults.length === 0 && (
-                  <div className='text-center py-12 text-muted-foreground'>
-                    <p>{t('noImageFound')}</p>
-                  </div>
-                )}
-              </div>
+              <ImageSelectionStep
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                searchResults={searchResults}
+                currentImageUid={currentImage?.uid}
+                onSelect={setCurrentImage}
+              />
             )}
-
-            {/* 步骤2: 配置工具 */}
             {currentStep === 2 && (
               <div>
                 <h2 className='text-xl font-semibold mb-2'>
@@ -361,7 +425,6 @@ function AddToolPageContent() {
                 <p className='text-muted-foreground mb-6'>
                   {t('fillBasicInfo')}
                 </p>
-
                 <ToolConfigForm
                   value={toolConfig}
                   toolGroups={toolGroups}
@@ -389,7 +452,6 @@ function AddToolPageContent() {
                 />
               </div>
             )}
-
             {currentStep === 3 && (
               <ConfirmStep
                 toolConfig={toolConfig}
@@ -398,36 +460,15 @@ function AddToolPageContent() {
             )}
           </div>
 
-          {/* 导航按钮 */}
-          <div className='flex justify-between items-center pt-4 border-t'>
-            <Button
-              variant='outline'
-              onClick={handlePrev}
-              disabled={currentStep === 1}
-            >
-              <ArrowLeft className='size-4 mr-2' />
-              {t('prevStep')}
-            </Button>
-
-            <div className='text-sm text-muted-foreground'>
-              {t('stepProgress', { current: currentStep, total: steps.length })}
-            </div>
-
-            {currentStep < steps.length ? (
-              <Button onClick={handleNext} disabled={!canProceed()}>
-                {t('nextStep')}
-                <ArrowRight className='size-4 ml-2' />
-              </Button>
-            ) : (
-              <Button
-                onClick={handleCreateTool}
-                className='bg-green-600 hover:bg-green-700'
-                disabled={!canProceed() || isCreating}
-              >
-                {isCreating ? t('creating') : t('createTool')}
-              </Button>
-            )}
-          </div>
+          <StepNavigation
+            currentStep={currentStep}
+            totalSteps={steps.length}
+            canProceed={canProceed()}
+            isCreating={isCreating}
+            onPrev={handlePrev}
+            onNext={handleNext}
+            onCreate={handleCreateTool}
+          />
         </div>
       </div>
     </SidebarInset>

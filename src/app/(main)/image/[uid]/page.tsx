@@ -40,7 +40,171 @@ import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { Textarea } from '@/components/ui/textarea'
 import { useImage, useUpdateImage } from '@/hooks/use-tool'
 import { formatImageTag } from '@/lib/image-utils'
-import type { ToolImagePublic } from '@/types/tool'
+import type { ToolImage, ToolImagePublic } from '@/types/tool'
+
+function ImageEditForm({
+  formData,
+  onChange,
+}: {
+  formData: Partial<ToolImage>
+  onChange: (updater: (prev: Partial<ToolImage>) => Partial<ToolImage>) => void
+}) {
+  const t = useTranslations('image.detail')
+  return (
+    <>
+      <div className='space-y-2'>
+        <Label htmlFor='name'>{t('nameLabel')}</Label>
+        <Input
+          id='name'
+          value={formData.name || ''}
+          onChange={(e) =>
+            onChange((prev) => ({ ...prev, name: e.target.value }))
+          }
+        />
+      </div>
+      <div className='space-y-2'>
+        <Label htmlFor='version'>{t('versionLabel')}</Label>
+        <Input
+          id='version'
+          value={formData.version || ''}
+          onChange={(e) =>
+            onChange((prev) => ({ ...prev, version: e.target.value }))
+          }
+        />
+      </div>
+      <div className='space-y-2'>
+        <Label htmlFor='description'>{t('descLabel')}</Label>
+        <Textarea
+          id='description'
+          rows={4}
+          value={formData.description || ''}
+          onChange={(e) =>
+            onChange((prev) => ({ ...prev, description: e.target.value }))
+          }
+        />
+      </div>
+      <div className='space-y-2'>
+        <Label htmlFor='homepage'>Homepage</Label>
+        <Input
+          id='homepage'
+          type='url'
+          value={formData.homepage || ''}
+          onChange={(e) =>
+            onChange((prev) => ({ ...prev, homepage: e.target.value }))
+          }
+        />
+      </div>
+      <div className='space-y-2'>
+        <Label htmlFor='paper_link'>Paper Link</Label>
+        <Input
+          id='paper_link'
+          type='url'
+          value={formData.paper_link || ''}
+          onChange={(e) =>
+            onChange((prev) => ({ ...prev, paper_link: e.target.value }))
+          }
+        />
+      </div>
+      <Separator />
+      <div className='space-y-4'>
+        <h3 className='text-sm font-medium'>{t('config')}</h3>
+        <div className='grid grid-cols-2 gap-4'>
+          {(['registry', 'namespace', 'repository', 'tag'] as const).map(
+            (field) => (
+              <div key={field} className='space-y-2'>
+                <Label htmlFor={field}>{t(field)}</Label>
+                <Input
+                  id={field}
+                  value={formData.image?.[field] || ''}
+                  onChange={(e) =>
+                    onChange((prev) => ({
+                      ...prev,
+                      image: {
+                        registry: '',
+                        namespace: '',
+                        repository: '',
+                        tag: '',
+                        ...prev.image,
+                        [field]: e.target.value,
+                      },
+                    }))
+                  }
+                  placeholder={t(`${field}Placeholder`)}
+                />
+              </div>
+            ),
+          )}
+        </div>
+      </div>
+    </>
+  )
+}
+
+function ImageViewContent({
+  image,
+  onCopy,
+  copied,
+}: {
+  image: ToolImagePublic
+  onCopy: () => void
+  copied: boolean
+}) {
+  const t = useTranslations('image.detail')
+  return (
+    <>
+      <div>
+        <h3 className='text-sm font-medium text-muted-foreground mb-2'>
+          {t('descLabel')}
+        </h3>
+        <p className='text-sm'>{image.description || t('noDesc')}</p>
+      </div>
+      <div>
+        <h3 className='text-sm font-medium text-muted-foreground mb-2'>
+          {t('imageTag')}
+        </h3>
+        <div className='flex items-center gap-2'>
+          <div className='flex-1 p-3 bg-muted rounded-md'>
+            <code className='text-sm font-mono'>{formatImageTag(image)}</code>
+          </div>
+          <Button
+            variant='outline'
+            size='icon'
+            onClick={onCopy}
+            className='shrink-0'
+          >
+            {copied ? (
+              <CheckIcon className='size-4 text-green-600' />
+            ) : (
+              <CopyIcon className='size-4' />
+            )}
+          </Button>
+        </div>
+      </div>
+      <div className='flex flex-wrap gap-3'>
+        {image.homepage && (
+          <Button variant='outline' size='sm' asChild>
+            <a href={image.homepage} target='_blank' rel='noopener noreferrer'>
+              <ExternalLinkIcon className='size-4 mr-2' />
+              Homepage
+            </a>
+          </Button>
+        )}
+        {image.paper_link && (
+          <Button variant='outline' size='sm' asChild>
+            <a
+              href={image.paper_link}
+              target='_blank'
+              rel='noopener noreferrer'
+            >
+              <FileTextIcon className='size-4 mr-2' />
+              Paper
+            </a>
+          </Button>
+        )}
+      </div>
+    </>
+  )
+}
 
 export default function ImageDetailPage() {
   const t = useTranslations('image.detail')
@@ -221,231 +385,13 @@ export default function ImageDetailPage() {
             </CardHeader>
             <CardContent className='space-y-6'>
               {isEditing ? (
-                <>
-                  <div className='space-y-2'>
-                    <Label htmlFor='name'>{t('nameLabel')}</Label>
-                    <Input
-                      id='name'
-                      value={formData.name || ''}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          name: e.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-                  <div className='space-y-2'>
-                    <Label htmlFor='version'>{t('versionLabel')}</Label>
-                    <Input
-                      id='version'
-                      value={formData.version || ''}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          version: e.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-                  <div className='space-y-2'>
-                    <Label htmlFor='description'>{t('descLabel')}</Label>
-                    <Textarea
-                      id='description'
-                      rows={4}
-                      value={formData.description || ''}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          description: e.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-                  <div className='space-y-2'>
-                    <Label htmlFor='homepage'>Homepage</Label>
-                    <Input
-                      id='homepage'
-                      type='url'
-                      value={formData.homepage || ''}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          homepage: e.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-                  <div className='space-y-2'>
-                    <Label htmlFor='paper_link'>Paper Link</Label>
-                    <Input
-                      id='paper_link'
-                      type='url'
-                      value={formData.paper_link || ''}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          paper_link: e.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-
-                  <Separator />
-
-                  <div className='space-y-4'>
-                    <h3 className='text-sm font-medium'>{t('config')}</h3>
-                    <div className='grid grid-cols-2 gap-4'>
-                      <div className='space-y-2'>
-                        <Label htmlFor='registry'>{t('registry')}</Label>
-                        <Input
-                          id='registry'
-                          value={formData.image?.registry || ''}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              image: {
-                                ...(prev.image || {
-                                  namespace: '',
-                                  repository: '',
-                                  tag: '',
-                                }),
-                                registry: e.target.value,
-                              },
-                            }))
-                          }
-                          placeholder={t('registryPlaceholder')}
-                        />
-                      </div>
-                      <div className='space-y-2'>
-                        <Label htmlFor='namespace'>{t('namespace')}</Label>
-                        <Input
-                          id='namespace'
-                          value={formData.image?.namespace || ''}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              image: {
-                                ...(prev.image || {
-                                  registry: '',
-                                  repository: '',
-                                  tag: '',
-                                }),
-                                namespace: e.target.value,
-                              },
-                            }))
-                          }
-                          placeholder={t('namespacePlaceholder')}
-                        />
-                      </div>
-                      <div className='space-y-2'>
-                        <Label htmlFor='repository'>{t('repository')}</Label>
-                        <Input
-                          id='repository'
-                          value={formData.image?.repository || ''}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              image: {
-                                ...(prev.image || {
-                                  registry: '',
-                                  namespace: '',
-                                  tag: '',
-                                }),
-                                repository: e.target.value,
-                              },
-                            }))
-                          }
-                          placeholder={t('repositoryPlaceholder')}
-                        />
-                      </div>
-                      <div className='space-y-2'>
-                        <Label htmlFor='tag'>{t('tag')}</Label>
-                        <Input
-                          id='tag'
-                          value={formData.image?.tag || ''}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              image: {
-                                ...(prev.image || {
-                                  registry: '',
-                                  namespace: '',
-                                  repository: '',
-                                }),
-                                tag: e.target.value,
-                              },
-                            }))
-                          }
-                          placeholder={t('tagPlaceholder')}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </>
+                <ImageEditForm formData={formData} onChange={setFormData} />
               ) : (
-                <>
-                  <div>
-                    <h3 className='text-sm font-medium text-muted-foreground mb-2'>
-                      {t('descLabel')}
-                    </h3>
-                    <p className='text-sm'>
-                      {image.description || t('noDesc')}
-                    </p>
-                  </div>
-
-                  <div>
-                    <h3 className='text-sm font-medium text-muted-foreground mb-2'>
-                      {t('imageTag')}
-                    </h3>
-                    <div className='flex items-center gap-2'>
-                      <div className='flex-1 p-3 bg-muted rounded-md'>
-                        <code className='text-sm font-mono'>
-                          {formatImageTag(image)}
-                        </code>
-                      </div>
-                      <Button
-                        variant='outline'
-                        size='icon'
-                        onClick={handleCopy}
-                        className='shrink-0'
-                      >
-                        {copied ? (
-                          <CheckIcon className='size-4 text-green-600' />
-                        ) : (
-                          <CopyIcon className='size-4' />
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className='flex flex-wrap gap-3'>
-                    {image.homepage && (
-                      <Button variant='outline' size='sm' asChild>
-                        <a
-                          href={image.homepage}
-                          target='_blank'
-                          rel='noopener noreferrer'
-                        >
-                          <ExternalLinkIcon className='size-4 mr-2' />
-                          Homepage
-                        </a>
-                      </Button>
-                    )}
-                    {image.paper_link && (
-                      <Button variant='outline' size='sm' asChild>
-                        <a
-                          href={image.paper_link}
-                          target='_blank'
-                          rel='noopener noreferrer'
-                        >
-                          <FileTextIcon className='size-4 mr-2' />
-                          Paper
-                        </a>
-                      </Button>
-                    )}
-                  </div>
-                </>
+                <ImageViewContent
+                  image={image}
+                  onCopy={handleCopy}
+                  copied={copied}
+                />
               )}
             </CardContent>
           </Card>
