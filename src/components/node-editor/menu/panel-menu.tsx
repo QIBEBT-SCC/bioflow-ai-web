@@ -7,8 +7,8 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
+  useReducer,
   useRef,
-  useState,
 } from 'react'
 import { DbMenu } from '@/components/node-editor/menu/db-menu'
 import { ToolMenu } from '@/components/node-editor/menu/tool-menu'
@@ -31,6 +31,46 @@ interface PanelMenuProps {
   ) => void
 }
 
+type MenuState = {
+  isAnalysisMenuOpen: boolean
+  isDBMenuOpen: boolean
+  activeMenu: string | null
+  activeSubItem: string | null
+  adjustedPosition: { x: number; y: number }
+}
+type MenuAction =
+  | { type: 'OPEN_ANALYSIS' }
+  | { type: 'OPEN_DB' }
+  | { type: 'SET_ACTIVE_MENU'; key: string | null }
+  | { type: 'SET_ACTIVE_SUB'; key: string | null }
+  | { type: 'SET_POSITION'; x: number; y: number }
+  | { type: 'RESET_ACTIVE' }
+
+const INITIAL_MENU_STATE: MenuState = {
+  isAnalysisMenuOpen: false,
+  isDBMenuOpen: false,
+  activeMenu: null,
+  activeSubItem: null,
+  adjustedPosition: { x: 0, y: 0 },
+}
+
+function menuReducer(state: MenuState, action: MenuAction): MenuState {
+  switch (action.type) {
+    case 'OPEN_ANALYSIS':
+      return { ...state, isAnalysisMenuOpen: true }
+    case 'OPEN_DB':
+      return { ...state, isDBMenuOpen: true }
+    case 'SET_ACTIVE_MENU':
+      return { ...state, activeMenu: action.key }
+    case 'SET_ACTIVE_SUB':
+      return { ...state, activeSubItem: action.key }
+    case 'SET_POSITION':
+      return { ...state, adjustedPosition: { x: action.x, y: action.y } }
+    case 'RESET_ACTIVE':
+      return { ...state, activeMenu: null, activeSubItem: null }
+  }
+}
+
 export const PanelMenu: React.FC<PanelMenuProps> = ({
   isOpen,
   position,
@@ -38,11 +78,16 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({
   onSelectTool,
 }) => {
   const t = useTranslations('editor.menu')
-  const [isAnalysisMenuOpen, setIsAnalysisMenuOpen] = useState(false)
-  const [isDBMenuOpen, setIsDBMenuOpen] = useState(false)
-  const [activeMenu, setActiveMenu] = useState<string | null>(null)
-  const [activeSubItem, setActiveSubItem] = useState<string | null>(null)
-  const [adjustedPosition, setAdjustedPosition] = useState({ x: 0, y: 0 })
+  const [
+    {
+      isAnalysisMenuOpen,
+      isDBMenuOpen,
+      activeMenu,
+      activeSubItem,
+      adjustedPosition,
+    },
+    dispatch,
+  ] = useReducer(menuReducer, INITIAL_MENU_STATE)
   const menuRef = useRef<HTMLDivElement>(null)
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const subCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -58,7 +103,10 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({
 
   const scheduleClose = useCallback(() => {
     cancelClose()
-    closeTimerRef.current = setTimeout(() => setActiveMenu(null), 150)
+    closeTimerRef.current = setTimeout(
+      () => dispatch({ type: 'SET_ACTIVE_MENU', key: null }),
+      150,
+    )
   }, [cancelClose])
 
   const cancelSubClose = useCallback(() => {
@@ -70,7 +118,10 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({
 
   const scheduleSubClose = useCallback(() => {
     cancelSubClose()
-    subCloseTimerRef.current = setTimeout(() => setActiveSubItem(null), 150)
+    subCloseTimerRef.current = setTimeout(
+      () => dispatch({ type: 'SET_ACTIVE_SUB', key: null }),
+      150,
+    )
   }, [cancelSubClose])
 
   // Fix position after mount so menuRef has real dimensions
@@ -79,7 +130,8 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({
     const { width, height } = menuRef.current.getBoundingClientRect()
     const vw = window.innerWidth
     const vh = window.innerHeight
-    setAdjustedPosition({
+    dispatch({
+      type: 'SET_POSITION',
       x: position.x + width > vw ? vw - width - 10 : position.x,
       y: position.y + height > vh ? vh - height - 10 : position.y,
     })
@@ -99,17 +151,14 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({
 
   // Reset submenu state when parent closes
   useEffect(() => {
-    if (!isOpen) {
-      setActiveMenu(null)
-      setActiveSubItem(null)
-    }
+    if (!isOpen) dispatch({ type: 'RESET_ACTIVE' })
   }, [isOpen])
 
   const handleItemClick = (key: string, itemType?: string) => {
     const group = menuData[key]
     if (itemType) {
       if (itemType === 'resource_db') {
-        setIsDBMenuOpen(true)
+        dispatch({ type: 'OPEN_DB' })
         onClose()
       } else if (itemType !== '__genome_submenu__') {
         onSelectTool(itemType)
@@ -117,7 +166,7 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({
       }
     } else {
       if (group.submenuType === 'tool-modal') {
-        setIsAnalysisMenuOpen(true)
+        dispatch({ type: 'OPEN_ANALYSIS' })
         onClose()
       }
     }
@@ -148,10 +197,10 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({
                     type='button'
                     onClick={() => handleItemClick(key)}
                     onMouseEnter={() => {
-                      setActiveMenu(key)
-                      setActiveSubItem(null)
+                      dispatch({ type: 'SET_ACTIVE_MENU', key })
+                      dispatch({ type: 'SET_ACTIVE_SUB', key: null })
                     }}
-                    onFocus={() => setActiveMenu(key)}
+                    onFocus={() => dispatch({ type: 'SET_ACTIVE_MENU', key })}
                     className={cn(
                       'w-full text-left px-4 py-2 text-sm hover:bg-accent flex items-center justify-between transition-colors',
                       activeMenu === key && 'bg-accent/50',
@@ -183,7 +232,10 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({
                               onClick={() => handleItemClick(key, item.type)}
                               onMouseEnter={() => {
                                 cancelSubClose()
-                                setActiveSubItem(hasSubItems ? item.type : null)
+                                dispatch({
+                                  type: 'SET_ACTIVE_SUB',
+                                  key: hasSubItems ? item.type : null,
+                                })
                               }}
                               onMouseLeave={() => {
                                 if (hasSubItems) scheduleSubClose()
