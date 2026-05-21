@@ -1,3 +1,4 @@
+import { format, parseISO } from 'date-fns'
 import {
   CheckIcon,
   ChevronDownIcon,
@@ -299,7 +300,10 @@ export function ProjectResourcesList() {
                       onClick={() => toggleSampleExpand(sample.uid)}
                       suppressHydrationWarning
                     >
-                      {new Date(sample.create_time).toLocaleString()}
+                      {format(
+                        parseISO(sample.create_time),
+                        'yyyy-MM-dd HH:mm:ss',
+                      )}
                     </TableCell>
                     <TableCell onClick={() => toggleSampleExpand(sample.uid)}>
                       {sample.files.length}
@@ -383,9 +387,10 @@ export function ProjectResourcesList() {
                                     className='text-xs'
                                     suppressHydrationWarning
                                   >
-                                    {new Date(
-                                      file.uploaded_time,
-                                    ).toLocaleString()}
+                                    {format(
+                                      parseISO(file.uploaded_time),
+                                      'yyyy-MM-dd HH:mm:ss',
+                                    )}
                                   </TableCell>
                                   <TableCell>
                                     <Button variant='ghost' size='icon'>

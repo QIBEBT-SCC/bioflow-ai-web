@@ -1,5 +1,6 @@
 'use client'
 
+import { format, parseISO } from 'date-fns'
 import {
   ChevronDown,
   ChevronRight,
@@ -173,7 +174,10 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
                         suppressHydrationWarning
                       >
                         导入时间：
-                        {new Date(workflow.import_time).toLocaleString('zh-CN')}
+                        {format(
+                          parseISO(workflow.import_time),
+                          'yyyy-MM-dd HH:mm:ss',
+                        )}
                       </CardDescription>
                     </button>
 
