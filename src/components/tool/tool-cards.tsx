@@ -61,7 +61,7 @@ export function ToolParamCard({
     <Card
       ref={setNodeRef}
       style={style}
-      className='overflow-hidden border-l-4 border-l-primary pt-0'
+      className='overflow-hidden shadow-[inset_3px_0_0_hsl(var(--primary)/0.6)] pt-0'
     >
       <CardHeader className='py-3 bg-muted/30'>
         <div className='flex justify-between items-center'>
