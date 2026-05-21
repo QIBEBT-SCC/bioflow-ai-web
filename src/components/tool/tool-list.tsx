@@ -380,7 +380,7 @@ function ToolListView({
                 }
               />
             </PaginationItem>
-            {pageNumbers.map((page, index) =>
+            {Array.from(pageNumbers.entries()).map(([pos, page]) =>
               typeof page === 'number' ? (
                 <PaginationItem key={`page-list-${page}`}>
                   <PaginationLink
@@ -392,8 +392,7 @@ function ToolListView({
                   </PaginationLink>
                 </PaginationItem>
               ) : (
-                // biome-ignore lint/suspicious/noArrayIndexKey: no need
-                <PaginationItem key={`ellipsis-list-${index}`}>
+                <PaginationItem key={`ellipsis-list-${pos}`}>
                   <PaginationEllipsis />
                 </PaginationItem>
               ),
@@ -502,7 +501,7 @@ function ToolGridView({
                 }
               />
             </PaginationItem>
-            {pageNumbers.map((page, index) =>
+            {Array.from(pageNumbers.entries()).map(([pos, page]) =>
               typeof page === 'number' ? (
                 <PaginationItem key={`page-grid-${page}`}>
                   <PaginationLink
@@ -514,8 +513,7 @@ function ToolGridView({
                   </PaginationLink>
                 </PaginationItem>
               ) : (
-                // biome-ignore lint/suspicious/noArrayIndexKey: no need
-                <PaginationItem key={`ellipsis-grid-${index}`}>
+                <PaginationItem key={`ellipsis-grid-${pos}`}>
                   <PaginationEllipsis />
                 </PaginationItem>
               ),

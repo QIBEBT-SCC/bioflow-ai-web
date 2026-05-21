@@ -138,9 +138,8 @@ export function WorkflowRunInstances({
   if (isLoading) {
     return (
       <div className='px-4 pb-4 space-y-2'>
-        {[...Array(3)].map((_, i) => (
-          // biome-ignore lint/suspicious/noArrayIndexKey: skeleton
-          <Skeleton key={i} className='h-10 w-full' />
+        {['sk-0', 'sk-1', 'sk-2'].map((key) => (
+          <Skeleton key={key} className='h-10 w-full' />
         ))}
       </div>
     )
