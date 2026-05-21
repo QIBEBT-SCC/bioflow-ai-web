@@ -15,7 +15,7 @@ import {
   UsersIcon,
 } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
@@ -71,10 +71,14 @@ export function StatisticsTab() {
   const [dateRange, setDateRange] = useState<{
     from: Date | undefined
     to: Date | undefined
-  }>({
-    from: new Date(new Date().setDate(new Date().getDate() - 7)),
-    to: new Date(),
-  })
+  }>({ from: undefined, to: undefined })
+
+  useEffect(() => {
+    const to = new Date()
+    const from = new Date()
+    from.setDate(from.getDate() - 7)
+    setDateRange({ from, to })
+  }, [])
 
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
