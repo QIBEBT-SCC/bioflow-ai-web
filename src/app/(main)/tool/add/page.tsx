@@ -78,6 +78,7 @@ function AddToolPageContent() {
     toolConfig,
     setCurrentImage,
     setToolConfig,
+    initFromCopy,
     updateToolConfigField: updateStoreField,
     resetStore,
   } = useCreateToolStore()
@@ -99,9 +100,8 @@ function AddToolPageContent() {
     let cancelled = false
     getTool(copyUid).then((tool) => {
       if (cancelled) return
-      setCurrentImage(tool.image)
       setSearchQuery(tool.image.name)
-      setToolConfig({
+      initFromCopy(tool.image, {
         name: `${tool.name}${t('copySuffix')}`,
         image_uid: tool.image.uid ?? '',
         description: tool.description,
@@ -118,7 +118,7 @@ function AddToolPageContent() {
     return () => {
       cancelled = true
     }
-  }, [copyUid, setCurrentImage, setToolConfig, t])
+  }, [copyUid, initFromCopy, t])
 
   // 处理下一步
   const handleNext = () => {
