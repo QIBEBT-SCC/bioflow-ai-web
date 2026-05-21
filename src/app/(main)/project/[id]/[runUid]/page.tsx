@@ -2,7 +2,15 @@
 
 import type { Node as FlowNode } from '@xyflow/react'
 import { ReactFlowProvider } from '@xyflow/react'
-import { use, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  use,
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from 'react'
 import { getRunFileBlobUrl, getRunFileContent } from '@/app/actions/run'
 import { ChatSidebar } from '@/components/chat/chat-sidebar'
 import { FileViewer } from '@/components/project/run/file-viewer'
@@ -25,6 +33,71 @@ import { useTaskLogStream } from '@/hooks/use-task'
 import { cn } from '@/lib/utils'
 import { useChatSidebarStore } from '@/stores/chat-sidebar-store'
 import { type RunData, Status } from '@/types/run'
+
+type PanelState = {
+  leftPanelOpen: boolean
+  leftPanelWidth: number
+  terminalOpen: boolean
+  terminalHeight: number
+}
+type PanelAction =
+  | { type: 'TOGGLE_LEFT_PANEL' }
+  | { type: 'SET_LEFT_WIDTH'; width: number }
+  | { type: 'TOGGLE_TERMINAL' }
+  | { type: 'SET_TERMINAL_HEIGHT'; height: number }
+
+function panelReducer(state: PanelState, action: PanelAction): PanelState {
+  switch (action.type) {
+    case 'TOGGLE_LEFT_PANEL':
+      return { ...state, leftPanelOpen: !state.leftPanelOpen }
+    case 'SET_LEFT_WIDTH':
+      return { ...state, leftPanelWidth: action.width }
+    case 'TOGGLE_TERMINAL':
+      return { ...state, terminalOpen: !state.terminalOpen }
+    case 'SET_TERMINAL_HEIGHT':
+      return { ...state, terminalHeight: action.height }
+  }
+}
+
+type TabState = {
+  openTabs: FileTab[]
+  activeTabId: string
+}
+type TabAction =
+  | { type: 'OPEN_TAB'; tab: FileTab }
+  | { type: 'UPDATE_TAB'; id: string; updates: Partial<FileTab> }
+  | { type: 'CLOSE_TAB'; id: string }
+  | { type: 'SET_ACTIVE'; id: string }
+
+function tabReducer(state: TabState, action: TabAction): TabState {
+  switch (action.type) {
+    case 'OPEN_TAB':
+      return {
+        openTabs: [...state.openTabs, action.tab],
+        activeTabId: action.tab.id,
+      }
+    case 'UPDATE_TAB':
+      return {
+        ...state,
+        openTabs: state.openTabs.map((t) =>
+          t.id === action.id ? { ...t, ...action.updates } : t,
+        ),
+      }
+    case 'CLOSE_TAB': {
+      const closing = state.openTabs.find((t) => t.id === action.id)
+      if (closing?.blobUrl) URL.revokeObjectURL(closing.blobUrl)
+      const newTabs = state.openTabs.filter((t) => t.id !== action.id)
+      let nextActiveId = state.activeTabId
+      if (state.activeTabId === action.id) {
+        const idx = state.openTabs.findIndex((t) => t.id === action.id)
+        nextActiveId = newTabs[idx]?.id ?? newTabs[idx - 1]?.id ?? CANVAS_TAB_ID
+      }
+      return { openTabs: newTabs, activeTabId: nextActiveId }
+    }
+    case 'SET_ACTIVE':
+      return { ...state, activeTabId: action.id }
+  }
+}
 
 const IMAGE_EXTS = new Set([
   'png',
@@ -61,10 +134,14 @@ function RunFlowContent({
   const { data: runFiles } = useRunFiles(runUid)
   const isOpen = useChatSidebarStore((s) => s.isOpen)
   const { flowNodes, edges, handleNodesChange } = useRunFlow(run)
-  const [leftPanelOpen, setLeftPanelOpen] = useState(true)
-  const [leftPanelWidth, setLeftPanelWidth] = useState(288)
-  const [terminalOpen, setTerminalOpen] = useState(true)
-  const [terminalHeight, setTerminalHeight] = useState(192)
+  const [panel, dispatchPanel] = useReducer(panelReducer, {
+    leftPanelOpen: true,
+    leftPanelWidth: 288,
+    terminalOpen: true,
+    terminalHeight: 192,
+  })
+  const { leftPanelOpen, leftPanelWidth, terminalOpen, terminalHeight } = panel
+
   const isResizing = useRef(false)
   const startY = useRef(0)
   const startHeight = useRef(0)
@@ -74,8 +151,11 @@ function RunFlowContent({
   const leftPanelDidDrag = useRef(false)
   const { chatSidebarWidth, handleChatResizeStart } = useChatSidebarResize()
 
-  const [openTabs, setOpenTabs] = useState<FileTab[]>([])
-  const [activeTabId, setActiveTabId] = useState<string>(CANVAS_TAB_ID)
+  const [tabs, dispatchTabs] = useReducer(tabReducer, {
+    openTabs: [],
+    activeTabId: CANVAS_TAB_ID,
+  })
+  const { openTabs, activeTabId } = tabs
 
   const handleResizeStart = useCallback(
     (e: React.MouseEvent) => {
@@ -87,11 +167,8 @@ function RunFlowContent({
       const onMouseMove = (ev: MouseEvent) => {
         if (!isResizing.current) return
         const delta = startY.current - ev.clientY
-        const newHeight = Math.min(
-          600,
-          Math.max(80, startHeight.current + delta),
-        )
-        setTerminalHeight(newHeight)
+        const height = Math.min(600, Math.max(80, startHeight.current + delta))
+        dispatchPanel({ type: 'SET_TERMINAL_HEIGHT', height })
       }
 
       const onMouseUp = () => {
@@ -118,11 +195,11 @@ function RunFlowContent({
         if (!isResizingLeft.current) return
         const delta = ev.clientX - startX.current
         if (Math.abs(delta) > 3) leftPanelDidDrag.current = true
-        const newWidth = Math.min(
+        const width = Math.min(
           520,
           Math.max(160, startLeftWidth.current + delta),
         )
-        setLeftPanelWidth(newWidth)
+        dispatchPanel({ type: 'SET_LEFT_WIDTH', width })
       }
 
       const onMouseUp = () => {
@@ -139,7 +216,7 @@ function RunFlowContent({
 
   const handleLeftPanelToggle = useCallback(() => {
     if (leftPanelDidDrag.current) return
-    setLeftPanelOpen((prev) => !prev)
+    dispatchPanel({ type: 'TOGGLE_LEFT_PANEL' })
   }, [])
 
   const [selectedToolNodeId, setSelectedToolNodeId] = useState<
@@ -181,58 +258,44 @@ function RunFlowContent({
     async (path: string) => {
       const name = path.split('/').pop() ?? path
       if (openTabs.some((t) => t.id === path)) {
-        setActiveTabId(path)
+        dispatchTabs({ type: 'SET_ACTIVE', id: path })
         return
       }
       const fileType = getFileType(name)
-      setOpenTabs((prev) => [
-        ...prev,
-        { id: path, path, name, fileType, loading: true },
-      ])
-      setActiveTabId(path)
+      dispatchTabs({
+        type: 'OPEN_TAB',
+        tab: { id: path, path, name, fileType, loading: true },
+      })
       try {
         if (fileType === 'image' || fileType === 'pdf') {
           const blobUrl = await getRunFileBlobUrl(runUid, path)
-          setOpenTabs((prev) =>
-            prev.map((t) =>
-              t.id === path ? { ...t, loading: false, blobUrl } : t,
-            ),
-          )
+          dispatchTabs({
+            type: 'UPDATE_TAB',
+            id: path,
+            updates: { loading: false, blobUrl },
+          })
         } else {
           const content = await getRunFileContent(runUid, path)
-          setOpenTabs((prev) =>
-            prev.map((t) =>
-              t.id === path ? { ...t, loading: false, content } : t,
-            ),
-          )
+          dispatchTabs({
+            type: 'UPDATE_TAB',
+            id: path,
+            updates: { loading: false, content },
+          })
         }
       } catch (err) {
-        setOpenTabs((prev) =>
-          prev.map((t) =>
-            t.id === path ? { ...t, loading: false, error: String(err) } : t,
-          ),
-        )
+        dispatchTabs({
+          type: 'UPDATE_TAB',
+          id: path,
+          updates: { loading: false, error: String(err) },
+        })
       }
     },
     [openTabs, runUid],
   )
 
-  const handleCloseTab = useCallback(
-    (tabId: string) => {
-      setOpenTabs((prev) => {
-        const closing = prev.find((t) => t.id === tabId)
-        if (closing?.blobUrl) URL.revokeObjectURL(closing.blobUrl)
-        const newTabs = prev.filter((t) => t.id !== tabId)
-        if (activeTabId === tabId) {
-          const idx = prev.findIndex((t) => t.id === tabId)
-          const next = newTabs[idx] ?? newTabs[idx - 1]
-          setActiveTabId(next?.id ?? CANVAS_TAB_ID)
-        }
-        return newTabs
-      })
-    },
-    [activeTabId],
-  )
+  const handleCloseTab = useCallback((tabId: string) => {
+    dispatchTabs({ type: 'CLOSE_TAB', id: tabId })
+  }, [])
 
   const openTabsRef = useRef(openTabs)
   openTabsRef.current = openTabs
@@ -271,7 +334,7 @@ function RunFlowContent({
           <RunTabBar
             activeTabId={activeTabId}
             openTabs={openTabs}
-            onTabSelect={setActiveTabId}
+            onTabSelect={(id) => dispatchTabs({ type: 'SET_ACTIVE', id })}
             onTabClose={handleCloseTab}
           />
 
@@ -294,7 +357,7 @@ function RunFlowContent({
               logContent={logContent ?? ''}
               isStreaming={isActiveNodeRunning}
               isOpen={terminalOpen}
-              onToggle={() => setTerminalOpen(!terminalOpen)}
+              onToggle={() => dispatchPanel({ type: 'TOGGLE_TERMINAL' })}
               height={terminalHeight}
               onResizeStart={handleResizeStart}
             />
