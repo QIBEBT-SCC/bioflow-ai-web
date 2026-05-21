@@ -1,5 +1,6 @@
 'use client'
 
+import { format, parseISO } from 'date-fns'
 import {
   EditIcon,
   Loader2,
@@ -141,7 +142,10 @@ export function ProjectFileMappings({ projectId }: ProjectFileMappingsProps) {
                       {mapping.description}
                     </TableCell>
                     <TableCell className='text-xs' suppressHydrationWarning>
-                      {new Date(mapping.create_time).toLocaleString('zh-CN')}
+                      {format(
+                        parseISO(mapping.create_time),
+                        'yyyy-MM-dd HH:mm:ss',
+                      )}
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>

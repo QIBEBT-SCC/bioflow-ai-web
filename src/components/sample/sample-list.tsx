@@ -1,5 +1,6 @@
 'use client'
 
+import { format, parseISO } from 'date-fns'
 import {
   CheckIcon,
   ChevronDownIcon,
@@ -139,7 +140,10 @@ function SampleFilesSection({
                     </div>
                   </TableCell>
                   <TableCell className='text-xs' suppressHydrationWarning>
-                    {new Date(file.uploaded_time).toLocaleString('zh-CN')}
+                    {format(
+                      parseISO(file.uploaded_time),
+                      'yyyy-MM-dd HH:mm:ss',
+                    )}
                   </TableCell>
                   <TableCell>
                     <Button
@@ -352,7 +356,10 @@ export function SampleList({ projectId }: SampleListProps) {
                           onClick={() => toggleSampleExpand(sample.uid)}
                           suppressHydrationWarning
                         >
-                          {new Date(sample.create_time).toLocaleString('zh-CN')}
+                          {format(
+                            parseISO(sample.create_time),
+                            'yyyy-MM-dd HH:mm:ss',
+                          )}
                         </TableCell>
                         <TableCell
                           onClick={() => toggleSampleExpand(sample.uid)}

@@ -1,6 +1,6 @@
 'use client'
 
-import { format } from 'date-fns'
+import { format, parseISO } from 'date-fns'
 import { enUS, zhCN } from 'date-fns/locale'
 import {
   BarChart3Icon,
@@ -195,7 +195,7 @@ function UsageDetailTable({
                 className='text-sm text-muted-foreground'
                 suppressHydrationWarning
               >
-                {format(new Date(record.time), 'yyyy-MM-dd HH:mm:ss')}
+                {format(parseISO(record.time), 'yyyy-MM-dd HH:mm:ss')}
               </TableCell>
             </TableRow>
           ))}
