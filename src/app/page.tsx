@@ -36,7 +36,7 @@ function LangToggle() {
           aria-label={t('lang_toggle')}
           title={t('lang_toggle')}
         >
-          <Languages className='h-5 w-5' />
+          <Languages className='size-5' />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align='end'>
@@ -101,13 +101,13 @@ function NavBar({
           aria-label='Documentation'
           title='Documentation'
         >
-          <BookOpenIcon className='h-5 w-5' />
+          <BookOpenIcon className='size-5' />
         </Button>
         <LangToggle />
         <div className='w-px h-5 bg-border' />
         {user ? (
           <Link href='/chat'>
-            <Avatar className='h-8 w-8 cursor-pointer ring-2 ring-primary/20 hover:ring-primary/60 transition-all'>
+            <Avatar className='size-8 cursor-pointer ring-2 ring-primary/20 hover:ring-primary/60 transition-all'>
               <AvatarFallback className='text-xs font-semibold bg-primary/10 text-primary'>
                 {user.username.slice(0, 2).toUpperCase()}
               </AvatarFallback>
@@ -117,7 +117,7 @@ function NavBar({
           <div className='flex items-center gap-2'>
             <Button variant='ghost' size='sm' asChild>
               <Link href='/login'>
-                <LogInIcon className='h-4 w-4 mr-1' />
+                <LogInIcon className='size-4 mr-1' />
                 {t('login')}
               </Link>
             </Button>
@@ -169,7 +169,7 @@ export default function HomePage() {
 
           {/* Title */}
           <div className='flex flex-col gap-3'>
-            <h1 className='text-5xl font-bold tracking-tight bg-gradient-to-br from-foreground to-foreground/60 bg-clip-text text-transparent'>
+            <h1 className='text-5xl font-semibold tracking-tight text-foreground'>
               BioFlow AI
             </h1>
             <p className='text-xl text-muted-foreground font-medium'>
@@ -199,7 +199,7 @@ export default function HomePage() {
           <div className='flex items-center gap-4 pt-2'>
             {loading ? (
               <Button size='lg' disabled>
-                <Loader2Icon className='h-4 w-4 mr-2 animate-spin' />
+                <Loader2Icon className='size-4 mr-2 animate-spin' />
                 {t('loading')}
               </Button>
             ) : user ? (
@@ -222,7 +222,9 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className='py-6 text-center text-sm text-muted-foreground border-t border-border/40'>
-        <p>{t('footer', { year: new Date().getFullYear() })}</p>
+        <p suppressHydrationWarning>
+          {t('footer', { year: new Date().getFullYear() })}
+        </p>
       </footer>
     </div>
   )

@@ -1,3 +1,4 @@
+import { format, parseISO } from 'date-fns'
 import {
   CheckIcon,
   ChevronDownIcon,
@@ -269,9 +270,9 @@ export function ProjectResourcesList() {
                   >
                     <TableCell onClick={() => toggleSampleExpand(sample.uid)}>
                       {expandedSamples[sample.uid] ? (
-                        <ChevronDownIcon className='h-4 w-4' />
+                        <ChevronDownIcon className='size-4' />
                       ) : (
-                        <ChevronRightIcon className='h-4 w-4' />
+                        <ChevronRightIcon className='size-4' />
                       )}
                     </TableCell>
                     <TableCell
@@ -295,8 +296,14 @@ export function ProjectResourcesList() {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell onClick={() => toggleSampleExpand(sample.uid)}>
-                      {new Date(sample.create_time).toLocaleString()}
+                    <TableCell
+                      onClick={() => toggleSampleExpand(sample.uid)}
+                      suppressHydrationWarning
+                    >
+                      {format(
+                        parseISO(sample.create_time),
+                        'yyyy-MM-dd HH:mm:ss',
+                      )}
                     </TableCell>
                     <TableCell onClick={() => toggleSampleExpand(sample.uid)}>
                       {sample.files.length}
@@ -311,7 +318,7 @@ export function ProjectResourcesList() {
                     </TableCell>
                     <TableCell>
                       <Button variant='ghost' size='icon'>
-                        <DownloadIcon className='h-4 w-4' />
+                        <DownloadIcon className='size-4' />
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -367,7 +374,7 @@ export function ProjectResourcesList() {
                                   </TableCell>
                                   <TableCell>
                                     <div className='flex items-center'>
-                                      <CheckIcon className='h-4 w-4 text-green-500 mr-1' />
+                                      <CheckIcon className='size-4 text-green-500 mr-1' />
                                       <span
                                         className='text-xs truncate w-16'
                                         title={file.md5_checksum}
@@ -376,14 +383,18 @@ export function ProjectResourcesList() {
                                       </span>
                                     </div>
                                   </TableCell>
-                                  <TableCell className='text-xs'>
-                                    {new Date(
-                                      file.uploaded_time,
-                                    ).toLocaleString()}
+                                  <TableCell
+                                    className='text-xs'
+                                    suppressHydrationWarning
+                                  >
+                                    {format(
+                                      parseISO(file.uploaded_time),
+                                      'yyyy-MM-dd HH:mm:ss',
+                                    )}
                                   </TableCell>
                                   <TableCell>
                                     <Button variant='ghost' size='icon'>
-                                      <DownloadIcon className='h-4 w-4' />
+                                      <DownloadIcon className='size-4' />
                                     </Button>
                                   </TableCell>
                                 </TableRow>

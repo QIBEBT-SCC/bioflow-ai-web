@@ -8,20 +8,19 @@ import {
   HardDriveIcon,
   MemoryStickIcon,
 } from 'lucide-react'
+import dynamic from 'next/dynamic'
 import { useMemo } from 'react'
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  Legend,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useTaskMonitor } from '@/hooks/use-task'
+
+const TaskMonitorCharts = dynamic(
+  () =>
+    import('./task-monitor-charts').then((m) => ({
+      default: m.TaskMonitorCharts,
+    })),
+  { ssr: false },
+)
 
 interface TaskMonitorProps {
   taskUid: string
@@ -106,9 +105,8 @@ export function TaskMonitor({ taskUid }: TaskMonitorProps) {
   if (isLoading) {
     return (
       <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
-        {[...Array(4)].map((_, i) => (
-          // biome-ignore lint/suspicious/noArrayIndexKey: skeleton loading
-          <div key={i} className='space-y-2'>
+        {['sk-0', 'sk-1', 'sk-2', 'sk-3'].map((key) => (
+          <div key={key} className='space-y-2'>
             <Skeleton className='h-4 w-20' />
             <Skeleton className='h-8 w-full' />
             <Skeleton className='h-3 w-16' />
@@ -121,7 +119,7 @@ export function TaskMonitor({ taskUid }: TaskMonitorProps) {
   if (monitors.length === 0) {
     return (
       <div className='text-center text-muted-foreground py-12'>
-        <ActivityIcon className='h-12 w-12 mx-auto mb-3 opacity-50' />
+        <ActivityIcon className='size-12 mx-auto mb-3 opacity-50' />
         <p>暂无监控数据</p>
       </div>
     )
@@ -135,7 +133,7 @@ export function TaskMonitor({ taskUid }: TaskMonitorProps) {
         <Card className='bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800'>
           <CardHeader className='pb-3'>
             <CardTitle className='text-sm font-medium flex items-center gap-2 text-blue-700 dark:text-blue-300'>
-              <CpuIcon className='h-4 w-4' />
+              <CpuIcon className='size-4' />
               CPU使用率
             </CardTitle>
           </CardHeader>
@@ -153,7 +151,7 @@ export function TaskMonitor({ taskUid }: TaskMonitorProps) {
         <Card className='bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900 border-purple-200 dark:border-purple-800'>
           <CardHeader className='pb-3'>
             <CardTitle className='text-sm font-medium flex items-center gap-2 text-purple-700 dark:text-purple-300'>
-              <MemoryStickIcon className='h-4 w-4' />
+              <MemoryStickIcon className='size-4' />
               内存使用率
             </CardTitle>
           </CardHeader>
@@ -171,7 +169,7 @@ export function TaskMonitor({ taskUid }: TaskMonitorProps) {
         <Card className='bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border-green-200 dark:border-green-800'>
           <CardHeader className='pb-3'>
             <CardTitle className='text-sm font-medium flex items-center gap-2 text-green-700 dark:text-green-300'>
-              <MemoryStickIcon className='h-4 w-4' />
+              <MemoryStickIcon className='size-4' />
               内存用量
             </CardTitle>
           </CardHeader>
@@ -189,7 +187,7 @@ export function TaskMonitor({ taskUid }: TaskMonitorProps) {
         <Card className='bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950 dark:to-orange-900 border-orange-200 dark:border-orange-800'>
           <CardHeader className='pb-3'>
             <CardTitle className='text-sm font-medium flex items-center gap-2 text-orange-700 dark:text-orange-300'>
-              <HardDriveIcon className='h-4 w-4' />
+              <HardDriveIcon className='size-4' />
               IO统计
             </CardTitle>
           </CardHeader>
@@ -222,158 +220,7 @@ export function TaskMonitor({ taskUid }: TaskMonitorProps) {
         </Card>
       </div>
 
-      {/* CPU 和内存使用率图表 */}
-      <div>
-        <h3 className='text-sm font-semibold mb-4'>CPU & 内存使用率趋势</h3>
-        <div className='border rounded-lg p-4'>
-          <ResponsiveContainer width='100%' height={300}>
-            <AreaChart data={chartData}>
-              <CartesianGrid strokeDasharray='3 3' className='stroke-muted' />
-              <XAxis
-                dataKey='time'
-                className='text-xs'
-                tick={{ fill: 'currentColor' }}
-              />
-              <YAxis
-                className='text-xs'
-                tick={{ fill: 'currentColor' }}
-                label={{
-                  value: '使用率 (%)',
-                  angle: -90,
-                  position: 'insideLeft',
-                }}
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'hsl(var(--background))',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '6px',
-                }}
-              />
-              <Legend />
-              <Area
-                type='monotone'
-                dataKey='cpu'
-                stroke='#3b82f6'
-                strokeWidth={2}
-                fill='#3b82f6'
-                fillOpacity={0.2}
-                name='CPU使用率'
-                dot={false}
-              />
-              <Area
-                type='monotone'
-                dataKey='memory'
-                stroke='#a855f7'
-                strokeWidth={2}
-                fill='#a855f7'
-                fillOpacity={0.2}
-                name='内存使用率'
-                dot={false}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* 内存用量图表 */}
-      <div>
-        <h3 className='text-sm font-semibold mb-4'>内存用量趋势</h3>
-        <div className='border rounded-lg p-4'>
-          <ResponsiveContainer width='100%' height={250}>
-            <AreaChart data={chartData}>
-              <CartesianGrid strokeDasharray='3 3' className='stroke-muted' />
-              <XAxis
-                dataKey='time'
-                className='text-xs'
-                tick={{ fill: 'currentColor' }}
-              />
-              <YAxis
-                className='text-xs'
-                tick={{ fill: 'currentColor' }}
-                label={{
-                  value: '内存 (GB)',
-                  angle: -90,
-                  position: 'insideLeft',
-                }}
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'hsl(var(--background))',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '6px',
-                }}
-                formatter={(value: number) => `${value.toFixed(2)} GB`}
-              />
-              <Legend />
-              <Area
-                type='monotone'
-                dataKey='memUsed'
-                stroke='#10b981'
-                strokeWidth={2}
-                fill='#10b981'
-                fillOpacity={0.2}
-                name='内存用量'
-                dot={false}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* IO 趋势图表 */}
-      <div>
-        <h3 className='text-sm font-semibold mb-4'>IO 读写趋势</h3>
-        <div className='border rounded-lg p-4'>
-          <ResponsiveContainer width='100%' height={250}>
-            <AreaChart data={chartData}>
-              <CartesianGrid strokeDasharray='3 3' className='stroke-muted' />
-              <XAxis
-                dataKey='time'
-                className='text-xs'
-                tick={{ fill: 'currentColor' }}
-              />
-              <YAxis
-                className='text-xs'
-                tick={{ fill: 'currentColor' }}
-                label={{ value: 'IO', angle: -90, position: 'insideLeft' }}
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'hsl(var(--background))',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '6px',
-                }}
-                formatter={(value: number) => {
-                  const formatted = formatBytes(value * 1024 * 1024)
-                  return `${formatted.value} ${formatted.unit}`
-                }}
-              />
-              <Legend />
-              <Area
-                type='monotone'
-                dataKey='ioIn'
-                stroke='#f97316'
-                strokeWidth={2}
-                fill='#f97316'
-                fillOpacity={0.2}
-                name='IO输入'
-                dot={false}
-              />
-              <Area
-                type='monotone'
-                dataKey='ioOut'
-                stroke='#ef4444'
-                strokeWidth={2}
-                fill='#ef4444'
-                fillOpacity={0.2}
-                name='IO输出'
-                dot={false}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
+      <TaskMonitorCharts chartData={chartData} />
     </div>
   )
 }

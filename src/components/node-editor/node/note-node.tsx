@@ -32,7 +32,7 @@ export const NoteNode = memo(function NoteNode() {
     }
   }, [nodeData?.data.content])
 
-  const handleBlur = useCallback(() => {
+  const saveNodeData = useCallback(() => {
     updateNodeData(nodeId, { content: args })
   }, [nodeId, args, updateNodeData])
 
@@ -50,11 +50,11 @@ export const NoteNode = memo(function NoteNode() {
       </NodeCardHeader>
       <NodeCardContent className='flex flex-1 flex-col overflow-hidden p-2'>
         <Textarea
-          className='nowheel h-full w-full resize-none overflow-y-auto rounded-md border-none bg-background p-3 text-sm focus-visible:border-none focus-visible:ring-0 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/40 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar]:w-1.5'
+          className='nowheel size-full resize-none overflow-y-auto rounded-md border-none bg-background p-3 text-sm focus-visible:border-none focus-visible:ring-0 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/40 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar]:w-1.5'
           placeholder='Enter notes here...'
           value={args}
           onChange={(e) => setArgs(e.target.value)}
-          onBlur={handleBlur}
+          onBlur={saveNodeData}
           disabled={readOnly}
         />
       </NodeCardContent>

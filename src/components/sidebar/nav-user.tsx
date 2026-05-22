@@ -63,7 +63,7 @@ export function NavUser({ user }: NavUserProps) {
       <SidebarMenu>
         <SidebarMenuItem>
           <SidebarMenuButton size='lg' className='cursor-default'>
-            <Skeleton className='h-8 w-8 rounded-lg' />
+            <Skeleton className='size-8 rounded-lg' />
             <div className='grid flex-1 gap-1'>
               <Skeleton className='h-4 w-24' />
               <Skeleton className='h-3 w-32' />
@@ -84,7 +84,7 @@ export function NavUser({ user }: NavUserProps) {
                 size='lg'
                 className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground flex-1'
               >
-                <Avatar className='h-8 w-8 rounded-lg'>
+                <Avatar className='size-8 rounded-lg'>
                   <AvatarFallback className='rounded-lg'>
                     {user?.username.substring(0, 2).toUpperCase()}
                   </AvatarFallback>
@@ -106,7 +106,7 @@ export function NavUser({ user }: NavUserProps) {
             >
               <DropdownMenuLabel className='p-0 font-normal'>
                 <div className='flex items-center gap-2 px-1 py-1.5 text-left text-sm'>
-                  <Avatar className='h-8 w-8 rounded-lg'>
+                  <Avatar className='size-8 rounded-lg'>
                     <AvatarFallback className='rounded-lg'>
                       {user?.username.substring(0, 2).toUpperCase()}
                     </AvatarFallback>

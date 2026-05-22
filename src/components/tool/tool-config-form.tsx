@@ -63,6 +63,8 @@ export type ToolConfigValues = Omit<
   modifiable_static_params: string | null // UI 层面允许 null
 }
 
+const EMPTY_TAGS: ToolTag[] = []
+
 interface ToolConfigFormProps {
   value: ToolConfigValues
   toolGroups: ToolGroup[]
@@ -107,7 +109,7 @@ interface ToolConfigFormProps {
 export function ToolConfigForm({
   value,
   toolGroups,
-  availableTags = [],
+  availableTags = EMPTY_TAGS,
   onFieldChange,
   onAddDynamicParam,
   onUpdateDynamicParam,
@@ -180,9 +182,11 @@ export function ToolConfigForm({
     if (!selectedGroup) return
 
     // 找到所有分组对应的标签(用于移除)
-    const groupTagIds = toolGroups
-      .map((g) => availableTags.find((t) => t.name === g.name)?.id)
-      .filter((id): id is number => id !== undefined)
+    const groupTagIds = toolGroups.reduce<number[]>((acc, g) => {
+      const id = availableTags.find((t) => t.name === g.name)?.id
+      if (id !== undefined) acc.push(id)
+      return acc
+    }, [])
 
     // 移除所有分组相关的标签
     const tagsWithoutGroupTags = value.tags.filter(
@@ -254,299 +258,42 @@ export function ToolConfigForm({
         </TabsList>
 
         <TabsContent value='basic'>
-          <Card>
-            <CardContent className='space-y-6 pt-6'>
-              <div className='space-y-2'>
-                <Label htmlFor='tool-name'>
-                  {t('toolName')} <span className='text-red-500'>*</span>
-                </Label>
-                <Input
-                  id='tool-name'
-                  value={value.name}
-                  onChange={(e) => onFieldChange('name', e.target.value)}
-                  placeholder={t('toolNamePlaceholder')}
-                  required
-                />
-              </div>
-
-              <div className='space-y-2'>
-                <Label htmlFor='tool-description'>{t('description')}</Label>
-                <Textarea
-                  id='tool-description'
-                  value={value.description}
-                  onChange={(e) => onFieldChange('description', e.target.value)}
-                  placeholder={t('descriptionPlaceholder')}
-                  rows={3}
-                />
-              </div>
-
-              <div className='space-y-2'>
-                <Label htmlFor='tool-command'>
-                  {t('commandTemplate')} <span className='text-red-500'>*</span>
-                </Label>
-                <Input
-                  id='tool-command'
-                  value={value.command_template}
-                  onChange={(e) =>
-                    onFieldChange('command_template', e.target.value)
-                  }
-                  placeholder='tool {dynamic_params} {static_params}'
-                  required
-                />
-              </div>
-
-              <div className='space-y-2'>
-                <Label htmlFor='tool-help-command'>
-                  {t('helpCommand')} <span className='text-red-500'>*</span>
-                </Label>
-                <div className='flex gap-2'>
-                  <Input
-                    id='tool-help-command'
-                    value={value.help_command}
-                    onChange={(e) =>
-                      onFieldChange('help_command', e.target.value)
-                    }
-                    placeholder={t('helpCommandPlaceholder')}
-                    required
-                    className='flex-1'
-                  />
-                  {imageUid && (
-                    <Button
-                      type='button'
-                      variant='outline'
-                      size='icon'
-                      onClick={handleTestHelpCommand}
-                      disabled={!value.help_command || isRunning}
-                      title={isRunning ? t('testHelpRunning') : t('testHelp')}
-                    >
-                      {isRunning ? (
-                        <Loader2Icon className='h-4 w-4 animate-spin' />
-                      ) : (
-                        <PlayIcon className='h-4 w-4' />
-                      )}
-                    </Button>
-                  )}
-                </div>
-              </div>
-
-              <div className='space-y-2'>
-                <Label htmlFor='tool-group'>{t('toolGroup')}</Label>
-                <Select
-                  value={value.group_id?.toString() || ''}
-                  onValueChange={(val) => handleGroupChange(Number(val))}
-                >
-                  <SelectTrigger id='tool-group'>
-                    <SelectValue placeholder={t('selectGroup')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {toolGroups.map((group) => (
-                      <SelectItem key={group.id} value={group.id.toString()}>
-                        {group.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {availableTags.length > 0 && (
-                <div className='space-y-2'>
-                  <Label>{t('toolTags')}</Label>
-                  <div className='flex flex-wrap gap-3 p-3 border rounded-md bg-muted/30'>
-                    {availableTags.map((tag) => {
-                      const isSelected = value.tags.some((t) => t.id === tag.id)
-                      const getTagStyle = (tagName: string) => {
-                        switch (tagName) {
-                          case 'AI Checked':
-                            return 'bg-green-50 text-green-600 border-green-200'
-                          case 'AI Unchecked':
-                            return 'bg-yellow-50 text-yellow-600 border-yellow-200'
-                          default:
-                            return 'bg-blue-50 text-blue-600 border-blue-200'
-                        }
-                      }
-                      return (
-                        <div
-                          key={tag.id}
-                          className='flex items-center space-x-2'
-                        >
-                          <Checkbox
-                            id={`tag-${tag.id}`}
-                            checked={isSelected}
-                            onCheckedChange={(checked) => {
-                              const newTags = checked
-                                ? [...value.tags, tag]
-                                : value.tags.filter((t) => t.id !== tag.id)
-                              onFieldChange('tags', newTags)
-                            }}
-                          />
-                          <Label
-                            htmlFor={`tag-${tag.id}`}
-                            className='cursor-pointer'
-                          >
-                            <Badge
-                              variant='outline'
-                              className={`${getTagStyle(tag.name)} text-xs`}
-                            >
-                              {tag.name}
-                            </Badge>
-                          </Label>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {showAIGeneratePlaceholder && (
-                <div className='flex justify-end pt-4 border-t'>
-                  <Button variant='outline' disabled>
-                    <SparklesIcon className='h-4 w-4 mr-2' />
-                    {t('aiGenerate')}
-                    <Badge variant='secondary' className='ml-2'>
-                      {t('comingSoon')}
-                    </Badge>
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <BasicConfigTab
+            value={value}
+            toolGroups={toolGroups}
+            availableTags={availableTags}
+            imageUid={imageUid}
+            isRunning={isRunning}
+            showAIGeneratePlaceholder={showAIGeneratePlaceholder}
+            onFieldChange={onFieldChange}
+            onGroupChange={handleGroupChange}
+            onTestHelpCommand={handleTestHelpCommand}
+          />
         </TabsContent>
 
         <TabsContent value='params'>
-          <Card>
-            <CardContent className='space-y-6 pt-6'>
-              <div className='space-y-2'>
-                <Label>{t('dynamicParams')}</Label>
-                {value.dynamic_params.length === 0 ? (
-                  <div className='text-center py-6 text-muted-foreground border rounded-md bg-muted/30'>
-                    {t('noDynamicParams')}
-                  </div>
-                ) : (
-                  <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragEnd={handleParamDragEnd}
-                  >
-                    <SortableContext
-                      items={paramIds.current}
-                      strategy={verticalListSortingStrategy}
-                    >
-                      <div className='space-y-4'>
-                        {value.dynamic_params.map((param, index) => (
-                          <ToolParamCard
-                            key={paramIds.current[index]}
-                            id={paramIds.current[index]}
-                            param={param}
-                            index={index}
-                            onRemoveAction={onRemoveDynamicParam}
-                            onUpdateAction={onUpdateDynamicParam}
-                          />
-                        ))}
-                      </div>
-                    </SortableContext>
-                  </DndContext>
-                )}
-                <Button
-                  type='button'
-                  onClick={onAddDynamicParam}
-                  variant='outline'
-                  className='w-full'
-                >
-                  {t('addDynamicParam')}
-                </Button>
-              </div>
-
-              <div className='space-y-4'>
-                <div className='space-y-2'>
-                  <Label htmlFor='tool-immutable-static'>
-                    {t('immutableStaticParams')}
-                    <span className='text-xs text-muted-foreground ml-2'>
-                      {t('immutableStaticParamsHint')}
-                    </span>
-                  </Label>
-                  <Textarea
-                    id='tool-immutable-static'
-                    value={value.immutable_static_params || ''}
-                    onChange={(e) =>
-                      onFieldChange(
-                        'immutable_static_params',
-                        e.target.value || null,
-                      )
-                    }
-                    placeholder={t('immutableStaticParamsPlaceholder')}
-                    rows={3}
-                  />
-                </div>
-                <div className='space-y-2'>
-                  <Label htmlFor='tool-modifiable-static'>
-                    {t('modifiableStaticParams')}
-                    <span className='text-xs text-muted-foreground ml-2'>
-                      {t('modifiableStaticParamsHint')}
-                    </span>
-                  </Label>
-                  <Textarea
-                    id='tool-modifiable-static'
-                    value={value.modifiable_static_params || ''}
-                    onChange={(e) =>
-                      onFieldChange(
-                        'modifiable_static_params',
-                        e.target.value || null,
-                      )
-                    }
-                    placeholder={t('modifiableStaticParamsPlaceholder')}
-                    rows={3}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <ParamsConfigTab
+            value={value}
+            paramIds={paramIds.current}
+            sensors={sensors}
+            onAdd={onAddDynamicParam}
+            onUpdate={onUpdateDynamicParam}
+            onRemove={onRemoveDynamicParam}
+            onDragEnd={handleParamDragEnd}
+            onFieldChange={onFieldChange}
+          />
         </TabsContent>
 
         <TabsContent value='files'>
-          <Card>
-            <CardContent className='space-y-6 pt-6'>
-              <div className='space-y-2'>
-                <Label>{t('fileMounts')}</Label>
-                {value.file_mounts.length === 0 ? (
-                  <div className='text-center py-6 text-muted-foreground border rounded-md bg-muted/30'>
-                    {t('noFileMounts')}
-                  </div>
-                ) : (
-                  <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragEnd={handleFileDragEnd}
-                  >
-                    <SortableContext
-                      items={fileIds.current}
-                      strategy={verticalListSortingStrategy}
-                    >
-                      <div className='space-y-4'>
-                        {value.file_mounts.map((file, index) => (
-                          <ToolFileCard
-                            key={fileIds.current[index]}
-                            id={fileIds.current[index]}
-                            file={file}
-                            index={index}
-                            onUpdateAction={onUpdateFileMount}
-                            onRemoveAction={onRemoveFileMount}
-                          />
-                        ))}
-                      </div>
-                    </SortableContext>
-                  </DndContext>
-                )}
-                <Button
-                  type='button'
-                  onClick={onAddFileMount}
-                  variant='outline'
-                  className='w-full'
-                >
-                  {t('addFileMount')}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <FilesConfigTab
+            value={value}
+            fileIds={fileIds.current}
+            sensors={sensors}
+            onAdd={onAddFileMount}
+            onUpdate={onUpdateFileMount}
+            onRemove={onRemoveFileMount}
+            onDragEnd={handleFileDragEnd}
+          />
         </TabsContent>
       </Tabs>
 
@@ -565,5 +312,365 @@ export function ToolConfigForm({
         </DialogContent>
       </Dialog>
     </div>
+  )
+}
+
+interface BasicConfigTabProps {
+  value: ToolConfigValues
+  toolGroups: ToolGroup[]
+  availableTags: ToolTag[]
+  imageUid?: string
+  isRunning: boolean
+  showAIGeneratePlaceholder: boolean
+  onFieldChange: ToolConfigFormProps['onFieldChange']
+  onGroupChange: (groupId: number) => void
+  onTestHelpCommand: () => void
+}
+
+function BasicConfigTab({
+  value,
+  toolGroups,
+  availableTags,
+  imageUid,
+  isRunning,
+  showAIGeneratePlaceholder,
+  onFieldChange,
+  onGroupChange,
+  onTestHelpCommand,
+}: BasicConfigTabProps) {
+  const t = useTranslations('tool.ConfigForm')
+  return (
+    <Card>
+      <CardContent className='space-y-6 pt-6'>
+        <div className='space-y-2'>
+          <Label htmlFor='tool-name'>
+            {t('toolName')} <span className='text-red-500'>*</span>
+          </Label>
+          <Input
+            id='tool-name'
+            value={value.name}
+            onChange={(e) => onFieldChange('name', e.target.value)}
+            placeholder={t('toolNamePlaceholder')}
+            required
+          />
+        </div>
+
+        <div className='space-y-2'>
+          <Label htmlFor='tool-description'>{t('description')}</Label>
+          <Textarea
+            id='tool-description'
+            value={value.description}
+            onChange={(e) => onFieldChange('description', e.target.value)}
+            placeholder={t('descriptionPlaceholder')}
+            rows={3}
+          />
+        </div>
+
+        <div className='space-y-2'>
+          <Label htmlFor='tool-command'>
+            {t('commandTemplate')} <span className='text-red-500'>*</span>
+          </Label>
+          <Input
+            id='tool-command'
+            value={value.command_template}
+            onChange={(e) => onFieldChange('command_template', e.target.value)}
+            placeholder='tool {dynamic_params} {static_params}'
+            required
+          />
+        </div>
+
+        <div className='space-y-2'>
+          <Label htmlFor='tool-help-command'>
+            {t('helpCommand')} <span className='text-red-500'>*</span>
+          </Label>
+          <div className='flex gap-2'>
+            <Input
+              id='tool-help-command'
+              value={value.help_command}
+              onChange={(e) => onFieldChange('help_command', e.target.value)}
+              placeholder={t('helpCommandPlaceholder')}
+              required
+              className='flex-1'
+            />
+            {imageUid && (
+              <Button
+                type='button'
+                variant='outline'
+                size='icon'
+                onClick={onTestHelpCommand}
+                disabled={!value.help_command || isRunning}
+                title={isRunning ? t('testHelpRunning') : t('testHelp')}
+              >
+                {isRunning ? (
+                  <Loader2Icon className='size-4 animate-spin' />
+                ) : (
+                  <PlayIcon className='size-4' />
+                )}
+              </Button>
+            )}
+          </div>
+        </div>
+
+        <div className='space-y-2'>
+          <Label htmlFor='tool-group'>{t('toolGroup')}</Label>
+          <Select
+            value={value.group_id?.toString() || ''}
+            onValueChange={(val) => onGroupChange(Number(val))}
+          >
+            <SelectTrigger id='tool-group'>
+              <SelectValue placeholder={t('selectGroup')} />
+            </SelectTrigger>
+            <SelectContent>
+              {toolGroups.map((group) => (
+                <SelectItem key={group.id} value={group.id.toString()}>
+                  {group.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {availableTags.length > 0 && (
+          <div className='space-y-2'>
+            <Label>{t('toolTags')}</Label>
+            <div className='flex flex-wrap gap-3 p-3 border rounded-md bg-muted/30'>
+              {availableTags.map((tag) => {
+                const isSelected = value.tags.some((tt) => tt.id === tag.id)
+                const getTagStyle = (tagName: string) => {
+                  switch (tagName) {
+                    case 'AI Checked':
+                      return 'bg-green-50 text-green-600 border-green-200'
+                    case 'AI Unchecked':
+                      return 'bg-yellow-50 text-yellow-600 border-yellow-200'
+                    default:
+                      return 'bg-blue-50 text-blue-600 border-blue-200'
+                  }
+                }
+                return (
+                  <div key={tag.id} className='flex items-center gap-x-2'>
+                    <Checkbox
+                      id={`tag-${tag.id}`}
+                      checked={isSelected}
+                      onCheckedChange={(checked) => {
+                        const newTags = checked
+                          ? [...value.tags, tag]
+                          : value.tags.filter((tt) => tt.id !== tag.id)
+                        onFieldChange('tags', newTags)
+                      }}
+                    />
+                    <Label htmlFor={`tag-${tag.id}`} className='cursor-pointer'>
+                      <Badge
+                        variant='outline'
+                        className={`${getTagStyle(tag.name)} text-xs`}
+                      >
+                        {tag.name}
+                      </Badge>
+                    </Label>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {showAIGeneratePlaceholder && (
+          <div className='flex justify-end pt-4 border-t'>
+            <Button variant='outline' disabled>
+              <SparklesIcon className='size-4 mr-2' />
+              {t('aiGenerate')}
+              <Badge variant='secondary' className='ml-2'>
+                {t('comingSoon')}
+              </Badge>
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+interface ParamsConfigTabProps {
+  value: ToolConfigValues
+  paramIds: string[]
+  sensors: ReturnType<typeof useSensors>
+  onAdd: () => void
+  onUpdate: (
+    index: number,
+    field: keyof ParamDefine,
+    value: string | number | boolean,
+  ) => void
+  onRemove: (index: number) => void
+  onDragEnd: (event: DragEndEvent) => void
+  onFieldChange: ToolConfigFormProps['onFieldChange']
+}
+
+function ParamsConfigTab({
+  value,
+  paramIds,
+  sensors,
+  onAdd,
+  onUpdate,
+  onRemove,
+  onDragEnd,
+  onFieldChange,
+}: ParamsConfigTabProps) {
+  const t = useTranslations('tool.ConfigForm')
+  return (
+    <Card>
+      <CardContent className='space-y-6 pt-6'>
+        <div className='space-y-2'>
+          <Label>{t('dynamicParams')}</Label>
+          {value.dynamic_params.length === 0 ? (
+            <div className='text-center py-6 text-muted-foreground border rounded-md bg-muted/30'>
+              {t('noDynamicParams')}
+            </div>
+          ) : (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={onDragEnd}
+            >
+              <SortableContext
+                items={paramIds}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className='space-y-4'>
+                  {value.dynamic_params.map((param, index) => (
+                    <ToolParamCard
+                      key={paramIds[index]}
+                      id={paramIds[index]}
+                      param={param}
+                      index={index}
+                      onRemoveAction={onRemove}
+                      onUpdateAction={onUpdate}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
+          )}
+          <Button
+            type='button'
+            onClick={onAdd}
+            variant='outline'
+            className='w-full'
+          >
+            {t('addDynamicParam')}
+          </Button>
+        </div>
+
+        <div className='space-y-4'>
+          <div className='space-y-2'>
+            <Label htmlFor='tool-immutable-static'>
+              {t('immutableStaticParams')}
+              <span className='text-xs text-muted-foreground ml-2'>
+                {t('immutableStaticParamsHint')}
+              </span>
+            </Label>
+            <Textarea
+              id='tool-immutable-static'
+              value={value.immutable_static_params || ''}
+              onChange={(e) =>
+                onFieldChange('immutable_static_params', e.target.value || null)
+              }
+              placeholder={t('immutableStaticParamsPlaceholder')}
+              rows={3}
+            />
+          </div>
+          <div className='space-y-2'>
+            <Label htmlFor='tool-modifiable-static'>
+              {t('modifiableStaticParams')}
+              <span className='text-xs text-muted-foreground ml-2'>
+                {t('modifiableStaticParamsHint')}
+              </span>
+            </Label>
+            <Textarea
+              id='tool-modifiable-static'
+              value={value.modifiable_static_params || ''}
+              onChange={(e) =>
+                onFieldChange(
+                  'modifiable_static_params',
+                  e.target.value || null,
+                )
+              }
+              placeholder={t('modifiableStaticParamsPlaceholder')}
+              rows={3}
+            />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+interface FilesConfigTabProps {
+  value: ToolConfigValues
+  fileIds: string[]
+  sensors: ReturnType<typeof useSensors>
+  onAdd: () => void
+  onUpdate: (
+    index: number,
+    field: keyof FileMount,
+    value: string | boolean,
+  ) => void
+  onRemove: (index: number) => void
+  onDragEnd: (event: DragEndEvent) => void
+}
+
+function FilesConfigTab({
+  value,
+  fileIds,
+  sensors,
+  onAdd,
+  onUpdate,
+  onRemove,
+  onDragEnd,
+}: FilesConfigTabProps) {
+  const t = useTranslations('tool.ConfigForm')
+  return (
+    <Card>
+      <CardContent className='space-y-6 pt-6'>
+        <div className='space-y-2'>
+          <Label>{t('fileMounts')}</Label>
+          {value.file_mounts.length === 0 ? (
+            <div className='text-center py-6 text-muted-foreground border rounded-md bg-muted/30'>
+              {t('noFileMounts')}
+            </div>
+          ) : (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={onDragEnd}
+            >
+              <SortableContext
+                items={fileIds}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className='space-y-4'>
+                  {value.file_mounts.map((file, index) => (
+                    <ToolFileCard
+                      key={fileIds[index]}
+                      id={fileIds[index]}
+                      file={file}
+                      index={index}
+                      onUpdateAction={onUpdate}
+                      onRemoveAction={onRemove}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
+          )}
+          <Button
+            type='button'
+            onClick={onAdd}
+            variant='outline'
+            className='w-full'
+          >
+            {t('addFileMount')}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   )
 }

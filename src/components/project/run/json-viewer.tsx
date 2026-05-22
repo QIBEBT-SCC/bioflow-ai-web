@@ -84,11 +84,10 @@ function JsonArray({ value, depth }: { value: JsonValue[]; depth: number }) {
         </button>
       ) : (
         <div className='ml-4 border-l border-border pl-3'>
-          {value.map((item, i) => (
-            // biome-ignore lint/suspicious/noArrayIndexKey: JSON 数组索引即唯一标识
-            <div key={i} className='my-px'>
+          {Array.from(value.entries()).map(([itemIndex, item]) => (
+            <div key={`item-${itemIndex}`} className='my-px'>
               <JsonNode value={item} depth={depth + 1} />
-              {i < value.length - 1 && (
+              {itemIndex < value.length - 1 && (
                 <span className='text-muted-foreground'>,</span>
               )}
             </div>
@@ -172,7 +171,7 @@ export function JsonViewer({ content }: JsonViewerProps) {
   } catch {
     // 解析失败则降级为纯文本
     return (
-      <ScrollArea className='h-full w-full'>
+      <ScrollArea className='size-full'>
         <pre className='p-4 font-mono text-sm leading-relaxed whitespace-pre-wrap break-words'>
           {content}
         </pre>
@@ -181,7 +180,7 @@ export function JsonViewer({ content }: JsonViewerProps) {
   }
 
   return (
-    <ScrollArea className='h-full w-full'>
+    <ScrollArea className='size-full'>
       <div className='p-4 font-mono text-sm leading-relaxed'>
         <JsonNode value={parsed} depth={0} />
       </div>

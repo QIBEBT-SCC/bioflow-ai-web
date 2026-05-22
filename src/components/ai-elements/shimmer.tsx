@@ -4,7 +4,7 @@ import type { MotionProps } from "motion/react";
 import type { CSSProperties, ElementType, JSX } from "react";
 
 import { cn } from "@/lib/utils";
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import { memo, useMemo } from "react";
 
 type MotionHTMLProps = MotionProps & Record<string, unknown>;
@@ -43,6 +43,8 @@ const ShimmerComponent = ({
     Component as keyof JSX.IntrinsicElements
   );
 
+  const prefersReducedMotion = useReducedMotion()
+
   const dynamicSpread = useMemo(
     () => (children?.length ?? 0) * spread,
     [children, spread]
@@ -50,13 +52,13 @@ const ShimmerComponent = ({
 
   return (
     <MotionComponent
-      animate={{ backgroundPosition: "0% center" }}
+      animate={prefersReducedMotion ? {} : { backgroundPosition: "0% center" }}
       className={cn(
         "relative inline-block bg-[length:250%_100%,auto] bg-clip-text text-transparent",
         "[--bg:linear-gradient(90deg,#0000_calc(50%-var(--spread)),var(--color-background),#0000_calc(50%+var(--spread)))] [background-repeat:no-repeat,padding-box]",
         className
       )}
-      initial={{ backgroundPosition: "100% center" }}
+      initial={prefersReducedMotion ? false : { backgroundPosition: "100% center" }}
       style={
         {
           "--spread": `${dynamicSpread}px`,
@@ -64,11 +66,11 @@ const ShimmerComponent = ({
             "var(--bg), linear-gradient(var(--color-muted-foreground), var(--color-muted-foreground))",
         } as CSSProperties
       }
-      transition={{
-        duration,
-        ease: "linear",
-        repeat: Number.POSITIVE_INFINITY,
-      }}
+      transition={
+        prefersReducedMotion
+          ? {}
+          : { duration, ease: "linear", repeat: Number.POSITIVE_INFINITY }
+      }
     >
       {children}
     </MotionComponent>

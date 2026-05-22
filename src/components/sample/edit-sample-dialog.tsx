@@ -1,7 +1,7 @@
 'use client'
 
 import { PlusIcon, XIcon } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
@@ -17,11 +17,26 @@ import { Label } from '@/components/ui/label'
 import { useUpdateSample } from '@/hooks/use-sample'
 import type { Sample } from '@/types/sample'
 
+interface MetaEntry {
+  id: number
+  key: string
+  value: string
+}
+
 interface EditSampleDialogProps {
   projectId: string
   sample: Sample
   open: boolean
   onOpenChange: (open: boolean) => void
+}
+
+function toEntries(metaData: Sample['meta_data']): MetaEntry[] {
+  let id = 0
+  return Object.entries(metaData || {}).map(([key, value]) => ({
+    id: id++,
+    key,
+    value: String(value),
+  }))
 }
 
 export function EditSampleDialog({
@@ -30,41 +45,39 @@ export function EditSampleDialog({
   open,
   onOpenChange,
 }: EditSampleDialogProps) {
-  const [sampleName, setSampleName] = useState(sample.sample_name)
-  const [metaData, setMetaData] = useState<
-    Array<{ key: string; value: string }>
-  >([])
+  const [sampleName, setSampleName] = useState('')
+  const [metaData, setMetaData] = useState<MetaEntry[]>([])
+  const nextId = useRef(0)
+
+  useEffect(() => {
+    if (open) {
+      setSampleName(sample.sample_name)
+      setMetaData(toEntries(sample.meta_data))
+      nextId.current = Object.keys(sample.meta_data || {}).length
+    }
+  }, [open, sample])
 
   const updateSampleMutation = useUpdateSample()
 
-  // 初始化元数据
-  useEffect(() => {
-    setSampleName(sample.sample_name)
-    const metaDataArray = Object.entries(sample.meta_data || {}).map(
-      ([key, value]) => ({
-        key,
-        value: String(value),
-      }),
-    )
-    setMetaData(metaDataArray)
-  }, [sample])
-
   const handleAddMetaData = () => {
-    setMetaData([...metaData, { key: '', value: '' }])
+    setMetaData((prev) => [
+      ...prev,
+      { id: nextId.current++, key: '', value: '' },
+    ])
   }
 
-  const handleRemoveMetaData = (index: number) => {
-    setMetaData(metaData.filter((_, i) => i !== index))
+  const handleRemoveMetaData = (id: number) => {
+    setMetaData((prev) => prev.filter((item) => item.id !== id))
   }
 
   const handleMetaDataChange = (
-    index: number,
+    id: number,
     field: 'key' | 'value',
     value: string,
   ) => {
-    const newMetaData = [...metaData]
-    newMetaData[index][field] = value
-    setMetaData(newMetaData)
+    setMetaData((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, [field]: value } : item)),
+    )
   }
 
   const handleSubmit = async () => {
@@ -73,13 +86,12 @@ export function EditSampleDialog({
       return
     }
 
-    // 转换元数据为对象
     const metaDataObject: Record<string, unknown> = {}
-    metaData.forEach((item) => {
+    for (const item of metaData) {
       if (item.key.trim()) {
         metaDataObject[item.key] = item.value
       }
-    })
+    }
 
     try {
       await updateSampleMutation.mutateAsync({
@@ -92,7 +104,6 @@ export function EditSampleDialog({
       })
 
       toast.success('样本更新成功')
-
       onOpenChange(false)
     } catch {
       toast.error('样本更新失败')
@@ -129,7 +140,7 @@ export function EditSampleDialog({
                 size='sm'
                 onClick={handleAddMetaData}
               >
-                <PlusIcon className='h-4 w-4 mr-2' />
+                <PlusIcon className='size-4 mr-2' />
                 添加字段
               </Button>
             </div>
@@ -140,30 +151,29 @@ export function EditSampleDialog({
               </p>
             ) : (
               <div className='space-y-2'>
-                {metaData.map((item, index) => (
-                  // biome-ignore lint/suspicious/noArrayIndexKey: no need
-                  <div key={index} className='flex gap-2'>
+                {metaData.map((item) => (
+                  <div key={item.id} className='flex gap-2'>
                     <Input
                       placeholder='键'
                       value={item.key}
                       onChange={(e) =>
-                        handleMetaDataChange(index, 'key', e.target.value)
+                        handleMetaDataChange(item.id, 'key', e.target.value)
                       }
                     />
                     <Input
                       placeholder='值'
                       value={item.value}
                       onChange={(e) =>
-                        handleMetaDataChange(index, 'value', e.target.value)
+                        handleMetaDataChange(item.id, 'value', e.target.value)
                       }
                     />
                     <Button
                       type='button'
                       variant='ghost'
                       size='icon'
-                      onClick={() => handleRemoveMetaData(index)}
+                      onClick={() => handleRemoveMetaData(item.id)}
                     >
-                      <XIcon className='h-4 w-4' />
+                      <XIcon className='size-4' />
                     </Button>
                   </div>
                 ))}

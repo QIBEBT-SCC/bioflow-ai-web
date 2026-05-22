@@ -9,7 +9,7 @@ import {
   SaveIcon,
   TypeIcon,
 } from 'lucide-react'
-import { useState } from 'react'
+import { useReducer, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -39,18 +39,47 @@ interface SaveAsDialogProps {
   disabled?: boolean
 }
 
+type SaveState = {
+  name: string
+  isPublic: boolean
+  workflowType: WorkflowType
+  executionScope: ExecutionScope
+}
+type SaveAction =
+  | { type: 'SET_NAME'; value: string }
+  | { type: 'SET_PUBLIC'; value: boolean }
+  | { type: 'SET_TYPE'; value: WorkflowType }
+  | { type: 'SET_SCOPE'; value: ExecutionScope }
+  | { type: 'RESET'; name?: string }
+
+const INITIAL_SAVE: SaveState = {
+  name: '',
+  isPublic: false,
+  workflowType: WorkflowType.TEMPLATE,
+  executionScope: ExecutionScope.SAMPLE_LEVEL,
+}
+
+function saveReducer(state: SaveState, action: SaveAction): SaveState {
+  switch (action.type) {
+    case 'SET_NAME':
+      return { ...state, name: action.value }
+    case 'SET_PUBLIC':
+      return { ...state, isPublic: action.value }
+    case 'SET_TYPE':
+      return { ...state, workflowType: action.value }
+    case 'SET_SCOPE':
+      return { ...state, executionScope: action.value }
+    case 'RESET':
+      return { ...INITIAL_SAVE, name: action.name ?? '' }
+  }
+}
+
 export function SaveAsDialog({
   currentWorkflowName,
   disabled,
 }: SaveAsDialogProps) {
-  const [name, setName] = useState('')
-  const [isPublic, setIsPublic] = useState(false)
-  const [workflowType, setWorkflowType] = useState<WorkflowType>(
-    WorkflowType.TEMPLATE,
-  )
-  const [executionScope, setExecutionScope] = useState<ExecutionScope>(
-    ExecutionScope.SAMPLE_LEVEL,
-  )
+  const [{ name, isPublic, workflowType, executionScope }, dispatch] =
+    useReducer(saveReducer, INITIAL_SAVE)
   const [open, setOpen] = useState(false)
 
   const { nodes, edges, setCurrentWorkflowUid } = useNodeEditorStore()
@@ -71,17 +100,14 @@ export function SaveAsDialog({
       onSuccess: (uid) => {
         setCurrentWorkflowUid(uid)
         setOpen(false)
-        setName('')
-        setIsPublic(false)
-        setWorkflowType(WorkflowType.TEMPLATE)
-        setExecutionScope(ExecutionScope.SAMPLE_LEVEL)
+        dispatch({ type: 'RESET' })
       },
     })
   }
 
   const handleOpenChange = (newOpen: boolean) => {
     if (newOpen && currentWorkflowName) {
-      setName(`${currentWorkflowName} - 副本`)
+      dispatch({ type: 'RESET', name: `${currentWorkflowName} - 副本` })
     }
     setOpen(newOpen)
   }
@@ -90,7 +116,7 @@ export function SaveAsDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button variant='ghost' size='sm' disabled={disabled}>
-          <SaveIcon className='h-4 w-4 mr-2' />
+          <SaveIcon className='size-4 mr-2' />
           另存为
         </Button>
       </DialogTrigger>
@@ -98,7 +124,7 @@ export function SaveAsDialog({
         <DialogHeader>
           <div className='flex items-center gap-2'>
             <div className='p-2 bg-primary/10 rounded-full'>
-              <CopyIcon className='h-5 w-5 text-primary' />
+              <CopyIcon className='size-5 text-primary' />
             </div>
             <DialogTitle>另存为副本</DialogTitle>
           </div>
@@ -110,7 +136,7 @@ export function SaveAsDialog({
         <div className='grid gap-6 py-4'>
           <div className='grid gap-2'>
             <Label htmlFor='name' className='flex items-center gap-2'>
-              <FileTextIcon className='h-4 w-4 text-muted-foreground' />
+              <FileTextIcon className='size-4 text-muted-foreground' />
               工作流名称
             </Label>
             <Input
@@ -118,25 +144,31 @@ export function SaveAsDialog({
               placeholder='输入工作流名称...'
               className='col-span-3'
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) =>
+                dispatch({ type: 'SET_NAME', value: e.target.value })
+              }
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && name.trim()) {
                   handleSaveAs()
                 }
               }}
-              autoFocus
             />
           </div>
 
           <div className='grid grid-cols-2 gap-4'>
             <div className='grid gap-2'>
               <Label htmlFor='type' className='flex items-center gap-2'>
-                <TypeIcon className='h-4 w-4 text-muted-foreground' />
+                <TypeIcon className='size-4 text-muted-foreground' />
                 类型
               </Label>
               <Select
                 value={String(workflowType)}
-                onValueChange={(value) => setWorkflowType(Number(value))}
+                onValueChange={(value) =>
+                  dispatch({
+                    type: 'SET_TYPE',
+                    value: Number(value) as WorkflowType,
+                  })
+                }
               >
                 <SelectTrigger id='type'>
                   <SelectValue />
@@ -155,9 +187,9 @@ export function SaveAsDialog({
             <div className='grid gap-2'>
               <Label htmlFor='public' className='flex items-center gap-2'>
                 {isPublic ? (
-                  <GlobeIcon className='h-4 w-4 text-primary' />
+                  <GlobeIcon className='size-4 text-primary' />
                 ) : (
-                  <LockIcon className='h-4 w-4 text-muted-foreground' />
+                  <LockIcon className='size-4 text-muted-foreground' />
                 )}
                 公开状态
               </Label>
@@ -168,7 +200,9 @@ export function SaveAsDialog({
                 <Switch
                   id='public'
                   checked={isPublic}
-                  onCheckedChange={setIsPublic}
+                  onCheckedChange={(v) =>
+                    dispatch({ type: 'SET_PUBLIC', value: v as boolean })
+                  }
                 />
               </div>
             </div>
@@ -179,22 +213,27 @@ export function SaveAsDialog({
               htmlFor='execution-scope'
               className='flex items-center gap-2'
             >
-              <LayersIcon className='h-4 w-4 text-muted-foreground' />
+              <LayersIcon className='size-4 text-muted-foreground' />
               执行范围
             </Label>
             <Select
               value={String(executionScope)}
-              onValueChange={(value) => setExecutionScope(Number(value))}
+              onValueChange={(value) =>
+                dispatch({
+                  type: 'SET_SCOPE',
+                  value: Number(value) as ExecutionScope,
+                })
+              }
             >
               <SelectTrigger id='execution-scope'>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={String(ExecutionScope.SAMPLE_LEVEL)}>
-                  样本级 — 为每个样本独立运行
+                  样本级: 为每个样本独立运行
                 </SelectItem>
                 <SelectItem value={String(ExecutionScope.PROJECT_LEVEL)}>
-                  项目级 — 整个项目运行一次
+                  项目级: 整个项目运行一次
                 </SelectItem>
               </SelectContent>
             </Select>

@@ -104,11 +104,12 @@ export function WorkflowRunInstances({
   const isLoading = samplesLoading || runsLoading
 
   // 按此工作流过滤运行实例，并以 sample_uid 为 key
-  const runMap = new Map(
-    (allRuns ?? [])
-      .filter((r) => r.workflow_uid === workflowUid)
-      .map((r) => [r.sample_uid, r]),
-  )
+  const runMap = (allRuns ?? []).reduce<
+    Map<string | null, (typeof allRuns)[0]>
+  >((acc, r) => {
+    if (r.workflow_uid === workflowUid) acc.set(r.sample_uid, r)
+    return acc
+  }, new Map())
 
   // 项目级：筛选 sample_uid 为 null 的运行实例
   const projectRuns = isProjectLevel
@@ -137,9 +138,8 @@ export function WorkflowRunInstances({
   if (isLoading) {
     return (
       <div className='px-4 pb-4 space-y-2'>
-        {[...Array(3)].map((_, i) => (
-          // biome-ignore lint/suspicious/noArrayIndexKey: skeleton
-          <Skeleton key={i} className='h-10 w-full' />
+        {['sk-0', 'sk-1', 'sk-2'].map((key) => (
+          <Skeleton key={key} className='h-10 w-full' />
         ))}
       </div>
     )
@@ -189,7 +189,7 @@ export function WorkflowRunInstances({
                   <TableCell>
                     <Badge variant={cfg.variant} className='gap-1'>
                       <Icon
-                        className={`h-3 w-3 ${cfg.animate ? 'animate-spin' : ''}`}
+                        className={`size-3 ${cfg.animate ? 'animate-spin' : ''}`}
                       />
                       {cfg.label}
                     </Badge>
@@ -224,11 +224,11 @@ export function WorkflowRunInstances({
                       <Button
                         variant='ghost'
                         size='icon'
-                        className='h-7 w-7'
+                        className='size-7'
                         asChild
                       >
                         <Link href={`/project/${projectId}/${run.uid}`}>
-                          <ExternalLink className='h-3.5 w-3.5' />
+                          <ExternalLink className='size-3.5' />
                         </Link>
                       </Button>
                       <Button
@@ -239,10 +239,10 @@ export function WorkflowRunInstances({
                         disabled={isRunning || run.status === Status.RUNNING}
                       >
                         {isRunning ? (
-                          <Loader2 className='h-3 w-3 animate-spin' />
+                          <Loader2 className='size-3 animate-spin' />
                         ) : (
                           <>
-                            <PlayIcon className='h-3 w-3 mr-1' />
+                            <PlayIcon className='size-3 mr-1' />
                             重新运行
                           </>
                         )}
@@ -305,7 +305,7 @@ export function WorkflowRunInstances({
                   {cfg && Icon ? (
                     <Badge variant={cfg.variant} className='gap-1'>
                       <Icon
-                        className={`h-3 w-3 ${cfg.animate ? 'animate-spin' : ''}`}
+                        className={`size-3 ${cfg.animate ? 'animate-spin' : ''}`}
                       />
                       {cfg.label}
                     </Badge>
@@ -346,11 +346,11 @@ export function WorkflowRunInstances({
                       <Button
                         variant='ghost'
                         size='icon'
-                        className='h-7 w-7'
+                        className='size-7'
                         asChild
                       >
                         <Link href={`/project/${projectId}/${run.uid}`}>
-                          <ExternalLink className='h-3.5 w-3.5' />
+                          <ExternalLink className='size-3.5' />
                         </Link>
                       </Button>
                     )}
@@ -362,10 +362,10 @@ export function WorkflowRunInstances({
                       disabled={isRunning || run?.status === Status.RUNNING}
                     >
                       {isRunning ? (
-                        <Loader2 className='h-3 w-3 animate-spin' />
+                        <Loader2 className='size-3 animate-spin' />
                       ) : (
                         <>
-                          <PlayIcon className='h-3 w-3 mr-1' />
+                          <PlayIcon className='size-3 mr-1' />
                           {run ? '重新运行' : '运行'}
                         </>
                       )}

@@ -1,5 +1,6 @@
 'use client'
 
+import { format, parseISO } from 'date-fns'
 import {
   CheckIcon,
   ChevronDownIcon,
@@ -50,13 +51,117 @@ import {
   useSample,
   useSamples,
 } from '@/hooks/use-sample'
-import type { SampleFileType } from '@/types/sample'
+import type { Sample, SampleFileType } from '@/types/sample'
 import { AddSampleFileDialog } from './add-sample-file-dialog'
 import { CreateSampleDialog } from './create-sample-dialog'
 import { EditSampleDialog } from './edit-sample-dialog'
 
+interface SampleFilesSectionProps {
+  projectId: string
+  sampleDetails: Sample
+  onDeleteFile: (fileUid: string) => void
+}
+
 interface SampleListProps {
   projectId: string
+}
+
+function SampleFilesSection({
+  projectId,
+  sampleDetails,
+  onDeleteFile,
+}: SampleFilesSectionProps) {
+  return (
+    <div className='p-4'>
+      <div className='flex items-center justify-between mb-2'>
+        <h4 className='text-sm font-semibold'>样本文件</h4>
+        <AddSampleFileDialog
+          projectId={projectId}
+          sampleUid={sampleDetails.uid}
+        />
+      </div>
+      {sampleDetails.files.length === 0 ? (
+        <p className='text-sm text-muted-foreground'>
+          该样本暂无文件,点击"添加文件"按钮添加
+        </p>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className='w-[180px]'>文件类型</TableHead>
+              <TableHead>文件路径</TableHead>
+              <TableHead className='w-[100px]'>格式</TableHead>
+              <TableHead className='w-[100px]'>大小</TableHead>
+              <TableHead className='w-[120px]'>MD5校验</TableHead>
+              <TableHead className='w-[180px]'>上传时间</TableHead>
+              <TableHead className='w-[80px]'>操作</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {sampleDetails.files.map((file) => {
+              const isDefaultTag = file.tag === defaultTags[file.data_type]
+              return (
+                <TableRow key={file.uid}>
+                  <TableCell>
+                    <div className='flex flex-wrap gap-1'>
+                      <Badge className={fileTypeColors[file.data_type]}>
+                        {fileTypeLabels[file.data_type]}
+                      </Badge>
+                      {file.tag && (
+                        <Badge
+                          variant='outline'
+                          className={
+                            isDefaultTag
+                              ? 'text-muted-foreground'
+                              : 'bg-blue-50 text-blue-700 border-blue-200'
+                          }
+                        >
+                          {file.tag}
+                        </Badge>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className='font-mono text-xs'>
+                    {file.file_path}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant='outline'>{file.file_format}</Badge>
+                  </TableCell>
+                  <TableCell>{formatFileSize(file.file_size)}</TableCell>
+                  <TableCell>
+                    <div className='flex items-center'>
+                      <CheckIcon className='size-4 text-green-500 mr-1' />
+                      <span
+                        className='text-xs truncate w-16'
+                        title={file.md5_checksum}
+                      >
+                        {file.md5_checksum.substring(0, 8)}...
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className='text-xs' suppressHydrationWarning>
+                    {format(
+                      parseISO(file.uploaded_time),
+                      'yyyy-MM-dd HH:mm:ss',
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      onClick={() => onDeleteFile(file.uid)}
+                    >
+                      <Trash2Icon className='size-4 text-destructive' />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              )
+            })}
+          </TableBody>
+        </Table>
+      )}
+    </div>
+  )
 }
 
 // 文件类型标签映射
@@ -164,7 +269,7 @@ export function SampleList({ projectId }: SampleListProps) {
     return (
       <Card>
         <CardContent className='flex items-center justify-center py-12'>
-          <Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
+          <Loader2 className='size-8 animate-spin text-muted-foreground' />
         </CardContent>
       </Card>
     )
@@ -219,9 +324,9 @@ export function SampleList({ projectId }: SampleListProps) {
                           onClick={() => toggleSampleExpand(sample.uid)}
                         >
                           {isExpanded ? (
-                            <ChevronDownIcon className='h-4 w-4' />
+                            <ChevronDownIcon className='size-4' />
                           ) : (
-                            <ChevronRightIcon className='h-4 w-4' />
+                            <ChevronRightIcon className='size-4' />
                           )}
                         </TableCell>
                         <TableCell
@@ -249,8 +354,12 @@ export function SampleList({ projectId }: SampleListProps) {
                         </TableCell>
                         <TableCell
                           onClick={() => toggleSampleExpand(sample.uid)}
+                          suppressHydrationWarning
                         >
-                          {new Date(sample.create_time).toLocaleString('zh-CN')}
+                          {format(
+                            parseISO(sample.create_time),
+                            'yyyy-MM-dd HH:mm:ss',
+                          )}
                         </TableCell>
                         <TableCell
                           onClick={() => toggleSampleExpand(sample.uid)}
@@ -261,21 +370,21 @@ export function SampleList({ projectId }: SampleListProps) {
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant='ghost' size='icon'>
-                                <MoreHorizontal className='h-4 w-4' />
+                                <MoreHorizontal className='size-4' />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align='end'>
                               <DropdownMenuItem
                                 onClick={() => setEditingSample(sample.uid)}
                               >
-                                <EditIcon className='h-4 w-4 mr-2' />
+                                <EditIcon className='size-4 mr-2' />
                                 编辑
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 className='text-destructive'
                                 onClick={() => setDeletingSample(sample.uid)}
                               >
-                                <Trash2Icon className='h-4 w-4 mr-2' />
+                                <Trash2Icon className='size-4 mr-2' />
                                 删除
                               </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -285,126 +394,16 @@ export function SampleList({ projectId }: SampleListProps) {
                       {isExpanded && sampleDetails && (
                         <TableRow className='bg-muted/30'>
                           <TableCell colSpan={6} className='p-0'>
-                            <div className='p-4'>
-                              <div className='flex items-center justify-between mb-2'>
-                                <h4 className='text-sm font-semibold'>
-                                  样本文件
-                                </h4>
-                                <AddSampleFileDialog
-                                  projectId={projectId}
-                                  sampleUid={sampleDetails.uid}
-                                />
-                              </div>
-                              {sampleDetails.files.length === 0 ? (
-                                <p className='text-sm text-muted-foreground'>
-                                  该样本暂无文件,点击"添加文件"按钮添加
-                                </p>
-                              ) : (
-                                <Table>
-                                  <TableHeader>
-                                    <TableRow>
-                                      <TableHead className='w-[180px]'>
-                                        文件类型
-                                      </TableHead>
-                                      <TableHead>文件路径</TableHead>
-                                      <TableHead className='w-[100px]'>
-                                        格式
-                                      </TableHead>
-                                      <TableHead className='w-[100px]'>
-                                        大小
-                                      </TableHead>
-                                      <TableHead className='w-[120px]'>
-                                        MD5校验
-                                      </TableHead>
-                                      <TableHead className='w-[180px]'>
-                                        上传时间
-                                      </TableHead>
-                                      <TableHead className='w-[80px]'>
-                                        操作
-                                      </TableHead>
-                                    </TableRow>
-                                  </TableHeader>
-                                  <TableBody>
-                                    {sampleDetails.files.map((file) => {
-                                      const isDefaultTag =
-                                        file.tag === defaultTags[file.data_type]
-                                      return (
-                                        <TableRow key={file.uid}>
-                                          <TableCell>
-                                            <div className='flex flex-wrap gap-1'>
-                                              <Badge
-                                                className={
-                                                  fileTypeColors[file.data_type]
-                                                }
-                                              >
-                                                {fileTypeLabels[file.data_type]}
-                                              </Badge>
-                                              {file.tag && (
-                                                <Badge
-                                                  variant='outline'
-                                                  className={
-                                                    isDefaultTag
-                                                      ? 'text-muted-foreground'
-                                                      : 'bg-blue-50 text-blue-700 border-blue-200'
-                                                  }
-                                                >
-                                                  {file.tag}
-                                                </Badge>
-                                              )}
-                                            </div>
-                                          </TableCell>
-                                          <TableCell className='font-mono text-xs'>
-                                            {file.file_path}
-                                          </TableCell>
-                                          <TableCell>
-                                            <Badge variant='outline'>
-                                              {file.file_format}
-                                            </Badge>
-                                          </TableCell>
-                                          <TableCell>
-                                            {formatFileSize(file.file_size)}
-                                          </TableCell>
-                                          <TableCell>
-                                            <div className='flex items-center'>
-                                              <CheckIcon className='h-4 w-4 text-green-500 mr-1' />
-                                              <span
-                                                className='text-xs truncate w-16'
-                                                title={file.md5_checksum}
-                                              >
-                                                {file.md5_checksum.substring(
-                                                  0,
-                                                  8,
-                                                )}
-                                                ...
-                                              </span>
-                                            </div>
-                                          </TableCell>
-                                          <TableCell className='text-xs'>
-                                            {new Date(
-                                              file.uploaded_time,
-                                            ).toLocaleString('zh-CN')}
-                                          </TableCell>
-                                          <TableCell>
-                                            <Button
-                                              variant='ghost'
-                                              size='icon'
-                                              onClick={() =>
-                                                setDeletingFile({
-                                                  sampleUid: sampleDetails.uid,
-                                                  fileUid: file.uid,
-                                                })
-                                              }
-                                            >
-                                              <Trash2Icon className='h-4 w-4 text-destructive' />
-                                            </Button>
-                                          </TableCell>
-                                        </TableRow>
-                                      )
-                                    })}
-                                  </TableBody>
-                                </Table>
-                              )}
-                            </div>
+                            <SampleFilesSection
+                              projectId={projectId}
+                              sampleDetails={sampleDetails}
+                              onDeleteFile={(fileUid) =>
+                                setDeletingFile({
+                                  sampleUid: sampleDetails.uid,
+                                  fileUid,
+                                })
+                              }
+                            />
                           </TableCell>
                         </TableRow>
                       )}
@@ -420,6 +419,7 @@ export function SampleList({ projectId }: SampleListProps) {
       {/* 编辑对话框 */}
       {editingSample && editingSampleData && (
         <EditSampleDialog
+          key={editingSampleData.uid}
           projectId={projectId}
           sample={editingSampleData}
           open={!!editingSample}
@@ -451,7 +451,6 @@ export function SampleList({ projectId }: SampleListProps) {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* 删除文件确认对话框 */}
       <AlertDialog
         open={!!deletingFile}
         onOpenChange={(open) => !open && setDeletingFile(null)}

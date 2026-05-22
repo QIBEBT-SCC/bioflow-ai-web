@@ -4,7 +4,7 @@ import { ArrowLeft, ArrowRight, Check } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { getTool } from '@/app/actions/tool'
 import {
@@ -36,9 +36,125 @@ import type {
   DockerToolCreate,
   FileMount,
   ParamDefine,
+  ToolImagePublic,
   ToolTag,
 } from '@/types/tool'
+
+function ImageSelectionStep({
+  searchQuery,
+  onSearchChange,
+  searchResults,
+  currentImageUid,
+  onSelect,
+}: {
+  searchQuery: string
+  onSearchChange: (q: string) => void
+  searchResults: ToolImagePublic[]
+  currentImageUid: string | undefined
+  onSelect: (image: ToolImagePublic) => void
+}) {
+  const t = useTranslations('tool.AddPage')
+  return (
+    <div>
+      <h2 className='text-xl font-semibold mb-2'>{t('selectImage')}</h2>
+      <p className='text-muted-foreground mb-6'>{t('searchImage')}</p>
+      <div className='mb-6'>
+        <Input
+          placeholder={t('searchPlaceholder')}
+          value={searchQuery}
+          onChange={(e) => onSearchChange(e.target.value)}
+        />
+      </div>
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+        {searchResults.map((image) => (
+          <Card
+            key={image.uid}
+            className={`pt-2 cursor-pointer transition-all hover:shadow-md border-2 ${
+              currentImageUid === image.uid
+                ? 'border-primary bg-primary/5'
+                : 'border-border hover:border-primary/50'
+            }`}
+            onClick={() => onSelect(image)}
+          >
+            <CardContent className='p-4'>
+              <h3 className='font-semibold'>{image.name}</h3>
+              <Badge variant='secondary' className='mt-2'>
+                {image.version}
+              </Badge>
+              <p className='text-sm text-muted-foreground mt-2 line-clamp-2'>
+                {image.description}
+              </p>
+              <code className='text-xs bg-muted px-2 py-1 rounded block overflow-x-auto mt-2'>
+                {image.image.registry}/{image.image.namespace}/
+                {image.image.repository}:{image.image.tag}
+              </code>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      {searchQuery && searchResults.length === 0 && (
+        <div className='text-center py-12 text-muted-foreground'>
+          <p>{t('noImageFound')}</p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function StepNavigation({
+  currentStep,
+  totalSteps,
+  canProceed,
+  isCreating,
+  onPrev,
+  onNext,
+  onCreate,
+}: {
+  currentStep: number
+  totalSteps: number
+  canProceed: boolean
+  isCreating: boolean
+  onPrev: () => void
+  onNext: () => void
+  onCreate: () => void
+}) {
+  const t = useTranslations('tool.AddPage')
+  return (
+    <div className='flex justify-between items-center pt-4 border-t'>
+      <Button variant='outline' onClick={onPrev} disabled={currentStep === 1}>
+        <ArrowLeft className='size-4 mr-2' />
+        {t('prevStep')}
+      </Button>
+      <div className='text-sm text-muted-foreground'>
+        {t('stepProgress', { current: currentStep, total: totalSteps })}
+      </div>
+      {currentStep < totalSteps ? (
+        <Button onClick={onNext} disabled={!canProceed}>
+          {t('nextStep')}
+          <ArrowRight className='size-4 ml-2' />
+        </Button>
+      ) : (
+        <Button
+          onClick={onCreate}
+          className='bg-green-600 hover:bg-green-700'
+          disabled={!canProceed || isCreating}
+        >
+          {isCreating ? t('creating') : t('createTool')}
+        </Button>
+      )}
+    </div>
+  )
+}
+
 export default function AddToolPage() {
+  return (
+    <Suspense>
+      <AddToolPageContent />
+    </Suspense>
+  )
+}
+
+function AddToolPageContent() {
   const t = useTranslations('tool.AddPage')
   const tPage = useTranslations('tool.Page')
   const steps = [
@@ -58,10 +174,10 @@ export default function AddToolPage() {
       description: t('steps.step3.description'),
     },
   ]
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const initialStep = Number(searchParams.get('step')) || 1
-  const copyUid = searchParams.get('copy')
+  const { push } = useRouter()
+  const { get } = useSearchParams()
+  const initialStep = Number(get('step')) || 1
+  const copyUid = get('copy')
   const [currentStep, setCurrentStep] = useState(initialStep)
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -70,6 +186,7 @@ export default function AddToolPage() {
     toolConfig,
     setCurrentImage,
     setToolConfig,
+    initFromCopy,
     updateToolConfigField: updateStoreField,
     resetStore,
   } = useCreateToolStore()
@@ -91,9 +208,8 @@ export default function AddToolPage() {
     let cancelled = false
     getTool(copyUid).then((tool) => {
       if (cancelled) return
-      setCurrentImage(tool.image)
       setSearchQuery(tool.image.name)
-      setToolConfig({
+      initFromCopy(tool.image, {
         name: `${tool.name}${t('copySuffix')}`,
         image_uid: tool.image.uid ?? '',
         description: tool.description,
@@ -110,20 +226,15 @@ export default function AddToolPage() {
     return () => {
       cancelled = true
     }
-  }, [copyUid, setCurrentImage, setToolConfig, t])
+  }, [copyUid, initFromCopy, t])
 
   // 处理下一步
   const handleNext = () => {
-    if (currentStep < steps.length) {
-      setCurrentStep(currentStep + 1)
-    }
+    setCurrentStep((prev) => (prev < steps.length ? prev + 1 : prev))
   }
 
-  // 处理上一步
   const handlePrev = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1)
-    }
+    setCurrentStep((prev) => (prev > 1 ? prev - 1 : prev))
   }
 
   // 处理工具创建
@@ -139,7 +250,7 @@ export default function AddToolPage() {
     createTool(requestData, {
       onSuccess: () => {
         toast.success(t('createSuccess'))
-        router.push('/tool')
+        push('/tool')
       },
     })
   }
@@ -178,18 +289,18 @@ export default function AddToolPage() {
 
   // 添加动态参数
   const addDynamicParam = () => {
-    setToolConfig({
-      ...toolConfig,
+    setToolConfig((prev) => ({
+      ...prev,
       dynamic_params: [
-        ...toolConfig.dynamic_params,
+        ...prev.dynamic_params,
         {
           description: '',
           command: '',
           is_position: false,
-          index: toolConfig.dynamic_params.length,
+          index: prev.dynamic_params.length,
         },
       ],
-    })
+    }))
   }
 
   // 更新动态参数
@@ -200,7 +311,7 @@ export default function AddToolPage() {
   ) => {
     const updatedParams = [...toolConfig.dynamic_params]
     updatedParams[index] = { ...updatedParams[index], [field]: value }
-    setToolConfig({ ...toolConfig, dynamic_params: updatedParams })
+    setToolConfig((prev) => ({ ...prev, dynamic_params: updatedParams }))
   }
 
   // 删除动态参数
@@ -211,15 +322,15 @@ export default function AddToolPage() {
     updatedParams.forEach((param, idx) => {
       param.index = idx
     })
-    setToolConfig({ ...toolConfig, dynamic_params: updatedParams })
+    setToolConfig((prev) => ({ ...prev, dynamic_params: updatedParams }))
   }
 
   // 添加文件挂载
   const addFileMount = () => {
-    setToolConfig({
-      ...toolConfig,
+    setToolConfig((prev) => ({
+      ...prev,
       file_mounts: [
-        ...toolConfig.file_mounts,
+        ...prev.file_mounts,
         {
           name: '',
           description: '',
@@ -230,7 +341,7 @@ export default function AddToolPage() {
           mount_path: '',
         },
       ],
-    })
+    }))
   }
 
   // 更新文件挂载
@@ -241,21 +352,21 @@ export default function AddToolPage() {
   ) => {
     const updatedFiles = [...toolConfig.file_mounts]
     updatedFiles[index] = { ...updatedFiles[index], [field]: value }
-    setToolConfig({ ...toolConfig, file_mounts: updatedFiles })
+    setToolConfig((prev) => ({ ...prev, file_mounts: updatedFiles }))
   }
 
   // 删除文件挂载
   const removeFileMount = (index: number) => {
     const updatedFiles = [...toolConfig.file_mounts]
     updatedFiles.splice(index, 1)
-    setToolConfig({ ...toolConfig, file_mounts: updatedFiles })
+    setToolConfig((prev) => ({ ...prev, file_mounts: updatedFiles }))
   }
 
   const reorderDynamicParams = (newParams: ParamDefine[]) =>
-    setToolConfig({ ...toolConfig, dynamic_params: newParams })
+    setToolConfig((prev) => ({ ...prev, dynamic_params: newParams }))
 
   const reorderFileMounts = (newMounts: FileMount[]) =>
-    setToolConfig({ ...toolConfig, file_mounts: newMounts })
+    setToolConfig((prev) => ({ ...prev, file_mounts: newMounts }))
 
   return (
     <SidebarInset className='h-screen flex flex-col'>
@@ -286,108 +397,26 @@ export default function AddToolPage() {
               href='/tool'
               className='inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-2'
             >
-              <ArrowLeft className='h-4 w-4 mr-1' />
+              <ArrowLeft className='size-4 mr-1' />
               {t('back')}
             </Link>
-            <h1 className='text-2xl font-bold'>{t('title')}</h1>
+            <h1 className='text-2xl font-semibold'>{t('title')}</h1>
             <p className='text-muted-foreground mt-1'>{t('subtitle')}</p>
           </div>
 
-          {/* 进度条 */}
-          <Card className='mb-8 py-4'>
-            <CardContent className='py-0'>
-              <div className='flex items-center justify-between'>
-                {steps.map((step, index) => (
-                  <div key={step.id} className='flex items-center'>
-                    <div className='flex flex-col items-center'>
-                      <div
-                        className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-medium ${
-                          currentStep > step.id
-                            ? 'bg-green-500 text-white'
-                            : currentStep === step.id
-                              ? 'bg-primary text-primary-foreground'
-                              : 'bg-muted text-muted-foreground'
-                        }`}
-                      >
-                        {currentStep > step.id ? (
-                          <Check className='h-5 w-5' />
-                        ) : (
-                          step.id
-                        )}
-                      </div>
-                      <div className='mt-2 text-center'>
-                        <div className='text-sm font-medium'>{step.title}</div>
-                        <div className='text-xs text-muted-foreground'>
-                          {step.description}
-                        </div>
-                      </div>
-                    </div>
-                    {index < steps.length - 1 && (
-                      <div
-                        className={`flex-1 h-0.5 mx-4 ${currentStep > step.id ? 'bg-green-500' : 'bg-muted'}`}
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <StepProgressBar steps={steps} currentStep={currentStep} />
 
           {/* 步骤内容 */}
           <div className='mb-8'>
-            {/* 步骤1: 选择镜像 */}
             {currentStep === 1 && (
-              <div>
-                <h2 className='text-xl font-semibold mb-2'>
-                  {t('selectImage')}
-                </h2>
-                <p className='text-muted-foreground mb-6'>{t('searchImage')}</p>
-
-                <div className='mb-6'>
-                  <Input
-                    placeholder={t('searchPlaceholder')}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                  {searchResults.map((image) => (
-                    <Card
-                      key={image.uid}
-                      className={`pt-2 cursor-pointer transition-all hover:shadow-md border-2 ${
-                        currentImage?.uid === image.uid
-                          ? 'border-primary bg-primary/5'
-                          : 'border-border hover:border-primary/50'
-                      }`}
-                      onClick={() => setCurrentImage(image)}
-                    >
-                      <CardContent className='p-4'>
-                        <h3 className='font-semibold'>{image.name}</h3>
-                        <Badge variant='secondary' className='mt-2'>
-                          {image.version}
-                        </Badge>
-                        <p className='text-sm text-muted-foreground mt-2 line-clamp-2'>
-                          {image.description}
-                        </p>
-                        <code className='text-xs bg-muted px-2 py-1 rounded block overflow-x-auto mt-2'>
-                          {image.image.registry}/{image.image.namespace}/
-                          {image.image.repository}:{image.image.tag}
-                        </code>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-
-                {searchQuery && searchResults.length === 0 && (
-                  <div className='text-center py-12 text-muted-foreground'>
-                    <p>{t('noImageFound')}</p>
-                  </div>
-                )}
-              </div>
+              <ImageSelectionStep
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                searchResults={searchResults}
+                currentImageUid={currentImage?.uid}
+                onSelect={setCurrentImage}
+              />
             )}
-
-            {/* 步骤2: 配置工具 */}
             {currentStep === 2 && (
               <div>
                 <h2 className='text-xl font-semibold mb-2'>
@@ -396,7 +425,6 @@ export default function AddToolPage() {
                 <p className='text-muted-foreground mb-6'>
                   {t('fillBasicInfo')}
                 </p>
-
                 <ToolConfigForm
                   value={toolConfig}
                   toolGroups={toolGroups}
@@ -424,129 +452,160 @@ export default function AddToolPage() {
                 />
               </div>
             )}
-
-            {/* 步骤3: 确认创建 */}
             {currentStep === 3 && (
-              <div>
-                <h2 className='text-xl font-semibold mb-2'>
-                  {t('confirmCreate')}
-                </h2>
-                <p className='text-muted-foreground mb-6'>{t('checkConfig')}</p>
-
-                <div className='space-y-4'>
-                  <Card>
-                    <CardContent className='pt-6'>
-                      <h3 className='font-semibold mb-4'>{t('basicInfo')}</h3>
-                      <div className='space-y-2'>
-                        <div className='flex justify-between'>
-                          <span className='text-muted-foreground'>
-                            {t('toolName')}
-                          </span>
-                          <span className='font-medium'>{toolConfig.name}</span>
-                        </div>
-                        <div className='flex justify-between'>
-                          <span className='text-muted-foreground'>
-                            {t('toolDesc')}
-                          </span>
-                          <span className='font-medium'>
-                            {toolConfig.description}
-                          </span>
-                        </div>
-                        <div className='flex justify-between'>
-                          <span className='text-muted-foreground'>
-                            {t('toolImage')}
-                          </span>
-                          <span className='font-medium'>
-                            {currentImage?.name}
-                          </span>
-                        </div>
-                        <div className='flex justify-between'>
-                          <span className='text-muted-foreground'>
-                            {t('commandTemplate')}
-                          </span>
-                          <code className='text-sm bg-muted px-2 py-1 rounded'>
-                            {toolConfig.command_template}
-                          </code>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardContent className='pt-6'>
-                      <h3 className='font-semibold mb-4'>
-                        {t('configSummary')}
-                      </h3>
-                      <div className='grid grid-cols-2 md:grid-cols-3 gap-4'>
-                        <div className='text-center'>
-                          <div className='text-2xl font-bold text-primary'>
-                            {toolConfig.dynamic_params.length}
-                          </div>
-                          <div className='text-sm text-muted-foreground'>
-                            {t('dynamicParams')}
-                          </div>
-                        </div>
-                        <div className='text-center'>
-                          <div className='text-2xl font-bold text-primary'>
-                            {toolConfig.file_mounts.length}
-                          </div>
-                          <div className='text-sm text-muted-foreground'>
-                            {t('fileMounts')}
-                          </div>
-                        </div>
-                        <div className='text-center'>
-                          <div className='text-2xl font-bold text-primary'>
-                            {(toolConfig.immutable_static_params || '').length >
-                              0 ||
-                            (toolConfig.modifiable_static_params || '').length >
-                              0
-                              ? t('yes')
-                              : t('no')}
-                          </div>
-                          <div className='text-sm text-muted-foreground'>
-                            {t('staticParams')}
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
+              <ConfirmStep
+                toolConfig={toolConfig}
+                currentImageName={currentImage?.name}
+              />
             )}
           </div>
 
-          {/* 导航按钮 */}
-          <div className='flex justify-between items-center pt-4 border-t'>
-            <Button
-              variant='outline'
-              onClick={handlePrev}
-              disabled={currentStep === 1}
-            >
-              <ArrowLeft className='h-4 w-4 mr-2' />
-              {t('prevStep')}
-            </Button>
-
-            <div className='text-sm text-muted-foreground'>
-              {t('stepProgress', { current: currentStep, total: steps.length })}
-            </div>
-
-            {currentStep < steps.length ? (
-              <Button onClick={handleNext} disabled={!canProceed()}>
-                {t('nextStep')}
-                <ArrowRight className='h-4 w-4 ml-2' />
-              </Button>
-            ) : (
-              <Button
-                onClick={handleCreateTool}
-                className='bg-green-600 hover:bg-green-700'
-                disabled={!canProceed() || isCreating}
-              >
-                {isCreating ? t('creating') : t('createTool')}
-              </Button>
-            )}
-          </div>
+          <StepNavigation
+            currentStep={currentStep}
+            totalSteps={steps.length}
+            canProceed={canProceed()}
+            isCreating={isCreating}
+            onPrev={handlePrev}
+            onNext={handleNext}
+            onCreate={handleCreateTool}
+          />
         </div>
       </div>
     </SidebarInset>
+  )
+}
+
+interface Step {
+  id: number
+  title: string
+  description: string
+}
+
+function StepProgressBar({
+  steps,
+  currentStep,
+}: {
+  steps: Step[]
+  currentStep: number
+}) {
+  return (
+    <Card className='mb-8 py-4'>
+      <CardContent className='py-0'>
+        <div className='flex items-center justify-between'>
+          {steps.map((step, index) => (
+            <div key={step.id} className='flex items-center'>
+              <div className='flex flex-col items-center'>
+                <div
+                  className={`size-9 rounded-full flex items-center justify-center text-sm font-medium ${
+                    currentStep > step.id
+                      ? 'bg-green-500 text-white'
+                      : currentStep === step.id
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted text-muted-foreground'
+                  }`}
+                >
+                  {currentStep > step.id ? (
+                    <Check className='size-5' />
+                  ) : (
+                    step.id
+                  )}
+                </div>
+                <div className='mt-2 text-center'>
+                  <div className='text-sm font-medium'>{step.title}</div>
+                  <div className='text-xs text-muted-foreground'>
+                    {step.description}
+                  </div>
+                </div>
+              </div>
+              {index < steps.length - 1 && (
+                <div
+                  className={`flex-1 h-0.5 mx-4 ${currentStep > step.id ? 'bg-green-500' : 'bg-muted'}`}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function ConfirmStep({
+  toolConfig,
+  currentImageName,
+}: {
+  toolConfig: ToolConfigValues
+  currentImageName?: string
+}) {
+  const t = useTranslations('tool.AddPage')
+  const hasStaticParams =
+    (toolConfig.immutable_static_params || '').length > 0 ||
+    (toolConfig.modifiable_static_params || '').length > 0
+
+  return (
+    <div>
+      <h2 className='text-xl font-semibold mb-2'>{t('confirmCreate')}</h2>
+      <p className='text-muted-foreground mb-6'>{t('checkConfig')}</p>
+      <div className='space-y-4'>
+        <Card>
+          <CardContent className='pt-6'>
+            <h3 className='font-semibold mb-4'>{t('basicInfo')}</h3>
+            <div className='space-y-2'>
+              <div className='flex justify-between'>
+                <span className='text-muted-foreground'>{t('toolName')}</span>
+                <span className='font-medium'>{toolConfig.name}</span>
+              </div>
+              <div className='flex justify-between'>
+                <span className='text-muted-foreground'>{t('toolDesc')}</span>
+                <span className='font-medium'>{toolConfig.description}</span>
+              </div>
+              <div className='flex justify-between'>
+                <span className='text-muted-foreground'>{t('toolImage')}</span>
+                <span className='font-medium'>{currentImageName}</span>
+              </div>
+              <div className='flex justify-between'>
+                <span className='text-muted-foreground'>
+                  {t('commandTemplate')}
+                </span>
+                <code className='text-sm bg-muted px-2 py-1 rounded'>
+                  {toolConfig.command_template}
+                </code>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className='pt-6'>
+            <h3 className='font-semibold mb-4'>{t('configSummary')}</h3>
+            <div className='grid grid-cols-2 md:grid-cols-3 gap-4'>
+              <div className='text-center'>
+                <div className='text-2xl font-bold text-primary'>
+                  {toolConfig.dynamic_params.length}
+                </div>
+                <div className='text-sm text-muted-foreground'>
+                  {t('dynamicParams')}
+                </div>
+              </div>
+              <div className='text-center'>
+                <div className='text-2xl font-bold text-primary'>
+                  {toolConfig.file_mounts.length}
+                </div>
+                <div className='text-sm text-muted-foreground'>
+                  {t('fileMounts')}
+                </div>
+              </div>
+              <div className='text-center'>
+                <div className='text-2xl font-bold text-primary'>
+                  {hasStaticParams ? t('yes') : t('no')}
+                </div>
+                <div className='text-sm text-muted-foreground'>
+                  {t('staticParams')}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   )
 }

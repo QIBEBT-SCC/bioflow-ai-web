@@ -19,8 +19,8 @@ import {
 import {
   createContext,
   memo,
+  use,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -60,7 +60,7 @@ interface StackTraceContextValue {
 const StackTraceContext = createContext<StackTraceContextValue | null>(null);
 
 const useStackTrace = () => {
-  const context = useContext(StackTraceContext);
+  const context = use(StackTraceContext);
   if (!context) {
     throw new Error("StackTrace components must be used within StackTrace");
   }
@@ -481,6 +481,7 @@ export const StackTraceFrames = memo(
     return (
       <div className={cn("space-y-1 p-3", className)} {...props}>
         {framesToShow.map((frame, index) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: frames may duplicate in recursive stack traces
           <div
             className={cn(
               "text-xs",

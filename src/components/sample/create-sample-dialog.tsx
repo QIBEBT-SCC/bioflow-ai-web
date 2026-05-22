@@ -2,7 +2,7 @@
 
 import { PlusIcon, XIcon } from 'lucide-react'
 import type React from 'react'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
@@ -18,6 +18,12 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useCreateSample } from '@/hooks/use-sample'
 
+interface MetaEntry {
+  id: number
+  key: string
+  value: string
+}
+
 interface CreateSampleDialogProps {
   projectId: string
   trigger?: React.ReactNode
@@ -29,28 +35,30 @@ export function CreateSampleDialog({
 }: CreateSampleDialogProps) {
   const [open, setOpen] = useState(false)
   const [sampleName, setSampleName] = useState('')
-  const [metaData, setMetaData] = useState<
-    Array<{ key: string; value: string }>
-  >([])
+  const [metaData, setMetaData] = useState<MetaEntry[]>([])
+  const nextId = useRef(0)
 
   const createSampleMutation = useCreateSample()
 
   const handleAddMetaData = () => {
-    setMetaData([...metaData, { key: '', value: '' }])
+    setMetaData((prev) => [
+      ...prev,
+      { id: nextId.current++, key: '', value: '' },
+    ])
   }
 
-  const handleRemoveMetaData = (index: number) => {
-    setMetaData(metaData.filter((_, i) => i !== index))
+  const handleRemoveMetaData = (id: number) => {
+    setMetaData((prev) => prev.filter((item) => item.id !== id))
   }
 
   const handleMetaDataChange = (
-    index: number,
+    id: number,
     field: 'key' | 'value',
     value: string,
   ) => {
-    const newMetaData = [...metaData]
-    newMetaData[index][field] = value
-    setMetaData(newMetaData)
+    setMetaData((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, [field]: value } : item)),
+    )
   }
 
   const handleSubmit = async () => {
@@ -59,13 +67,12 @@ export function CreateSampleDialog({
       return
     }
 
-    // 转换元数据为对象
     const metaDataObject: Record<string, unknown> = {}
-    metaData.forEach((item) => {
+    for (const item of metaData) {
       if (item.key.trim()) {
         metaDataObject[item.key] = item.value
       }
-    })
+    }
 
     try {
       await createSampleMutation.mutateAsync({
@@ -80,9 +87,9 @@ export function CreateSampleDialog({
 
       toast.success('样本创建成功')
 
-      // 重置表单
       setSampleName('')
       setMetaData([])
+      nextId.current = 0
       setOpen(false)
     } catch {
       toast.error('样本创建失败')
@@ -94,7 +101,7 @@ export function CreateSampleDialog({
       <DialogTrigger asChild>
         {trigger || (
           <Button size='sm'>
-            <PlusIcon className='h-4 w-4 mr-2' />
+            <PlusIcon className='size-4 mr-2' />
             添加样本
           </Button>
         )}
@@ -129,7 +136,7 @@ export function CreateSampleDialog({
                 size='sm'
                 onClick={handleAddMetaData}
               >
-                <PlusIcon className='h-4 w-4 mr-2' />
+                <PlusIcon className='size-4 mr-2' />
                 添加字段
               </Button>
             </div>
@@ -140,30 +147,29 @@ export function CreateSampleDialog({
               </p>
             ) : (
               <div className='space-y-2'>
-                {metaData.map((item, index) => (
-                  // biome-ignore lint/suspicious/noArrayIndexKey: no nedd
-                  <div key={index} className='flex gap-2'>
+                {metaData.map((item) => (
+                  <div key={item.id} className='flex gap-2'>
                     <Input
                       placeholder='键'
                       value={item.key}
                       onChange={(e) =>
-                        handleMetaDataChange(index, 'key', e.target.value)
+                        handleMetaDataChange(item.id, 'key', e.target.value)
                       }
                     />
                     <Input
                       placeholder='值'
                       value={item.value}
                       onChange={(e) =>
-                        handleMetaDataChange(index, 'value', e.target.value)
+                        handleMetaDataChange(item.id, 'value', e.target.value)
                       }
                     />
                     <Button
                       type='button'
                       variant='ghost'
                       size='icon'
-                      onClick={() => handleRemoveMetaData(index)}
+                      onClick={() => handleRemoveMetaData(item.id)}
                     >
-                      <XIcon className='h-4 w-4' />
+                      <XIcon className='size-4' />
                     </Button>
                   </div>
                 ))}

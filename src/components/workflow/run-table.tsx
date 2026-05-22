@@ -154,9 +154,8 @@ export function RunTables({
           <TableBody>
             {isLoading ? (
               // 加载骨架屏
-              [...Array(5)].map((_, i) => (
-                // biome-ignore lint/suspicious/noArrayIndexKey: no need
-                <TableRow key={i}>
+              ['sk-0', 'sk-1', 'sk-2', 'sk-3', 'sk-4'].map((key) => (
+                <TableRow key={key}>
                   <TableCell>
                     <Skeleton className='h-5 w-[200px]' />
                   </TableCell>
@@ -181,7 +180,7 @@ export function RunTables({
               <TableRow>
                 <TableCell colSpan={7} className='h-32 text-center'>
                   <div className='flex flex-col items-center justify-center text-muted-foreground'>
-                    <Clock className='h-8 w-8 mb-2' />
+                    <Clock className='size-8 mb-2' />
                     <p>暂无工作流运行实例</p>
                   </div>
                 </TableCell>
@@ -214,7 +213,7 @@ export function RunTables({
                     <TableCell>
                       <Badge variant={config.variant} className='gap-1'>
                         <Icon
-                          className={`h-3 w-3 ${
+                          className={`size-3 ${
                             config.icon === Loader2 ? 'animate-spin' : ''
                           }`}
                         />
@@ -274,7 +273,7 @@ export function RunTables({
               onClick={() => setPage(Math.max(0, page - 1))}
               disabled={page === 0}
             >
-              <ChevronLeft className='h-4 w-4 mr-1' />
+              <ChevronLeft className='size-4 mr-1' />
               上一页
             </Button>
             <Button
@@ -284,7 +283,7 @@ export function RunTables({
               disabled={page >= totalPages - 1}
             >
               下一页
-              <ChevronRight className='h-4 w-4 ml-1' />
+              <ChevronRight className='size-4 ml-1' />
             </Button>
           </div>
         </div>

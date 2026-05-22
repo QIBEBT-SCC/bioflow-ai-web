@@ -121,11 +121,11 @@ export function RunLeftPanel({
         <Collapsible open={statsOpen} onOpenChange={setStatsOpen}>
           <CollapsibleTrigger className='flex w-full items-center justify-between px-4 py-3 text-sm font-medium hover:bg-muted/50 border-b'>
             <div className='flex items-center gap-2'>
-              <BarChart3Icon className='h-4 w-4 text-muted-foreground' />
+              <BarChart3Icon className='size-4 text-muted-foreground' />
               运行统计
             </div>
             <ChevronDownIcon
-              className={`h-4 w-4 text-muted-foreground transition-transform ${statsOpen ? 'rotate-180' : ''}`}
+              className={`size-4 text-muted-foreground transition-transform ${statsOpen ? 'rotate-180' : ''}`}
             />
           </CollapsibleTrigger>
           <CollapsibleContent>
@@ -135,7 +135,7 @@ export function RunLeftPanel({
                 {run ? (
                   <Badge variant={statusConfig[run.status].variant}>
                     <Icon
-                      className={`h-3 w-3 ${run.status === Status.RUNNING ? 'animate-spin' : ''}`}
+                      className={`size-3 ${run.status === Status.RUNNING ? 'animate-spin' : ''}`}
                     />
                     {statusConfig[run.status].label}
                   </Badge>
@@ -169,7 +169,7 @@ export function RunLeftPanel({
         {/* 输出文件树 */}
         <div className='flex-1 overflow-y-auto'>
           <div className='px-4 py-3 text-sm font-medium border-b flex items-center gap-2 sticky top-0 bg-background'>
-            <FileTextIcon className='h-4 w-4 text-muted-foreground' />
+            <FileTextIcon className='size-4 text-muted-foreground' />
             输出文件
           </div>
           <div className='p-2'>
@@ -200,9 +200,9 @@ export function RunLeftPanel({
       >
         <div className='absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity'>
           {isOpen ? (
-            <ChevronLeftIcon className='h-3 w-3 text-muted-foreground' />
+            <ChevronLeftIcon className='size-3 text-muted-foreground' />
           ) : (
-            <ChevronRightIcon className='h-3 w-3 text-muted-foreground' />
+            <ChevronRightIcon className='size-3 text-muted-foreground' />
           )}
         </div>
       </button>

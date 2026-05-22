@@ -24,7 +24,7 @@ function SidebarLogo() {
   const { state } = useSidebar()
   const collapsed = state === 'collapsed'
   return (
-    <Link href='/' className='flex items-center justify-center px-0 py-0'>
+    <Link href='/' className='flex items-center justify-center p-0'>
       <Image
         src={collapsed ? '/logo_only.svg' : '/logo_and_text.svg'}
         alt='BioFlow AI'

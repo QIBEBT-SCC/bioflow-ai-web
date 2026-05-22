@@ -59,19 +59,19 @@ function ProjectTable({ projects }: { projects: ProjectPublic[] }) {
               <TableHead className='h-12 px-4'>标签</TableHead>
               <TableHead className='h-12 text-right'>
                 <div className='flex items-center justify-end'>
-                  <UserIcon className='h-3 w-3 mr-1' />
+                  <UserIcon className='size-3 mr-1' />
                   创建人
                 </div>
               </TableHead>
               <TableHead className='h-12 text-right'>
                 <div className='flex items-center justify-end'>
-                  <ClockIcon className='h-3 w-3 mr-1' />
+                  <ClockIcon className='size-3 mr-1' />
                   上次更新
                 </div>
               </TableHead>
               <TableHead className='h-12 text-right'>
                 <div className='flex items-center justify-end'>
-                  <ClockIcon className='h-3 w-3 mr-1' />
+                  <ClockIcon className='size-3 mr-1' />
                   创建
                 </div>
               </TableHead>
@@ -94,7 +94,7 @@ function ProjectTable({ projects }: { projects: ProjectPublic[] }) {
                       onClick={() => handleStar(project)}
                       disabled={isPending && pendingId === String(project.id)}
                     >
-                      <StarIcon className='h-4 w-4' />
+                      <StarIcon className='size-4' />
                       <span className='sr-only'>收藏</span>
                     </Button>
                     <Link
@@ -183,11 +183,11 @@ export function RecentProjectCard() {
       >
         <div className='font-medium mb-2'>{recentProject.name}</div>
         <div className='flex items-center text-xs text-muted-foreground'>
-          <ClockIcon className='h-3 w-3 mr-1' /> 最后更新:{' '}
+          <ClockIcon className='size-3 mr-1' /> 最后更新:{' '}
           {formatDateTime(recentProject.update_time)}
           <span className='mx-2'>•</span>
           <span className='flex items-center'>
-            <PlayIcon className='h-3 w-3 mr-1' /> -- 条数据
+            <PlayIcon className='size-3 mr-1' /> -- 条数据
           </span>
         </div>
       </Link>

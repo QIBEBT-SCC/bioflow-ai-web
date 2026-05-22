@@ -14,9 +14,98 @@ import {
 import { useToolCount, useToolGroupList } from '@/hooks/use-tool'
 import type { ToolGroup } from '@/types/tool'
 
-// 扩展ToolGroup类型以支持客户端渲染需要的children属性
 interface ToolGroupWithChildren extends ToolGroup {
   children?: ToolGroupWithChildren[]
+}
+
+function calculateTotalToolCount(group: ToolGroupWithChildren): number {
+  let total = group.tool_count || 0
+  if (group.children && group.children.length > 0) {
+    for (const child of group.children) {
+      total += calculateTotalToolCount(child)
+    }
+  }
+  return total
+}
+
+interface GroupTreeProps {
+  groups: ToolGroupWithChildren[]
+  level: number
+  selectedGroupId: number | null
+  expandedGroups: Record<number, boolean>
+  onSelectGroup: (id: number | null) => void
+  onToggleExpand: (id: number) => void
+}
+
+function GroupTree({
+  groups,
+  level,
+  selectedGroupId,
+  expandedGroups,
+  onSelectGroup,
+  onToggleExpand,
+}: GroupTreeProps) {
+  return groups.map((group) => {
+    const isExpanded = expandedGroups[group.id] || false
+    return (
+      <div key={group.id} className='space-y-1'>
+        <div className={`pl-${level * 4}`}>
+          {group.children && group.children.length > 0 ? (
+            <Collapsible
+              open={isExpanded}
+              onOpenChange={() => onToggleExpand(group.id)}
+              className='space-y-1'
+            >
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant={selectedGroupId === group.id ? 'secondary' : 'ghost'}
+                  className='w-full justify-start'
+                  size='sm'
+                  onClick={() => onSelectGroup(group.id)}
+                >
+                  {isExpanded ? (
+                    <FolderOpen className='size-4 mr-2 shrink-0' />
+                  ) : (
+                    <Folder className='size-4 mr-2 shrink-0' />
+                  )}
+                  <span className='flex-1 truncate'>{group.name}</span>
+                  <Badge className='ml-2 shrink-0'>
+                    {calculateTotalToolCount(group)}
+                  </Badge>
+                  <ChevronRight
+                    className={`size-4 ml-2 shrink-0 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+                  />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className='pl-4 space-y-1'>
+                <GroupTree
+                  groups={group.children}
+                  level={level + 1}
+                  selectedGroupId={selectedGroupId}
+                  expandedGroups={expandedGroups}
+                  onSelectGroup={onSelectGroup}
+                  onToggleExpand={onToggleExpand}
+                />
+              </CollapsibleContent>
+            </Collapsible>
+          ) : (
+            <Button
+              variant={selectedGroupId === group.id ? 'secondary' : 'ghost'}
+              className='w-full justify-start'
+              size='sm'
+              onClick={() => onSelectGroup(group.id)}
+            >
+              <Folder className='size-4 mr-2 shrink-0' />
+              <span className='flex-1 truncate'>{group.name}</span>
+              <Badge className='ml-2 shrink-0'>
+                {calculateTotalToolCount(group)}
+              </Badge>
+            </Button>
+          )}
+        </div>
+      </div>
+    )
+  })
 }
 
 interface ToolGroupSidebarProps {
@@ -36,7 +125,6 @@ export function ToolGroupSidebar({
   const { data: allToolsCount = 0 } = useToolCount()
   const { data: toolGroups = [] } = useToolGroupList()
 
-  // 切换分组展开/折叠状态
   const toggleGroupExpanded = (groupId: number) => {
     setExpandedGroups((prev) => ({
       ...prev,
@@ -44,107 +132,25 @@ export function ToolGroupSidebar({
     }))
   }
 
-  // 检查分组是否展开
-  const isGroupExpanded = (groupId: number) => {
-    return expandedGroups[groupId] || false
-  }
-
-  // 构建分组树
   const buildGroupTree = (groups: ToolGroup[]): ToolGroupWithChildren[] => {
     const groupMap: Record<number, ToolGroupWithChildren> = {}
     const rootGroups: ToolGroupWithChildren[] = []
-
-    // 首先创建所有分组的映射
-    groups.forEach((group) => {
+    for (const group of groups) {
       groupMap[group.id] = { ...group, children: [] }
-    })
-
-    // 然后构建树结构
-    groups.forEach((group) => {
+    }
+    for (const group of groups) {
       if (!group.parent_id) {
         rootGroups.push(groupMap[group.id])
       } else if (groupMap[group.parent_id]) {
         const parentGroup = groupMap[group.parent_id]
-        if (!parentGroup.children) {
-          parentGroup.children = []
-        }
+        if (!parentGroup.children) parentGroup.children = []
         parentGroup.children.push(groupMap[group.id])
       }
-    })
-
+    }
     return rootGroups
   }
 
-  // 递归计算分组的总工具数（包括所有子分组）
-  const calculateTotalToolCount = (group: ToolGroupWithChildren): number => {
-    let total = group.tool_count || 0
-    if (group.children && group.children.length > 0) {
-      group.children.forEach((child) => {
-        total += calculateTotalToolCount(child)
-      })
-    }
-    return total
-  }
-
-  // 构建分组树
   const groupTree = buildGroupTree(toolGroups)
-
-  // 递归渲染分组树
-  const renderGroupTree = (groups: ToolGroupWithChildren[], level = 0) => {
-    return groups.map((group) => (
-      <div key={group.id} className='space-y-1'>
-        <div className={`pl-${level * 4}`}>
-          {group.children && group.children.length > 0 ? (
-            <Collapsible
-              open={isGroupExpanded(group.id)}
-              onOpenChange={() => toggleGroupExpanded(group.id)}
-              className='space-y-1'
-            >
-              <CollapsibleTrigger asChild>
-                <Button
-                  variant={selectedGroupId === group.id ? 'secondary' : 'ghost'}
-                  className='w-full justify-start'
-                  size='sm'
-                  onClick={() => onSelectGroup(group.id)}
-                >
-                  {isGroupExpanded(group.id) ? (
-                    <FolderOpen className='h-4 w-4 mr-2 shrink-0' />
-                  ) : (
-                    <Folder className='h-4 w-4 mr-2 shrink-0' />
-                  )}
-                  <span className='flex-1 truncate'>{group.name}</span>
-                  <Badge className='ml-2 shrink-0'>
-                    {calculateTotalToolCount(group)}
-                  </Badge>
-                  <ChevronRight
-                    className={`h-4 w-4 ml-2 shrink-0 transition-transform ${
-                      isGroupExpanded(group.id) ? 'rotate-90' : ''
-                    }`}
-                  />
-                </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent className='pl-4 space-y-1'>
-                {renderGroupTree(group.children, level + 1)}
-              </CollapsibleContent>
-            </Collapsible>
-          ) : (
-            <Button
-              variant={selectedGroupId === group.id ? 'secondary' : 'ghost'}
-              className='w-full justify-start'
-              size='sm'
-              onClick={() => onSelectGroup(group.id)}
-            >
-              <Folder className='h-4 w-4 mr-2 shrink-0' />
-              <span className='flex-1 truncate'>{group.name}</span>
-              <Badge className='ml-2 shrink-0'>
-                {calculateTotalToolCount(group)}
-              </Badge>
-            </Button>
-          )}
-        </div>
-      </div>
-    ))
-  }
 
   return (
     <aside className='w-full md:w-64 shrink-0'>
@@ -152,8 +158,8 @@ export function ToolGroupSidebar({
         <CardContent className='p-4'>
           <div className='flex justify-between items-center mb-4'>
             <h2 className='text-md font-medium'>{t('title')}</h2>
-            <Button variant='ghost' size='icon' className='h-8 w-8'>
-              <FolderPlus className='h-4 w-4' />
+            <Button variant='ghost' size='icon' className='size-8'>
+              <FolderPlus className='size-4' />
             </Button>
           </div>
 
@@ -168,7 +174,14 @@ export function ToolGroupSidebar({
               <Badge className='ml-2 shrink-0'>{allToolsCount}</Badge>
             </Button>
 
-            {renderGroupTree(groupTree)}
+            <GroupTree
+              groups={groupTree}
+              level={0}
+              selectedGroupId={selectedGroupId}
+              expandedGroups={expandedGroups}
+              onSelectGroup={onSelectGroup}
+              onToggleExpand={toggleGroupExpanded}
+            />
           </div>
         </CardContent>
       </Card>

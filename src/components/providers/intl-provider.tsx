@@ -13,7 +13,11 @@ export function IntlProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const cookieLocale = (Cookies.get('locale') as Locale) || defaultLocale
     setLocale(cookieLocale)
-    import(`../../../messages/${cookieLocale}.json`).then((mod) => {
+    const loader =
+      cookieLocale === 'en'
+        ? import('../../../messages/en.json')
+        : import('../../../messages/zh.json')
+    loader.then((mod) => {
       setMessages(mod.default)
     })
   }, [])

@@ -59,10 +59,10 @@ export default function ToolsPage() {
         <div className='container mx-auto py-6'>
           {/* 顶部操作栏 */}
           <div className='flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center mb-6'>
-            <h1 className='text-2xl font-bold'>{t('management')}</h1>
+            <h1 className='text-2xl font-semibold'>{t('management')}</h1>
             <div className='flex gap-2 w-full sm:w-auto'>
               <div className='relative flex-1 sm:flex-initial'>
-                <Search className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
+                <Search className='absolute left-2.5 top-2.5 size-4 text-muted-foreground' />
                 <Input
                   type='search'
                   placeholder={t('searchPlaceholder')}
@@ -74,25 +74,25 @@ export default function ToolsPage() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant='outline'>
-                    <Plus className='h-4 w-4 mr-2' />
+                    <Plus className='size-4 mr-2' />
                     {t('add')}
-                    <ChevronDown className='h-4 w-4 ml-2' />
+                    <ChevronDown className='size-4 ml-2' />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align='end'>
                   <Link href='/tool/add'>
                     <DropdownMenuItem>
-                      <Plus className='h-4 w-4 mr-2' />
+                      <Plus className='size-4 mr-2' />
                       {t('addTool')}
                     </DropdownMenuItem>
                   </Link>
                   <DropdownMenuItem>
-                    <FolderPlus className='h-4 w-4 mr-2' />
+                    <FolderPlus className='size-4 mr-2' />
                     {t('createGroup')}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem>
-                    <Download className='h-4 w-4 mr-2' />
+                    <Download className='size-4 mr-2' />
                     {t('importTool')}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -116,7 +116,7 @@ export default function ToolsPage() {
                 </h2>
                 <div className='flex items-center gap-2'>
                   <Button variant='outline' size='sm'>
-                    <Filter className='h-4 w-4 mr-2' />
+                    <Filter className='size-4 mr-2' />
                     {t('filter')}
                   </Button>
                   <div className='border rounded-md flex'>
@@ -126,7 +126,7 @@ export default function ToolsPage() {
                       className='rounded-r-none'
                       onClick={() => setViewMode('list')}
                     >
-                      <List className='h-4 w-4' />
+                      <List className='size-4' />
                     </Button>
                     <Button
                       variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
@@ -134,7 +134,7 @@ export default function ToolsPage() {
                       className='rounded-l-none'
                       onClick={() => setViewMode('grid')}
                     >
-                      <Grid className='h-4 w-4' />
+                      <Grid className='size-4' />
                     </Button>
                   </div>
                 </div>

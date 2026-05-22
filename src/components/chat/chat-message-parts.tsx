@@ -47,48 +47,39 @@ export function ChatMessageParts({
   messageIndex,
   status,
 }: ChatMessagePartsProps) {
+  const fileParts = message.parts.filter((part) => part.type === 'file')
+  const sourceParts = message.parts.filter((part) => part.type === 'source-url')
   return (
     <MessageComponent from={message.role}>
       {/* Attachments */}
-      {message.parts.filter((part) => part.type === 'file').length > 0 && (
+      {fileParts.length > 0 && (
         <Attachments className='mb-2' variant='grid'>
-          {message.parts
-            .filter((part) => part.type === 'file')
-            .map((attachment) => (
-              // @ts-expect-error
-              <Attachment data={attachment} key={attachment.url}>
-                <AttachmentPreview />
-              </Attachment>
-            ))}
+          {fileParts.map((attachment) => (
+            // @ts-expect-error
+            <Attachment data={attachment} key={attachment.url}>
+              <AttachmentPreview />
+            </Attachment>
+          ))}
         </Attachments>
       )}
       {/* Sources */}
-      {message.role === 'assistant' &&
-        message.parts.filter((part) => part.type === 'source-url').length >
-          0 && (
-          <Sources>
-            <SourcesTrigger
-              count={
-                message.parts.filter((part) => part.type === 'source-url')
-                  .length
-              }
-            />
-            {message.parts
-              .filter((part) => part.type === 'source-url')
-              .map((part, i) => (
-                <SourcesContent key={`${message.id}-${i}`}>
-                  <Source href={part.url} title={part.url} />
-                </SourcesContent>
-              ))}
-          </Sources>
-        )}
+      {message.role === 'assistant' && sourceParts.length > 0 && (
+        <Sources>
+          <SourcesTrigger count={sourceParts.length} />
+          {sourceParts.map((part) => (
+            <SourcesContent key={part.url}>
+              <Source href={part.url} title={part.url} />
+            </SourcesContent>
+          ))}
+        </Sources>
+      )}
       <MessageContent>
-        {message.parts.map((part, i) => {
+        {message.parts.map((part) => {
           switch (part.type) {
             case 'text': {
               const isLastMessage = messageIndex === messages.length - 1
               return (
-                <Fragment key={`${message.id}-${i}`}>
+                <Fragment key={`${message.id}-text`}>
                   <MessageResponse>{part.text}</MessageResponse>
                   {message.role === 'assistant' && isLastMessage && (
                     <MessageActions>
@@ -109,11 +100,11 @@ export function ChatMessageParts({
             case 'reasoning':
               return (
                 <Reasoning
-                  key={`${message.id}-${i}`}
+                  key={`${message.id}-reasoning`}
                   className='w-full'
                   isStreaming={
                     status === 'streaming' &&
-                    i === message.parts.length - 1 &&
+                    message.parts.at(-1) === part &&
                     message.id === messages.at(-1)?.id
                   }
                 >
@@ -123,7 +114,7 @@ export function ChatMessageParts({
               )
             case 'tool-getWeather':
               return (
-                <Tool key={part.toolCallId || `${message.id}-${i}`}>
+                <Tool key={part.toolCallId}>
                   <ToolHeader type={part.type} state={part.state} />
                   <ToolContent>
                     <ToolInput input={part.input} />

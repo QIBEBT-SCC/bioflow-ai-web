@@ -40,7 +40,9 @@ export default function ResourcePage() {
         <div className='container mx-auto py-6'>
           <div className='flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center mb-6'>
             <div>
-              <h1 className='text-2xl font-bold tracking-tight'>资源管理</h1>
+              <h1 className='text-2xl font-semibold tracking-tight'>
+                资源管理
+              </h1>
               <p className='text-muted-foreground'>
                 管理样本数据和生物信息数据库
               </p>

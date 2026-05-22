@@ -1,7 +1,7 @@
 'use client'
 
 import { Package, Plus } from 'lucide-react'
-import { useState } from 'react'
+import { useReducer, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -18,23 +18,71 @@ import { Textarea } from '@/components/ui/textarea'
 import { useCreateImage } from '@/hooks/use-tool'
 import type { ToolImage } from '@/types/tool'
 
+type ImageFormState = {
+  name: string
+  version: string
+  description: string
+  homepage: string
+  paperLink: string
+  registry: string
+  namespace: string
+  repository: string
+  tag: string
+}
+type ImageFormAction =
+  | { type: 'SET'; field: keyof ImageFormState; value: string }
+  | { type: 'RESET' }
+
+const INITIAL_IMAGE_FORM: ImageFormState = {
+  name: '',
+  version: '',
+  description: '',
+  homepage: '',
+  paperLink: '',
+  registry: 'docker.io',
+  namespace: 'biocontainers',
+  repository: '',
+  tag: '',
+}
+
+function imageFormReducer(
+  state: ImageFormState,
+  action: ImageFormAction,
+): ImageFormState {
+  switch (action.type) {
+    case 'SET':
+      return { ...state, [action.field]: action.value }
+    case 'RESET':
+      return INITIAL_IMAGE_FORM
+  }
+}
+
+const DEFAULT_TRIGGER = (
+  <Button>
+    <Plus className='size-4 mr-2' />
+    新建镜像
+  </Button>
+)
+
 interface CreateImageDialogProps {
   trigger?: React.ReactNode
 }
 
 export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
-  const [name, setName] = useState('')
-  const [version, setVersion] = useState('')
-  const [description, setDescription] = useState('')
-  const [homepage, setHomepage] = useState('')
-  const [paperLink, setPaperLink] = useState('')
-
-  // 镜像配置
-  const [registry, setRegistry] = useState('docker.io')
-  const [namespace, setNamespace] = useState('biocontainers')
-  const [repository, setRepository] = useState('')
-  const [tag, setTag] = useState('')
-
+  const [
+    {
+      name,
+      version,
+      description,
+      homepage,
+      paperLink,
+      registry,
+      namespace,
+      repository,
+      tag,
+    },
+    dispatch,
+  ] = useReducer(imageFormReducer, INITIAL_IMAGE_FORM)
   const [open, setOpen] = useState(false)
 
   const { mutate: createImage, isPending } = useCreateImage()
@@ -50,45 +98,24 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
       description,
       homepage,
       paper_link: paperLink,
-      image: {
-        registry,
-        namespace,
-        repository,
-        tag,
-      },
+      image: { registry, namespace, repository, tag },
     }
 
     createImage(newImage, {
       onSuccess: () => {
         setOpen(false)
-        // 重置表单
-        setName('')
-        setVersion('')
-        setDescription('')
-        setHomepage('')
-        setPaperLink('')
-        setRegistry('')
-        setNamespace('')
-        setRepository('')
-        setTag('latest')
+        dispatch({ type: 'RESET' })
       },
     })
   }
 
-  const defaultTrigger = (
-    <Button>
-      <Plus className='h-4 w-4 mr-2' />
-      新建镜像
-    </Button>
-  )
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{trigger || defaultTrigger}</DialogTrigger>
+      <DialogTrigger asChild>{trigger || DEFAULT_TRIGGER}</DialogTrigger>
       <DialogContent className='max-w-2xl max-h-[90vh] overflow-y-auto'>
         <DialogHeader>
           <DialogTitle className='flex items-center gap-2'>
-            <Package className='h-5 w-5' />
+            <Package className='size-5' />
             创建新镜像
           </DialogTitle>
           <DialogDescription>
@@ -110,7 +137,13 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
                   id='name'
                   placeholder='例如: FastQC'
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) =>
+                    dispatch({
+                      type: 'SET',
+                      field: 'name',
+                      value: e.target.value,
+                    })
+                  }
                   required
                 />
               </div>
@@ -123,7 +156,13 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
                   id='version'
                   placeholder='例如: 0.11.9'
                   value={version}
-                  onChange={(e) => setVersion(e.target.value)}
+                  onChange={(e) =>
+                    dispatch({
+                      type: 'SET',
+                      field: 'version',
+                      value: e.target.value,
+                    })
+                  }
                   required
                 />
               </div>
@@ -135,7 +174,13 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
                 id='description'
                 placeholder='简要描述该镜像的功能和用途'
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={(e) =>
+                  dispatch({
+                    type: 'SET',
+                    field: 'description',
+                    value: e.target.value,
+                  })
+                }
                 rows={3}
               />
             </div>
@@ -148,7 +193,13 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
                   type='url'
                   placeholder='https://example.com'
                   value={homepage}
-                  onChange={(e) => setHomepage(e.target.value)}
+                  onChange={(e) =>
+                    dispatch({
+                      type: 'SET',
+                      field: 'homepage',
+                      value: e.target.value,
+                    })
+                  }
                 />
               </div>
 
@@ -159,7 +210,13 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
                   type='url'
                   placeholder='https://doi.org/...'
                   value={paperLink}
-                  onChange={(e) => setPaperLink(e.target.value)}
+                  onChange={(e) =>
+                    dispatch({
+                      type: 'SET',
+                      field: 'paperLink',
+                      value: e.target.value,
+                    })
+                  }
                 />
               </div>
             </div>
@@ -180,7 +237,13 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
                   id='registry'
                   placeholder='例如: docker.io'
                   value={registry}
-                  onChange={(e) => setRegistry(e.target.value)}
+                  onChange={(e) =>
+                    dispatch({
+                      type: 'SET',
+                      field: 'registry',
+                      value: e.target.value,
+                    })
+                  }
                   required
                 />
               </div>
@@ -193,7 +256,13 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
                   id='namespace'
                   placeholder='例如: biocontainers'
                   value={namespace}
-                  onChange={(e) => setNamespace(e.target.value)}
+                  onChange={(e) =>
+                    dispatch({
+                      type: 'SET',
+                      field: 'namespace',
+                      value: e.target.value,
+                    })
+                  }
                   required
                 />
               </div>
@@ -208,7 +277,13 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
                   id='repository'
                   placeholder='例如: fastqc'
                   value={repository}
-                  onChange={(e) => setRepository(e.target.value)}
+                  onChange={(e) =>
+                    dispatch({
+                      type: 'SET',
+                      field: 'repository',
+                      value: e.target.value,
+                    })
+                  }
                   required
                 />
               </div>
@@ -221,7 +296,13 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
                   id='tag'
                   placeholder='例如: latest'
                   value={tag}
-                  onChange={(e) => setTag(e.target.value)}
+                  onChange={(e) =>
+                    dispatch({
+                      type: 'SET',
+                      field: 'tag',
+                      value: e.target.value,
+                    })
+                  }
                   required
                 />
               </div>

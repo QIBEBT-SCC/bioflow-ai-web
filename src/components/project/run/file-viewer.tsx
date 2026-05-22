@@ -44,12 +44,13 @@ export function FileViewer({
 
   if (fileType === 'image' && blobUrl) {
     return (
-      <div className='relative flex h-full w-full items-center justify-center overflow-auto p-4'>
+      <div className='relative flex size-full items-center justify-center overflow-auto p-4'>
         <Image
           src={blobUrl}
           alt={fileName}
           fill
           unoptimized
+          sizes='100vw'
           className='object-contain'
         />
       </div>
@@ -58,11 +59,7 @@ export function FileViewer({
 
   if (fileType === 'pdf' && blobUrl) {
     return (
-      <iframe
-        src={blobUrl}
-        title={fileName}
-        className='h-full w-full border-0'
-      />
+      <iframe src={blobUrl} title={fileName} className='size-full border-0' />
     )
   }
 
@@ -75,7 +72,7 @@ export function FileViewer({
       <iframe
         srcDoc={content}
         title={fileName}
-        className='h-full w-full border-0'
+        className='size-full border-0'
         sandbox='allow-scripts allow-same-origin'
       />
     )
@@ -83,7 +80,7 @@ export function FileViewer({
 
   if (content !== undefined) {
     return (
-      <ScrollArea className='h-full w-full'>
+      <ScrollArea className='size-full'>
         <pre className='p-4 font-mono text-sm leading-relaxed whitespace-pre-wrap break-words'>
           {content}
         </pre>

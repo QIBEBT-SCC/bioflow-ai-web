@@ -18,8 +18,8 @@ import { cn } from "@/lib/utils";
 import { ArrowLeftIcon, ArrowRightIcon } from "lucide-react";
 import {
   createContext,
+  use,
   useCallback,
-  useContext,
   useEffect,
   useState,
 } from "react";
@@ -93,7 +93,7 @@ export const InlineCitationCardBody = ({
 const CarouselApiContext = createContext<CarouselApi | undefined>(undefined);
 
 const useCarouselApi = () => {
-  const context = useContext(CarouselApiContext);
+  const context = use(CarouselApiContext);
   return context;
 };
 

@@ -18,7 +18,7 @@ export function DatabasesManager() {
     <div className='space-y-4'>
       <div className='flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>
         <div className='relative flex-1 max-w-sm'>
-          <Search className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
+          <Search className='absolute left-2.5 top-2.5 size-4 text-muted-foreground' />
           <Input
             placeholder='搜索数据库...'
             className='pl-8'
@@ -27,7 +27,7 @@ export function DatabasesManager() {
           />
         </div>
         <Button onClick={() => setIsAddDialogOpen(true)}>
-          <PlusCircle className='mr-2 h-4 w-4' />
+          <PlusCircle className='mr-2 size-4' />
           添加数据库
         </Button>
       </div>
