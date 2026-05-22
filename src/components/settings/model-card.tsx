@@ -121,7 +121,7 @@ export function ModelCard({ model }: ModelCardProps) {
                   onClick={saveModel}
                   className='h-8 gap-2 bg-transparent'
                 >
-                  <SaveIcon className='h-3 w-3' />
+                  <SaveIcon className='size-3' />
                 </Button>
                 <Button
                   variant='outline'
@@ -129,7 +129,7 @@ export function ModelCard({ model }: ModelCardProps) {
                   onClick={cancelEdit}
                   className='h-8 gap-2 bg-transparent'
                 >
-                  <XIcon className='h-3 w-3' />
+                  <XIcon className='size-3' />
                 </Button>
               </>
             ) : (
@@ -140,7 +140,7 @@ export function ModelCard({ model }: ModelCardProps) {
                   onClick={startEditing}
                   className='h-8'
                 >
-                  <Edit2Icon className='h-3 w-3' />
+                  <Edit2Icon className='size-3' />
                 </Button>
                 <Button
                   variant='ghost'
@@ -148,7 +148,7 @@ export function ModelCard({ model }: ModelCardProps) {
                   onClick={deleteModel}
                   className='h-8 text-destructive hover:text-destructive'
                 >
-                  <Trash2Icon className='h-3 w-3' />
+                  <Trash2Icon className='size-3' />
                 </Button>
               </>
             )}

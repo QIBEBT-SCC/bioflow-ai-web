@@ -19,8 +19,8 @@ import { cn } from "@/lib/utils";
 import { ChevronDownIcon } from "lucide-react";
 import {
   createContext,
+  use,
   useCallback,
-  useContext,
   useMemo,
   useState,
 } from "react";
@@ -35,7 +35,7 @@ export interface WebPreviewContextValue {
 const WebPreviewContext = createContext<WebPreviewContextValue | null>(null);
 
 const useWebPreview = () => {
-  const context = useContext(WebPreviewContext);
+  const context = use(WebPreviewContext);
   if (!context) {
     throw new Error("WebPreview components must be used within a WebPreview");
   }
@@ -120,7 +120,7 @@ export const WebPreviewNavigationButton = ({
     <Tooltip>
       <TooltipTrigger asChild>
         <Button
-          className="h-8 w-8 p-0 hover:text-foreground"
+          className="size-8 p-0 hover:text-foreground"
           disabled={disabled}
           onClick={onClick}
           size="sm"
@@ -241,7 +241,7 @@ export const WebPreviewConsole = ({
           Console
           <ChevronDownIcon
             className={cn(
-              "h-4 w-4 transition-transform duration-200",
+              "size-4 transition-transform duration-200",
               consoleOpen && "rotate-180"
             )}
           />
@@ -258,6 +258,7 @@ export const WebPreviewConsole = ({
             <p className="text-muted-foreground">No console output</p>
           ) : (
             logs.map((log, index) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: log entries may share identical timestamps
               <div
                 className={cn(
                   "text-xs",

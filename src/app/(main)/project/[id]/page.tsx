@@ -93,15 +93,15 @@ export default function ProjectDetailPage() {
           <Tabs defaultValue='samples' className='w-full'>
             <TabsList className='grid grid-cols-4 md:w-auto md:inline-flex'>
               <TabsTrigger value='samples' className='flex items-center'>
-                <TestTubeDiagonal className='h-4 w-4 mr-2' />
+                <TestTubeDiagonal className='size-4 mr-2' />
                 样本
               </TabsTrigger>
               <TabsTrigger value='file-mappings' className='flex items-center'>
-                <FileCode className='h-4 w-4 mr-2' />
+                <FileCode className='size-4 mr-2' />
                 全局文件
               </TabsTrigger>
               <TabsTrigger value='workflows' className='flex items-center'>
-                <FlaskConical className='h-4 w-4 mr-2' />
+                <FlaskConical className='size-4 mr-2' />
                 工作流
               </TabsTrigger>
             </TabsList>

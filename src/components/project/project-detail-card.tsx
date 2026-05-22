@@ -31,7 +31,7 @@ export function ProjectDetailCard() {
       <div className='flex flex-col sm:flex-row gap-4 justify-between items-start mb-3'>
         <div>
           <div className='flex items-start gap-2'>
-            <h1 className='text-2xl font-bold'>{project.name}</h1>
+            <h1 className='text-2xl font-semibold'>{project.name}</h1>
             <div className='flex flex-wrap gap-1 mt-1.5'>
               {project.tags.map((tag) => (
                 <Badge
@@ -49,7 +49,7 @@ export function ProjectDetailCard() {
                 project.starred ? 'text-amber-400' : 'text-muted-foreground'
               }
             >
-              <Star className='h-5 w-5' />
+              <Star className='size-5' />
               <span className='sr-only'>收藏</span>
             </Button>
           </div>
@@ -62,7 +62,7 @@ export function ProjectDetailCard() {
         <Card>
           <CardHeader className='pb-2'>
             <CardTitle className='text-sm font-medium flex items-center'>
-              <Database className='h-4 w-4 mr-2' />
+              <Database className='size-4 mr-2' />
               样本数量
             </CardTitle>
           </CardHeader>
@@ -73,7 +73,7 @@ export function ProjectDetailCard() {
         <Card>
           <CardHeader className='pb-2'>
             <CardTitle className='text-sm font-medium flex items-center'>
-              <FlaskConical className='h-4 w-4 mr-2' />
+              <FlaskConical className='size-4 mr-2' />
               工作流状态
             </CardTitle>
           </CardHeader>
@@ -88,7 +88,7 @@ export function ProjectDetailCard() {
                   variant='outline'
                   className='bg-green-50 text-green-600 border-green-200 flex items-center'
                 >
-                  <CheckCircle2 className='h-3 w-3 mr-1' />
+                  <CheckCircle2 className='size-3 mr-1' />
                   {4}
                   {/*{project.completedWorkflows}*/}
                 </Badge>
@@ -96,7 +96,7 @@ export function ProjectDetailCard() {
                   variant='outline'
                   className='bg-blue-50 text-blue-600 border-blue-200 flex items-center'
                 >
-                  <Loader2 className='h-3 w-3 mr-1 animate-spin' />
+                  <Loader2 className='size-3 mr-1 animate-spin' />
                   {1}
                   {/*{project.inProgressWorkflows}*/}
                 </Badge>
@@ -104,7 +104,7 @@ export function ProjectDetailCard() {
                   variant='outline'
                   className='bg-red-50 text-red-600 border-red-200 flex items-center'
                 >
-                  <AlertCircle className='h-3 w-3 mr-1' />
+                  <AlertCircle className='size-3 mr-1' />
                   {/*{project.failedWorkflows}*/}
                   {1}
                 </Badge>
@@ -123,12 +123,12 @@ export function ProjectDetailCard() {
         <Card>
           <CardHeader className='pb-2'>
             <CardTitle className='text-sm font-medium flex items-center'>
-              <Clock className='h-4 w-4 mr-2' />
+              <Clock className='size-4 mr-2' />
               最后更新
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className='text-2xl font-bold'>
+            <p className='text-2xl font-bold' suppressHydrationWarning>
               {new Date(project.update_time).toLocaleString('zh-CN')}
             </p>
           </CardContent>

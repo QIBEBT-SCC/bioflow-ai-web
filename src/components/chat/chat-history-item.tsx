@@ -11,7 +11,7 @@ import {
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import type React from 'react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -36,9 +36,16 @@ export function ChatHistoryItem({
   isActive,
   onSelect,
 }: ChatHistoryItemProps) {
-  const router = useRouter()
+  const { push } = useRouter()
   const [isEditing, setIsEditing] = useState(false)
-  const [inputValue, setInputValue] = useState(chat.description)
+  const [inputValue, setInputValue] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (isEditing) {
+      inputRef.current?.focus()
+    }
+  }, [isEditing])
 
   const { mutateAsync: updateChat, isPending: isUpdating } =
     useUpdateChatSession()
@@ -69,7 +76,7 @@ export function ChatHistoryItem({
       await deleteChat(chat.uid)
       // 如果删除的是当前正在查看的对话，重定向到 /chat
       if (isActive) {
-        router.push('/chat')
+        push('/chat')
       }
     } catch (error) {
       console.error('Failed to delete chat session', error)
@@ -107,17 +114,17 @@ export function ChatHistoryItem({
     return (
       <div className='flex items-center gap-1 p-2 rounded-md bg-muted/50'>
         <Input
+          ref={inputRef}
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onClick={handleInputClick}
           onKeyDown={handleInputKeyDown}
           className='h-7 text-sm px-2 bg-background'
-          autoFocus
         />
         <Button
           size='icon'
           variant='ghost'
-          className='h-7 w-7 shrink-0 hover:bg-green-500/10 hover:text-green-500'
+          className='size-7 shrink-0 hover:bg-green-500/10 hover:text-green-500'
           onClick={handleSave}
           disabled={isUpdating}
         >
@@ -130,7 +137,7 @@ export function ChatHistoryItem({
         <Button
           size='icon'
           variant='ghost'
-          className='h-7 w-7 shrink-0 hover:bg-red-500/10 hover:text-red-500'
+          className='size-7 shrink-0 hover:bg-red-500/10 hover:text-red-500'
           onClick={handleCancel}
           disabled={isUpdating}
         >
@@ -156,7 +163,10 @@ export function ChatHistoryItem({
         <span className='font-medium text-sm truncate'>
           {chat.description || 'New Conversation'}
         </span>
-        <span className='text-[10px] text-muted-foreground'>
+        <span
+          className='text-[10px] text-muted-foreground'
+          suppressHydrationWarning
+        >
           {formatDistanceToNow(new Date(chat.create_time), {
             addSuffix: true,
           })}
@@ -166,7 +176,7 @@ export function ChatHistoryItem({
       <div className='opacity-0 group-hover:opacity-100 transition-opacity flex items-center'>
         <DropdownMenu>
           <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-            <Button variant='ghost' size='icon' className='h-6 w-6'>
+            <Button variant='ghost' size='icon' className='size-6'>
               <MoreHorizontalIcon className='size-3' />
             </Button>
           </DropdownMenuTrigger>
@@ -174,6 +184,7 @@ export function ChatHistoryItem({
             <DropdownMenuItem
               onClick={(e) => {
                 e.stopPropagation()
+                setInputValue(chat.description)
                 setIsEditing(true)
               }}
             >

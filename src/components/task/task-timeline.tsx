@@ -116,7 +116,7 @@ export function TaskTimeline() {
         </CardHeader>
         <CardContent>
           <div className='flex flex-col items-center justify-center h-48 text-muted-foreground'>
-            <Clock className='h-12 w-12 mb-3' />
+            <Clock className='size-12 mb-3' />
             <p>最近24小时内暂无任务运行记录</p>
           </div>
         </CardContent>
@@ -142,10 +142,9 @@ export function TaskTimeline() {
         <div className='relative bg-muted/30 rounded-lg p-4'>
           {/* 时间刻度 */}
           <div className='relative h-6 mb-2 border-b'>
-            {timelineData.timeLabels.map((label, i) => (
+            {timelineData.timeLabels.map((label) => (
               <div
-                // biome-ignore lint/suspicious/noArrayIndexKey: no need
-                key={i}
+                key={label.time}
                 className='absolute top-0 text-xs text-muted-foreground'
                 style={{
                   left: `${label.percent}%`,
@@ -181,7 +180,7 @@ export function TaskTimeline() {
                   {/* 任务名称 */}
                   <div className='absolute inset-0 flex items-center px-2 text-xs text-white font-medium overflow-hidden'>
                     {isRunning && (
-                      <Loader2 className='h-3 w-3 mr-1 animate-spin flex-shrink-0' />
+                      <Loader2 className='size-3 mr-1 animate-spin flex-shrink-0' />
                     )}
                     <span className='truncate'>{item.task.name}</span>
                   </div>
@@ -206,30 +205,31 @@ export function TaskTimeline() {
           {/* 当前时间线 */}
           <div
             className='absolute top-8 bottom-4 w-0.5 bg-primary'
+            suppressHydrationWarning
             style={{
               left: `${((Date.now() - timelineData.minTime) / (timelineData.maxTime - timelineData.minTime)) * 100}%`,
             }}
           >
-            <div className='absolute -top-1 -left-1.5 w-3 h-3 rounded-full bg-primary' />
+            <div className='absolute -top-1 -left-1.5 size-3 rounded-full bg-primary' />
           </div>
         </div>
 
         {/* 图例 */}
         <div className='flex items-center justify-center gap-6 mt-4 text-sm'>
           <div className='flex items-center gap-2'>
-            <div className='w-4 h-4 bg-green-500 rounded' />
+            <div className='size-4 bg-green-500 rounded' />
             <span className='text-muted-foreground'>成功</span>
           </div>
           <div className='flex items-center gap-2'>
-            <div className='w-4 h-4 bg-blue-500 rounded' />
+            <div className='size-4 bg-blue-500 rounded' />
             <span className='text-muted-foreground'>运行中</span>
           </div>
           <div className='flex items-center gap-2'>
-            <div className='w-4 h-4 bg-yellow-500 rounded' />
+            <div className='size-4 bg-yellow-500 rounded' />
             <span className='text-muted-foreground'>等待中</span>
           </div>
           <div className='flex items-center gap-2'>
-            <div className='w-4 h-4 bg-red-500 rounded' />
+            <div className='size-4 bg-red-500 rounded' />
             <span className='text-muted-foreground'>失败</span>
           </div>
         </div>

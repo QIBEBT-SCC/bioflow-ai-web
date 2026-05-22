@@ -27,7 +27,7 @@ export function TaskLog({ taskUid }: TaskLogProps) {
   if (error) {
     return (
       <div className='text-center text-muted-foreground py-12'>
-        <FileTextIcon className='h-12 w-12 mx-auto mb-3 opacity-50' />
+        <FileTextIcon className='size-12 mx-auto mb-3 opacity-50' />
         <p>日志文件不存在或无法读取</p>
       </div>
     )
@@ -36,7 +36,7 @@ export function TaskLog({ taskUid }: TaskLogProps) {
   if (!logData?.content) {
     return (
       <div className='text-center text-muted-foreground py-12'>
-        <FileTextIcon className='h-12 w-12 mx-auto mb-3 opacity-50' />
+        <FileTextIcon className='size-12 mx-auto mb-3 opacity-50' />
         <p>暂无日志内容</p>
       </div>
     )

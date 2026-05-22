@@ -11,14 +11,14 @@ import { useAuth } from '@/hooks/use-auth-query'
  * 纯副作用组件，未登录时自动重定向到 /login，不渲染任何 UI。
  */
 export function AuthGuard() {
-  const router = useRouter()
+  const { push } = useRouter()
   const { user, loading } = useAuth()
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push('/login')
+      push('/login')
     }
-  }, [loading, user, router])
+  }, [loading, user, push])
 
   return null
 }
@@ -28,20 +28,20 @@ export function AuthGuard() {
  * 已登录时自动重定向到 /chat。
  */
 export function GuestGuard({ children }: { children: React.ReactNode }) {
-  const router = useRouter()
+  const { push } = useRouter()
   const { user, loading } = useAuth()
 
   useEffect(() => {
     if (!loading && user) {
-      router.push('/')
+      push('/')
     }
-  }, [loading, user, router])
+  }, [loading, user, push])
 
   if (loading) {
     return (
       <div className='flex h-screen items-center justify-center'>
         <div className='flex flex-col items-center gap-4'>
-          <Loader2Icon className='h-8 w-8 animate-spin text-primary' />
+          <Loader2Icon className='size-8 animate-spin text-primary' />
           <p className='text-sm text-muted-foreground'>验证身份中...</p>
         </div>
       </div>

@@ -106,10 +106,10 @@ function FlowContent() {
         zIndex: nodeType === 'note' ? -10 : 20,
       }
 
-      setNodes([...nodes, newNode])
+      setNodes((prev) => [...prev, newNode])
       toast.success('节点已添加')
     },
-    [nodes, clickPosition, screenToFlowPosition, setNodes],
+    [clickPosition, screenToFlowPosition, setNodes],
   )
 
   // 保存workflow
@@ -181,7 +181,7 @@ function FlowContent() {
                   !currentWorkflowUid || updateWorkflowMutation.isPending
                 }
               >
-                <SaveIcon className='h-4 w-4 mr-2' />
+                <SaveIcon className='size-4 mr-2' />
                 {updateWorkflowMutation.isPending ? '保存中...' : '保存'}
               </Button>
 
@@ -198,7 +198,7 @@ function FlowContent() {
                 onClick={onRun}
                 disabled={runMutation.isPending}
               >
-                <PlayIcon className='h-4 w-4 mr-2 text-green-500' />
+                <PlayIcon className='size-4 mr-2 text-green-500' />
                 {runMutation.isPending ? '运行中...' : '运行'}
               </Button>
 

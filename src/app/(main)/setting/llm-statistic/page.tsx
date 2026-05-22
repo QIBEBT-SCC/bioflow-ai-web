@@ -38,8 +38,10 @@ export default function LLMStatisticPage() {
         <div className='container mx-auto px-6 py-8 max-w-7xl space-y-8'>
           <div className='mb-8'>
             <div className='flex items-center gap-3 mb-2'>
-              <BarChart3Icon className='h-8 w-8 text-primary' />
-              <h1 className='text-4xl font-bold text-balance'>{t('title')}</h1>
+              <BarChart3Icon className='size-8 text-primary' />
+              <h1 className='text-4xl font-semibold text-balance'>
+                {t('title')}
+              </h1>
             </div>
             <p className='text-muted-foreground text-pretty'>
               {t('description')}
@@ -49,11 +51,11 @@ export default function LLMStatisticPage() {
           <Tabs defaultValue='config' className='space-y-6'>
             <TabsList>
               <TabsTrigger value='config' className='gap-2'>
-                <SettingsIcon className='h-4 w-4' />
+                <SettingsIcon className='size-4' />
                 {t('tab_config')}
               </TabsTrigger>
               <TabsTrigger value='statistics' className='gap-2'>
-                <TrendingUpIcon className='h-4 w-4' />
+                <TrendingUpIcon className='size-4' />
                 {t('tab_statistics')}
               </TabsTrigger>
             </TabsList>

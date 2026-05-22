@@ -81,7 +81,6 @@ import {
   useChatSession,
   useCreateChatSession,
 } from '@/hooks/use-chat'
-import { useChatStore } from '@/stores/chat-store'
 
 const AttachmentItem = memo(
   ({
@@ -170,14 +169,12 @@ const PromptInputAttachmentsDisplay = () => {
 
 export default function ChatPage() {
   const params = useParams()
-  const router = useRouter()
+  const { push, replace } = useRouter()
   const sessionId = params.uid as string
 
   const [text, setText] = useState<string>('')
   const [useRebuildMode, setUseRebuildMode] = useState<boolean>(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-
-  const { setDebugMessages } = useChatStore()
 
   const { data: chatSession, error: sessionError } = useChatSession(sessionId)
   const { data: initMessages } = useChatHistory(sessionId)
@@ -195,13 +192,13 @@ export default function ChatPage() {
   useEffect(() => {
     if (sessionError) {
       console.warn('Chat session not found, redirecting to /chat')
-      router.replace('/chat')
+      replace('/chat')
     }
-  }, [sessionError, router])
+  }, [sessionError, replace])
 
   const handleNewChat = async () => {
     const session = await createChatSession()
-    router.push(`/chat/${session.uid}`)
+    push(`/chat/${session.uid}`)
   }
 
   const handleSubmit = async (message: PromptInputMessage) => {
@@ -224,11 +221,6 @@ export default function ChatPage() {
     )
     setText('')
   }
-
-  // Sync messages for debug store
-  useEffect(() => {
-    setDebugMessages(messages)
-  }, [messages, setDebugMessages])
 
   return (
     <SidebarInset className='h-screen flex flex-col'>
@@ -273,124 +265,116 @@ export default function ChatPage() {
                   description='Type a message below to begin'
                 />
               ) : (
-                messages.map((message, messageIndex) => (
-                  <MessageComponent key={message.id} from={message.role}>
-                    {/*Attachments*/}
-                    {message.parts.filter((part) => part.type === 'file')
-                      .length > 0 && (
-                      <Attachments className='mb-2' variant='grid'>
-                        {message.parts
-                          .filter((part) => part.type === 'file')
-                          .map((attachment) => (
+                messages.map((message, messageIndex) => {
+                  const fileParts = message.parts.filter(
+                    (part) => part.type === 'file',
+                  )
+                  const sourceParts = message.parts.filter(
+                    (part) => part.type === 'source-url',
+                  )
+                  return (
+                    <MessageComponent key={message.id} from={message.role}>
+                      {/*Attachments*/}
+                      {fileParts.length > 0 && (
+                        <Attachments className='mb-2' variant='grid'>
+                          {fileParts.map((attachment) => (
                             // @ts-expect-error
                             <Attachment data={attachment} key={attachment.url}>
                               <AttachmentPreview />
                             </Attachment>
                           ))}
-                      </Attachments>
-                    )}
-                    {/*Sources*/}
-                    {message.role === 'assistant' &&
-                      message.parts.filter((part) => part.type === 'source-url')
-                        .length > 0 && (
-                        <Sources>
-                          <SourcesTrigger
-                            count={
-                              message.parts.filter(
-                                (part) => part.type === 'source-url',
-                              ).length
-                            }
-                          />
-                          {message.parts
-                            .filter((part) => part.type === 'source-url')
-                            .map((part, i) => (
-                              <SourcesContent key={`${message.id}-${i}`}>
-                                <Source
-                                  key={`${message.id}-${i}`}
-                                  href={part.url}
-                                  title={part.url}
-                                />
+                        </Attachments>
+                      )}
+                      {/*Sources*/}
+                      {message.role === 'assistant' &&
+                        sourceParts.length > 0 && (
+                          <Sources>
+                            <SourcesTrigger count={sourceParts.length} />
+                            {sourceParts.map((part) => (
+                              <SourcesContent key={part.url}>
+                                <Source href={part.url} title={part.url} />
                               </SourcesContent>
                             ))}
-                        </Sources>
-                      )}
-                    <MessageContent>
-                      {message.parts.map((part, i) => {
-                        switch (part.type) {
-                          case 'text': {
-                            const isLastMessage =
-                              messageIndex === messages.length - 1
-                            return (
-                              <Fragment key={`${message.id}-${i}`}>
-                                <MessageResponse>{part.text}</MessageResponse>
-                                {message.role === 'assistant' &&
-                                  isLastMessage && (
-                                    <MessageActions>
-                                      <MessageAction
-                                        onClick={() => {}}
-                                        label='Retry'
-                                      >
-                                        <RefreshCcwIcon className='size-3' />
-                                      </MessageAction>
-                                      <MessageAction
-                                        onClick={() =>
-                                          navigator.clipboard.writeText(
-                                            part.text,
-                                          )
-                                        }
-                                        label='Copy'
-                                      >
-                                        <CopyIcon className='size-3' />
-                                      </MessageAction>
-                                    </MessageActions>
-                                  )}
-                              </Fragment>
-                            )
-                          }
-                          case 'reasoning':
-                            return (
-                              <Reasoning
-                                key={`${message.id}-${i}`}
-                                className='w-full'
-                                isStreaming={
-                                  status === 'streaming' &&
-                                  i === message.parts.length - 1 &&
-                                  message.id === messages.at(-1)?.id
-                                }
-                              >
-                                <ReasoningTrigger />
-                                <ReasoningContent>{part.text}</ReasoningContent>
-                              </Reasoning>
-                            )
-                          case 'tool-getWeather':
-                            return (
-                              <Tool
-                                key={part.toolCallId || `${message.id}-${i}`}
-                              >
-                                <ToolHeader
-                                  type={part.type}
-                                  state={part.state}
-                                />
-                                <ToolContent>
-                                  <ToolInput input={part.input} />
-                                  <ToolOutput
-                                    output={JSON.stringify(
-                                      part.output,
-                                      null,
-                                      2,
+                          </Sources>
+                        )}
+                      <MessageContent>
+                        {message.parts.map((part) => {
+                          switch (part.type) {
+                            case 'text': {
+                              const isLastMessage =
+                                messageIndex === messages.length - 1
+                              return (
+                                <Fragment key={`${message.id}-text`}>
+                                  <MessageResponse>{part.text}</MessageResponse>
+                                  {message.role === 'assistant' &&
+                                    isLastMessage && (
+                                      <MessageActions>
+                                        <MessageAction
+                                          onClick={() => {}}
+                                          label='Retry'
+                                        >
+                                          <RefreshCcwIcon className='size-3' />
+                                        </MessageAction>
+                                        <MessageAction
+                                          onClick={() =>
+                                            navigator.clipboard.writeText(
+                                              part.text,
+                                            )
+                                          }
+                                          label='Copy'
+                                        >
+                                          <CopyIcon className='size-3' />
+                                        </MessageAction>
+                                      </MessageActions>
                                     )}
-                                    errorText={part.errorText}
+                                </Fragment>
+                              )
+                            }
+                            case 'reasoning':
+                              return (
+                                <Reasoning
+                                  key={`${message.id}-reasoning`}
+                                  className='w-full'
+                                  isStreaming={
+                                    status === 'streaming' &&
+                                    message.parts.at(-1) === part &&
+                                    message.id === messages.at(-1)?.id
+                                  }
+                                >
+                                  <ReasoningTrigger />
+                                  <ReasoningContent>
+                                    {part.text}
+                                  </ReasoningContent>
+                                </Reasoning>
+                              )
+                            case 'tool-getWeather':
+                              return (
+                                <Tool key={part.toolCallId}>
+                                  <ToolHeader
+                                    type={part.type}
+                                    state={part.state}
                                   />
-                                </ToolContent>
-                              </Tool>
-                            )
-                          default:
-                            return null
-                        }
-                      })}
-                    </MessageContent>
-                  </MessageComponent>
-                ))
+                                  <ToolContent>
+                                    <ToolInput input={part.input} />
+                                    <ToolOutput
+                                      output={JSON.stringify(
+                                        part.output,
+                                        null,
+                                        2,
+                                      )}
+                                      errorText={part.errorText}
+                                    />
+                                  </ToolContent>
+                                </Tool>
+                              )
+                            default:
+                              return null
+                          }
+                        })}
+                      </MessageContent>
+                    </MessageComponent>
+                  )
+                })
               )}
               {status === 'submitted' && <Loader />}
             </ConversationContent>

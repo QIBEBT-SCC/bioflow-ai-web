@@ -34,7 +34,7 @@ export function ImageCard({ image }: ImageCardProps) {
       <CardHeader>
         <div className='flex items-start justify-between gap-2 mb-2'>
           <div className='flex items-center gap-2 min-w-0'>
-            <PackageIcon className='h-5 w-5 text-primary shrink-0' />
+            <PackageIcon className='size-5 text-primary shrink-0' />
             <CardTitle className='text-lg truncate'>
               <Link
                 href={`/image/${image.uid}`}
@@ -78,7 +78,7 @@ export function ImageCard({ image }: ImageCardProps) {
                 rel='noopener noreferrer'
                 className='flex items-center justify-center gap-1.5'
               >
-                <ExternalLinkIcon className='h-3.5 w-3.5' />
+                <ExternalLinkIcon className='size-3.5' />
                 <span>Homepage</span>
               </a>
             </Button>
@@ -96,7 +96,7 @@ export function ImageCard({ image }: ImageCardProps) {
                 rel='noopener noreferrer'
                 className='flex items-center justify-center gap-1.5'
               >
-                <FileTextIcon className='h-3.5 w-3.5' />
+                <FileTextIcon className='size-3.5' />
                 <span>Paper</span>
               </a>
             </Button>

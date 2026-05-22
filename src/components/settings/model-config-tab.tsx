@@ -155,7 +155,7 @@ export function ModelConfigTab() {
       <div className='flex items-center justify-between mb-4'>
         <h3 className='text-lg font-semibold'>{t('current_config_title')}</h3>
         <Button variant='outline' onClick={() => setIsEditing(true)}>
-          <SettingsIcon className='h-4 w-4 mr-2' />
+          <SettingsIcon className='size-4 mr-2' />
           {tSetting('edit')}
         </Button>
       </div>

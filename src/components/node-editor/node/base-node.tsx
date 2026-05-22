@@ -8,13 +8,7 @@ import {
   Loader2Icon,
   XCircleIcon,
 } from 'lucide-react'
-import React, {
-  forwardRef,
-  type HTMLAttributes,
-  memo,
-  useCallback,
-  useMemo,
-} from 'react'
+import React, { type HTMLAttributes, memo, useCallback, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Sheet,
@@ -111,7 +105,7 @@ const BaseNode = memo(function BaseNode({
                   type='target'
                   position={Position.Left}
                   className={cn(
-                    '!left-3 h-2.5 w-2.5 rounded-full border !border-border !bg-background shadow-xs transition-all duration-200',
+                    '!left-3 size-2.5 rounded-full border !border-border !bg-background shadow-xs transition-all duration-200',
                     'hover:!border-primary/50 hover:!bg-primary/10 hover:!scale-110',
                     isConnected(`${nodeId}-in-${input.name}`) &&
                       '!border-teal-500 !bg-teal-100',
@@ -147,7 +141,7 @@ const BaseNode = memo(function BaseNode({
                   type='source'
                   position={Position.Right}
                   className={cn(
-                    '!right-3 h-2.5 w-2.5 rounded-full border border-border !bg-background shadow-xs transition-all duration-200',
+                    '!right-3 size-2.5 rounded-full border border-border !bg-background shadow-xs transition-all duration-200',
                     'hover:!border-primary/50 hover:!bg-primary/10 hover:!scale-110',
                     isConnected(`${nodeId}-out-${output.name}`) &&
                       '!border-indigo-500 !bg-indigo-100',
@@ -178,7 +172,7 @@ const BaseNode = memo(function BaseNode({
         <Sheet>
           <SheetTrigger asChild>
             <Button className='text-muted-foreground/70 transition-colors !bg-transparent hover:text-foreground'>
-              <InfoIcon className='h-3.5 w-3.5' />
+              <InfoIcon className='size-3.5' />
             </Button>
           </SheetTrigger>
           <SheetContent>
@@ -205,24 +199,25 @@ const BaseNode = memo(function BaseNode({
   )
 })
 
-const NodeCard = memo(
-  forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
-    ({ className, ...props }, ref) => (
-      <div
-        ref={ref}
-        className={cn(
-          'relative min-h-[150px] w-[300px] font-sans',
-          'rounded-xl border-x border-b border-border bg-white shadow-sm transition-shadow duration-200',
-          'hover:shadow-md',
-          // 选中样式优化：使用高对比度的中性色 ring + shadow，不改变 border 颜色
-          '[&.selected]:ring-1 [&.selected]:ring-foreground [&.selected]:shadow-lg',
-          className,
-        )}
-        {...props}
-      />
-    ),
-  ),
-)
+const NodeCard = memo(function NodeCard({
+  className,
+  ref,
+  ...props
+}: HTMLAttributes<HTMLDivElement> & { ref?: React.Ref<HTMLDivElement> }) {
+  return (
+    <div
+      ref={ref}
+      className={cn(
+        'relative min-h-[150px] w-[300px] font-sans',
+        'rounded-xl border-x border-b border-border bg-white shadow-sm transition-shadow duration-200',
+        'hover:shadow-md',
+        '[&.selected]:ring-1 [&.selected]:ring-foreground [&.selected]:shadow-lg',
+        className,
+      )}
+      {...props}
+    />
+  )
+})
 
 const NodeCardHeader = memo(function NodeCardHeader({
   className,
@@ -318,7 +313,7 @@ const RunStatusBar = memo(function RunStatusBar({
       <div className='flex items-center gap-1.5 font-medium'>
         <Icon
           className={cn(
-            'h-3 w-3',
+            'size-3',
             runData.status === Status.RUNNING && 'animate-spin',
           )}
         />

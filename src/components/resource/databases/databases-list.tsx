@@ -38,13 +38,13 @@ export function DatabasesList({
 
   const handlePrevPage = () => {
     if (offset > 0) {
-      setOffset(offset - pageSize)
+      setOffset((prev) => prev - pageSize)
     }
   }
 
   const handleNextPage = () => {
     if (offset + pageSize < totalCount) {
-      setOffset(offset + pageSize)
+      setOffset((prev) => prev + pageSize)
     }
   }
 
@@ -90,7 +90,7 @@ export function DatabasesList({
                   onClick={handlePrevPage}
                   disabled={offset === 0}
                 >
-                  <ChevronLeftIcon className='h-4 w-4' />
+                  <ChevronLeftIcon className='size-4' />
                   上一页
                 </Button>
                 <Button
@@ -100,7 +100,7 @@ export function DatabasesList({
                   disabled={offset + pageSize >= totalCount}
                 >
                   下一页
-                  <ChevronRightIcon className='h-4 w-4' />
+                  <ChevronRightIcon className='size-4' />
                 </Button>
               </div>
             </div>

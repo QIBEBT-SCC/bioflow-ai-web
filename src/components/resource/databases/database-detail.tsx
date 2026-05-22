@@ -56,7 +56,7 @@ export function DatabaseDetail({ databaseId, onDelete }: DatabaseDetailProps) {
     <div className='space-y-4'>
       <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
         <div>
-          <h2 className='text-2xl font-bold'>{database.name}</h2>
+          <h2 className='text-2xl font-semibold'>{database.name}</h2>
         </div>
         <div className='flex gap-2'>
           <Button
@@ -64,7 +64,7 @@ export function DatabaseDetail({ databaseId, onDelete }: DatabaseDetailProps) {
             onClick={() => setIsDeleteDialogOpen(true)}
             disabled={deleteMutation.isPending}
           >
-            <Trash2Icon className='mr-2 h-4 w-4' />
+            <Trash2Icon className='mr-2 size-4' />
             {deleteMutation.isPending ? '删除中...' : '删除'}
           </Button>
         </div>

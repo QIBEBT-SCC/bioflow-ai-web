@@ -37,8 +37,10 @@ export default function LLMSettingPage() {
         <div className='container mx-auto px-6 py-8 max-w-7xl space-y-8'>
           <div className='mb-8'>
             <div className='flex items-center gap-3 mb-2'>
-              <SettingsIcon className='h-8 w-8 text-primary' />
-              <h1 className='text-4xl font-bold text-balance'>{t('title')}</h1>
+              <SettingsIcon className='size-8 text-primary' />
+              <h1 className='text-4xl font-semibold text-balance'>
+                {t('title')}
+              </h1>
             </div>
             <p className='text-muted-foreground text-pretty'>
               {t('description')}

@@ -15,7 +15,7 @@ export function TagList() {
     <aside className='w-full md:w-64 shrink-0'>
       <div className='sticky top-6 space-y-6'>
         <div className='flex items-center'>
-          <TagIcon className='h-4 w-4 mr-1' />
+          <TagIcon className='size-4 mr-1' />
           <h2 className='text-lg font-medium'>标签</h2>
         </div>
 

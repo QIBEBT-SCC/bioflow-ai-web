@@ -22,6 +22,72 @@ import {
 import { useToolNodeStore } from '@/stores/toolStore'
 import type { SimpleToolInfo, ToolGroup } from '@/types/tool'
 
+function getGroupPath(
+  currentGroupId: number | undefined,
+  allGroups: ToolGroup[],
+): ToolGroup[] {
+  if (!currentGroupId) return []
+  const groupById = new Map(allGroups.map((g) => [g.id, g]))
+  const path: ToolGroup[] = []
+  const currentGroup = groupById.get(currentGroupId)
+  if (!currentGroup) return path
+  let group = currentGroup
+  path.unshift(group)
+  while (group.parent_id !== undefined && group.parent_id !== null) {
+    const parentGroup = groupById.get(group.parent_id)
+    if (!parentGroup) break
+    path.unshift(parentGroup)
+    group = parentGroup
+  }
+  return path
+}
+
+function GroupBreadcrumbs({
+  currentGroupId,
+  allGroups,
+  onNavigate,
+}: {
+  currentGroupId: number | undefined
+  allGroups: ToolGroup[]
+  onNavigate: (id: number | undefined) => void
+}) {
+  const path = getGroupPath(currentGroupId, allGroups)
+  if (path.length === 0) return null
+  return (
+    <Breadcrumb>
+      <BreadcrumbList>
+        <BreadcrumbItem>
+          <BreadcrumbLink asChild>
+            <button
+              type='button'
+              onClick={() => onNavigate(undefined)}
+              className='hover:text-gray-900 whitespace-nowrap font-medium bg-transparent border-none p-0 m-0'
+            >
+              全部
+            </button>
+          </BreadcrumbLink>
+        </BreadcrumbItem>
+        {path.map((group) => (
+          <div key={group.id} className='flex items-center'>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <button
+                  type='button'
+                  onClick={() => onNavigate(group.id)}
+                  className='hover:text-gray-900 whitespace-nowrap bg-transparent border-none p-0 m-0'
+                >
+                  {group.name}
+                </button>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+          </div>
+        ))}
+      </BreadcrumbList>
+    </Breadcrumb>
+  )
+}
+
 interface ToolMenuProps {
   isOpen: boolean
   onClose: () => void
@@ -41,7 +107,7 @@ const ToolSkeleton = () => (
 const GroupSkeleton = () => (
   <div className='w-full p-2 rounded flex justify-between items-center'>
     <Skeleton className='h-5 w-3/4' />
-    <Skeleton className='h-4 w-4 rounded-full' />
+    <Skeleton className='size-4 rounded-full' />
   </div>
 )
 
@@ -72,76 +138,13 @@ export const ToolMenu: React.FC<ToolMenuProps> = ({
     return allGroups.filter((group) => group.parent_id === parentId)
   }
 
-  // 递归查找分组路径
-  function getGroupPath(
-    currentGroupId: number | undefined,
-    allGroups: ToolGroup[],
-  ): ToolGroup[] {
-    if (!currentGroupId) return []
-    const path: ToolGroup[] = []
-    const currentGroup = allGroups.find((g) => g.id === currentGroupId)
-    if (!currentGroup) return path
-
-    let group = currentGroup
-    path.unshift(group)
-
-    while (group.parent_id !== undefined && group.parent_id !== null) {
-      const parentGroup = allGroups.find((g) => g.id === group.parent_id)
-      if (!parentGroup) break
-      path.unshift(parentGroup)
-      group = parentGroup
-    }
-
-    return path
-  }
-
-  // 处理分组选择
   const handleGroupSelect = (groupId: number) => {
     setCurrentGroupId(groupId)
   }
 
-  // 处理工具选择
   const handleToolSelect = (tool: SimpleToolInfo) => {
     onSelectTool('tool', String(tool.uid))
     onClose()
-  }
-
-  const renderBreadcrumbs = () => {
-    const path = getGroupPath(currentGroupId, allGroups)
-    if (path.length === 0) return null
-    return (
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <button
-                type='button'
-                onClick={() => setCurrentGroupId(undefined)}
-                className='hover:text-gray-900 whitespace-nowrap font-medium bg-transparent border-none p-0 m-0'
-              >
-                全部
-              </button>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          {path.map((group) => (
-            <div key={group.id} className='flex items-center'>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <button
-                    type='button'
-                    onClick={() => setCurrentGroupId(group.id)}
-                    className='hover:text-gray-900 whitespace-nowrap bg-transparent border-none p-0 m-0'
-                  >
-                    {group.name}
-                  </button>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-            </div>
-          ))}
-        </BreadcrumbList>
-      </Breadcrumb>
-    )
   }
 
   if (!isOpen) return null
@@ -158,14 +161,14 @@ export const ToolMenu: React.FC<ToolMenuProps> = ({
             onClick={onClose}
             className='rounded-full'
           >
-            <XIcon className='h-5 w-5' />
+            <XIcon className='size-5' />
           </Button>
         </div>
 
         {/* 搜索框 */}
         <div className='p-4 border-b shrink-0'>
           <div className='relative'>
-            <SearchIcon className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5' />
+            <SearchIcon className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 size-5' />
             <Input
               type='text'
               placeholder='搜索工具...'
@@ -177,10 +180,10 @@ export const ToolMenu: React.FC<ToolMenuProps> = ({
               <Button
                 variant='ghost'
                 size='icon'
-                className='absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8'
+                className='absolute right-1 top-1/2 transform -translate-y-1/2 size-8'
                 onClick={() => setSearchQuery('')}
               >
-                <XIcon className='h-4 w-4' />
+                <XIcon className='size-4' />
               </Button>
             )}
           </div>
@@ -206,13 +209,17 @@ export const ToolMenu: React.FC<ToolMenuProps> = ({
                             onClick={() => handleGroupSelect(group.id)}
                           >
                             <span>{group.name}</span>
-                            <ChevronRightIcon className='h-4 w-4' />
+                            <ChevronRightIcon className='size-4' />
                           </Button>
                         ))}
                   </div>
                 ) : (
                   <div className='space-y-2'>
-                    {renderBreadcrumbs()}
+                    <GroupBreadcrumbs
+                      currentGroupId={currentGroupId}
+                      allGroups={allGroups}
+                      onNavigate={setCurrentGroupId}
+                    />
                     <div className='mt-4 space-y-2'>
                       {loadingGroups
                         ? ['c1', 'c2', 'c3'].map((id) => (
@@ -226,7 +233,7 @@ export const ToolMenu: React.FC<ToolMenuProps> = ({
                               onClick={() => handleGroupSelect(group.id)}
                             >
                               <span>{group.name}</span>
-                              <ChevronRightIcon className='h-4 w-4' />
+                              <ChevronRightIcon className='size-4' />
                             </Button>
                           ))}
                     </div>

@@ -53,7 +53,7 @@ const Copy2FolderCard = memo(function Copy2FolderCard() {
     }
   }, [nodeData?.data.folder_name])
 
-  const handleBlur = useCallback(() => {
+  const saveNodeData = useCallback(() => {
     updateNodeData(nodeId, { folder_name })
   }, [nodeId, folder_name, updateNodeData])
 
@@ -65,7 +65,7 @@ const Copy2FolderCard = memo(function Copy2FolderCard() {
         placeholder='Enter folder name...'
         value={folder_name}
         onChange={(e) => setFolderName(e.target.value)}
-        onBlur={handleBlur}
+        onBlur={saveNodeData}
         spellCheck={false}
         disabled={readOnly}
       />
@@ -145,7 +145,7 @@ const RenameFileCard = memo(function RenameFileCard() {
     }
   }, [nodeData?.data.new_file_name])
 
-  const handleBlur = useCallback(() => {
+  const saveNodeData = useCallback(() => {
     updateNodeData(nodeId, { new_file_name: newFileName })
   }, [nodeId, newFileName, updateNodeData])
 
@@ -157,7 +157,7 @@ const RenameFileCard = memo(function RenameFileCard() {
         placeholder='Enter new file name...'
         value={newFileName}
         onChange={(e) => setNewFileName(e.target.value)}
-        onBlur={handleBlur}
+        onBlur={saveNodeData}
         spellCheck={false}
         disabled={readOnly}
       />
@@ -225,7 +225,7 @@ const GlobalFileCard = memo(function GlobalFileCard() {
     }
   }, [nodeData?.data.description])
 
-  const handleBlur = useCallback(() => {
+  const saveNodeData = useCallback(() => {
     updateNodeData(nodeId, {
       mark_name: mark_name,
       description: description,
@@ -240,7 +240,7 @@ const GlobalFileCard = memo(function GlobalFileCard() {
         placeholder='Enter arguments here...'
         value={mark_name}
         onChange={(e) => setMarkName(e.target.value)}
-        onBlur={handleBlur}
+        onBlur={saveNodeData}
         spellCheck={false}
         disabled={readOnly}
       />
@@ -250,7 +250,7 @@ const GlobalFileCard = memo(function GlobalFileCard() {
         placeholder='Enter arguments here...'
         value={description}
         onChange={(e) => setDescription(e.target.value)}
-        onBlur={handleBlur}
+        onBlur={saveNodeData}
         spellCheck={false}
         disabled={readOnly}
       />
@@ -302,7 +302,7 @@ const SelectFileInFolderCard = memo(function SelectFileInFolderCard() {
     }
   }, [nodeData?.data.file_name])
 
-  const handleBlur = useCallback(() => {
+  const saveNodeData = useCallback(() => {
     updateNodeData(nodeId, { file_name })
   }, [nodeId, file_name, updateNodeData])
 
@@ -314,7 +314,7 @@ const SelectFileInFolderCard = memo(function SelectFileInFolderCard() {
         placeholder='Enter file name...'
         value={file_name}
         onChange={(e) => setFileName(e.target.value)}
-        onBlur={handleBlur}
+        onBlur={saveNodeData}
         spellCheck={false}
         disabled={readOnly}
       />
@@ -396,7 +396,7 @@ const LlmValueOutputCard = memo(function LlmValueOutputCard() {
     }
   }, [nodeData?.data.value_type])
 
-  const handleBlur = useCallback(() => {
+  const saveNodeData = useCallback(() => {
     updateNodeData(nodeId, { prompt, value_name, value_type })
   }, [nodeId, prompt, value_name, value_type, updateNodeData])
 
@@ -416,7 +416,7 @@ const LlmValueOutputCard = memo(function LlmValueOutputCard() {
         placeholder='Enter prompt...'
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
-        onBlur={handleBlur}
+        onBlur={saveNodeData}
         spellCheck={false}
         disabled={readOnly}
       />
@@ -426,7 +426,7 @@ const LlmValueOutputCard = memo(function LlmValueOutputCard() {
         placeholder='Enter value name...'
         value={value_name}
         onChange={(e) => setValueName(e.target.value)}
-        onBlur={handleBlur}
+        onBlur={saveNodeData}
         spellCheck={false}
         disabled={readOnly}
       />
@@ -491,7 +491,7 @@ const BindParamCard = memo(function BindParamCard() {
     }
   }, [nodeData?.data.parameter])
 
-  const handleBlur = useCallback(() => {
+  const saveNodeData = useCallback(() => {
     updateNodeData(nodeId, { parameter })
   }, [nodeId, parameter, updateNodeData])
 
@@ -503,7 +503,7 @@ const BindParamCard = memo(function BindParamCard() {
         placeholder='Enter parameter...'
         value={parameter}
         onChange={(e) => setParameter(e.target.value)}
-        onBlur={handleBlur}
+        onBlur={saveNodeData}
         spellCheck={false}
         disabled={readOnly}
       />

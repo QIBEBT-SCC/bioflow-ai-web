@@ -1,7 +1,7 @@
 'use client'
 
 import { CheckCircle2, Download, FlaskConical } from 'lucide-react'
-import { useState } from 'react'
+import { useReducer } from 'react'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
@@ -24,22 +24,62 @@ interface GenomeDownloadDialogProps {
   onOpenChange: (open: boolean) => void
 }
 
+type DlState = {
+  tab: 'name' | 'taxid'
+  speciesName: string
+  ncbiTaxId: string
+  selectedIndexes: string[]
+  result: GenomeDownloadResponse | null
+}
+type DlAction =
+  | { type: 'SET_TAB'; value: 'name' | 'taxid' }
+  | { type: 'SET_SPECIES'; value: string }
+  | { type: 'SET_TAXID'; value: string }
+  | { type: 'TOGGLE_INDEX'; field: string }
+  | { type: 'SET_RESULT'; value: GenomeDownloadResponse }
+  | { type: 'RESET' }
+
+const INITIAL_DL: DlState = {
+  tab: 'name',
+  speciesName: '',
+  ncbiTaxId: '',
+  selectedIndexes: [],
+  result: null,
+}
+
+function dlReducer(state: DlState, action: DlAction): DlState {
+  switch (action.type) {
+    case 'SET_TAB':
+      return { ...state, tab: action.value }
+    case 'SET_SPECIES':
+      return { ...state, speciesName: action.value }
+    case 'SET_TAXID':
+      return { ...state, ncbiTaxId: action.value }
+    case 'TOGGLE_INDEX':
+      return {
+        ...state,
+        selectedIndexes: state.selectedIndexes.includes(action.field)
+          ? state.selectedIndexes.filter((f) => f !== action.field)
+          : [...state.selectedIndexes, action.field],
+      }
+    case 'SET_RESULT':
+      return { ...state, result: action.value }
+    case 'RESET':
+      return INITIAL_DL
+  }
+}
+
 export function GenomeDownloadDialog({
   open,
   onOpenChange,
 }: GenomeDownloadDialogProps) {
-  const [tab, setTab] = useState<'name' | 'taxid'>('name')
-  const [speciesName, setSpeciesName] = useState('')
-  const [ncbiTaxId, setNcbiTaxId] = useState('')
-  const [selectedIndexes, setSelectedIndexes] = useState<string[]>([])
-  const [result, setResult] = useState<GenomeDownloadResponse | null>(null)
+  const [{ tab, speciesName, ncbiTaxId, selectedIndexes, result }, dispatch] =
+    useReducer(dlReducer, INITIAL_DL)
 
   const downloadMutation = useDownloadGenome()
 
   const toggleIndex = (field: string) => {
-    setSelectedIndexes((prev) =>
-      prev.includes(field) ? prev.filter((f) => f !== field) : [...prev, field],
-    )
+    dispatch({ type: 'TOGGLE_INDEX', field })
   }
 
   const handleSubmit = () => {
@@ -50,7 +90,7 @@ export function GenomeDownloadDialog({
 
     downloadMutation.mutate(data, {
       onSuccess: (resp) => {
-        setResult(resp)
+        dispatch({ type: 'SET_RESULT', value: resp })
       },
     })
   }
@@ -59,10 +99,7 @@ export function GenomeDownloadDialog({
     onOpenChange(false)
     // 延迟重置，避免关闭动画闪烁
     setTimeout(() => {
-      setSpeciesName('')
-      setNcbiTaxId('')
-      setSelectedIndexes([])
-      setResult(null)
+      dispatch({ type: 'RESET' })
     }, 300)
   }
 
@@ -83,7 +120,7 @@ export function GenomeDownloadDialog({
       <DialogContent className='sm:max-w-[520px]'>
         <DialogHeader>
           <DialogTitle className='flex items-center gap-2'>
-            <Download className='h-5 w-5' />
+            <Download className='size-5' />
             下载参考基因组
           </DialogTitle>
           <DialogDescription>
@@ -96,7 +133,7 @@ export function GenomeDownloadDialog({
           /* 成功结果展示 */
           <div className='py-4 space-y-4'>
             <div className='flex items-start gap-3 p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20'>
-              <CheckCircle2 className='h-5 w-5 text-emerald-500 shrink-0 mt-0.5' />
+              <CheckCircle2 className='size-5 text-emerald-500 shrink-0 mt-0.5' />
               <div>
                 <div className='font-medium text-sm text-emerald-700 dark:text-emerald-400'>
                   {result.task_id ? '下载任务已提交' : '基因组已存在'}
@@ -132,7 +169,7 @@ export function GenomeDownloadDialog({
                     </code>
                   ) : (
                     <span className='text-muted-foreground text-xs'>
-                      —（无需下载）
+                      （无需下载）
                     </span>
                   )}
                 </dd>
@@ -144,7 +181,9 @@ export function GenomeDownloadDialog({
           <div className='py-2 space-y-5'>
             <Tabs
               value={tab}
-              onValueChange={(v) => setTab(v as 'name' | 'taxid')}
+              onValueChange={(v) =>
+                dispatch({ type: 'SET_TAB', value: v as 'name' | 'taxid' })
+              }
             >
               <TabsList className='w-full'>
                 <TabsTrigger value='name' className='flex-1'>
@@ -158,13 +197,15 @@ export function GenomeDownloadDialog({
                 <div className='space-y-1.5'>
                   <Label htmlFor='species-name'>物种名称</Label>
                   <div className='relative'>
-                    <FlaskConical className='absolute left-3 top-2.5 h-4 w-4 text-muted-foreground' />
+                    <FlaskConical className='absolute left-3 top-2.5 size-4 text-muted-foreground' />
                     <Input
                       id='species-name'
                       className='pl-9'
                       placeholder='如：Homo sapiens、zebrafish、mouse'
                       value={speciesName}
-                      onChange={(e) => setSpeciesName(e.target.value)}
+                      onChange={(e) =>
+                        dispatch({ type: 'SET_SPECIES', value: e.target.value })
+                      }
                       disabled={downloadMutation.isPending}
                     />
                   </div>
@@ -181,7 +222,9 @@ export function GenomeDownloadDialog({
                     type='number'
                     placeholder='如：9606（人类）、10090（小鼠）'
                     value={ncbiTaxId}
-                    onChange={(e) => setNcbiTaxId(e.target.value)}
+                    onChange={(e) =>
+                      dispatch({ type: 'SET_TAXID', value: e.target.value })
+                    }
                     disabled={downloadMutation.isPending}
                   />
                   <p className='text-xs text-muted-foreground'>
@@ -242,7 +285,7 @@ export function GenomeDownloadDialog({
                 onClick={handleSubmit}
                 disabled={!isValid || downloadMutation.isPending}
               >
-                <Download className='h-4 w-4 mr-1.5' />
+                <Download className='size-4 mr-1.5' />
                 {downloadMutation.isPending ? '查询 NCBI 中...' : '开始下载'}
               </Button>
             </>

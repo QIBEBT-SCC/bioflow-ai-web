@@ -12,7 +12,7 @@ import {
   Trash2Icon,
   XIcon,
 } from 'lucide-react'
-import { useState } from 'react'
+import { useReducer, useState } from 'react'
 import { toast } from 'sonner'
 import {
   AlertDialog,
@@ -49,14 +49,52 @@ import {
 } from '@/hooks/use-workflow'
 import { useNodeEditorStore } from '@/stores/nodeviewStore'
 
+type InteractionState = {
+  deletingUid: string | null
+  renamingUid: string | null
+  renameValue: string
+}
+
+type InteractionAction =
+  | { type: 'START_RENAME'; uid: string; name: string }
+  | { type: 'SET_RENAME_VALUE'; value: string }
+  | { type: 'CANCEL_RENAME' }
+  | { type: 'START_DELETE'; uid: string }
+  | { type: 'CANCEL_DELETE' }
+
+const INITIAL_INTERACTION: InteractionState = {
+  deletingUid: null,
+  renamingUid: null,
+  renameValue: '',
+}
+
+function interactionReducer(
+  state: InteractionState,
+  action: InteractionAction,
+): InteractionState {
+  switch (action.type) {
+    case 'START_RENAME':
+      return { ...state, renamingUid: action.uid, renameValue: action.name }
+    case 'SET_RENAME_VALUE':
+      return { ...state, renameValue: action.value }
+    case 'CANCEL_RENAME':
+      return { ...state, renamingUid: null, renameValue: '' }
+    case 'START_DELETE':
+      return { ...state, deletingUid: action.uid }
+    case 'CANCEL_DELETE':
+      return { ...state, deletingUid: null }
+  }
+}
+
 export function LoadWorkflowDialog() {
   const [open, setOpen] = useState(false)
   const [page, setPage] = useState(0)
   const pageSize = 8
 
-  const [deletingUid, setDeletingUid] = useState<string | null>(null)
-  const [renamingUid, setRenamingUid] = useState<string | null>(null)
-  const [renameValue, setRenameValue] = useState('')
+  const [{ deletingUid, renamingUid, renameValue }, dispatch] = useReducer(
+    interactionReducer,
+    INITIAL_INTERACTION,
+  )
 
   const { currentWorkflowUid, setCurrentWorkflowUid } = useNodeEditorStore()
   const { data: workflows = [], isLoading } = useWorkflows(page * pageSize)
@@ -73,8 +111,7 @@ export function LoadWorkflowDialog() {
   }
 
   const handleRenameStart = (uid: string, currentName: string) => {
-    setRenamingUid(uid)
-    setRenameValue(currentName)
+    dispatch({ type: 'START_RENAME', uid, name: currentName })
   }
 
   const handleRenameConfirm = async () => {
@@ -83,7 +120,7 @@ export function LoadWorkflowDialog() {
       uid: renamingUid,
       data: { name: renameValue.trim() },
     })
-    setRenamingUid(null)
+    dispatch({ type: 'CANCEL_RENAME' })
   }
 
   const handleDeleteConfirm = async () => {
@@ -92,7 +129,7 @@ export function LoadWorkflowDialog() {
     if (deletingUid === currentWorkflowUid) {
       setCurrentWorkflowUid('')
     }
-    setDeletingUid(null)
+    dispatch({ type: 'CANCEL_DELETE' })
   }
 
   return (
@@ -100,7 +137,7 @@ export function LoadWorkflowDialog() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           <Button variant='ghost' size='sm'>
-            <FolderOpenIcon className='h-4 w-4 mr-2' />
+            <FolderOpenIcon className='size-4 mr-2' />
             加载
           </Button>
         </DialogTrigger>
@@ -108,7 +145,7 @@ export function LoadWorkflowDialog() {
           <DialogHeader className='shrink-0'>
             <div className='flex items-center gap-2'>
               <div className='p-2 bg-primary/10 rounded-full'>
-                <FolderOpenIcon className='h-5 w-5 text-primary' />
+                <FolderOpenIcon className='size-5 text-primary' />
               </div>
               <DialogTitle>加载工作流</DialogTitle>
             </div>
@@ -120,11 +157,11 @@ export function LoadWorkflowDialog() {
           <div className='flex flex-col min-h-0 flex-1 gap-3 overflow-hidden'>
             {isLoading ? (
               <div className='flex items-center justify-center py-10'>
-                <Loader2Icon className='h-6 w-6 animate-spin text-muted-foreground' />
+                <Loader2Icon className='size-6 animate-spin text-muted-foreground' />
               </div>
             ) : workflows.length === 0 ? (
               <div className='flex flex-col items-center justify-center py-10 text-muted-foreground'>
-                <FileTextIcon className='h-12 w-12 mb-2 opacity-50' />
+                <FileTextIcon className='size-12 mb-2 opacity-50' />
                 <p>暂无工作流</p>
               </div>
             ) : (
@@ -144,7 +181,7 @@ export function LoadWorkflowDialog() {
                         }`}
                       >
                         <FileTextIcon
-                          className={`h-4 w-4 shrink-0 ${
+                          className={`size-4 shrink-0 ${
                             isActive ? 'text-primary' : 'text-muted-foreground'
                           }`}
                         />
@@ -154,33 +191,40 @@ export function LoadWorkflowDialog() {
                             <Input
                               className='h-7 text-sm'
                               value={renameValue}
-                              onChange={(e) => setRenameValue(e.target.value)}
+                              onChange={(e) =>
+                                dispatch({
+                                  type: 'SET_RENAME_VALUE',
+                                  value: e.target.value,
+                                })
+                              }
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter') handleRenameConfirm()
-                                if (e.key === 'Escape') setRenamingUid(null)
+                                if (e.key === 'Escape')
+                                  dispatch({ type: 'CANCEL_RENAME' })
                               }}
-                              autoFocus
                             />
                             <Button
                               size='icon'
                               variant='ghost'
-                              className='h-7 w-7 shrink-0'
+                              className='size-7 shrink-0'
                               onClick={handleRenameConfirm}
                               disabled={updateWorkflowMutation.isPending}
                             >
                               {updateWorkflowMutation.isPending ? (
-                                <Loader2Icon className='h-3.5 w-3.5 animate-spin' />
+                                <Loader2Icon className='size-3.5 animate-spin' />
                               ) : (
-                                <CheckIcon className='h-3.5 w-3.5' />
+                                <CheckIcon className='size-3.5' />
                               )}
                             </Button>
                             <Button
                               size='icon'
                               variant='ghost'
-                              className='h-7 w-7 shrink-0'
-                              onClick={() => setRenamingUid(null)}
+                              className='size-7 shrink-0'
+                              onClick={() =>
+                                dispatch({ type: 'CANCEL_RENAME' })
+                              }
                             >
-                              <XIcon className='h-3.5 w-3.5' />
+                              <XIcon className='size-3.5' />
                             </Button>
                           </div>
                         ) : (
@@ -216,10 +260,10 @@ export function LoadWorkflowDialog() {
                               <Button
                                 size='icon'
                                 variant='ghost'
-                                className='h-7 w-7 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity'
+                                className='size-7 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity'
                                 onClick={(e) => e.stopPropagation()}
                               >
-                                <MoreHorizontalIcon className='h-4 w-4' />
+                                <MoreHorizontalIcon className='size-4' />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align='end'>
@@ -228,14 +272,19 @@ export function LoadWorkflowDialog() {
                                   handleRenameStart(workflow.uid, workflow.name)
                                 }
                               >
-                                <PencilIcon className='h-4 w-4 mr-2' />
+                                <PencilIcon className='size-4 mr-2' />
                                 重命名
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 className='text-destructive'
-                                onClick={() => setDeletingUid(workflow.uid)}
+                                onClick={() =>
+                                  dispatch({
+                                    type: 'START_DELETE',
+                                    uid: workflow.uid,
+                                  })
+                                }
                               >
-                                <Trash2Icon className='h-4 w-4 mr-2' />
+                                <Trash2Icon className='size-4 mr-2' />
                                 删除
                               </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -260,7 +309,7 @@ export function LoadWorkflowDialog() {
                     onClick={() => setPage((p) => Math.max(0, p - 1))}
                     disabled={page === 0}
                   >
-                    <ChevronLeftIcon className='h-4 w-4' />
+                    <ChevronLeftIcon className='size-4' />
                   </Button>
                   <Button
                     variant='outline'
@@ -270,7 +319,7 @@ export function LoadWorkflowDialog() {
                     }
                     disabled={page >= totalPages - 1}
                   >
-                    <ChevronRightIcon className='h-4 w-4' />
+                    <ChevronRightIcon className='size-4' />
                   </Button>
                 </div>
               </div>
@@ -281,7 +330,7 @@ export function LoadWorkflowDialog() {
 
       <AlertDialog
         open={!!deletingUid}
-        onOpenChange={(open) => !open && setDeletingUid(null)}
+        onOpenChange={(open) => !open && dispatch({ type: 'CANCEL_DELETE' })}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
