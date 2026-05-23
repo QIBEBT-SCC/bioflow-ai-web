@@ -108,7 +108,6 @@ function FlowContent() {
         zIndex: nodeType === 'note' ? -10 : 20,
       }
 
-      // @ts-expect-error no need
       setNodes((prev) => [...prev, newNode])
       toast.success('节点已添加')
     },
