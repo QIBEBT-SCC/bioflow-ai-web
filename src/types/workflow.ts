@@ -21,6 +21,8 @@ export interface Workflow {
   public: boolean
   wf_type: WorkflowType
   execution_scope?: ExecutionScope
+  auto_summary: boolean
+  summary_prompt?: string | null
 }
 
 export interface SimpleWorkflowInfo {

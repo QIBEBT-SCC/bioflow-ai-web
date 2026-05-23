@@ -7,6 +7,7 @@ import {
   LayersIcon,
   LockIcon,
   SaveIcon,
+  SparklesIcon,
   TypeIcon,
 } from 'lucide-react'
 import { useReducer, useState } from 'react'
@@ -30,6 +31,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
+import { Textarea } from '@/components/ui/textarea'
 import { useSaveWorkflow } from '@/hooks/use-workflow'
 import { useNodeEditorStore } from '@/stores/nodeviewStore'
 import { ExecutionScope, WorkflowType } from '@/types/workflow'
@@ -44,12 +46,16 @@ type SaveState = {
   isPublic: boolean
   workflowType: WorkflowType
   executionScope: ExecutionScope
+  autoSummary: boolean
+  summaryPrompt: string
 }
 type SaveAction =
   | { type: 'SET_NAME'; value: string }
   | { type: 'SET_PUBLIC'; value: boolean }
   | { type: 'SET_TYPE'; value: WorkflowType }
   | { type: 'SET_SCOPE'; value: ExecutionScope }
+  | { type: 'SET_AUTO_SUMMARY'; value: boolean }
+  | { type: 'SET_SUMMARY_PROMPT'; value: string }
   | { type: 'RESET'; name?: string }
 
 const INITIAL_SAVE: SaveState = {
@@ -57,6 +63,8 @@ const INITIAL_SAVE: SaveState = {
   isPublic: false,
   workflowType: WorkflowType.TEMPLATE,
   executionScope: ExecutionScope.SAMPLE_LEVEL,
+  autoSummary: false,
+  summaryPrompt: '',
 }
 
 function saveReducer(state: SaveState, action: SaveAction): SaveState {
@@ -69,6 +77,10 @@ function saveReducer(state: SaveState, action: SaveAction): SaveState {
       return { ...state, workflowType: action.value }
     case 'SET_SCOPE':
       return { ...state, executionScope: action.value }
+    case 'SET_AUTO_SUMMARY':
+      return { ...state, autoSummary: action.value }
+    case 'SET_SUMMARY_PROMPT':
+      return { ...state, summaryPrompt: action.value }
     case 'RESET':
       return { ...INITIAL_SAVE, name: action.name ?? '' }
   }
@@ -78,8 +90,17 @@ export function SaveAsDialog({
   currentWorkflowName,
   disabled,
 }: SaveAsDialogProps) {
-  const [{ name, isPublic, workflowType, executionScope }, dispatch] =
-    useReducer(saveReducer, INITIAL_SAVE)
+  const [
+    {
+      name,
+      isPublic,
+      workflowType,
+      executionScope,
+      autoSummary,
+      summaryPrompt,
+    },
+    dispatch,
+  ] = useReducer(saveReducer, INITIAL_SAVE)
   const [open, setOpen] = useState(false)
 
   const { nodes, edges, setCurrentWorkflowUid } = useNodeEditorStore()
@@ -94,6 +115,8 @@ export function SaveAsDialog({
       public: isPublic,
       wf_type: workflowType,
       execution_scope: executionScope,
+      auto_summary: autoSummary,
+      summary_prompt: autoSummary ? summaryPrompt.trim() : '',
     }
 
     saveWorkflowMutation.mutate(workflow, {
@@ -237,6 +260,41 @@ export function SaveAsDialog({
                 </SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div className='grid gap-3'>
+            <div className='flex items-center justify-between rounded-md border p-3'>
+              <Label htmlFor='auto-summary' className='flex items-center gap-2'>
+                <SparklesIcon className='size-4 text-muted-foreground' />
+                自动总结
+              </Label>
+              <Switch
+                id='auto-summary'
+                checked={autoSummary}
+                onCheckedChange={(v) =>
+                  dispatch({
+                    type: 'SET_AUTO_SUMMARY',
+                    value: v as boolean,
+                  })
+                }
+              />
+            </div>
+
+            <div className='grid gap-2'>
+              <Label htmlFor='summary-prompt'>总结提示词</Label>
+              <Textarea
+                id='summary-prompt'
+                placeholder='输入总结提示词...'
+                value={summaryPrompt}
+                disabled={!autoSummary}
+                onChange={(e) =>
+                  dispatch({
+                    type: 'SET_SUMMARY_PROMPT',
+                    value: e.target.value,
+                  })
+                }
+              />
+            </div>
           </div>
         </div>
 

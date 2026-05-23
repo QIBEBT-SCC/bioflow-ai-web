@@ -54,6 +54,8 @@ export async function updateWorkflow(
     name?: string
     workflow?: WorkflowDefinition
     execution_scope?: ExecutionScope
+    auto_summary?: boolean
+    summary_prompt?: string | null
   },
 ): Promise<void> {
   await clientFetch(`/workflows/${uid}`, {
