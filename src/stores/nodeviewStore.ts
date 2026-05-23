@@ -10,6 +10,7 @@ import {
   type OnEdgesChange,
   type OnNodesChange,
 } from '@xyflow/react'
+import type { SetStateAction } from 'react'
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 
@@ -22,8 +23,8 @@ export interface NodeEditorStore {
   onNodesChange: OnNodesChange
   onEdgesChange: OnEdgesChange
   onConnect: OnConnect
-  setNodes: (nodes: Node[]) => void
-  setEdges: (edges: Edge[]) => void
+  setNodes: (nodes: SetStateAction<Node[]>) => void
+  setEdges: (edges: SetStateAction<Edge[]>) => void
 }
 
 export const useNodeEditorStore = create<NodeEditorStore>()(
@@ -50,10 +51,14 @@ export const useNodeEditorStore = create<NodeEditorStore>()(
         })
       },
       setNodes: (nodes) => {
-        set({ nodes })
+        set((state) => ({
+          nodes: typeof nodes === 'function' ? nodes(state.nodes) : nodes,
+        }))
       },
       setEdges: (edges) => {
-        set({ edges })
+        set((state) => ({
+          edges: typeof edges === 'function' ? edges(state.edges) : edges,
+        }))
       },
     }),
     { name: 'node-store' },

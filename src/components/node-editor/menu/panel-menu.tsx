@@ -41,6 +41,8 @@ type MenuState = {
 type MenuAction =
   | { type: 'OPEN_ANALYSIS' }
   | { type: 'OPEN_DB' }
+  | { type: 'SET_ANALYSIS_OPEN'; open: boolean }
+  | { type: 'SET_DB_OPEN'; open: boolean }
   | { type: 'SET_ACTIVE_MENU'; key: string | null }
   | { type: 'SET_ACTIVE_SUB'; key: string | null }
   | { type: 'SET_POSITION'; x: number; y: number }
@@ -60,6 +62,10 @@ function menuReducer(state: MenuState, action: MenuAction): MenuState {
       return { ...state, isAnalysisMenuOpen: true }
     case 'OPEN_DB':
       return { ...state, isDBMenuOpen: true }
+    case 'SET_ANALYSIS_OPEN':
+      return { ...state, isAnalysisMenuOpen: action.open }
+    case 'SET_DB_OPEN':
+      return { ...state, isDBMenuOpen: action.open }
     case 'SET_ACTIVE_MENU':
       return { ...state, activeMenu: action.key }
     case 'SET_ACTIVE_SUB':
@@ -218,6 +224,7 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({
                   {hasInlineSubmenu && activeMenu === key && (
                     <div
                       role='menu'
+                      tabIndex={-1}
                       className='absolute left-full top-0 bg-popover text-popover-foreground border rounded-lg shadow-lg py-1 min-w-[200px] z-[100] animate-in fade-in slide-in-from-left-1'
                       onMouseEnter={cancelClose}
                       onMouseLeave={scheduleClose}
@@ -257,6 +264,7 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({
                             {hasSubItems && activeSubItem === item.type && (
                               <div
                                 role='menu'
+                                tabIndex={-1}
                                 className='absolute left-full top-0 bg-popover text-popover-foreground border rounded-lg shadow-lg py-1 min-w-[200px] z-[110] animate-in fade-in slide-in-from-left-1'
                                 onMouseEnter={cancelSubClose}
                                 onMouseLeave={scheduleSubClose}
@@ -293,13 +301,13 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({
 
       <ToolMenu
         isOpen={isAnalysisMenuOpen}
-        onClose={() => setIsAnalysisMenuOpen(false)}
+        onClose={() => dispatch({ type: 'SET_ANALYSIS_OPEN', open: false })}
         onSelectTool={onSelectTool}
       />
 
       <DbMenu
         isOpen={isDBMenuOpen}
-        onOpenChange={setIsDBMenuOpen}
+        onOpenChange={(open) => dispatch({ type: 'SET_DB_OPEN', open })}
         onSelectDb={onSelectTool}
       />
     </>
