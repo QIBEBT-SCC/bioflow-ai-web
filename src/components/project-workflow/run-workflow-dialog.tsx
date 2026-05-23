@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Dialog,
   DialogContent,
@@ -25,6 +26,7 @@ interface RunWorkflowDialogProps {
   workflowUid: string
   workflowName: string
   executionScope: ExecutionScope
+  defaultAutoSummary: boolean
   open: boolean
   onOpenChange: (open: boolean) => void
 }
@@ -34,11 +36,13 @@ export function RunWorkflowDialog({
   workflowUid,
   workflowName,
   executionScope,
+  defaultAutoSummary,
   open,
   onOpenChange,
 }: RunWorkflowDialogProps) {
   const [selectedSamples, setSelectedSamples] = useState<Set<string>>(new Set())
   const [runNamePrefix, setRunNamePrefix] = useState('')
+  const [autoSummary, setAutoSummary] = useState(defaultAutoSummary)
 
   const isProjectLevel = executionScope === ExecutionScope.PROJECT_LEVEL
 
@@ -81,6 +85,7 @@ export function RunWorkflowDialog({
         data: {
           sample_uids: isProjectLevel ? undefined : Array.from(selectedSamples),
           run_name_prefix: runNamePrefix || undefined,
+          auto_summary: autoSummary,
         },
       })
 
@@ -93,6 +98,7 @@ export function RunWorkflowDialog({
       // 重置状态
       setSelectedSamples(new Set())
       setRunNamePrefix('')
+      setAutoSummary(defaultAutoSummary)
       onOpenChange(false)
     } catch (error) {
       if (error instanceof Error && error.message.includes('409')) {
@@ -160,6 +166,7 @@ export function RunWorkflowDialog({
                         <div className='flex items-center h-5'>
                           <input
                             type='checkbox'
+                            aria-label={`选择样本 ${sample.sample_name}`}
                             checked={selectedSamples.has(sample.uid)}
                             onChange={() => toggleSample(sample.uid)}
                             className='size-4 rounded border-gray-300'
@@ -213,6 +220,20 @@ export function RunWorkflowDialog({
             <p className='text-xs text-muted-foreground'>
               如果不填写,将使用默认格式: 项目名-工作流名-样本名
             </p>
+          </div>
+
+          <div className='flex items-center gap-3 rounded-lg border p-3'>
+            <Checkbox
+              id='auto-summary'
+              checked={autoSummary}
+              onCheckedChange={(checked) => setAutoSummary(checked === true)}
+            />
+            <Label
+              htmlFor='auto-summary'
+              className='cursor-pointer text-sm font-medium'
+            >
+              自动生成摘要
+            </Label>
           </div>
 
           {/* 运行实例数量提示 */}

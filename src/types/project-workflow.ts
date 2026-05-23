@@ -11,6 +11,7 @@ export interface ProjectWorkflow {
   import_time: string
   enabled: boolean
   execution_scope?: ExecutionScope
+  auto_summary?: boolean
 }
 
 /**
@@ -26,6 +27,7 @@ export interface AddWorkflowRequest {
 export interface RunWorkflowRequest {
   sample_uids?: string[]
   run_name_prefix?: string
+  auto_summary?: boolean
 }
 
 /**
