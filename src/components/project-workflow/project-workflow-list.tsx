@@ -1,12 +1,9 @@
 'use client'
 
-import { format, parseISO } from 'date-fns'
 import {
-  BoxesIcon,
   ChevronDown,
   ChevronRight,
   DownloadIcon,
-  FileArchiveIcon,
   Loader2,
   PlayIcon,
   SparklesIcon,
@@ -57,7 +54,6 @@ import { cn } from '@/lib/utils'
 import { ExecutionScope } from '@/types/workflow'
 import { ImportWorkflowDialog } from './import-workflow-dialog'
 import { RunWorkflowDialog } from './run-workflow-dialog'
-import { AddProjectFileMappingDialog } from '@/components/project/add-project-file-mapping-dialog'
 
 interface ProjectWorkflowListProps {
   projectId: string
@@ -77,14 +73,6 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
   const { data: workflows, isLoading } = useProjectWorkflows(projectId)
   const removeWorkflowMutation = useRemoveWorkflowFromProject()
   const downloadMutation = useDownloadWorkflowPackage()
-  const workflowCount = workflows?.length ?? 0
-  const enabledCount =
-    workflows?.filter((workflow) => workflow.enabled).length ?? 0
-  const projectLevelCount =
-    workflows?.filter(
-      (workflow) => workflow.execution_scope === ExecutionScope.PROJECT_LEVEL,
-    ).length ?? 0
-  const sampleLevelCount = workflowCount - projectLevelCount
 
   const toggleExpand = (workflowUid: string) => {
     setExpandedWorkflows((prev) => {
