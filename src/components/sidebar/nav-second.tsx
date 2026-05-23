@@ -49,6 +49,7 @@ const projects = [
     items: [
       { name: 'llm_statistic', url: '/setting/llm-statistic' },
       { name: 'llm_setting', url: '/setting/llm-setting' },
+      { name: 'user_management', url: '/setting/user-management' },
     ],
   },
 ]
