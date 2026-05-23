@@ -2,11 +2,14 @@
 
 import { format, parseISO } from 'date-fns'
 import {
+  BoxesIcon,
   ChevronDown,
   ChevronRight,
   DownloadIcon,
+  FileArchiveIcon,
   Loader2,
   PlayIcon,
+  SparklesIcon,
   Trash2Icon,
 } from 'lucide-react'
 import { useState } from 'react'
@@ -32,13 +35,29 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import {
   useDownloadWorkflowPackage,
   useProjectWorkflows,
   useRemoveWorkflowFromProject,
 } from '@/hooks/use-project-workflow'
+import { cn } from '@/lib/utils'
 import { ExecutionScope } from '@/types/workflow'
 import { ImportWorkflowDialog } from './import-workflow-dialog'
 import { RunWorkflowDialog } from './run-workflow-dialog'
+import { AddProjectFileMappingDialog } from '@/components/project/add-project-file-mapping-dialog'
 
 interface ProjectWorkflowListProps {
   projectId: string
@@ -58,6 +77,14 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
   const { data: workflows, isLoading } = useProjectWorkflows(projectId)
   const removeWorkflowMutation = useRemoveWorkflowFromProject()
   const downloadMutation = useDownloadWorkflowPackage()
+  const workflowCount = workflows?.length ?? 0
+  const enabledCount =
+    workflows?.filter((workflow) => workflow.enabled).length ?? 0
+  const projectLevelCount =
+    workflows?.filter(
+      (workflow) => workflow.execution_scope === ExecutionScope.PROJECT_LEVEL,
+    ).length ?? 0
+  const sampleLevelCount = workflowCount - projectLevelCount
 
   const toggleExpand = (workflowUid: string) => {
     setExpandedWorkflows((prev) => {
@@ -93,163 +120,177 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
 
   return (
     <>
-      <div className='space-y-3'>
-        <div className='flex items-center justify-between'>
-          <div>
-            <h2 className='text-lg font-semibold'>工作流模板</h2>
-            <p className='text-sm text-muted-foreground'>
-              管理项目工作流，点击展开查看各样本运行状态
-            </p>
+      <Card className='overflow-hidden'>
+        <CardHeader className='border-b bg-muted/20'>
+          <div className='flex items-center justify-between'>
+            <div>
+              <CardTitle>工作流模板</CardTitle>
+              <CardDescription className='mt-1'>
+                管理项目工作流，展开后查看项目或样本的运行状态
+              </CardDescription>
+            </div>
+            <ImportWorkflowDialog projectId={projectId} />
           </div>
-          <ImportWorkflowDialog projectId={projectId} />
-        </div>
+        </CardHeader>
 
-        {!workflows || workflows.length === 0 ? (
-          <Card>
-            <CardContent className='flex flex-col items-center justify-center py-12 text-muted-foreground'>
-              <p className='text-sm'>
-                暂无工作流模板，点击「导入工作流」从工作流库中导入
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          workflows.map((workflow) => {
-            const isExpanded = expandedWorkflows.has(workflow.workflow_uid)
-            return (
-              <Card key={workflow.workflow_uid} className='overflow-hidden'>
-                <CardHeader className='pb-3'>
-                  <div className='flex items-center gap-3'>
-                    {/* 展开按钮 */}
-                    <button
-                      type='button'
-                      onClick={() => toggleExpand(workflow.workflow_uid)}
-                      className='text-muted-foreground hover:text-foreground transition-colors shrink-0'
-                    >
-                      {isExpanded ? (
-                        <ChevronDown className='size-4' />
-                      ) : (
-                        <ChevronRight className='size-4' />
+        <CardContent className='p-4 sm:p-5'>
+          {!workflows || workflows.length === 0 ? (
+            <Empty className='border py-12'>
+              <EmptyHeader>
+                <EmptyMedia variant='icon'>
+                  <SparklesIcon className='size-5' />
+                </EmptyMedia>
+                <EmptyTitle>暂无工作流模板</EmptyTitle>
+                <EmptyDescription>
+                  从工作流库导入模板后，可以在这里运行并追踪执行状态
+                </EmptyDescription>
+              </EmptyHeader>
+              <EmptyContent>
+                <ImportWorkflowDialog projectId={projectId} />
+              </EmptyContent>
+            </Empty>
+          ) : (
+            <TooltipProvider>
+              <div className='space-y-3'>
+                {workflows.map((workflow) => {
+                  const isExpanded = expandedWorkflows.has(
+                    workflow.workflow_uid,
+                  )
+                  const isProjectLevel =
+                    workflow.execution_scope === ExecutionScope.PROJECT_LEVEL
+                  const isDownloading =
+                    downloadMutation.isPending &&
+                    downloadMutation.variables?.workflowUid ===
+                      workflow.workflow_uid
+
+                  return (
+                    <div
+                      key={workflow.workflow_uid}
+                      className={cn(
+                        'overflow-hidden rounded-lg border bg-background shadow-xs transition-colors',
+                        isExpanded ? 'border-primary/30' : 'hover:bg-muted/20',
                       )}
-                    </button>
-
-                    {/* 工作流信息 */}
-                    <button
-                      type='button'
-                      className='flex-1 text-left'
-                      onClick={() => toggleExpand(workflow.workflow_uid)}
                     >
-                      <div className='flex items-center gap-2'>
-                        <CardTitle className='text-base'>
-                          {workflow.workflow_name}
-                        </CardTitle>
-                        {workflow.enabled ? (
-                          <Badge
-                            variant='outline'
-                            className='bg-green-50 text-green-600 border-green-200 text-xs'
-                          >
-                            已启用
-                          </Badge>
-                        ) : (
-                          <Badge variant='outline' className='text-xs'>
-                            已禁用
-                          </Badge>
-                        )}
-                        <Badge
-                          variant='outline'
-                          className={`text-xs ${
-                            workflow.execution_scope ===
-                            ExecutionScope.PROJECT_LEVEL
-                              ? 'bg-blue-50 text-blue-600 border-blue-200'
-                              : 'bg-emerald-50 text-emerald-600 border-emerald-200'
-                          }`}
+                      <div className='flex flex-col gap-4 p-4 md:flex-row md:items-center'>
+                        <button
+                          type='button'
+                          onClick={() => toggleExpand(workflow.workflow_uid)}
+                          className='group flex min-w-0 flex-1 flex-col gap-3 text-left sm:flex-row sm:items-start'
                         >
-                          {workflow.execution_scope ===
-                          ExecutionScope.PROJECT_LEVEL
-                            ? '项目级'
-                            : '样本级'}
-                        </Badge>
+                          {isExpanded ? (
+                            <ChevronDown className='size-5' />
+                          ) : (
+                            <ChevronRight className='size-5' />
+                          )}
+                          <span className='min-w-0 flex-1 space-y-2 pt-0.5'>
+                            <span className='flex flex-wrap items-center gap-2'>
+                              <span className='truncate text-base font-semibold leading-6'>
+                                {workflow.workflow_name}
+                              </span>
+                              {workflow.enabled ? (
+                                <Badge
+                                  variant='outline'
+                                  className='border-emerald-200 bg-emerald-50 text-emerald-700'
+                                >
+                                  已启用
+                                </Badge>
+                              ) : (
+                                <Badge
+                                  variant='outline'
+                                  className='border-muted bg-muted/50 text-muted-foreground'
+                                >
+                                  已禁用
+                                </Badge>
+                              )}
+                              <Badge
+                                variant='outline'
+                                className={cn(
+                                  isProjectLevel
+                                    ? 'border-sky-200 bg-sky-50 text-sky-700'
+                                    : 'border-teal-200 bg-teal-50 text-teal-700',
+                                )}
+                              >
+                                {isProjectLevel ? '全局分析' : '样本级分析'}
+                              </Badge>
+                            </span>
+                          </span>
+                        </button>
+
+                        <div className='flex shrink-0 items-center gap-2 self-end md:self-center'>
+                          <Button
+                            size='sm'
+                            onClick={() =>
+                              setRunningWorkflow({
+                                uid: workflow.workflow_uid,
+                                name: workflow.workflow_name,
+                                executionScope:
+                                  workflow.execution_scope ??
+                                  ExecutionScope.SAMPLE_LEVEL,
+                              })
+                            }
+                            disabled={!workflow.enabled}
+                          >
+                            <PlayIcon className='size-4 mr-1.5' />
+                            运行
+                          </Button>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant='outline'
+                                size='icon'
+                                className='text-muted-foreground hover:text-primary'
+                                onClick={() =>
+                                  downloadMutation.mutate({
+                                    projectId,
+                                    workflowUid: workflow.workflow_uid,
+                                  })
+                                }
+                                disabled={isDownloading}
+                              >
+                                {isDownloading ? (
+                                  <Loader2 className='size-4 animate-spin' />
+                                ) : (
+                                  <DownloadIcon className='size-4' />
+                                )}
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>下载运行结果</TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant='outline'
+                                size='icon'
+                                className='text-muted-foreground hover:border-destructive/30 hover:text-destructive'
+                                onClick={() =>
+                                  setRemovingWorkflow(workflow.workflow_uid)
+                                }
+                              >
+                                <Trash2Icon className='size-4' />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>移除工作流</TooltipContent>
+                          </Tooltip>
+                        </div>
                       </div>
-                      <CardDescription
-                        className='mt-0.5'
-                        suppressHydrationWarning
-                      >
-                        导入时间：
-                        {format(
-                          parseISO(workflow.import_time),
-                          'yyyy-MM-dd HH:mm:ss',
-                        )}
-                      </CardDescription>
-                    </button>
 
-                    {/* 操作按钮 */}
-                    <div className='flex items-center gap-2 shrink-0'>
-                      <Button
-                        size='sm'
-                        onClick={() =>
-                          setRunningWorkflow({
-                            uid: workflow.workflow_uid,
-                            name: workflow.workflow_name,
-                            executionScope:
-                              workflow.execution_scope ??
-                              ExecutionScope.SAMPLE_LEVEL,
-                          })
-                        }
-                        disabled={!workflow.enabled}
-                      >
-                        <PlayIcon className='size-4 mr-1' />
-                        运行
-                      </Button>
-                      <Button
-                        variant='ghost'
-                        size='icon'
-                        className='text-muted-foreground hover:text-primary'
-                        onClick={() =>
-                          downloadMutation.mutate({
-                            projectId,
-                            workflowUid: workflow.workflow_uid,
-                          })
-                        }
-                        disabled={
-                          downloadMutation.isPending &&
-                          downloadMutation.variables?.workflowUid ===
-                            workflow.workflow_uid
-                        }
-                      >
-                        {downloadMutation.isPending &&
-                        downloadMutation.variables?.workflowUid ===
-                          workflow.workflow_uid ? (
-                          <Loader2 className='size-4 animate-spin' />
-                        ) : (
-                          <DownloadIcon className='size-4' />
-                        )}
-                      </Button>
-                      <Button
-                        variant='ghost'
-                        size='icon'
-                        className='text-muted-foreground hover:text-destructive'
-                        onClick={() =>
-                          setRemovingWorkflow(workflow.workflow_uid)
-                        }
-                      >
-                        <Trash2Icon className='size-4' />
-                      </Button>
+                      {isExpanded && (
+                        <div className='border-t bg-muted/30'>
+                          <WorkflowRunInstances
+                            projectId={projectId}
+                            workflowUid={workflow.workflow_uid}
+                            executionScope={workflow.execution_scope}
+                          />
+                        </div>
+                      )}
                     </div>
-                  </div>
-                </CardHeader>
-
-                {/* 展开的运行实例列表 */}
-                {isExpanded && (
-                  <WorkflowRunInstances
-                    projectId={projectId}
-                    workflowUid={workflow.workflow_uid}
-                    executionScope={workflow.execution_scope}
-                  />
-                )}
-              </Card>
-            )
-          })
-        )}
-      </div>
+                  )
+                })}
+              </div>
+            </TooltipProvider>
+          )}
+        </CardContent>
+      </Card>
 
       {/* 运行工作流对话框 */}
       {runningWorkflow && (

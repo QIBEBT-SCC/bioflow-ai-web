@@ -3,6 +3,7 @@
 import { format } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import {
+  ActivityIcon,
   CheckCircle2,
   Clock,
   ExternalLink,
@@ -26,6 +27,7 @@ import {
 } from '@/components/ui/table'
 import { useProjectRuns, useRunWorkflow } from '@/hooks/use-project-workflow'
 import { useSamples } from '@/hooks/use-sample'
+import type { RunInstance } from '@/types/project-workflow'
 import { Status } from '@/types/run'
 import { ExecutionScope } from '@/types/workflow'
 
@@ -83,6 +85,12 @@ function calculateDuration(startTime?: string | null, endTime?: string | null) {
   return `${hours}h ${mins}m`
 }
 
+function calculateProgress(taskStats?: RunInstance['task_statistics']) {
+  if (!taskStats || taskStats.total <= 0) return 0
+
+  return Math.min(100, ((taskStats.success ?? 0) / taskStats.total) * 100)
+}
+
 export function WorkflowRunInstances({
   projectId,
   workflowUid,
@@ -104,12 +112,13 @@ export function WorkflowRunInstances({
   const isLoading = samplesLoading || runsLoading
 
   // 按此工作流过滤运行实例，并以 sample_uid 为 key
-  const runMap = (allRuns ?? []).reduce<
-    Map<string | null, (typeof allRuns)[0]>
-  >((acc, r) => {
-    if (r.workflow_uid === workflowUid) acc.set(r.sample_uid, r)
-    return acc
-  }, new Map())
+  const runMap = (allRuns ?? []).reduce<Map<string | null, RunInstance>>(
+    (acc, r) => {
+      if (r.workflow_uid === workflowUid) acc.set(r.sample_uid, r)
+      return acc
+    },
+    new Map(),
+  )
 
   // 项目级：筛选 sample_uid 为 null 的运行实例
   const projectRuns = isProjectLevel
@@ -137,10 +146,12 @@ export function WorkflowRunInstances({
 
   if (isLoading) {
     return (
-      <div className='px-4 pb-4 space-y-2'>
-        {['sk-0', 'sk-1', 'sk-2'].map((key) => (
-          <Skeleton key={key} className='h-10 w-full' />
-        ))}
+      <div className='p-4'>
+        <div className='space-y-2 rounded-md border bg-background p-3'>
+          {['sk-0', 'sk-1', 'sk-2'].map((key) => (
+            <Skeleton key={key} className='h-10 w-full' />
+          ))}
+        </div>
       </div>
     )
   }
@@ -149,55 +160,194 @@ export function WorkflowRunInstances({
   if (isProjectLevel) {
     if (projectRuns.length === 0) {
       return (
-        <div className='px-4 pb-4 text-sm text-muted-foreground text-center py-6'>
-          尚未运行，请点击「运行」按钮启动
+        <div className='p-4'>
+          <div className='rounded-md border border-dashed bg-background px-4 py-8 text-center text-sm text-muted-foreground'>
+            尚未运行，请点击「运行」按钮启动
+          </div>
         </div>
       )
     }
 
     return (
-      <div className='border-t'>
+      <div className='p-4'>
+        <div className='overflow-hidden rounded-md border bg-background'>
+          <div className='flex items-center gap-2 border-b bg-muted/40 px-4 py-3'>
+            <ActivityIcon className='size-4 text-muted-foreground' />
+            <div className='text-sm font-medium'>运行实例</div>
+            <Badge variant='secondary' className='ml-auto'>
+              {projectRuns.length}
+            </Badge>
+          </div>
+          <Table>
+            <TableHeader>
+              <TableRow className='bg-muted/20 hover:bg-muted/20'>
+                <TableHead>运行名称</TableHead>
+                <TableHead className='w-[110px]'>状态</TableHead>
+                <TableHead className='w-[220px]'>进度</TableHead>
+                <TableHead className='w-[120px]'>开始时间</TableHead>
+                <TableHead className='w-[90px]'>时长</TableHead>
+                <TableHead className='w-[130px] text-right'>操作</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {projectRuns.map((run) => {
+                const cfg = statusConfig[run.status]
+                const Icon = cfg.icon
+                const taskStats = run.task_statistics
+                const progress = calculateProgress(taskStats)
+                const isRunning =
+                  runWorkflowMutation.isPending &&
+                  !runWorkflowMutation.variables?.data.sample_uids
+
+                return (
+                  <TableRow key={run.uid}>
+                    <TableCell className='font-medium text-sm'>
+                      {run.name}
+                    </TableCell>
+
+                    <TableCell>
+                      <Badge variant={cfg.variant} className='gap-1'>
+                        <Icon
+                          className={`size-3 ${cfg.animate ? 'animate-spin' : ''}`}
+                        />
+                        {cfg.label}
+                      </Badge>
+                    </TableCell>
+
+                    <TableCell>
+                      {taskStats ? (
+                        <div className='space-y-1.5'>
+                          <div className='flex items-center justify-between text-xs text-muted-foreground'>
+                            <span>
+                              {taskStats.success ?? 0}/{taskStats.total}
+                            </span>
+                            <span>{progress.toFixed(0)}%</span>
+                          </div>
+                          <Progress value={progress} className='h-1.5' />
+                        </div>
+                      ) : (
+                        <span className='text-sm text-muted-foreground'>-</span>
+                      )}
+                    </TableCell>
+
+                    <TableCell className='text-sm text-muted-foreground'>
+                      {formatDateTime(run.start_time)}
+                    </TableCell>
+
+                    <TableCell className='text-sm text-muted-foreground'>
+                      {calculateDuration(run.start_time, run.end_time)}
+                    </TableCell>
+
+                    <TableCell className='text-right'>
+                      <div className='flex items-center justify-end gap-1'>
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          className='h-7 gap-1 text-xs'
+                          asChild
+                        >
+                          <Link href={`/project/${projectId}/${run.uid}`}>
+                            <ExternalLink className='size-3' />
+                            查看详情
+                          </Link>
+                        </Button>
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          className='h-7 text-xs'
+                          onClick={() => handleRerun()}
+                          disabled={isRunning || run.status === Status.RUNNING}
+                        >
+                          {isRunning ? (
+                            <Loader2 className='size-3 animate-spin' />
+                          ) : (
+                            <>
+                              <PlayIcon className='size-3 mr-1' />
+                              重新运行
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+    )
+  }
+
+  // 样本级工作流视图
+  if (!samples || samples.length === 0) {
+    return (
+      <div className='p-4'>
+        <div className='rounded-md border border-dashed bg-background px-4 py-8 text-center text-sm text-muted-foreground'>
+          项目中暂无样本，请先在「样本」Tab 中添加样本
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className='p-4'>
+      <div className='overflow-hidden rounded-md border bg-background'>
+        <div className='flex items-center gap-2 border-b bg-muted/40 px-4 py-3'>
+          <ActivityIcon className='size-4 text-muted-foreground' />
+          <div className='text-sm font-medium'>样本运行实例</div>
+          <Badge variant='secondary' className='ml-auto'>
+            {samples.length}
+          </Badge>
+        </div>
         <Table>
           <TableHeader>
-            <TableRow className='bg-muted/30'>
-              <TableHead>运行名称</TableHead>
+            <TableRow className='bg-muted/20 hover:bg-muted/20'>
+              <TableHead className='w-[220px]'>样本名称</TableHead>
               <TableHead className='w-[110px]'>状态</TableHead>
-              <TableHead className='w-[180px]'>进度</TableHead>
-              <TableHead className='w-[100px]'>开始时间</TableHead>
-              <TableHead className='w-[80px]'>时长</TableHead>
-              <TableHead className='w-[120px] text-right'>操作</TableHead>
+              <TableHead className='w-[220px]'>进度</TableHead>
+              <TableHead className='w-[120px]'>开始时间</TableHead>
+              <TableHead className='w-[90px]'>时长</TableHead>
+              <TableHead className='w-[130px] text-right'>操作</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {projectRuns.map((run) => {
-              const cfg = statusConfig[run.status]
-              const Icon = cfg.icon
-              const taskStats = run.task_statistics
-              const progress = taskStats
-                ? ((taskStats.success ?? 0) / taskStats.total) * 100
-                : 0
+            {samples.map((sample) => {
+              const run = runMap.get(sample.uid)
+              const cfg = run ? statusConfig[run.status] : null
+              const Icon = cfg?.icon
+              const taskStats = run?.task_statistics
+              const progress = calculateProgress(taskStats)
               const isRunning =
                 runWorkflowMutation.isPending &&
-                !runWorkflowMutation.variables?.data.sample_uids
+                runWorkflowMutation.variables?.data.sample_uids?.includes(
+                  sample.uid,
+                )
 
               return (
-                <TableRow key={run.uid}>
+                <TableRow key={sample.uid}>
                   <TableCell className='font-medium text-sm'>
-                    {run.name}
+                    {sample.sample_name}
                   </TableCell>
 
                   <TableCell>
-                    <Badge variant={cfg.variant} className='gap-1'>
-                      <Icon
-                        className={`size-3 ${cfg.animate ? 'animate-spin' : ''}`}
-                      />
-                      {cfg.label}
-                    </Badge>
+                    {cfg && Icon ? (
+                      <Badge variant={cfg.variant} className='gap-1'>
+                        <Icon
+                          className={`size-3 ${cfg.animate ? 'animate-spin' : ''}`}
+                        />
+                        {cfg.label}
+                      </Badge>
+                    ) : (
+                      <span className='text-xs text-muted-foreground'>
+                        未运行
+                      </span>
+                    )}
                   </TableCell>
 
                   <TableCell>
                     {taskStats ? (
-                      <div className='space-y-1'>
+                      <div className='space-y-1.5'>
                         <div className='flex items-center justify-between text-xs text-muted-foreground'>
                           <span>
                             {taskStats.success ?? 0}/{taskStats.total}
@@ -212,38 +362,43 @@ export function WorkflowRunInstances({
                   </TableCell>
 
                   <TableCell className='text-sm text-muted-foreground'>
-                    {formatDateTime(run.start_time)}
+                    {formatDateTime(run?.start_time)}
                   </TableCell>
 
                   <TableCell className='text-sm text-muted-foreground'>
-                    {calculateDuration(run.start_time, run.end_time)}
+                    {run
+                      ? calculateDuration(run.start_time, run.end_time)
+                      : '-'}
                   </TableCell>
 
                   <TableCell className='text-right'>
                     <div className='flex items-center justify-end gap-1'>
-                      <Button
-                        variant='ghost'
-                        size='icon'
-                        className='size-7'
-                        asChild
-                      >
-                        <Link href={`/project/${projectId}/${run.uid}`}>
-                          <ExternalLink className='size-3.5' />
-                        </Link>
-                      </Button>
+                      {run && (
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          className='h-7 gap-1 text-xs'
+                          asChild
+                        >
+                          <Link href={`/project/${projectId}/${run.uid}`}>
+                            <ExternalLink className='size-3' />
+                            查看详情
+                          </Link>
+                        </Button>
+                      )}
                       <Button
                         variant='ghost'
                         size='sm'
                         className='h-7 text-xs'
-                        onClick={() => handleRerun()}
-                        disabled={isRunning || run.status === Status.RUNNING}
+                        onClick={() => handleRerun(sample.uid)}
+                        disabled={isRunning || run?.status === Status.RUNNING}
                       >
                         {isRunning ? (
                           <Loader2 className='size-3 animate-spin' />
                         ) : (
                           <>
                             <PlayIcon className='size-3 mr-1' />
-                            重新运行
+                            {run ? '重新运行' : '运行'}
                           </>
                         )}
                       </Button>
@@ -255,128 +410,6 @@ export function WorkflowRunInstances({
           </TableBody>
         </Table>
       </div>
-    )
-  }
-
-  // 样本级工作流视图
-  if (!samples || samples.length === 0) {
-    return (
-      <div className='px-4 pb-4 text-sm text-muted-foreground text-center py-6'>
-        项目中暂无样本，请先在「样本」Tab 中添加样本
-      </div>
-    )
-  }
-
-  return (
-    <div className='border-t'>
-      <Table>
-        <TableHeader>
-          <TableRow className='bg-muted/30'>
-            <TableHead className='w-[220px]'>样本名称</TableHead>
-            <TableHead className='w-[110px]'>状态</TableHead>
-            <TableHead className='w-[180px]'>进度</TableHead>
-            <TableHead className='w-[100px]'>开始时间</TableHead>
-            <TableHead className='w-[80px]'>时长</TableHead>
-            <TableHead className='w-[120px] text-right'>操作</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {samples.map((sample) => {
-            const run = runMap.get(sample.uid)
-            const cfg = run ? statusConfig[run.status] : null
-            const Icon = cfg?.icon
-            const taskStats = run?.task_statistics
-            const progress = taskStats
-              ? ((taskStats.success ?? 0) / taskStats.total) * 100
-              : 0
-            const isRunning =
-              runWorkflowMutation.isPending &&
-              runWorkflowMutation.variables?.data.sample_uids?.includes(
-                sample.uid,
-              )
-
-            return (
-              <TableRow key={sample.uid}>
-                <TableCell className='font-medium text-sm'>
-                  {sample.sample_name}
-                </TableCell>
-
-                <TableCell>
-                  {cfg && Icon ? (
-                    <Badge variant={cfg.variant} className='gap-1'>
-                      <Icon
-                        className={`size-3 ${cfg.animate ? 'animate-spin' : ''}`}
-                      />
-                      {cfg.label}
-                    </Badge>
-                  ) : (
-                    <span className='text-xs text-muted-foreground'>
-                      未运行
-                    </span>
-                  )}
-                </TableCell>
-
-                <TableCell>
-                  {taskStats ? (
-                    <div className='space-y-1'>
-                      <div className='flex items-center justify-between text-xs text-muted-foreground'>
-                        <span>
-                          {taskStats.success ?? 0}/{taskStats.total}
-                        </span>
-                        <span>{progress.toFixed(0)}%</span>
-                      </div>
-                      <Progress value={progress} className='h-1.5' />
-                    </div>
-                  ) : (
-                    <span className='text-sm text-muted-foreground'>-</span>
-                  )}
-                </TableCell>
-
-                <TableCell className='text-sm text-muted-foreground'>
-                  {formatDateTime(run?.start_time)}
-                </TableCell>
-
-                <TableCell className='text-sm text-muted-foreground'>
-                  {run ? calculateDuration(run.start_time, run.end_time) : '-'}
-                </TableCell>
-
-                <TableCell className='text-right'>
-                  <div className='flex items-center justify-end gap-1'>
-                    {run && (
-                      <Button
-                        variant='ghost'
-                        size='icon'
-                        className='size-7'
-                        asChild
-                      >
-                        <Link href={`/project/${projectId}/${run.uid}`}>
-                          <ExternalLink className='size-3.5' />
-                        </Link>
-                      </Button>
-                    )}
-                    <Button
-                      variant='ghost'
-                      size='sm'
-                      className='h-7 text-xs'
-                      onClick={() => handleRerun(sample.uid)}
-                      disabled={isRunning || run?.status === Status.RUNNING}
-                    >
-                      {isRunning ? (
-                        <Loader2 className='size-3 animate-spin' />
-                      ) : (
-                        <>
-                          <PlayIcon className='size-3 mr-1' />
-                          {run ? '重新运行' : '运行'}
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            )
-          })}
-        </TableBody>
-      </Table>
     </div>
   )
 }
