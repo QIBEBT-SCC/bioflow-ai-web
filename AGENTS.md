@@ -15,12 +15,17 @@ BioFlow AI Web — a bioinformatics workflow platform built with Next.js 16 (App
 ## Commands
 
 ```bash
-pnpm dev              # Dev server (Turbopack)
 pnpm build            # Production build (Turbopack, standalone output)
-pnpm start            # Run standalone server (requires .env.production)
 pnpm lint             # Lint with Biome
 pnpm format           # Format with Biome (auto-write)
+npx react-doctor@latest . 
 ```
+The inspection needs to cover only these three parts:
+1. The build compiles successfully.
+2. All Biome-related checks pass.
+3. The react-doctor code compliance check passes.
+
+Among these, parts 2 and 3 only check the files affected by the current change.
 
 ### Stack
 
