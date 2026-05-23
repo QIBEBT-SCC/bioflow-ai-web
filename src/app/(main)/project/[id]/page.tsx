@@ -127,7 +127,7 @@ export default function ProjectDetailPage() {
         <ChatSidebar
           pageKey={`project-${projectId}`}
           width={chatSidebarWidth}
-          onResizeStart={handleChatResizeStart}
+          onResizeStartAction={handleChatResizeStart}
         />
       )}
     </SidebarInset>

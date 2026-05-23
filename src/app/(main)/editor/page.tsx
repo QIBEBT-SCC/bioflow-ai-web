@@ -33,6 +33,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
+import { useChatSidebarResize } from '@/hooks/use-chat-sidebar-resize'
 import { useNewRunInstance } from '@/hooks/use-run'
 import { useUpdateWorkflow, useWorkflow } from '@/hooks/use-workflow'
 import { generateLetterId } from '@/lib/id-generator'
@@ -63,6 +64,7 @@ function FlowContent() {
   )
 
   const isOpen = useChatSidebarStore((s) => s.isOpen)
+  const { chatSidebarWidth, handleChatResizeStart } = useChatSidebarResize()
 
   const { screenToFlowPosition } = useReactFlow()
   const { data: workflowData } = useWorkflow(currentWorkflowUid)
@@ -106,6 +108,7 @@ function FlowContent() {
         zIndex: nodeType === 'note' ? -10 : 20,
       }
 
+      // @ts-expect-error no need
       setNodes((prev) => [...prev, newNode])
       toast.success('节点已添加')
     },
@@ -243,7 +246,13 @@ function FlowContent() {
           />
         </div>
       </div>
-      {isOpen && <ChatSidebar pageKey='editor' />}
+      {isOpen && (
+        <ChatSidebar
+          pageKey='editor'
+          width={chatSidebarWidth}
+          onResizeStartAction={handleChatResizeStart}
+        />
+      )}
     </SidebarInset>
   )
 }

@@ -276,11 +276,11 @@ function ChatSidebarInner({
 export function ChatSidebar({
   pageKey,
   width,
-  onResizeStart,
+  onResizeStartAction,
 }: {
   pageKey: string
   width: number
-  onResizeStart: (e: React.MouseEvent) => void
+  onResizeStartAction: (e: React.MouseEvent) => void
 }) {
   const { sessions } = useChatSidebarStore()
   const sessionId = sessions[pageKey] ?? null
@@ -289,7 +289,7 @@ export function ChatSidebar({
       key={sessionId || 'new'}
       pageKey={pageKey}
       width={width}
-      onResizeStart={onResizeStart}
+      onResizeStart={onResizeStartAction}
     />
   )
 }
