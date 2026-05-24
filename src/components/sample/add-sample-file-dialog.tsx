@@ -1,6 +1,7 @@
 'use client'
 
 import { PlusIcon } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import type React from 'react'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -32,13 +33,12 @@ interface AddSampleFileDialogProps {
   trigger?: React.ReactNode
 }
 
-// 文件类型选项
 const fileTypeOptions = [
-  { value: SampleFileType.SEQUENCING_R1, label: '测序数据 R1 (正向)' },
-  { value: SampleFileType.SEQUENCING_R2, label: '测序数据 R2 (反向)' },
-  { value: SampleFileType.SEQUENCING, label: '单端测序数据' },
-  { value: SampleFileType.SPECTRUM, label: '光谱数据' },
-  { value: SampleFileType.IMAGE, label: '图像数据' },
+  { value: SampleFileType.SEQUENCING_R1, labelKey: 'sequencingR1Long' },
+  { value: SampleFileType.SEQUENCING_R2, labelKey: 'sequencingR2Long' },
+  { value: SampleFileType.SEQUENCING, labelKey: 'sequencingSingleLong' },
+  { value: SampleFileType.SPECTRUM, labelKey: 'spectrumLong' },
+  { value: SampleFileType.IMAGE, labelKey: 'imageLong' },
 ]
 
 // 默认标签映射
@@ -55,6 +55,7 @@ export function AddSampleFileDialog({
   sampleUid,
   trigger,
 }: AddSampleFileDialogProps) {
+  const t = useTranslations('Project.sample.files')
   const [open, setOpen] = useState(false)
   const [dataType, setDataType] = useState<SampleFileType | ''>('')
   const [filePath, setFilePath] = useState('')
@@ -65,11 +66,11 @@ export function AddSampleFileDialog({
   const handleSubmit = async () => {
     // 验证必填字段
     if (!dataType && dataType !== 0) {
-      toast.error('请选择文件类型')
+      toast.error(t('fileTypeRequired'))
       return
     }
     if (!filePath.trim()) {
-      toast.error('请输入文件路径')
+      toast.error(t('filePathRequired'))
       return
     }
 
@@ -84,7 +85,7 @@ export function AddSampleFileDialog({
         },
       })
 
-      toast.success('文件添加成功')
+      toast.success(t('addSuccess'))
 
       // 重置表单
       setDataType('')
@@ -95,9 +96,9 @@ export function AddSampleFileDialog({
       // 处理 409 冲突错误（标签重复）
       const err = error as { status?: number; message?: string }
       if (err?.status === 409 || err?.message?.includes('already exists')) {
-        toast.error('标签已存在，请使用其他标签')
+        toast.error(t('tagDuplicate'))
       } else {
-        toast.error('文件添加失败')
+        toast.error(t('addFailed'))
       }
     }
   }
@@ -108,22 +109,20 @@ export function AddSampleFileDialog({
         {trigger || (
           <Button size='sm' variant='outline'>
             <PlusIcon className='size-4 mr-2' />
-            添加文件
+            {t('add')}
           </Button>
         )}
       </DialogTrigger>
       <DialogContent className='max-w-2xl'>
         <DialogHeader>
-          <DialogTitle>添加样本文件</DialogTitle>
-          <DialogDescription>
-            为样本添加新的数据文件,请选择文件类型并输入文件路径。文件大小、格式和MD5校验码将由后端自动计算。
-          </DialogDescription>
+          <DialogTitle>{t('addDialogTitle')}</DialogTitle>
+          <DialogDescription>{t('addDialogDescription')}</DialogDescription>
         </DialogHeader>
 
         <div className='space-y-4 py-4'>
           {/* 文件类型 */}
           <div className='space-y-2'>
-            <Label htmlFor='data-type'>文件类型 *</Label>
+            <Label htmlFor='data-type'>{t('fileTypeRequiredLabel')}</Label>
             <Select
               value={dataType.toString()}
               onValueChange={(value) =>
@@ -131,7 +130,7 @@ export function AddSampleFileDialog({
               }
             >
               <SelectTrigger id='data-type'>
-                <SelectValue placeholder='选择文件类型' />
+                <SelectValue placeholder={t('fileTypePlaceholder')} />
               </SelectTrigger>
               <SelectContent>
                 {fileTypeOptions.map((option) => (
@@ -139,7 +138,7 @@ export function AddSampleFileDialog({
                     key={option.value}
                     value={option.value.toString()}
                   >
-                    {option.label}
+                    {t(`types.${option.labelKey}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -148,44 +147,45 @@ export function AddSampleFileDialog({
 
           {/* 文件路径 */}
           <div className='space-y-2'>
-            <Label htmlFor='file-path'>文件路径 *</Label>
+            <Label htmlFor='file-path'>{t('filePathRequiredLabel')}</Label>
             <Input
               id='file-path'
-              placeholder='例如: /data/samples/sample_R1.fq.gz'
+              placeholder={t('filePathPlaceholder')}
               value={filePath}
               onChange={(e) => setFilePath(e.target.value)}
             />
             <p className='text-xs text-muted-foreground'>
-              输入服务器上的文件完整路径,后端将自动计算文件大小、格式和MD5校验码
+              {t('filePathDescription')}
             </p>
           </div>
 
           {/* 文件标签 */}
           <div className='space-y-2'>
-            <Label htmlFor='tag'>文件标签 (可选)</Label>
+            <Label htmlFor='tag'>{t('tagOptionalLabel')}</Label>
             <Input
               id='tag'
               placeholder={
                 dataType !== '' && dataType !== undefined
-                  ? `留空则自动分配为 "${defaultTagPlaceholders[dataType as SampleFileType]}"`
-                  : '留空则自动分配默认标签'
+                  ? t('tagPlaceholderWithDefault', {
+                      tag: defaultTagPlaceholders[dataType as SampleFileType],
+                    })
+                  : t('tagPlaceholder')
               }
               value={tag}
               onChange={(e) => setTag(e.target.value)}
             />
             <p className='text-xs text-muted-foreground'>
-              用于在工作流中引用此文件，如
-              sample:r1_positive。同一样本内标签必须唯一。
+              {t('tagDescription')}
             </p>
           </div>
         </div>
 
         <DialogFooter>
           <Button variant='outline' onClick={() => setOpen(false)}>
-            取消
+            {t('cancel')}
           </Button>
           <Button onClick={handleSubmit} disabled={addFileMutation.isPending}>
-            {addFileMutation.isPending ? '添加中...' : '添加文件'}
+            {addFileMutation.isPending ? t('adding') : t('add')}
           </Button>
         </DialogFooter>
       </DialogContent>

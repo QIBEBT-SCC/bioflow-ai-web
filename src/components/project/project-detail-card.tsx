@@ -8,6 +8,7 @@ import {
   Star,
 } from 'lucide-react'
 import { useParams } from 'next/navigation'
+import { useLocale, useTranslations } from 'next-intl'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -17,6 +18,8 @@ import { useSampleCount } from '@/hooks/use-sample'
 import { colorClassMap } from '@/types/color'
 
 export function ProjectDetailCard() {
+  const locale = useLocale()
+  const t = useTranslations('Project.detail.card')
   const params = useParams()
   const projectId = params.id as string
   const { data: project, isLoading } = useProject(projectId)
@@ -50,7 +53,7 @@ export function ProjectDetailCard() {
               }
             >
               <Star className='size-5' />
-              <span className='sr-only'>收藏</span>
+              <span className='sr-only'>{t('favorite')}</span>
             </Button>
           </div>
           <p className='text-muted-foreground mt-1'>{project.description}</p>
@@ -63,7 +66,7 @@ export function ProjectDetailCard() {
           <CardHeader className='pb-2'>
             <CardTitle className='text-sm font-medium flex items-center'>
               <Database className='size-4 mr-2' />
-              样本数量
+              {t('sampleCount')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -74,7 +77,7 @@ export function ProjectDetailCard() {
           <CardHeader className='pb-2'>
             <CardTitle className='text-sm font-medium flex items-center'>
               <FlaskConical className='size-4 mr-2' />
-              工作流状态
+              {t('workflowStatus')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -124,12 +127,12 @@ export function ProjectDetailCard() {
           <CardHeader className='pb-2'>
             <CardTitle className='text-sm font-medium flex items-center'>
               <Clock className='size-4 mr-2' />
-              最后更新
+              {t('lastUpdated')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className='text-2xl font-bold' suppressHydrationWarning>
-              {new Date(project.update_time).toLocaleString('zh-CN')}
+              {new Date(project.update_time).toLocaleString(locale)}
             </p>
           </CardContent>
         </Card>

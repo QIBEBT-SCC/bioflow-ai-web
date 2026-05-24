@@ -1,6 +1,7 @@
 'use client'
 
 import { PlusIcon, XIcon } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import type React from 'react'
 import { useRef, useState } from 'react'
 import { toast } from 'sonner'
@@ -33,6 +34,7 @@ export function CreateSampleDialog({
   projectId,
   trigger,
 }: CreateSampleDialogProps) {
+  const t = useTranslations('Project.sample')
   const [open, setOpen] = useState(false)
   const [sampleName, setSampleName] = useState('')
   const [metaData, setMetaData] = useState<MetaEntry[]>([])
@@ -63,7 +65,7 @@ export function CreateSampleDialog({
 
   const handleSubmit = async () => {
     if (!sampleName.trim()) {
-      toast.error('请输入样本名称')
+      toast.error(t('sampleNameRequired'))
       return
     }
 
@@ -85,14 +87,14 @@ export function CreateSampleDialog({
         },
       })
 
-      toast.success('样本创建成功')
+      toast.success(t('createSuccess'))
 
       setSampleName('')
       setMetaData([])
       nextId.current = 0
       setOpen(false)
     } catch {
-      toast.error('样本创建失败')
+      toast.error(t('createFailed'))
     }
   }
 
@@ -102,25 +104,23 @@ export function CreateSampleDialog({
         {trigger || (
           <Button size='sm'>
             <PlusIcon className='size-4 mr-2' />
-            添加样本
+            {t('add')}
           </Button>
         )}
       </DialogTrigger>
       <DialogContent className='max-w-2xl max-h-[80vh] overflow-y-auto'>
         <DialogHeader>
-          <DialogTitle>创建新样本</DialogTitle>
-          <DialogDescription>
-            添加新的生物样本到项目中,可以选择性添加元数据信息
-          </DialogDescription>
+          <DialogTitle>{t('createDialogTitle')}</DialogTitle>
+          <DialogDescription>{t('createDialogDescription')}</DialogDescription>
         </DialogHeader>
 
         <div className='space-y-4 py-4'>
           {/* 样本名称 */}
           <div className='space-y-2'>
-            <Label htmlFor='sample-name'>样本名称 *</Label>
+            <Label htmlFor='sample-name'>{t('sampleNameRequiredLabel')}</Label>
             <Input
               id='sample-name'
-              placeholder='例如: Sample-001'
+              placeholder={t('sampleNamePlaceholder')}
               value={sampleName}
               onChange={(e) => setSampleName(e.target.value)}
             />
@@ -129,7 +129,7 @@ export function CreateSampleDialog({
           {/* 元数据 */}
           <div className='space-y-2'>
             <div className='flex items-center justify-between'>
-              <Label>元数据</Label>
+              <Label>{t('metadata')}</Label>
               <Button
                 type='button'
                 variant='outline'
@@ -137,27 +137,27 @@ export function CreateSampleDialog({
                 onClick={handleAddMetaData}
               >
                 <PlusIcon className='size-4 mr-2' />
-                添加字段
+                {t('addField')}
               </Button>
             </div>
 
             {metaData.length === 0 ? (
               <p className='text-sm text-muted-foreground'>
-                暂无元数据,点击"添加字段"按钮添加
+                {t('emptyMetadata')}
               </p>
             ) : (
               <div className='space-y-2'>
                 {metaData.map((item) => (
                   <div key={item.id} className='flex gap-2'>
                     <Input
-                      placeholder='键'
+                      placeholder={t('keyPlaceholder')}
                       value={item.key}
                       onChange={(e) =>
                         handleMetaDataChange(item.id, 'key', e.target.value)
                       }
                     />
                     <Input
-                      placeholder='值'
+                      placeholder={t('valuePlaceholder')}
                       value={item.value}
                       onChange={(e) =>
                         handleMetaDataChange(item.id, 'value', e.target.value)
@@ -180,13 +180,13 @@ export function CreateSampleDialog({
 
         <DialogFooter>
           <Button variant='outline' onClick={() => setOpen(false)}>
-            取消
+            {t('cancel')}
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={createSampleMutation.isPending}
           >
-            {createSampleMutation.isPending ? '创建中...' : '创建样本'}
+            {createSampleMutation.isPending ? t('creating') : t('create')}
           </Button>
         </DialogFooter>
       </DialogContent>

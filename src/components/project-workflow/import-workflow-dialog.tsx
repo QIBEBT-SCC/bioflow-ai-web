@@ -1,6 +1,7 @@
 'use client'
 
 import { Loader2, PlusIcon, Search } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -23,6 +24,7 @@ interface ImportWorkflowDialogProps {
 }
 
 export function ImportWorkflowDialog({ projectId }: ImportWorkflowDialogProps) {
+  const t = useTranslations('Project.workflow.import')
   const [open, setOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedWorkflows, setSelectedWorkflows] = useState<Set<string>>(
@@ -53,7 +55,7 @@ export function ImportWorkflowDialog({ projectId }: ImportWorkflowDialogProps) {
   // 导入选中的工作流
   const handleImport = async () => {
     if (selectedWorkflows.size === 0) {
-      toast.error('请至少选择一个工作流')
+      toast.error(t('selectAtLeastOne'))
       return
     }
 
@@ -68,16 +70,16 @@ export function ImportWorkflowDialog({ projectId }: ImportWorkflowDialogProps) {
 
       await Promise.all(promises)
 
-      toast.success(`成功导入 ${selectedWorkflows.size} 个工作流`)
+      toast.success(t('importSuccess', { count: selectedWorkflows.size }))
       setSelectedWorkflows(new Set())
       setOpen(false)
     } catch (error) {
       // 错误处理已在 mutation 中完成
       if (error instanceof Error) {
         if (error.message.includes('409')) {
-          toast.error('部分工作流已存在于项目中')
+          toast.error(t('someAlreadyExist'))
         } else {
-          toast.error('导入失败,请重试')
+          toast.error(t('importFailed'))
         }
       }
     }
@@ -88,22 +90,20 @@ export function ImportWorkflowDialog({ projectId }: ImportWorkflowDialogProps) {
       <DialogTrigger asChild>
         <Button>
           <PlusIcon className='size-4 mr-2' />
-          导入工作流
+          {t('trigger')}
         </Button>
       </DialogTrigger>
       <DialogContent className='max-w-2xl'>
         <DialogHeader>
-          <DialogTitle>导入工作流模板</DialogTitle>
-          <DialogDescription>
-            从工作流库中选择要导入到项目的工作流模板
-          </DialogDescription>
+          <DialogTitle>{t('title')}</DialogTitle>
+          <DialogDescription>{t('description')}</DialogDescription>
         </DialogHeader>
 
         {/* 搜索框 */}
         <div className='relative'>
           <Search className='absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground' />
           <Input
-            placeholder='搜索工作流...'
+            placeholder={t('searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className='pl-9'
@@ -118,7 +118,7 @@ export function ImportWorkflowDialog({ projectId }: ImportWorkflowDialogProps) {
             </div>
           ) : !filteredWorkflows || filteredWorkflows.length === 0 ? (
             <div className='text-center py-12 text-muted-foreground'>
-              {searchQuery ? '未找到匹配的工作流' : '暂无可用的工作流'}
+              {searchQuery ? t('noMatches') : t('empty')}
             </div>
           ) : (
             <div className='space-y-2'>
@@ -136,6 +136,7 @@ export function ImportWorkflowDialog({ projectId }: ImportWorkflowDialogProps) {
                   <div className='flex items-center h-5'>
                     <input
                       type='checkbox'
+                      aria-label={workflow.name}
                       checked={selectedWorkflows.has(workflow.uid)}
                       onChange={() => toggleWorkflow(workflow.uid)}
                       className='size-4 rounded border-gray-300'
@@ -156,7 +157,7 @@ export function ImportWorkflowDialog({ projectId }: ImportWorkflowDialogProps) {
 
         <DialogFooter>
           <Button variant='outline' onClick={() => setOpen(false)}>
-            取消
+            {t('cancel')}
           </Button>
           <Button
             onClick={handleImport}
@@ -167,10 +168,10 @@ export function ImportWorkflowDialog({ projectId }: ImportWorkflowDialogProps) {
             {addWorkflowMutation.isPending ? (
               <>
                 <Loader2 className='size-4 mr-2 animate-spin' />
-                导入中...
+                {t('importing')}
               </>
             ) : (
-              `导入选中项 (${selectedWorkflows.size})`
+              t('importSelected', { count: selectedWorkflows.size })
             )}
           </Button>
         </DialogFooter>

@@ -1,6 +1,7 @@
 'use client'
 
 import { Loader2 } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
@@ -40,6 +41,7 @@ export function RunWorkflowDialog({
   open,
   onOpenChange,
 }: RunWorkflowDialogProps) {
+  const t = useTranslations('Project.workflow.runDialog')
   const [selectedSamples, setSelectedSamples] = useState<Set<string>>(new Set())
   const [runNamePrefix, setRunNamePrefix] = useState('')
   const [autoSummary, setAutoSummary] = useState(defaultAutoSummary)
@@ -74,7 +76,7 @@ export function RunWorkflowDialog({
   // 运行工作流
   const handleRun = async () => {
     if (!isProjectLevel && selectedSamples.size === 0) {
-      toast.error('请至少选择一个样本')
+      toast.error(t('selectAtLeastOneSample'))
       return
     }
 
@@ -91,8 +93,8 @@ export function RunWorkflowDialog({
 
       toast.success(
         isProjectLevel
-          ? '项目级工作流已启动'
-          : `成功提交 ${result.count} 个运行实例`,
+          ? t('projectRunStarted')
+          : t('sampleRunStarted', { count: result.count }),
       )
 
       // 重置状态
@@ -102,11 +104,11 @@ export function RunWorkflowDialog({
       onOpenChange(false)
     } catch (error) {
       if (error instanceof Error && error.message.includes('409')) {
-        toast.error('部分样本正在运行中，请等待完成后再重跑')
+        toast.error(t('someSamplesRunning'))
       } else if (error instanceof Error) {
-        toast.error(`运行失败: ${error.message}`)
+        toast.error(t('runFailedWithMessage', { message: error.message }))
       } else {
-        toast.error('运行失败，请重试')
+        toast.error(t('runFailed'))
       }
     }
   }
@@ -115,11 +117,11 @@ export function RunWorkflowDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='max-w-2xl'>
         <DialogHeader>
-          <DialogTitle>运行工作流: {workflowName}</DialogTitle>
+          <DialogTitle>{t('title', { name: workflowName })}</DialogTitle>
           <DialogDescription>
             {isProjectLevel
-              ? '此工作流为项目级，将在整个项目上运行一次'
-              : '选择要分析的样本，对已有实例的样本将重新运行分析'}
+              ? t('projectLevelDescription')
+              : t('sampleLevelDescription')}
           </DialogDescription>
         </DialogHeader>
 
@@ -128,7 +130,7 @@ export function RunWorkflowDialog({
           {!isProjectLevel && (
             <div className='space-y-2'>
               <div className='flex items-center justify-between'>
-                <Label>选择要分析的样本</Label>
+                <Label>{t('selectSamples')}</Label>
                 <Button
                   variant='ghost'
                   size='sm'
@@ -136,8 +138,8 @@ export function RunWorkflowDialog({
                   disabled={!samples || samples.length === 0}
                 >
                   {selectedSamples.size === samples?.length
-                    ? '取消全选'
-                    : '全选'}
+                    ? t('deselectAll')
+                    : t('selectAll')}
                 </Button>
               </div>
 
@@ -148,7 +150,7 @@ export function RunWorkflowDialog({
                   </div>
                 ) : !samples || samples.length === 0 ? (
                   <div className='text-center py-12 text-muted-foreground'>
-                    项目中暂无样本,请先添加样本
+                    {t('emptySamples')}
                   </div>
                 ) : (
                   <div className='space-y-2'>
@@ -166,7 +168,9 @@ export function RunWorkflowDialog({
                         <div className='flex items-center h-5'>
                           <input
                             type='checkbox'
-                            aria-label={`选择样本 ${sample.sample_name}`}
+                            aria-label={t('selectSampleAria', {
+                              name: sample.sample_name,
+                            })}
                             checked={selectedSamples.has(sample.uid)}
                             onChange={() => toggleSample(sample.uid)}
                             className='size-4 rounded border-gray-300'
@@ -179,7 +183,7 @@ export function RunWorkflowDialog({
                               {sample.sample_name}
                             </h4>
                             <Badge variant='outline' className='text-xs'>
-                              {sample.file_count} 个文件
+                              {t('fileCount', { count: sample.file_count })}
                             </Badge>
                           </div>
                           {Object.keys(sample.meta_data || {}).length > 0 && (
@@ -209,16 +213,17 @@ export function RunWorkflowDialog({
           {/* 运行名称前缀 */}
           <div className='space-y-2'>
             <Label htmlFor='run-name-prefix'>
-              运行名称前缀 <span className='text-muted-foreground'>(可选)</span>
+              {t('runNamePrefix')}{' '}
+              <span className='text-muted-foreground'>{t('optional')}</span>
             </Label>
             <Input
               id='run-name-prefix'
-              placeholder='例如: Experiment-2024-01-22'
+              placeholder={t('runNamePrefixPlaceholder')}
               value={runNamePrefix}
               onChange={(e) => setRunNamePrefix(e.target.value)}
             />
             <p className='text-xs text-muted-foreground'>
-              如果不填写,将使用默认格式: 项目名-工作流名-样本名
+              {t('runNamePrefixDescription')}
             </p>
           </div>
 
@@ -232,7 +237,7 @@ export function RunWorkflowDialog({
               htmlFor='auto-summary'
               className='cursor-pointer text-sm font-medium'
             >
-              自动生成摘要
+              {t('autoSummary')}
             </Label>
           </div>
 
@@ -240,19 +245,20 @@ export function RunWorkflowDialog({
           {isProjectLevel ? (
             <div className='rounded-lg bg-muted p-3'>
               <p className='text-sm'>
-                将创建 <span className='font-semibold text-primary'>1</span>{' '}
-                个项目级运行实例
+                {t('willCreate')}{' '}
+                <span className='font-semibold text-primary'>1</span>{' '}
+                {t('projectInstanceSuffix')}
               </p>
             </div>
           ) : (
             selectedSamples.size > 0 && (
               <div className='rounded-lg bg-muted p-3'>
                 <p className='text-sm'>
-                  将创建{' '}
+                  {t('willCreate')}{' '}
                   <span className='font-semibold text-primary'>
                     {selectedSamples.size}
                   </span>{' '}
-                  个运行实例
+                  {t('instanceCountSuffix')}
                 </p>
               </div>
             )
@@ -261,7 +267,7 @@ export function RunWorkflowDialog({
 
         <DialogFooter>
           <Button variant='outline' onClick={() => onOpenChange(false)}>
-            取消
+            {t('cancel')}
           </Button>
           <Button
             onClick={handleRun}
@@ -273,10 +279,10 @@ export function RunWorkflowDialog({
             {runWorkflowMutation.isPending ? (
               <>
                 <Loader2 className='size-4 mr-2 animate-spin' />
-                运行中...
+                {t('running')}
               </>
             ) : (
-              '开始运行'
+              t('start')
             )}
           </Button>
         </DialogFooter>

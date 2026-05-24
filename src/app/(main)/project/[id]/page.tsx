@@ -3,6 +3,7 @@
 import { FileCode, FlaskConical, TestTubeDiagonal } from 'lucide-react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { ChatSidebar } from '@/components/chat/chat-sidebar'
 import { ChatSidebarToggle } from '@/components/chat/chat-sidebar-toggle'
 import { ProjectDetailCard } from '@/components/project/project-detail-card'
@@ -25,6 +26,7 @@ import { useProject } from '@/hooks/use-project'
 import { useChatSidebarStore } from '@/stores/chat-sidebar-store'
 
 export default function ProjectDetailPage() {
+  const t = useTranslations('Project.detail')
   const params = useParams()
   const projectId = params.id as string
   const { data: project } = useProject(projectId)
@@ -43,7 +45,7 @@ export default function ProjectDetailPage() {
               <BreadcrumbList>
                 <BreadcrumbItem className='hidden md:block'>
                   <BreadcrumbLink asChild>
-                    <Link href='/project'>Projects</Link>
+                    <Link href='/project'>{t('breadcrumb.projects')}</Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className='hidden md:block' />
@@ -70,8 +72,7 @@ export default function ProjectDetailPage() {
               <BreadcrumbList>
                 <BreadcrumbItem className='hidden md:block'>
                   <BreadcrumbLink asChild>
-                    <Link href='/project'>Projects</Link>
-                    {/*Projects*/}
+                    <Link href='/project'>{t('breadcrumb.projects')}</Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className='hidden md:block' />
@@ -94,15 +95,15 @@ export default function ProjectDetailPage() {
             <TabsList className='grid grid-cols-4 md:w-auto md:inline-flex'>
               <TabsTrigger value='samples' className='flex items-center'>
                 <TestTubeDiagonal className='size-4 mr-2' />
-                样本
+                {t('tabs.samples')}
               </TabsTrigger>
               <TabsTrigger value='file-mappings' className='flex items-center'>
                 <FileCode className='size-4 mr-2' />
-                全局文件
+                {t('tabs.fileMappings')}
               </TabsTrigger>
               <TabsTrigger value='workflows' className='flex items-center'>
                 <FlaskConical className='size-4 mr-2' />
-                工作流
+                {t('tabs.workflows')}
               </TabsTrigger>
             </TabsList>
 

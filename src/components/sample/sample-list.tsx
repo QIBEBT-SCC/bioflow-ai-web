@@ -10,6 +10,7 @@ import {
   MoreHorizontal,
   Trash2Icon,
 } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { Fragment, useState } from 'react'
 import { toast } from 'sonner'
 import {
@@ -66,35 +67,43 @@ interface SampleListProps {
   projectId: string
 }
 
+const fileTypeLabelKeys: Record<SampleFileType, string> = {
+  0: 'sequencingR1',
+  1: 'sequencingR2',
+  2: 'sequencingSingle',
+  3: 'spectrum',
+  4: 'image',
+}
+
 function SampleFilesSection({
   projectId,
   sampleDetails,
   onDeleteFile,
 }: SampleFilesSectionProps) {
+  const t = useTranslations('Project.sample.files')
+
   return (
     <div className='p-4'>
       <div className='flex items-center justify-between mb-2'>
-        <h4 className='text-sm font-semibold'>样本文件</h4>
+        <h4 className='text-sm font-semibold'>{t('title')}</h4>
         <AddSampleFileDialog
           projectId={projectId}
           sampleUid={sampleDetails.uid}
         />
       </div>
       {sampleDetails.files.length === 0 ? (
-        <p className='text-sm text-muted-foreground'>
-          该样本暂无文件,点击"添加文件"按钮添加
-        </p>
+        <p className='text-sm text-muted-foreground'>{t('empty')}</p>
       ) : (
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className='w-[180px]'>文件类型</TableHead>
-              <TableHead>文件路径</TableHead>
-              <TableHead className='w-[100px]'>格式</TableHead>
-              <TableHead className='w-[100px]'>大小</TableHead>
-              <TableHead className='w-[120px]'>MD5校验</TableHead>
-              <TableHead className='w-[180px]'>上传时间</TableHead>
-              <TableHead className='w-[80px]'>操作</TableHead>
+              <TableHead className='w-[180px]'>{t('fileType')}</TableHead>
+              <TableHead>{t('filePath')}</TableHead>
+              <TableHead className='w-[100px]'>{t('format')}</TableHead>
+              <TableHead className='w-[100px]'>{t('size')}</TableHead>
+              <TableHead className='w-[120px]'>{t('md5')}</TableHead>
+              <TableHead className='w-[180px]'>{t('uploadedAt')}</TableHead>
+              <TableHead className='w-[80px]'>{t('actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -105,7 +114,7 @@ function SampleFilesSection({
                   <TableCell>
                     <div className='flex flex-wrap gap-1'>
                       <Badge className={fileTypeColors[file.data_type]}>
-                        {fileTypeLabels[file.data_type]}
+                        {t(`types.${fileTypeLabelKeys[file.data_type]}`)}
                       </Badge>
                       {file.tag && (
                         <Badge
@@ -165,14 +174,6 @@ function SampleFilesSection({
 }
 
 // 文件类型标签映射
-const fileTypeLabels: Record<SampleFileType, string> = {
-  0: '测序 R1',
-  1: '测序 R2',
-  2: '单端测序',
-  3: '光谱',
-  4: '图像',
-}
-
 // 文件类型颜色映射
 const fileTypeColors: Record<SampleFileType, string> = {
   0: 'bg-blue-100 text-blue-800',
@@ -203,6 +204,8 @@ function formatFileSize(bytes: number): string {
 }
 
 export function SampleList({ projectId }: SampleListProps) {
+  const t = useTranslations('Project.sample')
+  const tFiles = useTranslations('Project.sample.files')
   const [expandedSamples, setExpandedSamples] = useState<
     Record<string, boolean>
   >({})
@@ -241,11 +244,11 @@ export function SampleList({ projectId }: SampleListProps) {
         sampleUid,
       })
 
-      toast.success('样本删除成功')
+      toast.success(t('deleteSuccess'))
 
       setDeletingSample(null)
     } catch {
-      toast.error('样本删除失败')
+      toast.error(t('deleteFailed'))
     }
   }
 
@@ -257,11 +260,11 @@ export function SampleList({ projectId }: SampleListProps) {
         fileUid,
       })
 
-      toast.success('文件删除成功')
+      toast.success(tFiles('deleteSuccess'))
 
       setDeletingFile(null)
     } catch {
-      toast.error('文件删除失败')
+      toast.error(tFiles('deleteFailed'))
     }
   }
 
@@ -281,8 +284,8 @@ export function SampleList({ projectId }: SampleListProps) {
         <CardHeader className='pb-3'>
           <div className='flex items-center justify-between'>
             <div>
-              <CardTitle>样本管理</CardTitle>
-              <CardDescription>管理项目中的生物样本及其文件</CardDescription>
+              <CardTitle>{t('title')}</CardTitle>
+              <CardDescription>{t('description')}</CardDescription>
             </div>
             <CreateSampleDialog projectId={projectId} />
           </div>
@@ -292,11 +295,11 @@ export function SampleList({ projectId }: SampleListProps) {
             <TableHeader>
               <TableRow>
                 <TableHead className='w-[30px]'></TableHead>
-                <TableHead className='w-[180px]'>样本名称</TableHead>
-                <TableHead>元数据</TableHead>
-                <TableHead className='w-[180px]'>创建时间</TableHead>
-                <TableHead className='w-[100px]'>文件数量</TableHead>
-                <TableHead className='w-[100px]'>操作</TableHead>
+                <TableHead className='w-[180px]'>{t('sampleName')}</TableHead>
+                <TableHead>{t('metadata')}</TableHead>
+                <TableHead className='w-[180px]'>{t('createdAt')}</TableHead>
+                <TableHead className='w-[100px]'>{t('fileCount')}</TableHead>
+                <TableHead className='w-[100px]'>{t('actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -306,7 +309,7 @@ export function SampleList({ projectId }: SampleListProps) {
                     colSpan={6}
                     className='text-center py-8 text-muted-foreground'
                   >
-                    暂无样本数据,点击"添加样本"按钮创建新样本
+                    {t('empty')}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -378,14 +381,14 @@ export function SampleList({ projectId }: SampleListProps) {
                                 onClick={() => setEditingSample(sample.uid)}
                               >
                                 <EditIcon className='size-4 mr-2' />
-                                编辑
+                                {t('edit')}
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 className='text-destructive'
                                 onClick={() => setDeletingSample(sample.uid)}
                               >
                                 <Trash2Icon className='size-4 mr-2' />
-                                删除
+                                {t('delete')}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -434,18 +437,20 @@ export function SampleList({ projectId }: SampleListProps) {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>确认删除</AlertDialogTitle>
+            <AlertDialogTitle>{t('deleteDialogTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              确定要删除这个样本吗?此操作无法撤销,样本的所有文件信息也将被删除。
+              {t('deleteDialogDescription')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deletingSample && handleDelete(deletingSample)}
               className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
             >
-              {deleteSampleMutation.isPending ? '删除中...' : '确认删除'}
+              {deleteSampleMutation.isPending
+                ? t('deleting')
+                : t('confirmDelete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -457,13 +462,13 @@ export function SampleList({ projectId }: SampleListProps) {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>确认删除文件</AlertDialogTitle>
+            <AlertDialogTitle>{tFiles('deleteDialogTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              确定要删除这个文件吗?此操作无法撤销。
+              {tFiles('deleteDialogDescription')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() =>
                 deletingFile &&
@@ -471,7 +476,9 @@ export function SampleList({ projectId }: SampleListProps) {
               }
               className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
             >
-              {deleteFileMutation.isPending ? '删除中...' : '确认删除'}
+              {deleteFileMutation.isPending
+                ? t('deleting')
+                : t('confirmDelete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
