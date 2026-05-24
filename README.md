@@ -1,4 +1,5 @@
-![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)
+![GitHub Release](https://img.shields.io/github/v/release/QIBEBT-SCC/bioflow-ai-web?label=release)
+![Next.js](https://img.shields.io/badge/Next.js-16.2.4-black)
 
 BioFlow AI Web 前端，基于 Next.js 构建。采用纯客户端渲染（CSR）架构，Next.js Server 仅承担静态资源托管和 `/api/v1` 反向代理职责。
 
