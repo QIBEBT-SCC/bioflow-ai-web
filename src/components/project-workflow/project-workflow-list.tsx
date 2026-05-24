@@ -9,6 +9,7 @@ import {
   SparklesIcon,
   Trash2Icon,
 } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { WorkflowRunInstances } from '@/components/project-workflow/workflow-run-instances'
@@ -60,6 +61,7 @@ interface ProjectWorkflowListProps {
 }
 
 export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
+  const t = useTranslations('Project.workflow')
   const [removingWorkflow, setRemovingWorkflow] = useState<string | null>(null)
   const [runningWorkflow, setRunningWorkflow] = useState<{
     uid: string
@@ -90,10 +92,10 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
   const handleRemove = async (workflowUid: string) => {
     try {
       await removeWorkflowMutation.mutateAsync({ projectId, workflowUid })
-      toast.success('工作流移除成功')
+      toast.success(t('removeSuccess'))
       setRemovingWorkflow(null)
     } catch {
-      toast.error('工作流移除失败')
+      toast.error(t('removeFailed'))
     }
   }
 
@@ -113,9 +115,9 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
         <CardHeader className='border-b bg-muted/20'>
           <div className='flex items-center justify-between'>
             <div>
-              <CardTitle>工作流模板</CardTitle>
+              <CardTitle>{t('title')}</CardTitle>
               <CardDescription className='mt-1'>
-                管理项目工作流，展开后查看项目或样本的运行状态
+                {t('description')}
               </CardDescription>
             </div>
             <ImportWorkflowDialog projectId={projectId} />
@@ -129,10 +131,8 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
                 <EmptyMedia variant='icon'>
                   <SparklesIcon className='size-5' />
                 </EmptyMedia>
-                <EmptyTitle>暂无工作流模板</EmptyTitle>
-                <EmptyDescription>
-                  从工作流库导入模板后，可以在这里运行并追踪执行状态
-                </EmptyDescription>
+                <EmptyTitle>{t('emptyTitle')}</EmptyTitle>
+                <EmptyDescription>{t('emptyDescription')}</EmptyDescription>
               </EmptyHeader>
               <EmptyContent>
                 <ImportWorkflowDialog projectId={projectId} />
@@ -181,14 +181,14 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
                                   variant='outline'
                                   className='border-emerald-200 bg-emerald-50 text-emerald-700'
                                 >
-                                  已启用
+                                  {t('enabled')}
                                 </Badge>
                               ) : (
                                 <Badge
                                   variant='outline'
                                   className='border-muted bg-muted/50 text-muted-foreground'
                                 >
-                                  已禁用
+                                  {t('disabled')}
                                 </Badge>
                               )}
                               <Badge
@@ -199,7 +199,9 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
                                     : 'border-teal-200 bg-teal-50 text-teal-700',
                                 )}
                               >
-                                {isProjectLevel ? '全局分析' : '样本级分析'}
+                                {isProjectLevel
+                                  ? t('projectLevel')
+                                  : t('sampleLevel')}
                               </Badge>
                             </span>
                           </span>
@@ -221,7 +223,7 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
                             disabled={!workflow.enabled}
                           >
                             <PlayIcon className='size-4 mr-1.5' />
-                            运行
+                            {t('run')}
                           </Button>
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -244,7 +246,9 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
                                 )}
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent>下载运行结果</TooltipContent>
+                            <TooltipContent>
+                              {t('downloadResults')}
+                            </TooltipContent>
                           </Tooltip>
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -259,7 +263,9 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
                                 <Trash2Icon className='size-4' />
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent>移除工作流</TooltipContent>
+                            <TooltipContent>
+                              {t('removeWorkflow')}
+                            </TooltipContent>
                           </Tooltip>
                         </div>
                       </div>
@@ -302,18 +308,20 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>确认移除</AlertDialogTitle>
+            <AlertDialogTitle>{t('removeDialogTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              确定要从项目中移除这个工作流模板吗？这不会删除工作流本身，只是解除与项目的关联。
+              {t('removeDialogDescription')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => removingWorkflow && handleRemove(removingWorkflow)}
               className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
             >
-              {removeWorkflowMutation.isPending ? '移除中...' : '确认移除'}
+              {removeWorkflowMutation.isPending
+                ? t('removing')
+                : t('confirmRemove')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

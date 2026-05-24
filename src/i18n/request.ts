@@ -12,6 +12,7 @@ const namespaces = [
   'setting',
   'image',
   'tool',
+  'project',
 ]
 
 export default getRequestConfig(async () => {

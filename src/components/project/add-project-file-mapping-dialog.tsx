@@ -1,6 +1,7 @@
 'use client'
 
 import { PlusIcon } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import type React from 'react'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -28,6 +29,7 @@ export function AddProjectFileMappingDialog({
   projectId,
   trigger,
 }: AddProjectFileMappingDialogProps) {
+  const t = useTranslations('Project.fileMapping')
   const [open, setOpen] = useState(false)
   const [keyword, setKeyword] = useState('')
   const [filePath, setFilePath] = useState('')
@@ -37,15 +39,15 @@ export function AddProjectFileMappingDialog({
 
   const handleSubmit = async () => {
     if (!keyword.trim()) {
-      toast.error('请输入关键字')
+      toast.error(t('keywordRequired'))
       return
     }
     if (!filePath.trim()) {
-      toast.error('请输入文件路径')
+      toast.error(t('filePathRequired'))
       return
     }
     if (!description.trim()) {
-      toast.error('请输入描述')
+      toast.error(t('descriptionRequired'))
       return
     }
 
@@ -59,7 +61,7 @@ export function AddProjectFileMappingDialog({
         },
       })
 
-      toast.success('全局文件创建成功')
+      toast.success(t('createSuccess'))
       setKeyword('')
       setFilePath('')
       setDescription('')
@@ -67,9 +69,9 @@ export function AddProjectFileMappingDialog({
     } catch (error: unknown) {
       const err = error as { status?: number; message?: string }
       if (err?.status === 409 || err?.message?.includes('already exists')) {
-        toast.error('关键字已存在，请使用其他关键字')
+        toast.error(t('keywordDuplicate'))
       } else {
-        toast.error('全局文件创建失败')
+        toast.error(t('createFailed'))
       }
     }
   }
@@ -80,48 +82,45 @@ export function AddProjectFileMappingDialog({
         {trigger || (
           <Button size='sm' variant='outline'>
             <PlusIcon className='size-4 mr-2' />
-            添加文件
+            {t('add')}
           </Button>
         )}
       </DialogTrigger>
       <DialogContent className='max-w-lg'>
         <DialogHeader>
-          <DialogTitle>添加全局文件</DialogTitle>
-          <DialogDescription>
-            创建项目级全局文件，可在工作流中使用 proj:keyword 格式引用
-          </DialogDescription>
+          <DialogTitle>{t('dialogTitle')}</DialogTitle>
+          <DialogDescription>{t('dialogDescription')}</DialogDescription>
         </DialogHeader>
 
         <div className='space-y-4 py-4'>
           <div className='space-y-2'>
-            <Label htmlFor='keyword'>关键字 *</Label>
+            <Label htmlFor='keyword'>{t('keywordRequiredLabel')}</Label>
             <Input
               id='keyword'
-              placeholder='例如: reference_genome'
+              placeholder={t('keywordPlaceholder')}
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
             />
             <p className='text-xs text-muted-foreground'>
-              用于工作流引用，如
-              proj:reference_genome。建议使用小写字母、数字和下划线。
+              {t('keywordDescription')}
             </p>
           </div>
 
           <div className='space-y-2'>
-            <Label htmlFor='file-path'>文件路径 *</Label>
+            <Label htmlFor='file-path'>{t('filePathRequiredLabel')}</Label>
             <Input
               id='file-path'
-              placeholder='例如: /data/genomes/hg38.fa'
+              placeholder={t('filePathPlaceholder')}
               value={filePath}
               onChange={(e) => setFilePath(e.target.value)}
             />
           </div>
 
           <div className='space-y-2'>
-            <Label htmlFor='description'>描述 *</Label>
+            <Label htmlFor='description'>{t('descriptionRequiredLabel')}</Label>
             <Textarea
               id='description'
-              placeholder='例如: Human reference genome GRCh38'
+              placeholder={t('descriptionPlaceholder')}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
@@ -131,10 +130,10 @@ export function AddProjectFileMappingDialog({
 
         <DialogFooter>
           <Button variant='outline' onClick={() => setOpen(false)}>
-            取消
+            {t('cancel')}
           </Button>
           <Button onClick={handleSubmit} disabled={createMutation.isPending}>
-            {createMutation.isPending ? '创建中...' : '创建文件'}
+            {createMutation.isPending ? t('creating') : t('create')}
           </Button>
         </DialogFooter>
       </DialogContent>

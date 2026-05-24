@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
+import { useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
@@ -30,25 +31,19 @@ export function EditProjectFileMappingDialog({
   open,
   onOpenChange,
 }: EditProjectFileMappingDialogProps) {
-  const [filePath, setFilePath] = useState('')
-  const [description, setDescription] = useState('')
-
-  useEffect(() => {
-    if (open) {
-      setFilePath(mapping.file_path)
-      setDescription(mapping.description)
-    }
-  }, [open, mapping])
+  const t = useTranslations('Project.fileMapping')
+  const [filePath, setFilePath] = useState(mapping.file_path)
+  const [description, setDescription] = useState(mapping.description)
 
   const updateMutation = useUpdateProjectFileMapping()
 
   const handleSubmit = async () => {
     if (!filePath.trim()) {
-      toast.error('请输入文件路径')
+      toast.error(t('filePathRequired'))
       return
     }
     if (!description.trim()) {
-      toast.error('请输入描述')
+      toast.error(t('descriptionRequired'))
       return
     }
 
@@ -62,10 +57,10 @@ export function EditProjectFileMappingDialog({
         },
       })
 
-      toast.success('全局文件更新成功')
+      toast.success(t('updateSuccess'))
       onOpenChange(false)
     } catch {
-      toast.error('全局文件更新失败')
+      toast.error(t('updateFailed'))
     }
   }
 
@@ -73,15 +68,13 @@ export function EditProjectFileMappingDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='max-w-lg'>
         <DialogHeader>
-          <DialogTitle>编辑全局文件</DialogTitle>
-          <DialogDescription>
-            修改全局文件的路径和描述（关键字不可修改）
-          </DialogDescription>
+          <DialogTitle>{t('editDialogTitle')}</DialogTitle>
+          <DialogDescription>{t('editDialogDescription')}</DialogDescription>
         </DialogHeader>
 
         <div className='space-y-4 py-4'>
           <div className='space-y-2'>
-            <Label htmlFor='keyword'>关键字</Label>
+            <Label htmlFor='keyword'>{t('keyword')}</Label>
             <Input
               id='keyword'
               value={`proj:${mapping.keyword}`}
@@ -89,25 +82,25 @@ export function EditProjectFileMappingDialog({
               className='bg-muted'
             />
             <p className='text-xs text-muted-foreground'>
-              关键字创建后不可修改
+              {t('keywordImmutable')}
             </p>
           </div>
 
           <div className='space-y-2'>
-            <Label htmlFor='file-path'>文件路径 *</Label>
+            <Label htmlFor='file-path'>{t('filePathRequiredLabel')}</Label>
             <Input
               id='file-path'
-              placeholder='例如: /data/genomes/hg38.fa'
+              placeholder={t('filePathPlaceholder')}
               value={filePath}
               onChange={(e) => setFilePath(e.target.value)}
             />
           </div>
 
           <div className='space-y-2'>
-            <Label htmlFor='description'>描述 *</Label>
+            <Label htmlFor='description'>{t('descriptionRequiredLabel')}</Label>
             <Textarea
               id='description'
-              placeholder='例如: Human reference genome GRCh38'
+              placeholder={t('descriptionPlaceholder')}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
@@ -117,10 +110,10 @@ export function EditProjectFileMappingDialog({
 
         <DialogFooter>
           <Button variant='outline' onClick={() => onOpenChange(false)}>
-            取消
+            {t('cancel')}
           </Button>
           <Button onClick={handleSubmit} disabled={updateMutation.isPending}>
-            {updateMutation.isPending ? '更新中...' : '更新文件'}
+            {updateMutation.isPending ? t('updating') : t('update')}
           </Button>
         </DialogFooter>
       </DialogContent>

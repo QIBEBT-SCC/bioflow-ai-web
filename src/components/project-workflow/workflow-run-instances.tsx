@@ -1,7 +1,5 @@
 'use client'
 
-import { format } from 'date-fns'
-import { zhCN } from 'date-fns/locale'
 import {
   ActivityIcon,
   CheckCircle2,
@@ -12,6 +10,8 @@ import {
   XCircle,
 } from 'lucide-react'
 import Link from 'next/link'
+import { useLocale, useTranslations } from 'next-intl'
+import { useMemo } from 'react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -39,35 +39,38 @@ interface WorkflowRunInstancesProps {
 
 const statusConfig = {
   [Status.WAITING]: {
-    label: '等待中',
+    labelKey: 'waiting',
     variant: 'secondary' as const,
     icon: Clock,
     animate: false,
   },
   [Status.RUNNING]: {
-    label: '运行中',
+    labelKey: 'running',
     variant: 'default' as const,
     icon: Loader2,
     animate: true,
   },
   [Status.ERROR]: {
-    label: '失败',
+    labelKey: 'failed',
     variant: 'destructive' as const,
     icon: XCircle,
     animate: false,
   },
   [Status.SUCCESS]: {
-    label: '成功',
+    labelKey: 'success',
     variant: 'outline' as const,
     icon: CheckCircle2,
     animate: false,
   },
 }
 
-function formatDateTime(dateStr?: string | null) {
+function formatDateTime(
+  dateFormatter: Intl.DateTimeFormat,
+  dateStr?: string | null,
+) {
   if (!dateStr) return '-'
   try {
-    return format(new Date(dateStr), 'MM-dd HH:mm', { locale: zhCN })
+    return dateFormatter.format(new Date(dateStr))
   } catch {
     return '-'
   }
@@ -96,6 +99,19 @@ export function WorkflowRunInstances({
   workflowUid,
   executionScope,
 }: WorkflowRunInstancesProps) {
+  const locale = useLocale()
+  const t = useTranslations('Project.workflow.runs')
+  const tStatus = useTranslations('Project.workflow.status')
+  const dateFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat(locale, {
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+    [locale],
+  )
   const runWorkflowMutation = useRunWorkflow()
   const isProjectLevel = executionScope === ExecutionScope.PROJECT_LEVEL
 
@@ -134,12 +150,12 @@ export function WorkflowRunInstances({
         workflowUid,
         data: sampleUid ? { sample_uids: [sampleUid] } : {},
       })
-      toast.success('已重新提交运行')
+      toast.success(t('rerunSubmitted'))
     } catch (error) {
       if (error instanceof Error && error.message.includes('409')) {
-        toast.error('该样本正在运行中，请等待完成后再重跑')
+        toast.error(t('sampleRunning'))
       } else {
-        toast.error('运行失败，请重试')
+        toast.error(t('runFailed'))
       }
     }
   }
@@ -162,7 +178,7 @@ export function WorkflowRunInstances({
       return (
         <div className='p-4'>
           <div className='rounded-md border border-dashed bg-background px-4 py-8 text-center text-sm text-muted-foreground'>
-            尚未运行，请点击「运行」按钮启动
+            {t('projectNotRun')}
           </div>
         </div>
       )
@@ -173,7 +189,7 @@ export function WorkflowRunInstances({
         <div className='overflow-hidden rounded-md border bg-background'>
           <div className='flex items-center gap-2 border-b bg-muted/40 px-4 py-3'>
             <ActivityIcon className='size-4 text-muted-foreground' />
-            <div className='text-sm font-medium'>运行实例</div>
+            <div className='text-sm font-medium'>{t('projectRuns')}</div>
             <Badge variant='secondary' className='ml-auto'>
               {projectRuns.length}
             </Badge>
@@ -181,12 +197,14 @@ export function WorkflowRunInstances({
           <Table>
             <TableHeader>
               <TableRow className='bg-muted/20 hover:bg-muted/20'>
-                <TableHead>运行名称</TableHead>
-                <TableHead className='w-[110px]'>状态</TableHead>
-                <TableHead className='w-[220px]'>进度</TableHead>
-                <TableHead className='w-[120px]'>开始时间</TableHead>
-                <TableHead className='w-[90px]'>时长</TableHead>
-                <TableHead className='w-[130px] text-right'>操作</TableHead>
+                <TableHead>{t('runName')}</TableHead>
+                <TableHead className='w-[110px]'>{t('status')}</TableHead>
+                <TableHead className='w-[220px]'>{t('progress')}</TableHead>
+                <TableHead className='w-[120px]'>{t('startTime')}</TableHead>
+                <TableHead className='w-[90px]'>{t('duration')}</TableHead>
+                <TableHead className='w-[130px] text-right'>
+                  {t('actions')}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -210,7 +228,7 @@ export function WorkflowRunInstances({
                         <Icon
                           className={`size-3 ${cfg.animate ? 'animate-spin' : ''}`}
                         />
-                        {cfg.label}
+                        {tStatus(cfg.labelKey)}
                       </Badge>
                     </TableCell>
 
@@ -231,7 +249,7 @@ export function WorkflowRunInstances({
                     </TableCell>
 
                     <TableCell className='text-sm text-muted-foreground'>
-                      {formatDateTime(run.start_time)}
+                      {formatDateTime(dateFormatter, run.start_time)}
                     </TableCell>
 
                     <TableCell className='text-sm text-muted-foreground'>
@@ -248,7 +266,7 @@ export function WorkflowRunInstances({
                         >
                           <Link href={`/project/${projectId}/${run.uid}`}>
                             <ExternalLink className='size-3' />
-                            查看详情
+                            {t('viewDetails')}
                           </Link>
                         </Button>
                         <Button
@@ -263,7 +281,7 @@ export function WorkflowRunInstances({
                           ) : (
                             <>
                               <PlayIcon className='size-3 mr-1' />
-                              重新运行
+                              {t('rerun')}
                             </>
                           )}
                         </Button>
@@ -284,7 +302,7 @@ export function WorkflowRunInstances({
     return (
       <div className='p-4'>
         <div className='rounded-md border border-dashed bg-background px-4 py-8 text-center text-sm text-muted-foreground'>
-          项目中暂无样本，请先在「样本」Tab 中添加样本
+          {t('noSamples')}
         </div>
       </div>
     )
@@ -295,7 +313,7 @@ export function WorkflowRunInstances({
       <div className='overflow-hidden rounded-md border bg-background'>
         <div className='flex items-center gap-2 border-b bg-muted/40 px-4 py-3'>
           <ActivityIcon className='size-4 text-muted-foreground' />
-          <div className='text-sm font-medium'>样本运行实例</div>
+          <div className='text-sm font-medium'>{t('sampleRuns')}</div>
           <Badge variant='secondary' className='ml-auto'>
             {samples.length}
           </Badge>
@@ -303,12 +321,14 @@ export function WorkflowRunInstances({
         <Table>
           <TableHeader>
             <TableRow className='bg-muted/20 hover:bg-muted/20'>
-              <TableHead className='w-[220px]'>样本名称</TableHead>
-              <TableHead className='w-[110px]'>状态</TableHead>
-              <TableHead className='w-[220px]'>进度</TableHead>
-              <TableHead className='w-[120px]'>开始时间</TableHead>
-              <TableHead className='w-[90px]'>时长</TableHead>
-              <TableHead className='w-[130px] text-right'>操作</TableHead>
+              <TableHead className='w-[220px]'>{t('sampleName')}</TableHead>
+              <TableHead className='w-[110px]'>{t('status')}</TableHead>
+              <TableHead className='w-[220px]'>{t('progress')}</TableHead>
+              <TableHead className='w-[120px]'>{t('startTime')}</TableHead>
+              <TableHead className='w-[90px]'>{t('duration')}</TableHead>
+              <TableHead className='w-[130px] text-right'>
+                {t('actions')}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -336,11 +356,11 @@ export function WorkflowRunInstances({
                         <Icon
                           className={`size-3 ${cfg.animate ? 'animate-spin' : ''}`}
                         />
-                        {cfg.label}
+                        {tStatus(cfg.labelKey)}
                       </Badge>
                     ) : (
                       <span className='text-xs text-muted-foreground'>
-                        未运行
+                        {tStatus('notRun')}
                       </span>
                     )}
                   </TableCell>
@@ -362,7 +382,7 @@ export function WorkflowRunInstances({
                   </TableCell>
 
                   <TableCell className='text-sm text-muted-foreground'>
-                    {formatDateTime(run?.start_time)}
+                    {formatDateTime(dateFormatter, run?.start_time)}
                   </TableCell>
 
                   <TableCell className='text-sm text-muted-foreground'>
@@ -382,7 +402,7 @@ export function WorkflowRunInstances({
                         >
                           <Link href={`/project/${projectId}/${run.uid}`}>
                             <ExternalLink className='size-3' />
-                            查看详情
+                            {t('viewDetails')}
                           </Link>
                         </Button>
                       )}
@@ -398,7 +418,7 @@ export function WorkflowRunInstances({
                         ) : (
                           <>
                             <PlayIcon className='size-3 mr-1' />
-                            {run ? '重新运行' : '运行'}
+                            {run ? t('rerun') : t('run')}
                           </>
                         )}
                       </Button>

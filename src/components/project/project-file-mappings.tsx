@@ -8,6 +8,7 @@ import {
   PlusIcon,
   Trash2Icon,
 } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import {
@@ -55,6 +56,7 @@ interface ProjectFileMappingsProps {
 }
 
 export function ProjectFileMappings({ projectId }: ProjectFileMappingsProps) {
+  const t = useTranslations('Project.fileMapping')
   const [editingMapping, setEditingMapping] =
     useState<ProjectFileMapping | null>(null)
   const [deletingMapping, setDeletingMapping] =
@@ -71,10 +73,10 @@ export function ProjectFileMappings({ projectId }: ProjectFileMappingsProps) {
         projectId,
         mappingId: deletingMapping.id,
       })
-      toast.success('全局文件删除成功')
+      toast.success(t('deleteSuccess'))
       setDeletingMapping(null)
     } catch {
-      toast.error('全局文件删除失败')
+      toast.error(t('deleteFailed'))
     }
   }
 
@@ -94,10 +96,8 @@ export function ProjectFileMappings({ projectId }: ProjectFileMappingsProps) {
         <CardHeader>
           <div className='flex items-center justify-between'>
             <div>
-              <CardTitle>全局文件</CardTitle>
-              <CardDescription>
-                管理项目级共享资源，可在工作流中使用 proj:keyword 格式引用
-              </CardDescription>
+              <CardTitle>{t('title')}</CardTitle>
+              <CardDescription>{t('descriptionText')}</CardDescription>
             </div>
             <AddProjectFileMappingDialog projectId={projectId} />
           </div>
@@ -105,15 +105,13 @@ export function ProjectFileMappings({ projectId }: ProjectFileMappingsProps) {
         <CardContent>
           {!mappings || mappings.length === 0 ? (
             <div className='text-center py-12'>
-              <p className='text-muted-foreground mb-4'>
-                暂无全局文件，点击"添加文件"按钮创建
-              </p>
+              <p className='text-muted-foreground mb-4'>{t('empty')}</p>
               <AddProjectFileMappingDialog
                 projectId={projectId}
                 trigger={
                   <Button>
                     <PlusIcon className='size-4 mr-2' />
-                    添加文件
+                    {t('add')}
                   </Button>
                 }
               />
@@ -122,11 +120,11 @@ export function ProjectFileMappings({ projectId }: ProjectFileMappingsProps) {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className='w-[200px]'>关键字</TableHead>
-                  <TableHead>文件路径</TableHead>
-                  <TableHead>描述</TableHead>
-                  <TableHead className='w-[180px]'>创建时间</TableHead>
-                  <TableHead className='w-[80px]'>操作</TableHead>
+                  <TableHead className='w-[200px]'>{t('keyword')}</TableHead>
+                  <TableHead>{t('filePath')}</TableHead>
+                  <TableHead>{t('description')}</TableHead>
+                  <TableHead className='w-[180px]'>{t('createdAt')}</TableHead>
+                  <TableHead className='w-[80px]'>{t('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -159,14 +157,14 @@ export function ProjectFileMappings({ projectId }: ProjectFileMappingsProps) {
                             onClick={() => setEditingMapping(mapping)}
                           >
                             <EditIcon className='size-4 mr-2' />
-                            编辑
+                            {t('edit')}
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className='text-destructive'
                             onClick={() => setDeletingMapping(mapping)}
                           >
                             <Trash2Icon className='size-4 mr-2' />
-                            删除
+                            {t('delete')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -197,19 +195,20 @@ export function ProjectFileMappings({ projectId }: ProjectFileMappingsProps) {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>确认删除</AlertDialogTitle>
+            <AlertDialogTitle>{t('deleteDialogTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              确定要删除全局文件 "proj:{deletingMapping?.keyword}" 吗？
-              此操作无法撤销，使用此文件的工作流可能会受到影响。
+              {t('deleteDialogDescription', {
+                keyword: `proj:${deletingMapping?.keyword ?? ''}`,
+              })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
             >
-              {deleteMutation.isPending ? '删除中...' : '删除'}
+              {deleteMutation.isPending ? t('deleting') : t('delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

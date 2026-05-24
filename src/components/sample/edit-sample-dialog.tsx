@@ -1,7 +1,8 @@
 'use client'
 
 import { PlusIcon, XIcon } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
+import { useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
@@ -45,17 +46,12 @@ export function EditSampleDialog({
   open,
   onOpenChange,
 }: EditSampleDialogProps) {
-  const [sampleName, setSampleName] = useState('')
-  const [metaData, setMetaData] = useState<MetaEntry[]>([])
-  const nextId = useRef(0)
-
-  useEffect(() => {
-    if (open) {
-      setSampleName(sample.sample_name)
-      setMetaData(toEntries(sample.meta_data))
-      nextId.current = Object.keys(sample.meta_data || {}).length
-    }
-  }, [open, sample])
+  const t = useTranslations('Project.sample')
+  const [sampleName, setSampleName] = useState(sample.sample_name)
+  const [metaData, setMetaData] = useState<MetaEntry[]>(
+    toEntries(sample.meta_data),
+  )
+  const nextId = useRef(Object.keys(sample.meta_data || {}).length)
 
   const updateSampleMutation = useUpdateSample()
 
@@ -82,7 +78,7 @@ export function EditSampleDialog({
 
   const handleSubmit = async () => {
     if (!sampleName.trim()) {
-      toast.error('请输入样本名称')
+      toast.error(t('sampleNameRequired'))
       return
     }
 
@@ -103,10 +99,10 @@ export function EditSampleDialog({
         },
       })
 
-      toast.success('样本更新成功')
+      toast.success(t('updateSuccess'))
       onOpenChange(false)
     } catch {
-      toast.error('样本更新失败')
+      toast.error(t('updateFailed'))
     }
   }
 
@@ -114,17 +110,17 @@ export function EditSampleDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='max-w-2xl max-h-[80vh] overflow-y-auto'>
         <DialogHeader>
-          <DialogTitle>编辑样本</DialogTitle>
-          <DialogDescription>修改样本的名称和元数据信息</DialogDescription>
+          <DialogTitle>{t('editDialogTitle')}</DialogTitle>
+          <DialogDescription>{t('editDialogDescription')}</DialogDescription>
         </DialogHeader>
 
         <div className='space-y-4 py-4'>
           {/* 样本名称 */}
           <div className='space-y-2'>
-            <Label htmlFor='sample-name'>样本名称 *</Label>
+            <Label htmlFor='sample-name'>{t('sampleNameRequiredLabel')}</Label>
             <Input
               id='sample-name'
-              placeholder='例如: Sample-001'
+              placeholder={t('sampleNamePlaceholder')}
               value={sampleName}
               onChange={(e) => setSampleName(e.target.value)}
             />
@@ -133,7 +129,7 @@ export function EditSampleDialog({
           {/* 元数据 */}
           <div className='space-y-2'>
             <div className='flex items-center justify-between'>
-              <Label>元数据</Label>
+              <Label>{t('metadata')}</Label>
               <Button
                 type='button'
                 variant='outline'
@@ -141,27 +137,27 @@ export function EditSampleDialog({
                 onClick={handleAddMetaData}
               >
                 <PlusIcon className='size-4 mr-2' />
-                添加字段
+                {t('addField')}
               </Button>
             </div>
 
             {metaData.length === 0 ? (
               <p className='text-sm text-muted-foreground'>
-                暂无元数据,点击"添加字段"按钮添加
+                {t('emptyMetadata')}
               </p>
             ) : (
               <div className='space-y-2'>
                 {metaData.map((item) => (
                   <div key={item.id} className='flex gap-2'>
                     <Input
-                      placeholder='键'
+                      placeholder={t('keyPlaceholder')}
                       value={item.key}
                       onChange={(e) =>
                         handleMetaDataChange(item.id, 'key', e.target.value)
                       }
                     />
                     <Input
-                      placeholder='值'
+                      placeholder={t('valuePlaceholder')}
                       value={item.value}
                       onChange={(e) =>
                         handleMetaDataChange(item.id, 'value', e.target.value)
@@ -184,13 +180,13 @@ export function EditSampleDialog({
 
         <DialogFooter>
           <Button variant='outline' onClick={() => onOpenChange(false)}>
-            取消
+            {t('cancel')}
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={updateSampleMutation.isPending}
           >
-            {updateSampleMutation.isPending ? '保存中...' : '保存更改'}
+            {updateSampleMutation.isPending ? t('saving') : t('saveChanges')}
           </Button>
         </DialogFooter>
       </DialogContent>
