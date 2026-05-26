@@ -1,3 +1,10 @@
+allowBuilds:
+  '@swc/core': true
+  msgpackr-extract: true
+  sharp: true
+minimumReleaseAgeExclude:
+  - oxlint-plugin-react-doctor@0.2.6
+  - react-doctor@0.2.6
 onlyBuiltDependencies:
   - '@swc/core'
   - '@tailwindcss/oxide'
