@@ -18,7 +18,7 @@ BioFlow AI Web — a bioinformatics workflow platform built with Next.js 16 (App
 pnpm build            # Production build (Turbopack, standalone output)
 pnpm lint             # Lint with Biome
 pnpm format           # Format with Biome (auto-write)
-npx react-doctor@latest . 
+npx react-doctor@latest --diff --offline  # Check code compliance
 ```
 The inspection needs to cover only these three parts:
 1. The build compiles successfully.
