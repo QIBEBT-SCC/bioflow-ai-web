@@ -6,6 +6,7 @@ import type {
   RunWorkflowRequest,
   WorkflowRunResult,
 } from '@/types/project-workflow'
+import type { Statistics } from '@/types/run'
 
 /**
  * 添加工作流到项目
@@ -95,6 +96,15 @@ export async function getProjectRuns(
  */
 export async function getProjectRunCount(projectId: string): Promise<number> {
   return await clientFetch<number>(`/projects/${projectId}/runs/count`)
+}
+
+/**
+ * 获取项目运行实例统计信息
+ */
+export async function getProjectRunStats(
+  projectId: string,
+): Promise<Statistics> {
+  return await clientFetch<Statistics>(`/projects/${projectId}/runs/stats`)
 }
 
 /**

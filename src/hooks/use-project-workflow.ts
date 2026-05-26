@@ -7,6 +7,7 @@ import {
   downloadWorkflowPackage,
   getProjectRun,
   getProjectRunCount,
+  getProjectRunStats,
   getProjectRuns,
   getProjectWorkflows,
   removeWorkflowFromProject,
@@ -19,6 +20,7 @@ import type {
   RunWorkflowRequest,
   WorkflowRunResult,
 } from '@/types/project-workflow'
+import type { Statistics } from '@/types/run'
 
 // ============================================
 // Query Hooks (数据查询)
@@ -56,6 +58,15 @@ export function useProjectRunCount(projectId: string) {
   return useQuery<number>({
     queryKey: ['projects', projectId, 'runs', 'count'],
     queryFn: () => getProjectRunCount(projectId),
+    enabled: !!projectId,
+    staleTime: 30 * 1000,
+  })
+}
+
+export function useProjectRunStats(projectId: string) {
+  return useQuery<Statistics>({
+    queryKey: ['projects', projectId, 'runs', 'stats'],
+    queryFn: () => getProjectRunStats(projectId),
     enabled: !!projectId,
     staleTime: 30 * 1000,
   })
@@ -152,6 +163,9 @@ export function useRunWorkflow() {
     onSuccess: (_, { projectId }) => {
       queryClient.invalidateQueries({
         queryKey: ['projects', projectId, 'runs'],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['projects', projectId, 'runs', 'stats'],
       })
       queryClient.invalidateQueries({
         queryKey: ['projects', projectId, 'workflows'],
