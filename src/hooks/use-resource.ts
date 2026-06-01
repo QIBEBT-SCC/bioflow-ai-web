@@ -6,11 +6,14 @@ import {
   createDB,
   deleteDB,
   getDB,
-  getDBCount,
   getDBList,
   searchDB,
 } from '@/app/actions/resource'
-import type { BioDb, BioDbCreate } from '@/types/resource'
+import type {
+  BioDbCreate,
+  PaginatedBioDbSimple,
+  PaginatedBioDbs,
+} from '@/types/resource'
 
 // ============================================
 // Query Hooks (数据查询)
@@ -19,23 +22,16 @@ import type { BioDb, BioDbCreate } from '@/types/resource'
 /**
  * 获取数据库列表（分页）
  */
-export const useDBList = (offset: number = 0, enabled: boolean = true) => {
+export const useDBList = (
+  offset: number = 0,
+  limit: number = 8,
+  enabled: boolean = true,
+) => {
   return useQuery({
-    queryKey: ['databases', 'list', offset],
-    queryFn: () => getDBList(offset, 8),
+    queryKey: ['databases', 'list', offset, limit],
+    queryFn: () => getDBList(offset, limit),
     enabled,
     staleTime: 5 * 60 * 1000, // 5分钟缓存
-  })
-}
-
-/**
- * 获取数据库总数
- */
-export const useDBCount = () => {
-  return useQuery({
-    queryKey: ['databases', 'count'],
-    queryFn: () => getDBCount(),
-    staleTime: 5 * 60 * 1000,
   })
 }
 
@@ -53,10 +49,14 @@ export const useDB = (id: number) => {
 /**
  * 搜索数据库
  */
-export const useSearchDB = (name: string, offset: number = 0) => {
+export const useSearchDB = (
+  name: string,
+  offset: number = 0,
+  limit: number = 10,
+) => {
   return useQuery({
-    queryKey: ['databases', 'search', name, offset],
-    queryFn: () => searchDB(name, offset, 10), // 搜索时返回更多结果
+    queryKey: ['databases', 'search', name, offset, limit],
+    queryFn: () => searchDB(name, offset, limit),
     enabled: !!name && name.trim().length > 0, // 只有有搜索词时才查询
     staleTime: 2 * 60 * 1000, // 搜索结果缓存2分钟
   })
@@ -76,9 +76,8 @@ export const useCreateDB = () => {
     mutationFn: (data: BioDbCreate) => createDB(data),
     onSuccess: () => {
       toast.success('数据库添加成功')
-      // 自动刷新列表和总数
       queryClient.invalidateQueries({ queryKey: ['databases', 'list'] })
-      queryClient.invalidateQueries({ queryKey: ['databases', 'count'] })
+      queryClient.invalidateQueries({ queryKey: ['databases', 'search'] })
     },
     onError: (error: Error & { status?: number }) => {
       // 错误由组件处理，这里只记录
@@ -97,9 +96,8 @@ export const useDeleteDB = () => {
     mutationFn: (id: number) => deleteDB(id),
     onSuccess: (_, id) => {
       toast.success('数据库删除成功')
-      // 刷新列表和总数
       queryClient.invalidateQueries({ queryKey: ['databases', 'list'] })
-      queryClient.invalidateQueries({ queryKey: ['databases', 'count'] })
+      queryClient.invalidateQueries({ queryKey: ['databases', 'search'] })
       // 删除详情缓存
       queryClient.removeQueries({ queryKey: ['database', id] })
     },
@@ -146,9 +144,27 @@ export const useOptimisticDeleteDB = () => {
       })
 
       // 乐观更新：从所有列表中移除该数据库
-      queryClient.setQueriesData<BioDb[]>(
+      queryClient.setQueriesData<PaginatedBioDbSimple>(
         { queryKey: ['databases', 'list'] },
-        (old) => old?.filter((db) => db.id !== id),
+        (old) =>
+          old
+            ? {
+                ...old,
+                total: Math.max(0, old.total - 1),
+                data: old.data.filter((db) => db.id !== id),
+              }
+            : old,
+      )
+      queryClient.setQueriesData<PaginatedBioDbs>(
+        { queryKey: ['databases', 'search'] },
+        (old) =>
+          old
+            ? {
+                ...old,
+                total: Math.max(0, old.total - 1),
+                data: old.data.filter((db) => db.id !== id),
+              }
+            : old,
       )
 
       return { previousData }
@@ -165,7 +181,8 @@ export const useOptimisticDeleteDB = () => {
     onSuccess: (_, id) => {
       toast.success('数据库删除成功')
       queryClient.removeQueries({ queryKey: ['database', id] })
-      queryClient.invalidateQueries({ queryKey: ['databases', 'count'] })
+      queryClient.invalidateQueries({ queryKey: ['databases', 'list'] })
+      queryClient.invalidateQueries({ queryKey: ['databases', 'search'] })
     },
   })
 }

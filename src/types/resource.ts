@@ -18,3 +18,19 @@ export interface BioDb {
   size: string
   last_update: string
 }
+
+export interface PaginatedBioDbs {
+  total: number
+  offset: number
+  limit: number
+  has_more: boolean
+  data: BioDb[]
+}
+
+export interface PaginatedBioDbSimple {
+  total: number
+  offset: number
+  limit: number
+  has_more: boolean
+  data: BioDbSimple[]
+}
