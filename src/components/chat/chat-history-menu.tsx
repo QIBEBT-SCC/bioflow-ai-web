@@ -51,7 +51,7 @@ export function ChatHistoryMenu() {
         <div className='p-4 border-b'>
           <h4 className='font-medium leading-none'>Chat History</h4>
         </div>
-        <ScrollArea className='h-[300px]'>
+        <ScrollArea className='h-75'>
           <div className='flex flex-col p-2'>
             {isLoading && (
               <div className='flex justify-center p-4'>
