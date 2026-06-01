@@ -52,6 +52,14 @@ export interface PaginatedToolImages {
   data: ToolImage[]
 }
 
+export interface PaginatedTools {
+  total: number
+  offset: number
+  limit: number
+  has_more: boolean
+  data: SimpleToolInfo[]
+}
+
 // 参数定义接口
 export interface ParamDefine {
   description?: string

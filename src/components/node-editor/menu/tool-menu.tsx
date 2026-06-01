@@ -123,8 +123,9 @@ export const ToolMenu: React.FC<ToolMenuProps> = ({
   const { data: allGroups = [], isLoading: loadingGroups } = useToolGroupList()
   const { data: tools = [], isLoading: loadingTools } =
     useGroupTools(currentGroupId)
-  const { data: searchResults = [], isLoading: searchLoading } =
+  const { data: searchPage, isLoading: searchLoading } =
     useSearchTools(searchQuery)
+  const searchResults = searchPage?.data ?? []
 
   const toolsContainerRef = useRef<HTMLDivElement>(null)
 
