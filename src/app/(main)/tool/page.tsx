@@ -44,7 +44,7 @@ export default function ToolsPage() {
       <header className='flex flex-col shrink-0 border-b'>
         <div className='flex items-center gap-2 px-4 h-12 bg-background'>
           <SidebarTrigger className='-ml-1' />
-          <Separator orientation='vertical' className='!mr-2 !h-4' />
+          <Separator orientation='vertical' className='mr-2! h-4!' />
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem className='hidden md:block'>
@@ -66,7 +66,7 @@ export default function ToolsPage() {
                 <Input
                   type='search'
                   placeholder={t('searchPlaceholder')}
-                  className='pl-8 w-full sm:w-[250px]'
+                  className='pl-8 w-full sm:w-62.5'
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />

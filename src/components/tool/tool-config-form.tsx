@@ -299,7 +299,7 @@ export function ToolConfigForm({
 
       {/* 帮助命令测试结果对话框 */}
       <Dialog open={showHelpResult} onOpenChange={setShowHelpResult}>
-        <DialogContent className='sm:!max-w-5xl'>
+        <DialogContent className='sm:max-w-5xl!'>
           <DialogHeader>
             <DialogTitle>{t('helpCommandResult')}</DialogTitle>
           </DialogHeader>

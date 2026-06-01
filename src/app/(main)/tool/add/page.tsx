@@ -175,9 +175,9 @@ function AddToolPageContent() {
     },
   ]
   const { push } = useRouter()
-  const { get } = useSearchParams()
-  const initialStep = Number(get('step')) || 1
-  const copyUid = get('copy')
+  const searchParams = useSearchParams()
+  const initialStep = Number(searchParams.get('step')) || 1
+  const copyUid = searchParams.get('copy')
   const [currentStep, setCurrentStep] = useState(initialStep)
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -289,18 +289,18 @@ function AddToolPageContent() {
 
   // 添加动态参数
   const addDynamicParam = () => {
-    setToolConfig((prev) => ({
-      ...prev,
+    setToolConfig({
+      ...toolConfig,
       dynamic_params: [
-        ...prev.dynamic_params,
+        ...toolConfig.dynamic_params,
         {
           description: '',
           command: '',
           is_position: false,
-          index: prev.dynamic_params.length,
+          index: toolConfig.dynamic_params.length,
         },
       ],
-    }))
+    })
   }
 
   // 更新动态参数
@@ -311,7 +311,7 @@ function AddToolPageContent() {
   ) => {
     const updatedParams = [...toolConfig.dynamic_params]
     updatedParams[index] = { ...updatedParams[index], [field]: value }
-    setToolConfig((prev) => ({ ...prev, dynamic_params: updatedParams }))
+    setToolConfig({ ...toolConfig, dynamic_params: updatedParams })
   }
 
   // 删除动态参数
@@ -322,26 +322,26 @@ function AddToolPageContent() {
     updatedParams.forEach((param, idx) => {
       param.index = idx
     })
-    setToolConfig((prev) => ({ ...prev, dynamic_params: updatedParams }))
+    setToolConfig({ ...toolConfig, dynamic_params: updatedParams })
   }
 
   // 添加文件挂载
   const addFileMount = () => {
-    setToolConfig((prev) => ({
-      ...prev,
+    setToolConfig({
+      ...toolConfig,
       file_mounts: [
-        ...prev.file_mounts,
+        ...toolConfig.file_mounts,
         {
           name: '',
           description: '',
           file_path: '',
-          file_type: 'OUTPUT',
+          file_type: 'INPUT',
           is_report: false,
           is_log: false,
           mount_path: '',
         },
       ],
-    }))
+    })
   }
 
   // 更新文件挂载
@@ -352,28 +352,28 @@ function AddToolPageContent() {
   ) => {
     const updatedFiles = [...toolConfig.file_mounts]
     updatedFiles[index] = { ...updatedFiles[index], [field]: value }
-    setToolConfig((prev) => ({ ...prev, file_mounts: updatedFiles }))
+    setToolConfig({ ...toolConfig, file_mounts: updatedFiles })
   }
 
   // 删除文件挂载
   const removeFileMount = (index: number) => {
     const updatedFiles = [...toolConfig.file_mounts]
     updatedFiles.splice(index, 1)
-    setToolConfig((prev) => ({ ...prev, file_mounts: updatedFiles }))
+    setToolConfig({ ...toolConfig, file_mounts: updatedFiles })
   }
 
   const reorderDynamicParams = (newParams: ParamDefine[]) =>
-    setToolConfig((prev) => ({ ...prev, dynamic_params: newParams }))
+    setToolConfig({ ...toolConfig, dynamic_params: newParams })
 
   const reorderFileMounts = (newMounts: FileMount[]) =>
-    setToolConfig((prev) => ({ ...prev, file_mounts: newMounts }))
+    setToolConfig({ ...toolConfig, file_mounts: newMounts })
 
   return (
     <SidebarInset className='h-screen flex flex-col'>
       <header className='flex flex-col shrink-0 border-b'>
         <div className='flex items-center gap-2 px-4 h-12 bg-background'>
           <SidebarTrigger className='-ml-1' />
-          <Separator orientation='vertical' className='!mr-2 !h-4' />
+          <Separator orientation='vertical' className='mr-2! h-4!' />
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem className='hidden md:block'>
