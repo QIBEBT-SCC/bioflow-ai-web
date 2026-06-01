@@ -60,14 +60,14 @@ function toNumber(value: string) {
   return Number.isFinite(parsed) ? parsed : 0
 }
 
-function useCurrencyFormatter() {
+function useUsdCostFormatter() {
   const locale = useLocale()
 
   return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: 'USD',
     minimumFractionDigits: 2,
-    maximumFractionDigits: 6,
+    maximumFractionDigits: 2,
   })
 }
 
@@ -259,7 +259,7 @@ function UserRoleAction({ user }: { user: ManagedUser }) {
 export function UserManagement() {
   const t = useTranslations('setting.user_management')
   const usersQuery = useUsers()
-  const currency = useCurrencyFormatter()
+  const currency = useUsdCostFormatter()
   const users = usersQuery.data ?? []
 
   const totalCost = users.reduce(
