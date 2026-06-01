@@ -1,5 +1,9 @@
 import { clientFetch } from '@/lib/api-client'
-import type { ToolImage, ToolImagePublic } from '@/types/tool'
+import type {
+  PaginatedToolImages,
+  ToolImage,
+  ToolImagePublic,
+} from '@/types/tool'
 
 /**
  * 获取镜像列表
@@ -7,8 +11,8 @@ import type { ToolImage, ToolImagePublic } from '@/types/tool'
 export async function getImageList(
   offset: number = 0,
   limit: number = 12,
-): Promise<ToolImage[]> {
-  return await clientFetch<ToolImage[]>('/images', {
+): Promise<PaginatedToolImages> {
+  return await clientFetch<PaginatedToolImages>('/images', {
     params: {
       offset: String(offset),
       limit: String(limit),
@@ -16,16 +20,17 @@ export async function getImageList(
   })
 }
 
-/**
- * 获取镜像总数
- */
-export async function getImageCount(): Promise<number> {
-  return await clientFetch<number>('/images/count')
-}
-
-export async function searchImages(name: string): Promise<ToolImage[]> {
-  return await clientFetch<ToolImage[]>('/images/search', {
-    params: { name },
+export async function searchImages(
+  name: string,
+  offset: number = 0,
+  limit: number = 12,
+): Promise<PaginatedToolImages> {
+  return await clientFetch<PaginatedToolImages>('/images/search', {
+    params: {
+      name,
+      offset: String(offset),
+      limit: String(limit),
+    },
   })
 }
 

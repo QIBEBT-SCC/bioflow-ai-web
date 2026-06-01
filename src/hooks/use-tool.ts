@@ -6,7 +6,6 @@ import { refreshDocument } from '@/app/actions/document'
 import {
   createImage,
   getImage,
-  getImageCount,
   getImageList,
   runInImage,
   searchImages,
@@ -29,6 +28,7 @@ import type { ToolArgPublic } from '@/types/node'
 import type {
   DockerToolCreate,
   DockerToolUpdate,
+  PaginatedToolImages,
   SimpleToolInfo,
   ToolGroup,
   ToolImage,
@@ -198,10 +198,14 @@ export const useUpdateTool = () => {
 /**
  * 搜索镜像
  */
-export const useSearchImages = (name: string) => {
-  return useQuery<ToolImage[]>({
-    queryKey: ['images', name],
-    queryFn: () => searchImages(name),
+export const useSearchImages = (
+  name: string,
+  offset: number = 0,
+  limit: number = 12,
+) => {
+  return useQuery<PaginatedToolImages>({
+    queryKey: ['images', name, offset, limit],
+    queryFn: () => searchImages(name, offset, limit),
     enabled: !!name,
     staleTime: 5 * 60 * 1000,
   })
@@ -211,20 +215,9 @@ export const useSearchImages = (name: string) => {
  * 获取镜像列表
  */
 export const useImageList = (offset: number = 0, limit: number = 12) => {
-  return useQuery<ToolImage[]>({
+  return useQuery<PaginatedToolImages>({
     queryKey: ['imageList', offset, limit],
     queryFn: () => getImageList(offset, limit),
-    staleTime: 5 * 60 * 1000,
-  })
-}
-
-/**
- * 获取镜像总数
- */
-export const useImageCount = () => {
-  return useQuery<number>({
-    queryKey: ['imageCount'],
-    queryFn: () => getImageCount(),
     staleTime: 5 * 60 * 1000,
   })
 }
@@ -252,7 +245,6 @@ export const useCreateImage = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['images'] })
       queryClient.invalidateQueries({ queryKey: ['imageList'] })
-      queryClient.invalidateQueries({ queryKey: ['imageCount'] })
       toast.success('镜像创建成功')
     },
     onError: (error: Error) => {
@@ -271,9 +263,9 @@ export const useUpdateImage = () => {
     mutationFn: ({ uid, image }: { uid: string; image: Partial<ToolImage> }) =>
       updateImage(uid, image),
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['images', variables.uid] })
+      queryClient.invalidateQueries({ queryKey: ['images'] })
+      queryClient.invalidateQueries({ queryKey: ['image', variables.uid] })
       queryClient.invalidateQueries({ queryKey: ['imageList'] })
-      queryClient.invalidateQueries({ queryKey: ['imageCount'] })
       toast.success('镜像更新成功')
     },
     onError: (error: Error) => {
