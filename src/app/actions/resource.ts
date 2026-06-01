@@ -1,5 +1,10 @@
 import { clientFetch } from '@/lib/api-client'
-import type { BioDb, BioDbCreate, BioDbSimple } from '@/types/resource'
+import type {
+  BioDb,
+  BioDbCreate,
+  PaginatedBioDbSimple,
+  PaginatedBioDbs,
+} from '@/types/resource'
 
 /**
  * 获取数据库列表
@@ -7,20 +12,13 @@ import type { BioDb, BioDbCreate, BioDbSimple } from '@/types/resource'
 export async function getDBList(
   offset: number = 0,
   limit: number = 8,
-): Promise<BioDbSimple[]> {
-  return await clientFetch('/bio_dbs', {
+): Promise<PaginatedBioDbSimple> {
+  return await clientFetch<PaginatedBioDbSimple>('/bio_dbs', {
     params: {
       offset: String(offset),
       limit: String(limit),
     },
   })
-}
-
-/**
- * 获取数据库总数
- */
-export async function getDBCount(): Promise<number> {
-  return await clientFetch('/bio_dbs/count')
 }
 
 /**
@@ -57,8 +55,8 @@ export async function searchDB(
   name: string,
   offset: number = 0,
   limit: number = 10,
-): Promise<BioDb[]> {
-  return await clientFetch<BioDb[]>('/bio_dbs/search', {
+): Promise<PaginatedBioDbs> {
+  return await clientFetch<PaginatedBioDbs>('/bio_dbs/search', {
     params: {
       name: name,
       offset: String(offset),
