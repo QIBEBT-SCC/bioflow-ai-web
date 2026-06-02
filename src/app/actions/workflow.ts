@@ -1,7 +1,7 @@
 import { clientFetch } from '@/lib/api-client'
 import type {
   ExecutionScope,
-  SimpleWorkflowInfo,
+  PaginatedWorkflows,
   Workflow,
   WorkflowDefinition,
 } from '@/types/workflow'
@@ -12,20 +12,13 @@ import type {
 export async function getWorkflows(
   offset: number = 0,
   limit: number = 8,
-): Promise<SimpleWorkflowInfo[]> {
-  return await clientFetch<SimpleWorkflowInfo[]>('/workflows', {
+): Promise<PaginatedWorkflows> {
+  return await clientFetch<PaginatedWorkflows>('/workflows', {
     params: {
       offset: String(offset),
       limit: String(limit),
     },
   })
-}
-
-/**
- * 获取workflow总数
- */
-export async function getWorkflowCount(): Promise<number> {
-  return await clientFetch<number>('/workflows/count')
 }
 
 /**

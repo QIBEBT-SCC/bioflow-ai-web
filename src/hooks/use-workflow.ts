@@ -5,13 +5,13 @@ import { toast } from 'sonner'
 import {
   deleteWorkflow,
   getWorkflow,
-  getWorkflowCount,
   getWorkflows,
   saveWorkflow,
   updateWorkflow,
 } from '@/app/actions/workflow'
 import type {
   ExecutionScope,
+  PaginatedWorkflows,
   Workflow,
   WorkflowDefinition,
 } from '@/types/workflow'
@@ -23,22 +23,11 @@ import type {
 /**
  * 获取workflow列表（分页）
  */
-export const useWorkflows = (offset: number = 0) => {
-  return useQuery({
-    queryKey: ['workflows', offset],
-    queryFn: () => getWorkflows(offset, 8),
+export const useWorkflows = (offset: number = 0, limit: number = 8) => {
+  return useQuery<PaginatedWorkflows>({
+    queryKey: ['workflows', offset, limit],
+    queryFn: () => getWorkflows(offset, limit),
     staleTime: 5 * 60 * 1000, // 5分钟缓存
-  })
-}
-
-/**
- * 获取workflow总数
- */
-export const useWorkflowCount = () => {
-  return useQuery({
-    queryKey: ['workflowCount'],
-    queryFn: () => getWorkflowCount(),
-    staleTime: 5 * 60 * 1000,
   })
 }
 

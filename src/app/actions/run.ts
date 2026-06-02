@@ -1,5 +1,10 @@
 import { clientFetch } from '@/lib/api-client'
-import type { RunFileNode, RunPublic, Statistics } from '@/types/run'
+import type {
+  PaginatedRuns,
+  RunFileNode,
+  RunPublic,
+  Statistics,
+} from '@/types/run'
 import type { WorkflowDefinition } from '@/types/workflow'
 
 /**
@@ -25,8 +30,8 @@ export async function newRunInstance(
 export async function getRuns(
   offset: number = 0,
   limit: number = 20,
-): Promise<RunPublic[]> {
-  return await clientFetch<RunPublic[]>('/runs', {
+): Promise<PaginatedRuns> {
+  return await clientFetch<PaginatedRuns>('/runs', {
     params: {
       offset: String(offset),
       limit: String(limit),

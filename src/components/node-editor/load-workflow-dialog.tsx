@@ -44,7 +44,6 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   useDeleteWorkflow,
   useUpdateWorkflow,
-  useWorkflowCount,
   useWorkflows,
 } from '@/hooks/use-workflow'
 import { useNodeEditorStore } from '@/stores/nodeviewStore'
@@ -97,8 +96,12 @@ export function LoadWorkflowDialog() {
   )
 
   const { currentWorkflowUid, setCurrentWorkflowUid } = useNodeEditorStore()
-  const { data: workflows = [], isLoading } = useWorkflows(page * pageSize)
-  const { data: totalCount = 0 } = useWorkflowCount()
+  const { data: workflowsPage, isLoading } = useWorkflows(
+    page * pageSize,
+    pageSize,
+  )
+  const workflows = workflowsPage?.data ?? []
+  const totalCount = workflowsPage?.total ?? 0
   const updateWorkflowMutation = useUpdateWorkflow()
   const deleteWorkflowMutation = useDeleteWorkflow()
 
@@ -141,7 +144,7 @@ export function LoadWorkflowDialog() {
             加载
           </Button>
         </DialogTrigger>
-        <DialogContent className='flex flex-col sm:max-w-[520px] max-h-[80vh]'>
+        <DialogContent className='flex flex-col sm:max-w-130 max-h-[80vh]'>
           <DialogHeader className='shrink-0'>
             <div className='flex items-center gap-2'>
               <div className='p-2 bg-primary/10 rounded-full'>
