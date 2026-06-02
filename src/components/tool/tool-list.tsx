@@ -46,7 +46,6 @@ import {
   useDeleteTool,
   useGroupTools,
   useSearchTools,
-  useToolCount,
   useToolList,
 } from '@/hooks/use-tool'
 import type { SimpleToolInfo } from '@/types/tool'
@@ -114,8 +113,13 @@ export function ToolList({
   const isFiltering = selectedGroupId !== null && !isSearching // 搜索优先级高于分组
 
   // 搜索工具（服务端分页）
-  const { data: searchResults = [], isLoading: isSearchLoading } =
-    useSearchTools(searchQuery.trim(), offset)
+  const { data: searchPage, isLoading: isSearchLoading } = useSearchTools(
+    searchQuery.trim(),
+    offset,
+    pageSize,
+  )
+  const searchResults = searchPage?.data ?? []
+  const searchTotal = searchPage?.total ?? 0
 
   // 分组工具（无服务端分页，需要客户端处理）
   const { data: allGroupTools = [], isLoading: isLoadingGroup } = useGroupTools(
@@ -123,11 +127,12 @@ export function ToolList({
   )
 
   // 所有工具（服务端分页）
-  const { data: allToolsList = [], isLoading: isLoadingAll } = useToolList(
+  const { data: allToolsPage, isLoading: isLoadingAll } = useToolList(
     !isSearching && !isFiltering ? offset : 0,
-    !isSearching && !isFiltering ? pageSize : 10,
+    pageSize,
   )
-  const { data: toolCounts = 0 } = useToolCount()
+  const allToolsList = allToolsPage?.data ?? []
+  const allToolsTotal = allToolsPage?.total ?? 0
 
   // 对分组工具进行客户端分页
   const paginatedGroupTools = isFiltering
@@ -149,19 +154,25 @@ export function ToolList({
 
   // 计算总页数
   const totalPages = isSearching
-    ? Math.ceil((searchResults.length || 1) / pageSize) // 搜索结果可能需要更多信息来计算总数
+    ? Math.ceil(searchTotal / pageSize)
     : isFiltering
       ? Math.ceil(allGroupTools.length / pageSize)
-      : Math.ceil(toolCounts / pageSize)
+      : Math.ceil(allToolsTotal / pageSize)
+  const safeTotalPages = Math.max(1, totalPages)
+  const totalTools = isSearching
+    ? searchTotal
+    : isFiltering
+      ? allGroupTools.length
+      : allToolsTotal
 
   // 生成页码数组
   const getPageNumbers = () => {
     const pages: (number | string)[] = []
     const maxVisible = 5
 
-    if (totalPages <= maxVisible) {
+    if (safeTotalPages <= maxVisible) {
       // 如果总页数少于最大可见数，显示所有页码
-      for (let i = 1; i <= totalPages; i++) {
+      for (let i = 1; i <= safeTotalPages; i++) {
         pages.push(i)
       }
     } else {
@@ -173,11 +184,11 @@ export function ToolList({
         }
         pages.push('...')
         pages.push(totalPages)
-      } else if (currentPage >= totalPages - 2) {
+      } else if (currentPage >= safeTotalPages - 2) {
         // 当前页在末尾
         pages.push(1)
         pages.push('...')
-        for (let i = totalPages - 3; i <= totalPages; i++) {
+        for (let i = safeTotalPages - 3; i <= safeTotalPages; i++) {
           pages.push(i)
         }
       } else {
@@ -188,7 +199,7 @@ export function ToolList({
           pages.push(i)
         }
         pages.push('...')
-        pages.push(totalPages)
+        pages.push(safeTotalPages)
       }
     }
 
@@ -213,9 +224,9 @@ export function ToolList({
           tools={allTools}
           offset={offset}
           pageSize={pageSize}
-          toolCounts={toolCounts}
+          toolCounts={totalTools}
           currentPage={currentPage}
-          totalPages={totalPages}
+          totalPages={safeTotalPages}
           pageNumbers={getPageNumbers()}
           onPageChange={setCurrentPage}
           onCopy={handleCopyTool}
@@ -226,7 +237,7 @@ export function ToolList({
         <ToolGridView
           tools={allTools}
           currentPage={currentPage}
-          totalPages={totalPages}
+          totalPages={safeTotalPages}
           pageNumbers={getPageNumbers()}
           onPageChange={setCurrentPage}
           onCopy={handleCopyTool}

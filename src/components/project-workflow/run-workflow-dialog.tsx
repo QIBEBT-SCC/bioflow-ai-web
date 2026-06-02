@@ -48,7 +48,7 @@ export function RunWorkflowDialog({
 
   const isProjectLevel = executionScope === ExecutionScope.PROJECT_LEVEL
 
-  const { data: samples, isLoading } = useSamples(projectId)
+  const { data: samples = [], isLoading } = useSamples(projectId, 0, 100)
   const runWorkflowMutation = useRunWorkflow()
 
   // 切换样本选择
@@ -66,10 +66,10 @@ export function RunWorkflowDialog({
 
   // 全选/取消全选
   const toggleAll = () => {
-    if (selectedSamples.size === samples?.length) {
+    if (selectedSamples.size === samples.length) {
       setSelectedSamples(new Set())
     } else {
-      setSelectedSamples(new Set(samples?.map((s) => s.uid) || []))
+      setSelectedSamples(new Set(samples.map((s) => s.uid)))
     }
   }
 
@@ -135,20 +135,20 @@ export function RunWorkflowDialog({
                   variant='ghost'
                   size='sm'
                   onClick={toggleAll}
-                  disabled={!samples || samples.length === 0}
+                  disabled={samples.length === 0}
                 >
-                  {selectedSamples.size === samples?.length
+                  {selectedSamples.size === samples.length
                     ? t('deselectAll')
                     : t('selectAll')}
                 </Button>
               </div>
 
-              <ScrollArea className='h-[250px] rounded-md border p-4'>
+              <ScrollArea className='h-62.5 rounded-md border p-4'>
                 {isLoading ? (
                   <div className='flex items-center justify-center py-12'>
                     <Loader2 className='size-8 animate-spin text-muted-foreground' />
                   </div>
-                ) : !samples || samples.length === 0 ? (
+                ) : samples.length === 0 ? (
                   <div className='text-center py-12 text-muted-foreground'>
                     {t('emptySamples')}
                   </div>

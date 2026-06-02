@@ -1,7 +1,7 @@
 'use client'
 
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { useDBCount, useDBList } from '@/hooks/use-resource'
+import { useDBList, useSearchDB } from '@/hooks/use-resource'
 
 interface DatabasesListProps {
   searchQuery: string
@@ -26,14 +26,30 @@ export function DatabasesList({
 }: DatabasesListProps) {
   const [offset, setOffset] = useState(0)
   const pageSize = 8
+  const trimmedSearchQuery = searchQuery.trim()
+  const isSearching = trimmedSearchQuery.length > 0
+  const prevSearchQueryRef = useRef(trimmedSearchQuery)
+  if (trimmedSearchQuery !== prevSearchQueryRef.current) {
+    prevSearchQueryRef.current = trimmedSearchQuery
+    setOffset(0)
+  }
 
-  const { data: databases = [], isLoading: isLoadingList } = useDBList(
+  const { data: listPage, isLoading: isLoadingList } = useDBList(
     offset,
-    !searchQuery, // 有搜索时不请求
+    pageSize,
+    !isSearching,
   )
-  const { data: totalCount = 0 } = useDBCount()
+  const { data: searchPage, isLoading: isLoadingSearch } = useSearchDB(
+    trimmedSearchQuery,
+    offset,
+    pageSize,
+  )
+  const activePage = isSearching ? searchPage : listPage
+  const databases = activePage?.data ?? []
+  const totalCount = activePage?.total ?? 0
+  const isLoading = isSearching ? isLoadingSearch : isLoadingList
 
-  const totalPages = Math.ceil(totalCount / pageSize)
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize))
   const currentPage = Math.floor(offset / pageSize) + 1
 
   const handlePrevPage = () => {
@@ -52,7 +68,7 @@ export function DatabasesList({
     <div className='space-y-4'>
       <h2 className='text-xl font-semibold'>数据库列表</h2>
 
-      {isLoadingList ? (
+      {isLoading ? (
         <div className='py-12 text-center text-muted-foreground'>加载中...</div>
       ) : databases.length > 0 ? (
         <>

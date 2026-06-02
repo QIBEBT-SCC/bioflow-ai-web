@@ -6,7 +6,6 @@ import { refreshDocument } from '@/app/actions/document'
 import {
   createImage,
   getImage,
-  getImageCount,
   getImageList,
   runInImage,
   searchImages,
@@ -18,7 +17,6 @@ import {
   getGroupTools,
   getTool,
   getToolArg,
-  getToolCount,
   getToolGroupList,
   getToolList,
   getToolTagList,
@@ -29,6 +27,8 @@ import type { ToolArgPublic } from '@/types/node'
 import type {
   DockerToolCreate,
   DockerToolUpdate,
+  PaginatedToolImages,
+  PaginatedTools,
   SimpleToolInfo,
   ToolGroup,
   ToolImage,
@@ -74,10 +74,14 @@ export const useGroupTools = (parent_id?: number) => {
 /**
  * 搜索工具
  */
-export const useSearchTools = (name: string, offset: number = 0) => {
-  return useQuery<SimpleToolInfo[]>({
-    queryKey: ['searchTools', name, offset],
-    queryFn: () => searchTools(name, offset),
+export const useSearchTools = (
+  name: string,
+  offset: number = 0,
+  limit: number = 12,
+) => {
+  return useQuery<PaginatedTools>({
+    queryKey: ['searchTools', name, offset, limit],
+    queryFn: () => searchTools(name, offset, limit),
     enabled: !!name,
     staleTime: 2 * 60 * 1000,
   })
@@ -95,21 +99,10 @@ export const useToolTagList = () => {
 }
 
 /**
- * 获取工具总数
- */
-export const useToolCount = () => {
-  return useQuery<number>({
-    queryKey: ['toolCount'],
-    queryFn: () => getToolCount(),
-    staleTime: 5 * 60 * 1000,
-  })
-}
-
-/**
  * 获取工具列表
  */
 export const useToolList = (offset: number = 0, limit: number = 10) => {
-  return useQuery<SimpleToolInfo[]>({
+  return useQuery<PaginatedTools>({
     queryKey: ['toolList', offset, limit],
     queryFn: () => getToolList(offset, limit),
     staleTime: 5 * 60 * 1000,
@@ -138,7 +131,6 @@ export const useCreateTool = () => {
     mutationFn: (tool: DockerToolCreate) => createTool(tool),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['toolList'] })
-      queryClient.invalidateQueries({ queryKey: ['toolCount'] })
       queryClient.invalidateQueries({ queryKey: ['groupTools'] })
       queryClient.invalidateQueries({ queryKey: ['searchTools'] })
       toast.success('工具创建成功')
@@ -159,8 +151,8 @@ export const useDeleteTool = () => {
     mutationFn: (uid: string) => deleteTool(uid),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['toolList'] })
-      queryClient.invalidateQueries({ queryKey: ['toolCount'] })
       queryClient.invalidateQueries({ queryKey: ['groupTools'] })
+      queryClient.invalidateQueries({ queryKey: ['searchTools'] })
       toast.success('工具删除成功')
     },
     onError: (error: Error) => {
@@ -198,10 +190,14 @@ export const useUpdateTool = () => {
 /**
  * 搜索镜像
  */
-export const useSearchImages = (name: string) => {
-  return useQuery<ToolImage[]>({
-    queryKey: ['images', name],
-    queryFn: () => searchImages(name),
+export const useSearchImages = (
+  name: string,
+  offset: number = 0,
+  limit: number = 12,
+) => {
+  return useQuery<PaginatedToolImages>({
+    queryKey: ['images', name, offset, limit],
+    queryFn: () => searchImages(name, offset, limit),
     enabled: !!name,
     staleTime: 5 * 60 * 1000,
   })
@@ -211,20 +207,9 @@ export const useSearchImages = (name: string) => {
  * 获取镜像列表
  */
 export const useImageList = (offset: number = 0, limit: number = 12) => {
-  return useQuery<ToolImage[]>({
+  return useQuery<PaginatedToolImages>({
     queryKey: ['imageList', offset, limit],
     queryFn: () => getImageList(offset, limit),
-    staleTime: 5 * 60 * 1000,
-  })
-}
-
-/**
- * 获取镜像总数
- */
-export const useImageCount = () => {
-  return useQuery<number>({
-    queryKey: ['imageCount'],
-    queryFn: () => getImageCount(),
     staleTime: 5 * 60 * 1000,
   })
 }
@@ -252,7 +237,6 @@ export const useCreateImage = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['images'] })
       queryClient.invalidateQueries({ queryKey: ['imageList'] })
-      queryClient.invalidateQueries({ queryKey: ['imageCount'] })
       toast.success('镜像创建成功')
     },
     onError: (error: Error) => {
@@ -271,9 +255,9 @@ export const useUpdateImage = () => {
     mutationFn: ({ uid, image }: { uid: string; image: Partial<ToolImage> }) =>
       updateImage(uid, image),
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['images', variables.uid] })
+      queryClient.invalidateQueries({ queryKey: ['images'] })
+      queryClient.invalidateQueries({ queryKey: ['image', variables.uid] })
       queryClient.invalidateQueries({ queryKey: ['imageList'] })
-      queryClient.invalidateQueries({ queryKey: ['imageCount'] })
       toast.success('镜像更新成功')
     },
     onError: (error: Error) => {

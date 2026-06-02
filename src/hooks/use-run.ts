@@ -14,7 +14,12 @@ import {
   getRuns,
   newRunInstance,
 } from '@/app/actions/run'
-import type { RunFileNode, RunPublic, Statistics } from '@/types/run'
+import type {
+  PaginatedRuns,
+  RunFileNode,
+  RunPublic,
+  Statistics,
+} from '@/types/run'
 import { Status } from '@/types/run'
 import type { WorkflowDefinition } from '@/types/workflow'
 
@@ -60,9 +65,9 @@ export const useRuns = (
   refetchInterval?:
     | number
     | false
-    | ((query: Query<RunPublic[]>) => number | false | undefined),
+    | ((query: Query<PaginatedRuns>) => number | false | undefined),
 ) => {
-  return useQuery<RunPublic[]>({
+  return useQuery<PaginatedRuns>({
     queryKey: ['runs', offset, limit],
     queryFn: () => getRuns(offset, limit),
     staleTime: 30 * 1000, // 30秒缓存，运行状态变化较快
