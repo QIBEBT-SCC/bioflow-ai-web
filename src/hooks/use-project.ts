@@ -14,6 +14,7 @@ import {
   updateProject,
 } from '@/app/actions/project'
 import type {
+  PaginatedProjects,
   ProjectCreateProp,
   ProjectPublic,
   ProjectTagProp,
@@ -26,13 +27,13 @@ import type {
  * 获取项目列表（分页）
  */
 export function useProjects(
-  page: number = 1,
+  offset: number = 0,
   limit: number = 20,
   filter?: string,
 ) {
-  return useQuery<ProjectPublic[]>({
-    queryKey: ['projects', page, limit, filter],
-    queryFn: () => getProjects(page, limit, filter),
+  return useQuery<PaginatedProjects>({
+    queryKey: ['projects', offset, limit, filter],
+    queryFn: () => getProjects(offset, limit, filter),
     staleTime: 30 * 1000,
   })
 }

@@ -1,6 +1,7 @@
 import { clientFetch } from '@/lib/api-client'
 import type {
   AddWorkflowRequest,
+  PaginatedProjectRuns,
   ProjectWorkflow,
   RunInstance,
   RunWorkflowRequest,
@@ -82,13 +83,16 @@ export async function getProjectRuns(
   projectId: string,
   offset: number = 0,
   limit: number = 20,
-): Promise<RunInstance[]> {
-  return await clientFetch<RunInstance[]>(`/projects/${projectId}/runs`, {
-    params: {
-      offset: String(offset),
-      limit: String(limit),
+): Promise<PaginatedProjectRuns> {
+  return await clientFetch<PaginatedProjectRuns>(
+    `/projects/${projectId}/runs`,
+    {
+      params: {
+        offset: String(offset),
+        limit: String(limit),
+      },
     },
-  })
+  )
 }
 
 /**

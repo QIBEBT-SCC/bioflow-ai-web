@@ -11,7 +11,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
-import { useToolCount, useToolGroupList } from '@/hooks/use-tool'
+import { useToolGroupList, useToolList } from '@/hooks/use-tool'
 import type { ToolGroup } from '@/types/tool'
 
 interface ToolGroupWithChildren extends ToolGroup {
@@ -26,6 +26,24 @@ function calculateTotalToolCount(group: ToolGroupWithChildren): number {
     }
   }
   return total
+}
+
+function buildGroupTree(groups: ToolGroup[]): ToolGroupWithChildren[] {
+  const groupMap: Record<number, ToolGroupWithChildren> = {}
+  const rootGroups: ToolGroupWithChildren[] = []
+  for (const group of groups) {
+    groupMap[group.id] = { ...group, children: [] }
+  }
+  for (const group of groups) {
+    if (!group.parent_id) {
+      rootGroups.push(groupMap[group.id])
+    } else if (groupMap[group.parent_id]) {
+      const parentGroup = groupMap[group.parent_id]
+      if (!parentGroup.children) parentGroup.children = []
+      parentGroup.children.push(groupMap[group.id])
+    }
+  }
+  return rootGroups
 }
 
 interface GroupTreeProps {
@@ -122,7 +140,8 @@ export function ToolGroupSidebar({
     {},
   )
 
-  const { data: allToolsCount = 0 } = useToolCount()
+  const { data: allToolsPage } = useToolList(0, 1)
+  const allToolsCount = allToolsPage?.total ?? 0
   const { data: toolGroups = [] } = useToolGroupList()
 
   const toggleGroupExpanded = (groupId: number) => {
@@ -130,24 +149,6 @@ export function ToolGroupSidebar({
       ...prev,
       [groupId]: !prev[groupId],
     }))
-  }
-
-  const buildGroupTree = (groups: ToolGroup[]): ToolGroupWithChildren[] => {
-    const groupMap: Record<number, ToolGroupWithChildren> = {}
-    const rootGroups: ToolGroupWithChildren[] = []
-    for (const group of groups) {
-      groupMap[group.id] = { ...group, children: [] }
-    }
-    for (const group of groups) {
-      if (!group.parent_id) {
-        rootGroups.push(groupMap[group.id])
-      } else if (groupMap[group.parent_id]) {
-        const parentGroup = groupMap[group.parent_id]
-        if (!parentGroup.children) parentGroup.children = []
-        parentGroup.children.push(groupMap[group.id])
-      }
-    }
-    return rootGroups
   }
 
   const groupTree = buildGroupTree(toolGroups)

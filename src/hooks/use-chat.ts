@@ -13,7 +13,7 @@ import {
   getChatSessions,
   updateChatSession,
 } from '@/app/actions/chat'
-import type { ChatSessionPublic, PaginatedChatResponse } from '@/types/chat'
+import type { ChatSessionPage, ChatSessionPublic } from '@/types/chat'
 
 // ============================================
 // Query Hooks (数据查询)
@@ -21,10 +21,13 @@ import type { ChatSessionPublic, PaginatedChatResponse } from '@/types/chat'
 /**
  * 获取会话列表
  */
-export function useChatSessions(page: number = 1, limit: number = 8) {
-  return useQuery<PaginatedChatResponse>({
-    queryKey: ['chat', page, limit],
-    queryFn: () => getChatSessions(page, limit),
+export function useChatSessions(
+  cursor: string | null = null,
+  limit: number = 8,
+) {
+  return useQuery<ChatSessionPage>({
+    queryKey: ['chat', cursor, limit],
+    queryFn: () => getChatSessions(cursor, limit),
     staleTime: 30 * 1000,
   })
 }
@@ -32,15 +35,15 @@ export function useChatSessions(page: number = 1, limit: number = 8) {
 /**
  * 获取无限滚动会话列表
  */
-export function useInfiniteChats(limit: number = 12) {
-  return useInfiniteQuery<PaginatedChatResponse>({
-    queryKey: ['chat', 'infinite'],
+export function useInfiniteChats(limit: number = 8) {
+  return useInfiniteQuery<ChatSessionPage>({
+    queryKey: ['chat', 'infinite', limit],
     queryFn: ({ pageParam }: { pageParam: unknown }) =>
-      getChatSessions(pageParam as number, limit),
-    initialPageParam: 0,
-    getNextPageParam: (lastPage: PaginatedChatResponse) => {
+      getChatSessions(pageParam as string | null, limit),
+    initialPageParam: null,
+    getNextPageParam: (lastPage: ChatSessionPage) => {
       if (lastPage.has_more) {
-        return lastPage.offset + lastPage.limit
+        return lastPage.next_cursor ?? undefined
       }
       return undefined
     },

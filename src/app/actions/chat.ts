@@ -1,19 +1,24 @@
 import type { UIMessage } from 'ai'
 import { clientFetch } from '@/lib/api-client'
-import type { ChatSessionPublic, PaginatedChatResponse } from '@/types/chat'
+import type { ChatSessionPage, ChatSessionPublic } from '@/types/chat'
 
 /**
  * 获取聊天会话列表
  */
 export async function getChatSessions(
-  offset: number = 0,
-  limit: number = 12,
-): Promise<PaginatedChatResponse> {
-  return await clientFetch<PaginatedChatResponse>('/chat', {
-    params: {
-      offset: String(offset),
-      limit: String(limit),
-    },
+  cursor: string | null = null,
+  limit: number = 8,
+): Promise<ChatSessionPage> {
+  const params: Record<string, string> = {
+    limit: String(limit),
+  }
+
+  if (cursor) {
+    params.cursor = cursor
+  }
+
+  return await clientFetch<ChatSessionPage>('/chat', {
+    params,
   })
 }
 

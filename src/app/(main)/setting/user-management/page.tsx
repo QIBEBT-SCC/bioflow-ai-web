@@ -21,7 +21,7 @@ export default function UserManagementPage() {
         <div className='flex items-center justify-between px-4 h-12 bg-background'>
           <div className='flex items-center gap-2'>
             <SidebarTrigger className='-ml-1' />
-            <Separator orientation='vertical' className='!mr-2 !h-4' />
+            <Separator orientation='vertical' className='mr-2! h-4!' />
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className='hidden md:block'>

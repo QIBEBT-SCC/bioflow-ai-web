@@ -13,6 +13,7 @@ import {
 import { useTranslations } from 'next-intl'
 import { Fragment, useState } from 'react'
 import { toast } from 'sonner'
+import { ImagePagination } from '@/components/image/image-pagination'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -50,7 +51,7 @@ import {
   useDeleteSample,
   useDeleteSampleFile,
   useSample,
-  useSamples,
+  useSamplesPage,
 } from '@/hooks/use-sample'
 import type { Sample, SampleFileType } from '@/types/sample'
 import { AddSampleFileDialog } from './add-sample-file-dialog'
@@ -65,6 +66,21 @@ interface SampleFilesSectionProps {
 
 interface SampleListProps {
   projectId: string
+}
+
+interface SampleDialogsProps {
+  projectId: string
+  editingSample: string | null
+  editingSampleData?: Sample
+  deletingSample: string | null
+  deletingFile: { sampleUid: string; fileUid: string } | null
+  isDeletingSample: boolean
+  isDeletingFile: boolean
+  onCloseEditing: () => void
+  onCloseDeletingSample: () => void
+  onCloseDeletingFile: () => void
+  onDeleteSample: (sampleUid: string) => void
+  onDeleteFile: (sampleUid: string, fileUid: string) => void
 }
 
 const fileTypeLabelKeys: Record<SampleFileType, string> = {
@@ -97,13 +113,13 @@ function SampleFilesSection({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className='w-[180px]'>{t('fileType')}</TableHead>
+              <TableHead className='w-45'>{t('fileType')}</TableHead>
               <TableHead>{t('filePath')}</TableHead>
-              <TableHead className='w-[100px]'>{t('format')}</TableHead>
-              <TableHead className='w-[100px]'>{t('size')}</TableHead>
-              <TableHead className='w-[120px]'>{t('md5')}</TableHead>
-              <TableHead className='w-[180px]'>{t('uploadedAt')}</TableHead>
-              <TableHead className='w-[80px]'>{t('actions')}</TableHead>
+              <TableHead className='w-25'>{t('format')}</TableHead>
+              <TableHead className='w-25'>{t('size')}</TableHead>
+              <TableHead className='w-30'>{t('md5')}</TableHead>
+              <TableHead className='w-45'>{t('uploadedAt')}</TableHead>
+              <TableHead className='w-20'>{t('actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -203,20 +219,119 @@ function formatFileSize(bytes: number): string {
   return `${Number.parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`
 }
 
+function SampleDialogs({
+  projectId,
+  editingSample,
+  editingSampleData,
+  deletingSample,
+  deletingFile,
+  isDeletingSample,
+  isDeletingFile,
+  onCloseEditing,
+  onCloseDeletingSample,
+  onCloseDeletingFile,
+  onDeleteSample,
+  onDeleteFile,
+}: SampleDialogsProps) {
+  const t = useTranslations('Project.sample')
+  const tFiles = useTranslations('Project.sample.files')
+
+  return (
+    <>
+      {editingSample && editingSampleData && (
+        <EditSampleDialog
+          key={editingSampleData.uid}
+          projectId={projectId}
+          sample={editingSampleData}
+          open={!!editingSample}
+          onOpenChange={(open) => !open && onCloseEditing()}
+        />
+      )}
+
+      <AlertDialog
+        open={!!deletingSample}
+        onOpenChange={(open) => !open && onCloseDeletingSample()}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('deleteDialogTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('deleteDialogDescription')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deletingSample && onDeleteSample(deletingSample)}
+              className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
+            >
+              {isDeletingSample ? t('deleting') : t('confirmDelete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={!!deletingFile}
+        onOpenChange={(open) => !open && onCloseDeletingFile()}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{tFiles('deleteDialogTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {tFiles('deleteDialogDescription')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() =>
+                deletingFile &&
+                onDeleteFile(deletingFile.sampleUid, deletingFile.fileUid)
+              }
+              className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
+            >
+              {isDeletingFile ? t('deleting') : t('confirmDelete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  )
+}
+
 export function SampleList({ projectId }: SampleListProps) {
   const t = useTranslations('Project.sample')
   const tFiles = useTranslations('Project.sample.files')
   const [expandedSamples, setExpandedSamples] = useState<
     Record<string, boolean>
   >({})
-  const [editingSample, setEditingSample] = useState<string | null>(null)
-  const [deletingSample, setDeletingSample] = useState<string | null>(null)
-  const [deletingFile, setDeletingFile] = useState<{
-    sampleUid: string
-    fileUid: string
-  } | null>(null)
+  const [listState, setListState] = useState<{
+    editingSample: string | null
+    deletingSample: string | null
+    deletingFile: { sampleUid: string; fileUid: string } | null
+    currentPage: number
+  }>({
+    editingSample: null,
+    deletingSample: null,
+    deletingFile: null,
+    currentPage: 1,
+  })
+  const itemsPerPage = 20
+  const { currentPage, deletingFile, deletingSample, editingSample } = listState
+  const offset = (currentPage - 1) * itemsPerPage
+  const updateListState = (state: Partial<typeof listState>) => {
+    setListState((prev) => ({ ...prev, ...state }))
+  }
 
-  const { data: samples, isLoading } = useSamples(projectId)
+  const { data: samplesPage, isLoading } = useSamplesPage(
+    projectId,
+    offset,
+    itemsPerPage,
+  )
+  const samples = samplesPage?.data ?? []
+  const totalCount = samplesPage?.total ?? 0
+  const totalPages = Math.max(1, Math.ceil(totalCount / itemsPerPage))
   const deleteSampleMutation = useDeleteSample()
   const deleteFileMutation = useDeleteSampleFile()
 
@@ -246,7 +361,7 @@ export function SampleList({ projectId }: SampleListProps) {
 
       toast.success(t('deleteSuccess'))
 
-      setDeletingSample(null)
+      updateListState({ deletingSample: null })
     } catch {
       toast.error(t('deleteFailed'))
     }
@@ -262,7 +377,7 @@ export function SampleList({ projectId }: SampleListProps) {
 
       toast.success(tFiles('deleteSuccess'))
 
-      setDeletingFile(null)
+      updateListState({ deletingFile: null })
     } catch {
       toast.error(tFiles('deleteFailed'))
     }
@@ -294,16 +409,16 @@ export function SampleList({ projectId }: SampleListProps) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className='w-[30px]'></TableHead>
-                <TableHead className='w-[180px]'>{t('sampleName')}</TableHead>
+                <TableHead className='w-7.5'></TableHead>
+                <TableHead className='w-45'>{t('sampleName')}</TableHead>
                 <TableHead>{t('metadata')}</TableHead>
-                <TableHead className='w-[180px]'>{t('createdAt')}</TableHead>
-                <TableHead className='w-[100px]'>{t('fileCount')}</TableHead>
-                <TableHead className='w-[100px]'>{t('actions')}</TableHead>
+                <TableHead className='w-45'>{t('createdAt')}</TableHead>
+                <TableHead className='w-25'>{t('fileCount')}</TableHead>
+                <TableHead className='w-25'>{t('actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {!samples || samples.length === 0 ? (
+              {samples.length === 0 ? (
                 <TableRow>
                   <TableCell
                     colSpan={6}
@@ -378,14 +493,22 @@ export function SampleList({ projectId }: SampleListProps) {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align='end'>
                               <DropdownMenuItem
-                                onClick={() => setEditingSample(sample.uid)}
+                                onClick={() =>
+                                  updateListState({
+                                    editingSample: sample.uid,
+                                  })
+                                }
                               >
                                 <EditIcon className='size-4 mr-2' />
                                 {t('edit')}
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 className='text-destructive'
-                                onClick={() => setDeletingSample(sample.uid)}
+                                onClick={() =>
+                                  updateListState({
+                                    deletingSample: sample.uid,
+                                  })
+                                }
                               >
                                 <Trash2Icon className='size-4 mr-2' />
                                 {t('delete')}
@@ -401,9 +524,11 @@ export function SampleList({ projectId }: SampleListProps) {
                               projectId={projectId}
                               sampleDetails={sampleDetails}
                               onDeleteFile={(fileUid) =>
-                                setDeletingFile({
-                                  sampleUid: sampleDetails.uid,
-                                  fileUid,
+                                updateListState({
+                                  deletingFile: {
+                                    sampleUid: sampleDetails.uid,
+                                    fileUid,
+                                  },
                                 })
                               }
                             />
@@ -416,73 +541,30 @@ export function SampleList({ projectId }: SampleListProps) {
               )}
             </TableBody>
           </Table>
+          {totalPages > 1 && (
+            <ImagePagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={(page) => updateListState({ currentPage: page })}
+            />
+          )}
         </CardContent>
       </Card>
 
-      {/* 编辑对话框 */}
-      {editingSample && editingSampleData && (
-        <EditSampleDialog
-          key={editingSampleData.uid}
-          projectId={projectId}
-          sample={editingSampleData}
-          open={!!editingSample}
-          onOpenChange={(open) => !open && setEditingSample(null)}
-        />
-      )}
-
-      {/* 删除确认对话框 */}
-      <AlertDialog
-        open={!!deletingSample}
-        onOpenChange={(open) => !open && setDeletingSample(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('deleteDialogTitle')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('deleteDialogDescription')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => deletingSample && handleDelete(deletingSample)}
-              className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
-            >
-              {deleteSampleMutation.isPending
-                ? t('deleting')
-                : t('confirmDelete')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <AlertDialog
-        open={!!deletingFile}
-        onOpenChange={(open) => !open && setDeletingFile(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{tFiles('deleteDialogTitle')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {tFiles('deleteDialogDescription')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() =>
-                deletingFile &&
-                handleDeleteFile(deletingFile.sampleUid, deletingFile.fileUid)
-              }
-              className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
-            >
-              {deleteFileMutation.isPending
-                ? t('deleting')
-                : t('confirmDelete')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <SampleDialogs
+        projectId={projectId}
+        editingSample={editingSample}
+        editingSampleData={editingSampleData}
+        deletingSample={deletingSample}
+        deletingFile={deletingFile}
+        isDeletingSample={deleteSampleMutation.isPending}
+        isDeletingFile={deleteFileMutation.isPending}
+        onCloseEditing={() => updateListState({ editingSample: null })}
+        onCloseDeletingSample={() => updateListState({ deletingSample: null })}
+        onCloseDeletingFile={() => updateListState({ deletingFile: null })}
+        onDeleteSample={handleDelete}
+        onDeleteFile={handleDeleteFile}
+      />
     </>
   )
 }

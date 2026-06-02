@@ -39,6 +39,14 @@ export interface RunPublic extends SimpleRunPublic {
   edges: Edge[]
 }
 
+export interface PaginatedRuns {
+  total: number
+  offset: number
+  limit: number
+  has_more: boolean
+  data: RunPublic[]
+}
+
 export type RunFileNode =
   | { type: 'file'; path: string; name: string; iconType?: 'json' }
   | { type: 'folder'; path: string; name: string; children: RunFileNode[] }

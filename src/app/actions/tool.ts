@@ -3,6 +3,7 @@ import type { ToolArgPublic } from '@/types/node'
 import type {
   DockerToolCreate,
   DockerToolUpdate,
+  PaginatedTools,
   SimpleToolInfo,
   ToolGroup,
   ToolInfo,
@@ -42,12 +43,13 @@ export async function getGroupTools(
 export async function searchTools(
   name: string,
   offset: number = 0,
-): Promise<SimpleToolInfo[]> {
-  return await clientFetch<SimpleToolInfo[]>('/tools/search', {
+  limit: number = 12,
+): Promise<PaginatedTools> {
+  return await clientFetch<PaginatedTools>('/tools/search', {
     params: {
       name: name,
       offset: String(offset),
-      limit: '12',
+      limit: String(limit),
     },
   })
 }
@@ -60,20 +62,13 @@ export async function getToolTagList(): Promise<ToolTag[]> {
 }
 
 /**
- * 获取工具总数
- */
-export async function getToolCount(): Promise<number> {
-  return await clientFetch<number>('/tools/count')
-}
-
-/**
  * 获取工具列表
  */
 export async function getToolList(
   offset: number = 0,
   limit: number = 10,
-): Promise<SimpleToolInfo[]> {
-  return await clientFetch<SimpleToolInfo[]>('/tools', {
+): Promise<PaginatedTools> {
+  return await clientFetch<PaginatedTools>('/tools', {
     params: {
       offset: String(offset),
       limit: String(limit),

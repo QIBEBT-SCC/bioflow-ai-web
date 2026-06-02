@@ -3,10 +3,10 @@ import type {
   AddSampleFileRequest,
   CreateProjectFileMappingRequest,
   CreateSampleRequest,
+  PaginatedSamples,
   ProjectFileMapping,
   Sample,
   SampleFile,
-  SampleListItem,
   UpdateProjectFileMappingRequest,
   UpdateSampleRequest,
 } from '@/types/sample'
@@ -18,8 +18,8 @@ export async function getSamples(
   projectId: string,
   offset: number = 0,
   limit: number = 20,
-): Promise<SampleListItem[]> {
-  return await clientFetch<SampleListItem[]>(`/projects/${projectId}/samples`, {
+): Promise<PaginatedSamples> {
+  return await clientFetch<PaginatedSamples>(`/projects/${projectId}/samples`, {
     params: {
       offset: String(offset),
       limit: String(limit),

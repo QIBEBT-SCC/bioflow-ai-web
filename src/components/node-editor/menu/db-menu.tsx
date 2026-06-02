@@ -37,7 +37,9 @@ export const DbMenu: React.FC<DBMenuProps> = ({
 
   // 只在有搜索查询时才调用API
   const hasQuery = query.trim() !== ''
-  const { data: searchResults = [], isLoading } = useSearchDB(query)
+  const { data: searchPage, isLoading } = useSearchDB(query)
+  const searchResults = searchPage?.data ?? []
+  const searchTotal = searchPage?.total ?? 0
 
   // 处理数据库选择
   const handleDBSelect = (db: BioDb) => {
@@ -76,7 +78,7 @@ export const DbMenu: React.FC<DBMenuProps> = ({
           ) : (
             searchResults.length > 0 && (
               // 搜索结果
-              <CommandGroup heading={`搜索结果 (${searchResults.length})`}>
+              <CommandGroup heading={`搜索结果 (${searchTotal})`}>
                 {searchResults.map((db) => (
                   <CommandItem
                     key={db.id}

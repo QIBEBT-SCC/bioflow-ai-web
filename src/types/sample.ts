@@ -46,6 +46,14 @@ export interface SampleListItem {
   file_count: number
 }
 
+export interface PaginatedSamples {
+  total: number
+  offset: number
+  limit: number
+  has_more: boolean
+  data: SampleListItem[]
+}
+
 /**
  * 创建样本请求
  */

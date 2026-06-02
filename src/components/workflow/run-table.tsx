@@ -31,7 +31,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { useRunCount, useRuns } from '@/hooks/use-run'
+import { useRuns } from '@/hooks/use-run'
 import { Status } from '@/types/run'
 
 // 状态配置
@@ -99,12 +99,13 @@ export function RunTables({
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const limit = 10
 
-  const { data: runCount = 0 } = useRunCount(refetchInterval)
-  const { data: runs = [], isLoading } = useRuns(
+  const { data: runsPage, isLoading } = useRuns(
     page * limit,
     limit,
     refetchInterval,
   )
+  const runs = runsPage?.data ?? []
+  const runCount = runsPage?.total ?? 0
 
   // 过滤运行实例
   const filteredRuns = runs.filter((run) => {
