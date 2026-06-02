@@ -54,3 +54,11 @@ export interface RunInstance {
   start_time: string | null
   end_time: string | null
 }
+
+export interface PaginatedProjectRuns {
+  total: number
+  offset: number
+  limit: number
+  has_more: boolean
+  data: RunInstance[]
+}

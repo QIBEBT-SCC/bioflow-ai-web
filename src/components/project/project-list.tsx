@@ -2,6 +2,8 @@ import { format } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { ClockIcon, PlayIcon, StarIcon, UserIcon } from 'lucide-react'
 import Link from 'next/link'
+import { useState } from 'react'
+import { ImagePagination } from '@/components/image/image-pagination'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -138,28 +140,49 @@ function ProjectTable({ projects }: { projects: ProjectPublic[] }) {
   )
 }
 
-export function AllProjectTable() {
-  const { data: projects = [], isLoading } = useProjects()
+function PaginatedProjectTable({
+  filter,
+}: {
+  filter: 'all' | 'starred' | 'my'
+}) {
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 20
+  const offset = (currentPage - 1) * itemsPerPage
+  const { data: projectPage, isLoading } = useProjects(
+    offset,
+    itemsPerPage,
+    filter,
+  )
+  const projects = projectPage?.data ?? []
+  const totalCount = projectPage?.total ?? 0
+  const totalPages = Math.max(1, Math.ceil(totalCount / itemsPerPage))
 
   if (isLoading) return <div>加载中...</div>
 
-  return <ProjectTable projects={projects} />
+  return (
+    <div className='space-y-4'>
+      <ProjectTable projects={projects} />
+      {totalPages > 1 && (
+        <ImagePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
+      )}
+    </div>
+  )
+}
+
+export function AllProjectTable() {
+  return <PaginatedProjectTable filter='all' />
 }
 
 export function StarredProjectTable() {
-  const { data: projects = [], isLoading } = useProjects(1, 20, 'starred')
-
-  if (isLoading) return <div>加载中...</div>
-
-  return <ProjectTable projects={projects} />
+  return <PaginatedProjectTable filter='starred' />
 }
 
 export function MyProjectTable() {
-  const { data: projects = [], isLoading } = useProjects(1, 20, 'mine')
-
-  if (isLoading) return <div>加载中...</div>
-
-  return <ProjectTable projects={projects} />
+  return <PaginatedProjectTable filter='my' />
 }
 
 export function RecentProjectCard() {

@@ -1,5 +1,6 @@
 import { clientFetch } from '@/lib/api-client'
 import type {
+  PaginatedProjects,
   ProjectCreateProp,
   ProjectPublic,
   ProjectTag,
@@ -11,18 +12,18 @@ import type {
  * 获取项目列表（分页）
  */
 export async function getProjects(
-  page: number = 1,
+  offset: number = 0,
   limit: number = 20,
   filter?: string,
-): Promise<ProjectPublic[]> {
+): Promise<PaginatedProjects> {
   const params: Record<string, string> = {
-    skip: String((page - 1) * limit),
+    offset: String(offset),
     limit: String(limit),
   }
   if (filter) {
     params.filter = filter
   }
-  return await clientFetch<ProjectPublic[]>('/projects', {
+  return await clientFetch<PaginatedProjects>('/projects', {
     params,
   })
 }

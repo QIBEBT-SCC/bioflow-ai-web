@@ -31,3 +31,11 @@ export interface ProjectPublic {
   owner: User
   tags: ProjectTag[]
 }
+
+export interface PaginatedProjects {
+  total: number
+  offset: number
+  limit: number
+  has_more: boolean
+  data: ProjectPublic[]
+}

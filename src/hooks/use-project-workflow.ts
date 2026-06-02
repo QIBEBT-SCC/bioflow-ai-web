@@ -47,7 +47,10 @@ export function useProjectRuns(
 ) {
   return useQuery<RunInstance[]>({
     queryKey: ['projects', projectId, 'runs', offset, limit],
-    queryFn: () => getProjectRuns(projectId, offset, limit),
+    queryFn: async () => {
+      const page = await getProjectRuns(projectId, offset, limit)
+      return page.data
+    },
     enabled: !!projectId,
     staleTime: 30 * 1000,
     refetchInterval,

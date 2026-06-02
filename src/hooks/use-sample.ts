@@ -21,6 +21,7 @@ import type {
   AddSampleFileRequest,
   CreateProjectFileMappingRequest,
   CreateSampleRequest,
+  PaginatedSamples,
   ProjectFileMapping,
   Sample,
   SampleFile,
@@ -43,6 +44,25 @@ export function useSamples(
 ) {
   return useQuery<SampleListItem[]>({
     queryKey: ['samples', projectId, offset, limit],
+    queryFn: async () => {
+      const page = await getSamples(projectId, offset, limit)
+      return page.data
+    },
+    enabled: !!projectId,
+    staleTime: 30 * 1000,
+  })
+}
+
+/**
+ * 获取项目的样本分页列表
+ */
+export function useSamplesPage(
+  projectId: string,
+  offset: number = 0,
+  limit: number = 20,
+) {
+  return useQuery<PaginatedSamples>({
+    queryKey: ['samples', projectId, 'page', offset, limit],
     queryFn: () => getSamples(projectId, offset, limit),
     enabled: !!projectId,
     staleTime: 30 * 1000,
