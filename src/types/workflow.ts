@@ -30,3 +30,11 @@ export interface SimpleWorkflowInfo {
   name: string
   execution_scope?: ExecutionScope
 }
+
+export interface PaginatedWorkflows {
+  total: number
+  offset: number
+  limit: number
+  has_more: boolean
+  data: SimpleWorkflowInfo[]
+}

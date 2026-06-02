@@ -4,6 +4,7 @@ import { Loader2, PlusIcon, Search } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { ImagePagination } from '@/components/image/image-pagination'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -27,17 +28,28 @@ export function ImportWorkflowDialog({ projectId }: ImportWorkflowDialogProps) {
   const t = useTranslations('Project.workflow.import')
   const [open, setOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
   const [selectedWorkflows, setSelectedWorkflows] = useState<Set<string>>(
     new Set(),
   )
+  const pageSize = 20
+  const offset = (currentPage - 1) * pageSize
 
-  const { data: workflows, isLoading } = useWorkflows(0)
+  const { data: workflowsPage, isLoading } = useWorkflows(offset, pageSize)
+  const workflows = workflowsPage?.data ?? []
+  const totalCount = workflowsPage?.total ?? 0
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize))
   const addWorkflowMutation = useAddWorkflowToProject()
 
   // 过滤工作流
-  const filteredWorkflows = workflows?.filter((wf) =>
+  const filteredWorkflows = workflows.filter((wf) =>
     wf.name.toLowerCase().includes(searchQuery.toLowerCase()),
   )
+
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value)
+    setCurrentPage(1)
+  }
 
   // 切换工作流选择
   const toggleWorkflow = (uid: string) => {
@@ -105,18 +117,18 @@ export function ImportWorkflowDialog({ projectId }: ImportWorkflowDialogProps) {
           <Input
             placeholder={t('searchPlaceholder')}
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             className='pl-9'
           />
         </div>
 
         {/* 工作流列表 */}
-        <ScrollArea className='h-[400px] rounded-md border p-4'>
+        <ScrollArea className='h-100 rounded-md border p-4'>
           {isLoading ? (
             <div className='flex items-center justify-center py-12'>
               <Loader2 className='size-8 animate-spin text-muted-foreground' />
             </div>
-          ) : !filteredWorkflows || filteredWorkflows.length === 0 ? (
+          ) : filteredWorkflows.length === 0 ? (
             <div className='text-center py-12 text-muted-foreground'>
               {searchQuery ? t('noMatches') : t('empty')}
             </div>
@@ -154,6 +166,14 @@ export function ImportWorkflowDialog({ projectId }: ImportWorkflowDialogProps) {
             </div>
           )}
         </ScrollArea>
+
+        {totalPages > 1 && (
+          <ImagePagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        )}
 
         <DialogFooter>
           <Button variant='outline' onClick={() => setOpen(false)}>
