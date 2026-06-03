@@ -1,4 +1,5 @@
 import { FileText, Workflow, X } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 
 export const CANVAS_TAB_ID = '__canvas__'
@@ -29,6 +30,7 @@ export function RunTabBar({
   onTabSelect,
   onTabClose,
 }: RunTabBarProps) {
+  const t = useTranslations('Project.runDetail.tabs')
   const isCanvasActive = activeTabId === CANVAS_TAB_ID
 
   return (
@@ -45,7 +47,7 @@ export function RunTabBar({
         )}
       >
         <Workflow className='size-3.5' />
-        <span>工作流</span>
+        <span>{t('workflow')}</span>
       </button>
 
       {/* 文件选项卡 */}

@@ -8,6 +8,79 @@
     }
   },
   "Project": {
+    "list": {
+      "breadcrumb": "项目",
+      "title": "项目",
+      "searchPlaceholder": "搜索项目...",
+      "filter": "筛选",
+      "loading": "加载中...",
+      "tabs": {
+        "all": "全部项目",
+        "starred": "已收藏",
+        "my": "我创建的"
+      },
+      "sort": {
+        "recent": "最近更新",
+        "nameAsc": "名称 (A-Z)",
+        "nameDesc": "名称 (Z-A)",
+        "mostRuns": "最多运行",
+        "fewestRuns": "最少运行"
+      },
+      "tags": {
+        "title": "标签",
+        "loading": "加载中...",
+        "loadFailed": "加载失败",
+        "empty": "暂无标签"
+      },
+      "table": {
+        "projectName": "项目名称",
+        "description": "描述",
+        "tags": "标签",
+        "owner": "创建人",
+        "lastUpdated": "上次更新",
+        "created": "创建",
+        "favorite": "收藏"
+      },
+      "recent": {
+        "emptyTitle": "没有最近运行的项目",
+        "emptyDescription": "您最近运行过的项目将显示在这里。",
+        "lastUpdated": "最后更新:",
+        "dataCount": "-- 条数据"
+      }
+    },
+    "create": {
+      "trigger": "新项目",
+      "title": "新建项目",
+      "description": "创建一个新的项目并选择可用标签",
+      "name": "项目名称",
+      "namePlaceholder": "项目名称",
+      "public": "公开",
+      "projectDescription": "项目描述",
+      "descriptionPlaceholder": "项目描述",
+      "projectTag": "项目标签",
+      "creating": "创建中...",
+      "create": "创建"
+    },
+    "tag": {
+      "trigger": "添加新标签",
+      "title": "新建标签",
+      "description": "创建新的项目标签",
+      "name": "标签名称",
+      "namePlaceholder": "标签名称",
+      "color": "颜色",
+      "colorPreview": "标签颜色",
+      "selectColor": "选择 {color} 颜色",
+      "creating": "创建中...",
+      "create": "创建"
+    },
+    "tagSelector": {
+      "placeholder": "选择标签...",
+      "searchPlaceholder": "搜索标签...",
+      "createTag": "创建标签“{name}”",
+      "empty": "未找到标签。",
+      "heading": "标签",
+      "actions": "操作"
+    },
     "detail": {
       "breadcrumb": {
         "projects": "项目"
@@ -22,6 +95,31 @@
         "sampleCount": "样本数量",
         "workflowStatus": "工作流状态",
         "lastUpdated": "最后更新"
+      }
+    },
+    "runDetail": {
+      "fileViewer": {
+        "loading": "加载中...",
+        "empty": "无内容"
+      },
+      "leftPanel": {
+        "statistics": "运行统计",
+        "status": "运行状态",
+        "totalTasks": "总任务数",
+        "successTasks": "成功任务",
+        "failedTasks": "失败任务",
+        "outputFiles": "输出文件",
+        "resizeOrCollapse": "拖拽调整宽度 / 点击收起",
+        "expandPanel": "展开面板"
+      },
+      "tabs": {
+        "workflow": "工作流"
+      },
+      "terminal": {
+        "title": "终端",
+        "resizeHeight": "拖拽调整终端高度",
+        "collapse": "收起终端",
+        "expand": "展开终端"
       }
     },
     "fileMapping": {
