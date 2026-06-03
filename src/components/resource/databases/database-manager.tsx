@@ -1,6 +1,7 @@
 'use client'
 
 import { PlusCircle, Search } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { DatabaseAddDialog } from '@/components/resource/databases/database-add-dialog'
 import { DatabaseDetail } from '@/components/resource/databases/database-detail'
@@ -10,6 +11,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 
 export function DatabasesManager() {
+  const t = useTranslations('resource')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedDbId, setSelectedDbId] = useState<number | null>(null)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
@@ -20,7 +22,7 @@ export function DatabasesManager() {
         <div className='relative flex-1 max-w-sm'>
           <Search className='absolute left-2.5 top-2.5 size-4 text-muted-foreground' />
           <Input
-            placeholder='搜索数据库...'
+            placeholder={t('search_database')}
             className='pl-8'
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -28,7 +30,7 @@ export function DatabasesManager() {
         </div>
         <Button onClick={() => setIsAddDialogOpen(true)}>
           <PlusCircle className='mr-2 size-4' />
-          添加数据库
+          {t('add_database')}
         </Button>
       </div>
 
@@ -51,7 +53,7 @@ export function DatabasesManager() {
               />
             ) : (
               <div className='flex h-[400px] items-center justify-center text-muted-foreground'>
-                请选择一个数据库查看详情
+                {t('no_database_selected')}
               </div>
             )}
           </CardContent>

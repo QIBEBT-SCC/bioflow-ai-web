@@ -1,6 +1,7 @@
 'use client'
 
 import { Trash2Icon } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import {
   AlertDialog,
@@ -22,6 +23,7 @@ interface DatabaseDetailProps {
 }
 
 export function DatabaseDetail({ databaseId, onDelete }: DatabaseDetailProps) {
+  const t = useTranslations('resource')
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
   const { data: database, isLoading } = useDB(databaseId)
@@ -39,7 +41,7 @@ export function DatabaseDetail({ databaseId, onDelete }: DatabaseDetailProps) {
   if (isLoading) {
     return (
       <div className='flex h-[400px] items-center justify-center text-muted-foreground'>
-        加载中...
+        {t('loading')}
       </div>
     )
   }
@@ -47,7 +49,7 @@ export function DatabaseDetail({ databaseId, onDelete }: DatabaseDetailProps) {
   if (!database) {
     return (
       <div className='flex h-[400px] items-center justify-center text-muted-foreground'>
-        数据库不存在或已被删除
+        {t('database_not_found')}
       </div>
     )
   }
@@ -65,7 +67,7 @@ export function DatabaseDetail({ databaseId, onDelete }: DatabaseDetailProps) {
             disabled={deleteMutation.isPending}
           >
             <Trash2Icon className='mr-2 size-4' />
-            {deleteMutation.isPending ? '删除中...' : '删除'}
+            {deleteMutation.isPending ? t('deleting') : t('delete')}
           </Button>
         </div>
       </div>
@@ -75,15 +77,15 @@ export function DatabaseDetail({ databaseId, onDelete }: DatabaseDetailProps) {
           <dl className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
             <div className='col-span-2'>
               <dt className='text-sm font-medium text-muted-foreground'>
-                描述
+                {t('description_label')}
               </dt>
               <dd className='mt-1 text-sm'>
-                {database.description || '无描述'}
+                {database.description || t('no_description')}
               </dd>
             </div>
             <div className='col-span-2'>
               <dt className='text-sm font-medium text-muted-foreground'>
-                路径
+                {t('path')}
               </dt>
               <dd className='mt-1 text-sm font-mono bg-muted p-2 rounded'>
                 {database.path}
@@ -91,13 +93,13 @@ export function DatabaseDetail({ databaseId, onDelete }: DatabaseDetailProps) {
             </div>
             <div>
               <dt className='text-sm font-medium text-muted-foreground'>
-                大小
+                {t('size')}
               </dt>
               <dd className='mt-1 text-sm'>{database.size}</dd>
             </div>
             <div>
               <dt className='text-sm font-medium text-muted-foreground'>
-                最后更新
+                {t('last_update')}
               </dt>
               <dd className='mt-1 text-sm'>{database.last_update}</dd>
             </div>
@@ -111,21 +113,21 @@ export function DatabaseDetail({ databaseId, onDelete }: DatabaseDetailProps) {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>确认删除数据库</AlertDialogTitle>
+            <AlertDialogTitle>{t('delete_confirm')}</AlertDialogTitle>
             <AlertDialogDescription>
-              此操作将从系统中移除此数据库的引用。数据库文件本身不会被删除，但系统将无法再访问它。
+              {t('delete_confirm_message')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deleteMutation.isPending}>
-              取消
+              {t('cancel')}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
               className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
               disabled={deleteMutation.isPending}
             >
-              {deleteMutation.isPending ? '删除中...' : '删除'}
+              {deleteMutation.isPending ? t('deleting') : t('delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

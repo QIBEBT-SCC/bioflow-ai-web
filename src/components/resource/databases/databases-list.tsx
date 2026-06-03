@@ -1,6 +1,7 @@
 'use client'
 
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
@@ -24,6 +25,7 @@ export function DatabasesList({
   onSelectDatabase,
   selectedDbId,
 }: DatabasesListProps) {
+  const t = useTranslations('resource')
   const [offset, setOffset] = useState(0)
   const pageSize = 8
   const trimmedSearchQuery = searchQuery.trim()
@@ -66,17 +68,19 @@ export function DatabasesList({
 
   return (
     <div className='space-y-4'>
-      <h2 className='text-xl font-semibold'>数据库列表</h2>
+      <h2 className='text-xl font-semibold'>{t('database_list')}</h2>
 
       {isLoading ? (
-        <div className='py-12 text-center text-muted-foreground'>加载中...</div>
+        <div className='py-12 text-center text-muted-foreground'>
+          {t('loading')}
+        </div>
       ) : databases.length > 0 ? (
         <>
           <div className='rounded-md border'>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>名称</TableHead>
+                  <TableHead>{t('name')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -97,7 +101,11 @@ export function DatabasesList({
           {totalCount > pageSize && (
             <div className='flex items-center justify-between'>
               <div className='text-sm text-muted-foreground'>
-                共 {totalCount} 条记录，第 {currentPage} / {totalPages} 页
+                {t('pagination', {
+                  total: totalCount,
+                  current: currentPage,
+                  total_pages: totalPages,
+                })}
               </div>
               <div className='flex gap-2'>
                 <Button
@@ -107,7 +115,7 @@ export function DatabasesList({
                   disabled={offset === 0}
                 >
                   <ChevronLeftIcon className='size-4' />
-                  上一页
+                  {t('prev_page')}
                 </Button>
                 <Button
                   variant='outline'
@@ -115,7 +123,7 @@ export function DatabasesList({
                   onClick={handleNextPage}
                   disabled={offset + pageSize >= totalCount}
                 >
-                  下一页
+                  {t('next_page')}
                   <ChevronRightIcon className='size-4' />
                 </Button>
               </div>
@@ -124,7 +132,7 @@ export function DatabasesList({
         </>
       ) : (
         <div className='py-12 text-center text-muted-foreground'>
-          未找到数据库
+          {t('no_database_found')}
         </div>
       )}
     </div>

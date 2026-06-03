@@ -1,6 +1,16 @@
 {
   "resource": {
     "add_database": "添加数据库",
+    "adding": "添加中...",
+    "cancel": "取消",
+    "database_not_found": "数据库不存在或已被删除",
+    "delete": "删除",
+    "deleting": "删除中...",
+    "loading": "加载中...",
+    "next_page": "下一页",
+    "no_description": "无描述",
+    "pagination": "共 {total} 条记录，第 {current} / {total_pages} 页",
+    "prev_page": "上一页",
     "add_new_database": "添加新数据库",
     "add_new_database_desc": "添加生物信息数据库的引用。所有带 * 的字段为必填项。",
     "create_failed": "添加数据库失败",
