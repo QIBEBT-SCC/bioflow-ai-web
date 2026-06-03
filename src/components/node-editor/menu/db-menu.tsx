@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import type React from 'react'
 import { useState } from 'react'
 import {
@@ -20,7 +21,6 @@ interface DBMenuProps {
   onSelectDb: (toolType: string, toolUid: string, resourceName?: string) => void
 }
 
-// 数据库项骨架屏组件
 const DBSkeleton = () => (
   <div className='p-3'>
     <Skeleton className='h-4 w-3/4 mb-2' />
@@ -33,22 +33,20 @@ export const DbMenu: React.FC<DBMenuProps> = ({
   onOpenChange,
   onSelectDb,
 }) => {
+  const t = useTranslations('editor.menu')
   const [query, setQuery] = useState('')
 
-  // 只在有搜索查询时才调用API
   const hasQuery = query.trim() !== ''
   const { data: searchPage, isLoading } = useSearchDB(query)
   const searchResults = searchPage?.data ?? []
   const searchTotal = searchPage?.total ?? 0
 
-  // 处理数据库选择
   const handleDBSelect = (db: BioDb) => {
     onSelectDb('resource_db', String(db.id), db.name)
-    setQuery('') // 清空搜索
+    setQuery('')
     onOpenChange(false)
   }
 
-  // 处理搜索输入变化
   const handleSearchChange = (value: string) => {
     setQuery(value)
   }
@@ -56,19 +54,18 @@ export const DbMenu: React.FC<DBMenuProps> = ({
   return (
     <CommandDialog open={isOpen} onOpenChange={onOpenChange}>
       <CommandInput
-        placeholder='搜索数据库...'
+        placeholder={t('search_database')}
         value={query}
         onValueChange={handleSearchChange}
       />
       <CommandList>
         <CommandEmpty>
-          {hasQuery ? '未找到匹配的数据库' : '请输入关键词搜索数据库'}
+          {hasQuery ? t('no_database_found') : t('enter_keywords')}
         </CommandEmpty>
 
         {hasQuery &&
           (isLoading ? (
-            // 搜索加载状态
-            <CommandGroup heading='搜索中...'>
+            <CommandGroup heading={t('searching')}>
               {['s1', 's2', 's3'].map((id) => (
                 <div key={id}>
                   <DBSkeleton />
@@ -77,8 +74,9 @@ export const DbMenu: React.FC<DBMenuProps> = ({
             </CommandGroup>
           ) : (
             searchResults.length > 0 && (
-              // 搜索结果
-              <CommandGroup heading={`搜索结果 (${searchTotal})`}>
+              <CommandGroup
+                heading={t('search_results_count', { count: searchTotal })}
+              >
                 {searchResults.map((db) => (
                   <CommandItem
                     key={db.id}
@@ -94,7 +92,7 @@ export const DbMenu: React.FC<DBMenuProps> = ({
                         </span>
                       )}
                       <span className='text-xs text-muted-foreground truncate'>
-                        路径: {db.path}
+                        {t('db_path', { path: db.path })}
                       </span>
                     </div>
                   </CommandItem>

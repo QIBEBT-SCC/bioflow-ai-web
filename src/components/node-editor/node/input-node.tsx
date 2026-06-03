@@ -7,6 +7,7 @@ import {
   useNodesData,
   useReactFlow,
 } from '@xyflow/react'
+import { useTranslations } from 'next-intl'
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 
 import { BaseNode } from '@/components/node-editor/node/base-node'
@@ -196,12 +197,13 @@ const SequenceInputCard = memo(function SequenceInputCard() {
 })
 
 const SequenceInputNode = memo(function SequenceInputNode() {
+  const t = useTranslations('editor.node')
   const nodeComponent = useMemo(() => <SequenceInputCard />, [])
 
   return (
     <BaseNode
       title='Pair-end Reads Input'
-      description='用于手动指定双端测序文件输入'
+      description={t('sequence_input_description')}
       handles={SEQUENCE_INPUT_HANDLES}
       color={colorSchemes.green}
       nodeComponent={nodeComponent}
@@ -249,6 +251,7 @@ const DBInputCard = memo(function DBInputCard() {
 })
 
 const DBInputNode = memo(function DBInputNode() {
+  const t = useTranslations('editor.node')
   const nodeId = useNodeId() ?? ''
   const nodeData =
     useNodesData<Node<{ db_id: string; db_name: string }, 'resource_db'>>(
@@ -259,7 +262,7 @@ const DBInputNode = memo(function DBInputNode() {
   return (
     <BaseNode
       title={nodeData?.data.db_name || 'Biological Database'}
-      description='分析软件所使用的生物信息数据库'
+      description={t('db_description')}
       handles={DB_INPUT_HANDLES}
       color={colorSchemes.green}
       nodeComponent={nodeComponent}
@@ -320,6 +323,7 @@ const NcbiGenomeCard = memo(function NcbiGenomeCard() {
 })
 
 const NcbiGenomeNode = memo(function NcbiGenomeNode() {
+  const t = useTranslations('editor.node')
   const nodeId = useNodeId() ?? ''
   const connections = useNodeConnections({ handleType: 'source' })
   const { updateNodeData } = useReactFlow()
@@ -338,7 +342,7 @@ const NcbiGenomeNode = memo(function NcbiGenomeNode() {
   return (
     <BaseNode
       title='NCBI Genome'
-      description='从NCBI获取参考基因组'
+      description={t('ncbi_genome_description')}
       handles={NCBI_GENOME_HANDLES}
       color={colorSchemes.green}
       nodeComponent={nodeComponent}
@@ -352,11 +356,12 @@ const GRCH38_HANDLES = {
 }
 
 const GRCh38Node = memo(function GRCh38Node() {
+  const t = useTranslations('editor.node')
   const nodeComponent = useMemo(() => <div />, [])
   return (
     <BaseNode
       title='GRCh38'
-      description='人类参考基因组 GRCh38 (hg38)'
+      description={t('grch38_description')}
       handles={GRCH38_HANDLES}
       color={colorSchemes.green}
       nodeComponent={nodeComponent}
@@ -370,11 +375,12 @@ const GRCM39_HANDLES = {
 }
 
 const GRCm39Node = memo(function GRCm39Node() {
+  const t = useTranslations('editor.node')
   const nodeComponent = useMemo(() => <div />, [])
   return (
     <BaseNode
       title='GRCm39'
-      description='小鼠参考基因组 GRCm39 (mm39)'
+      description={t('grcm39_description')}
       handles={GRCM39_HANDLES}
       color={colorSchemes.green}
       nodeComponent={nodeComponent}

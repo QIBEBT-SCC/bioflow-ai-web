@@ -13,6 +13,7 @@ import {
   Trash2Icon,
   XIcon,
 } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useReducer, useState } from 'react'
 import { toast } from 'sonner'
 import {
@@ -70,10 +71,6 @@ const INITIAL_INTERACTION: InteractionState = {
   renameValue: '',
 }
 
-function getExecutionScopeLabel(executionScope: ExecutionScope) {
-  return executionScope === ExecutionScope.PROJECT_LEVEL ? '项目级' : '样本级'
-}
-
 function interactionReducer(
   state: InteractionState,
   action: InteractionAction,
@@ -93,6 +90,7 @@ function interactionReducer(
 }
 
 export function LoadWorkflowDialog() {
+  const t = useTranslations('editor.load_workflow_dialog')
   const [open, setOpen] = useState(false)
   const [page, setPage] = useState(0)
   const pageSize = 8
@@ -117,7 +115,7 @@ export function LoadWorkflowDialog() {
   const handleLoadWorkflow = (uid: string, name: string) => {
     setCurrentWorkflowUid(uid)
     setOpen(false)
-    toast.success(`已加载工作流: ${name}`)
+    toast.success(t('workflow_loaded', { name }))
   }
 
   const handleRenameStart = (uid: string, currentName: string) => {
@@ -148,7 +146,7 @@ export function LoadWorkflowDialog() {
         <DialogTrigger asChild>
           <Button variant='ghost' size='sm'>
             <FolderOpenIcon className='size-4 mr-2' />
-            加载
+            {t('trigger')}
           </Button>
         </DialogTrigger>
         <DialogContent className='flex flex-col sm:max-w-130 max-h-[80vh]'>
@@ -157,10 +155,10 @@ export function LoadWorkflowDialog() {
               <div className='p-2 bg-primary/10 rounded-full'>
                 <FolderOpenIcon className='size-5 text-primary' />
               </div>
-              <DialogTitle>加载工作流</DialogTitle>
+              <DialogTitle>{t('title')}</DialogTitle>
             </div>
             <DialogDescription className='pt-1'>
-              选择一个工作流加载到编辑器中
+              {t('description')}
             </DialogDescription>
           </DialogHeader>
 
@@ -172,7 +170,7 @@ export function LoadWorkflowDialog() {
             ) : workflows.length === 0 ? (
               <div className='flex flex-col items-center justify-center py-10 text-muted-foreground'>
                 <FileTextIcon className='size-12 mb-2 opacity-50' />
-                <p>暂无工作流</p>
+                <p>{t('empty')}</p>
               </div>
             ) : (
               <ScrollArea className='flex-1 -mr-1 pr-1'>
@@ -258,12 +256,13 @@ export function LoadWorkflowDialog() {
                                 className='h-5 gap-1 rounded px-1.5 text-[11px]'
                               >
                                 <LayersIcon className='size-3' />
-                                {getExecutionScopeLabel(
-                                  workflow.execution_scope,
-                                )}
+                                {workflow.execution_scope ===
+                                ExecutionScope.PROJECT_LEVEL
+                                  ? t('scope_project')
+                                  : t('scope_sample')}
                               </Badge>
                               <span className='truncate text-xs text-muted-foreground/70'>
-                                {workflow.description || '无描述'}
+                                {workflow.description || t('no_description')}
                               </span>
                             </div>
                           </button>
@@ -271,7 +270,7 @@ export function LoadWorkflowDialog() {
 
                         {isActive && !isRenaming && (
                           <span className='shrink-0 text-xs font-medium text-primary px-1.5 py-0.5 bg-primary/10 rounded'>
-                            当前
+                            {t('current')}
                           </span>
                         )}
 
@@ -294,7 +293,7 @@ export function LoadWorkflowDialog() {
                                 }
                               >
                                 <PencilIcon className='size-4 mr-2' />
-                                重命名
+                                {t('rename')}
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 className='text-destructive'
@@ -306,7 +305,7 @@ export function LoadWorkflowDialog() {
                                 }
                               >
                                 <Trash2Icon className='size-4 mr-2' />
-                                删除
+                                {t('delete')}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -321,7 +320,11 @@ export function LoadWorkflowDialog() {
             {totalPages > 1 && (
               <div className='shrink-0 flex items-center justify-between pt-2 border-t'>
                 <p className='text-xs text-muted-foreground'>
-                  {page + 1} / {totalPages} 页 · 共 {totalCount} 个
+                  {t('pagination', {
+                    page: page + 1,
+                    total_pages: totalPages,
+                    total: totalCount,
+                  })}
                 </p>
                 <div className='flex gap-1.5'>
                   <Button
@@ -355,18 +358,20 @@ export function LoadWorkflowDialog() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>确认删除</AlertDialogTitle>
+            <AlertDialogTitle>{t('confirm_delete_title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              确定要删除这个工作流吗？此操作不可撤销。
+              {t('confirm_delete_description')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
               className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
             >
-              {deleteWorkflowMutation.isPending ? '删除中...' : '确认删除'}
+              {deleteWorkflowMutation.isPending
+                ? t('deleting')
+                : t('confirm_delete_action')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

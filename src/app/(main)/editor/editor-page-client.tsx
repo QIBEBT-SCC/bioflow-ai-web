@@ -11,6 +11,7 @@ import {
   type XYPosition,
 } from '@xyflow/react'
 import { PlayIcon, SaveIcon } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import type React from 'react'
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
@@ -41,6 +42,8 @@ import { useChatSidebarStore } from '@/stores/chat-sidebar-store'
 import { useNodeEditorStore } from '@/stores/nodeviewStore'
 
 function FlowContent() {
+  const t = useTranslations('editor')
+
   const {
     currentWorkflowUid,
     nodes,
@@ -109,15 +112,15 @@ function FlowContent() {
       }
 
       setNodes((prev) => [...prev, newNode])
-      toast.success('节点已添加')
+      toast.success(t('node_added'))
     },
-    [clickPosition, screenToFlowPosition, setNodes],
+    [clickPosition, screenToFlowPosition, setNodes, t],
   )
 
   // 保存workflow
   const onSave = useCallback(() => {
     if (!currentWorkflowUid) {
-      toast.error('请先加载一个workflow')
+      toast.error(t('no_workflow_loaded'))
       return
     }
 
@@ -126,7 +129,7 @@ function FlowContent() {
       uid: currentWorkflowUid,
       data: { workflow },
     })
-  }, [currentWorkflowUid, nodes, edges, updateWorkflowMutation])
+  }, [currentWorkflowUid, nodes, edges, updateWorkflowMutation, t])
 
   // 运行workflow
   const onRun = useCallback(() => {
@@ -161,7 +164,7 @@ function FlowContent() {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className='hidden md:block'>
-                  <BreadcrumbPage>节点编辑器</BreadcrumbPage>
+                  <BreadcrumbPage>{t('title')}</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
@@ -184,7 +187,7 @@ function FlowContent() {
                 }
               >
                 <SaveIcon className='size-4 mr-2' />
-                {updateWorkflowMutation.isPending ? '保存中...' : '保存'}
+                {updateWorkflowMutation.isPending ? t('saving') : t('save')}
               </Button>
 
               <SaveAsDialog
@@ -201,13 +204,13 @@ function FlowContent() {
                 disabled={runMutation.isPending}
               >
                 <PlayIcon className='size-4 mr-2 text-green-500' />
-                {runMutation.isPending ? '运行中...' : '运行'}
+                {runMutation.isPending ? t('running') : t('run')}
               </Button>
 
               <Separator orientation='vertical' className='h-8! mx-2' />
 
               <div className='text-sm text-muted-foreground'>
-                右键点击画布添加节点
+                {t('right_click_to_add')}
               </div>
             </div>
           </div>

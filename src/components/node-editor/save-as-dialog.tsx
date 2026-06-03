@@ -11,6 +11,7 @@ import {
   SparklesIcon,
   TypeIcon,
 } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useReducer, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
@@ -96,6 +97,8 @@ export function SaveAsDialog({
   currentWorkflowName,
   disabled,
 }: SaveAsDialogProps) {
+  const t = useTranslations('editor')
+  const td = useTranslations('editor.save_as_dialog')
   const [
     {
       name,
@@ -138,7 +141,10 @@ export function SaveAsDialog({
 
   const handleOpenChange = (newOpen: boolean) => {
     if (newOpen && currentWorkflowName) {
-      dispatch({ type: 'RESET', name: `${currentWorkflowName} - 副本` })
+      dispatch({
+        type: 'RESET',
+        name: `${currentWorkflowName} - ${td('copy_suffix')}`,
+      })
     }
     setOpen(newOpen)
   }
@@ -148,7 +154,7 @@ export function SaveAsDialog({
       <DialogTrigger asChild>
         <Button variant='ghost' size='sm' disabled={disabled}>
           <SaveIcon className='size-4 mr-2' />
-          另存为
+          {t('save_as')}
         </Button>
       </DialogTrigger>
       <DialogContent className='sm:max-w-[425px]'>
@@ -157,10 +163,10 @@ export function SaveAsDialog({
             <div className='p-2 bg-primary/10 rounded-full'>
               <CopyIcon className='size-5 text-primary' />
             </div>
-            <DialogTitle>另存为副本</DialogTitle>
+            <DialogTitle>{td('title')}</DialogTitle>
           </div>
           <DialogDescription className='pt-2'>
-            创建一个当前工作流的完整副本。您可以修改名称并设置新的属性。
+            {td('description')}
           </DialogDescription>
         </DialogHeader>
 
@@ -168,11 +174,11 @@ export function SaveAsDialog({
           <div className='grid gap-2'>
             <Label htmlFor='name' className='flex items-center gap-2'>
               <FileTextIcon className='size-4 text-muted-foreground' />
-              工作流名称
+              {td('name_label')}
             </Label>
             <Input
               id='name'
-              placeholder='输入工作流名称...'
+              placeholder={td('name_placeholder')}
               className='col-span-3'
               value={name}
               onChange={(e) =>
@@ -189,11 +195,11 @@ export function SaveAsDialog({
           <div className='grid gap-2'>
             <Label htmlFor='description' className='flex items-center gap-2'>
               <AlignLeftIcon className='size-4 text-muted-foreground' />
-              工作流描述
+              {td('description_label')}
             </Label>
             <Textarea
               id='description'
-              placeholder='输入工作流描述...'
+              placeholder={td('description_placeholder')}
               value={description}
               onChange={(e) =>
                 dispatch({
@@ -208,7 +214,7 @@ export function SaveAsDialog({
             <div className='grid gap-2'>
               <Label htmlFor='type' className='flex items-center gap-2'>
                 <TypeIcon className='size-4 text-muted-foreground' />
-                类型
+                {td('type_label')}
               </Label>
               <Select
                 value={String(workflowType)}
@@ -224,10 +230,10 @@ export function SaveAsDialog({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={String(WorkflowType.TEMPLATE)}>
-                    模板
+                    {td('type_template')}
                   </SelectItem>
                   <SelectItem value={String(WorkflowType.SUBMODULE)}>
-                    子模块
+                    {td('type_submodule')}
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -240,11 +246,11 @@ export function SaveAsDialog({
                 ) : (
                   <LockIcon className='size-4 text-muted-foreground' />
                 )}
-                公开状态
+                {td('visibility_label')}
               </Label>
               <div className='flex items-center justify-between rounded-md border p-2 h-10'>
                 <span className='text-sm text-muted-foreground'>
-                  {isPublic ? '已公开' : '私有'}
+                  {isPublic ? td('public') : td('private')}
                 </span>
                 <Switch
                   id='public'
@@ -263,7 +269,7 @@ export function SaveAsDialog({
               className='flex items-center gap-2'
             >
               <LayersIcon className='size-4 text-muted-foreground' />
-              执行范围
+              {td('scope_label')}
             </Label>
             <Select
               value={String(executionScope)}
@@ -279,10 +285,10 @@ export function SaveAsDialog({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={String(ExecutionScope.SAMPLE_LEVEL)}>
-                  样本级: 为每个样本独立运行
+                  {td('scope_sample')}
                 </SelectItem>
                 <SelectItem value={String(ExecutionScope.PROJECT_LEVEL)}>
-                  项目级: 整个项目运行一次
+                  {td('scope_project')}
                 </SelectItem>
               </SelectContent>
             </Select>
@@ -292,7 +298,7 @@ export function SaveAsDialog({
             <div className='flex items-center justify-between rounded-md border p-3'>
               <Label htmlFor='auto-summary' className='flex items-center gap-2'>
                 <SparklesIcon className='size-4 text-muted-foreground' />
-                自动总结
+                {td('auto_summary')}
               </Label>
               <Switch
                 id='auto-summary'
@@ -307,10 +313,12 @@ export function SaveAsDialog({
             </div>
 
             <div className='grid gap-2'>
-              <Label htmlFor='summary-prompt'>总结提示词</Label>
+              <Label htmlFor='summary-prompt'>
+                {td('summary_prompt_label')}
+              </Label>
               <Textarea
                 id='summary-prompt'
-                placeholder='输入总结提示词...'
+                placeholder={td('summary_prompt_placeholder')}
                 value={summaryPrompt}
                 disabled={!autoSummary}
                 onChange={(e) =>
@@ -330,14 +338,14 @@ export function SaveAsDialog({
             onClick={() => setOpen(false)}
             disabled={saveWorkflowMutation.isPending}
           >
-            取消
+            {td('cancel')}
           </Button>
           <Button
             onClick={handleSaveAs}
             disabled={!name.trim() || saveWorkflowMutation.isPending}
             className='min-w-[80px]'
           >
-            {saveWorkflowMutation.isPending ? '保存中...' : '确认保存'}
+            {saveWorkflowMutation.isPending ? t('saving') : td('confirm')}
           </Button>
         </DialogFooter>
       </DialogContent>
