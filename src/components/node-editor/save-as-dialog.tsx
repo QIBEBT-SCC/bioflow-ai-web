@@ -1,6 +1,7 @@
 'use client'
 
 import {
+  AlignLeftIcon,
   CopyIcon,
   FileTextIcon,
   GlobeIcon,
@@ -43,6 +44,7 @@ interface SaveAsDialogProps {
 
 type SaveState = {
   name: string
+  description: string
   isPublic: boolean
   workflowType: WorkflowType
   executionScope: ExecutionScope
@@ -51,6 +53,7 @@ type SaveState = {
 }
 type SaveAction =
   | { type: 'SET_NAME'; value: string }
+  | { type: 'SET_DESCRIPTION'; value: string }
   | { type: 'SET_PUBLIC'; value: boolean }
   | { type: 'SET_TYPE'; value: WorkflowType }
   | { type: 'SET_SCOPE'; value: ExecutionScope }
@@ -60,6 +63,7 @@ type SaveAction =
 
 const INITIAL_SAVE: SaveState = {
   name: '',
+  description: '',
   isPublic: false,
   workflowType: WorkflowType.TEMPLATE,
   executionScope: ExecutionScope.SAMPLE_LEVEL,
@@ -71,6 +75,8 @@ function saveReducer(state: SaveState, action: SaveAction): SaveState {
   switch (action.type) {
     case 'SET_NAME':
       return { ...state, name: action.value }
+    case 'SET_DESCRIPTION':
+      return { ...state, description: action.value }
     case 'SET_PUBLIC':
       return { ...state, isPublic: action.value }
     case 'SET_TYPE':
@@ -93,6 +99,7 @@ export function SaveAsDialog({
   const [
     {
       name,
+      description,
       isPublic,
       workflowType,
       executionScope,
@@ -111,6 +118,7 @@ export function SaveAsDialog({
 
     const workflow = {
       name: name.trim(),
+      description: description.trim(),
       workflow: { nodes, edges },
       public: isPublic,
       wf_type: workflowType,
@@ -175,6 +183,24 @@ export function SaveAsDialog({
                   handleSaveAs()
                 }
               }}
+            />
+          </div>
+
+          <div className='grid gap-2'>
+            <Label htmlFor='description' className='flex items-center gap-2'>
+              <AlignLeftIcon className='size-4 text-muted-foreground' />
+              工作流描述
+            </Label>
+            <Textarea
+              id='description'
+              placeholder='输入工作流描述...'
+              value={description}
+              onChange={(e) =>
+                dispatch({
+                  type: 'SET_DESCRIPTION',
+                  value: e.target.value,
+                })
+              }
             />
           </div>
 

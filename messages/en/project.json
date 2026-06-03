@@ -185,6 +185,7 @@
         "searchPlaceholder": "Search workflows...",
         "noMatches": "No matching workflows found",
         "empty": "No workflows available",
+        "noDescription": "No description",
         "cancel": "Cancel",
         "importing": "Importing...",
         "importSelected": "Import Selected ({count})",
