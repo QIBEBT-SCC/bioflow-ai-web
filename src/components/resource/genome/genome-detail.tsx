@@ -8,6 +8,7 @@ import {
   MinusCircle,
   Trash2,
 } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { GenomeBuildIndexDialog } from '@/components/resource/genome/genome-build-index-dialog'
 import {
@@ -42,22 +43,28 @@ function IndexStatusIcon({ status }: { status: IndexStatus }) {
 }
 
 function IndexStatusLabel({ status }: { status: IndexStatus }) {
+  const t = useTranslations('resource')
   if (status === 'ready')
     return (
       <span className='text-emerald-600 dark:text-emerald-400 text-sm font-medium'>
-        已就绪
+        {t('genome.status_ready')}
       </span>
     )
   if (status === 'building')
     return (
       <span className='text-amber-600 dark:text-amber-400 text-sm font-medium'>
-        构建中
+        {t('genome.status_building')}
       </span>
     )
-  return <span className='text-muted-foreground text-sm'>未构建</span>
+  return (
+    <span className='text-muted-foreground text-sm'>
+      {t('genome.status_not_built')}
+    </span>
+  )
 }
 
 export function GenomeDetail({ genomeId, onDelete }: GenomeDetailProps) {
+  const t = useTranslations('resource')
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isBuildIndexOpen, setIsBuildIndexOpen] = useState(false)
 
@@ -84,7 +91,7 @@ export function GenomeDetail({ genomeId, onDelete }: GenomeDetailProps) {
   if (!genome) {
     return (
       <div className='flex h-[400px] items-center justify-center text-muted-foreground'>
-        基因组不存在或已被删除
+        {t('genome.not_found')}
       </div>
     )
   }
@@ -120,7 +127,7 @@ export function GenomeDetail({ genomeId, onDelete }: GenomeDetailProps) {
               onClick={() => setIsBuildIndexOpen(true)}
             >
               <Hammer className='size-4 mr-1' />
-              构建索引
+              {t('genome.build_index')}
             </Button>
           )}
           <Button
@@ -130,16 +137,15 @@ export function GenomeDetail({ genomeId, onDelete }: GenomeDetailProps) {
             disabled={deleteMutation.isPending}
           >
             <Trash2 className='size-4 mr-1' />
-            {deleteMutation.isPending ? '删除中...' : '删除'}
+            {deleteMutation.isPending ? t('deleting') : t('delete')}
           </Button>
         </div>
       </div>
 
-      {/* 基本信息 */}
       <Card>
         <CardHeader className='pb-2'>
           <CardTitle className='text-sm font-medium text-muted-foreground'>
-            基本信息
+            {t('genome.basic_info')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -164,20 +170,19 @@ export function GenomeDetail({ genomeId, onDelete }: GenomeDetailProps) {
         </CardContent>
       </Card>
 
-      {/* 文件路径 */}
       <Card>
         <CardHeader className='pb-2'>
           <CardTitle className='text-sm font-medium text-muted-foreground flex items-center gap-1'>
             <FileText className='size-4' />
-            文件路径
+            {t('genome.file_paths')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <dl className='space-y-3'>
             {[
-              { label: '基因组序列 (FASTA)', value: genome.genome_sequences },
-              { label: 'GFF 注释', value: genome.annotation_gff },
-              { label: 'GTF 注释', value: genome.annotation_gtf },
+              { label: t('genome.fasta_file'), value: genome.genome_sequences },
+              { label: t('genome.gff_file'), value: genome.annotation_gff },
+              { label: t('genome.gtf_file'), value: genome.annotation_gtf },
             ].map(({ label, value }) => (
               <div key={label}>
                 <dt className='text-xs font-medium text-muted-foreground'>
@@ -194,11 +199,10 @@ export function GenomeDetail({ genomeId, onDelete }: GenomeDetailProps) {
         </CardContent>
       </Card>
 
-      {/* 索引状态 */}
       <Card>
         <CardHeader className='pb-2'>
           <CardTitle className='text-sm font-medium text-muted-foreground'>
-            比对索引状态
+            {t('genome.index_status_card')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -218,7 +222,7 @@ export function GenomeDetail({ genomeId, onDelete }: GenomeDetailProps) {
                     <div>
                       <div className='text-sm font-medium'>{tool.label}</div>
                       <div className='text-xs text-muted-foreground'>
-                        {tool.description}
+                        {t(tool.descKey as Parameters<typeof t>[0])}
                       </div>
                     </div>
                   </div>
@@ -253,20 +257,26 @@ export function GenomeDetail({ genomeId, onDelete }: GenomeDetailProps) {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>确认删除参考基因组</AlertDialogTitle>
-            <AlertDialogDescription>
-              将从数据库中移除 <strong>{genome.name}</strong> (
-              {genome.accession}) 的记录。 磁盘上的 FASTA 文件和索引文件
-              <strong>不会被删除</strong>，但系统将无法再引用该基因组。
+            <AlertDialogTitle>
+              {t('genome.delete_confirm_title')}
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div>
+                {t.rich('genome.delete_confirm_desc', {
+                  name: genome.name,
+                  accession: genome.accession,
+                  strong: (chunks) => <strong>{chunks}</strong>,
+                })}
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
               className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
             >
-              确认删除
+              {t('genome.confirm_delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

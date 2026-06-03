@@ -1,6 +1,7 @@
 'use client'
 
 import { Hammer } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -28,6 +29,7 @@ export function GenomeBuildIndexDialog({
   onOpenChange,
   genome,
 }: GenomeBuildIndexDialogProps) {
+  const t = useTranslations('resource')
   const [selected, setSelected] = useState<string[]>([])
   const buildMutation = useBuildGenomeIndex()
 
@@ -63,11 +65,15 @@ export function GenomeBuildIndexDialog({
         <DialogHeader>
           <DialogTitle className='flex items-center gap-2'>
             <Hammer className='size-5' />
-            构建比对索引
+            {t('genome.build_index_title')}
           </DialogTitle>
-          <DialogDescription>
-            为 <strong>{genome.name}</strong>{' '}
-            选择需要构建的索引。已就绪的索引不可再次构建，构建中的索引跳过。
+          <DialogDescription asChild>
+            <div>
+              {t.rich('genome.build_index_desc', {
+                name: genome.name,
+                strong: (chunks) => <strong>{chunks}</strong>,
+              })}
+            </div>
           </DialogDescription>
         </DialogHeader>
 
@@ -101,21 +107,23 @@ export function GenomeBuildIndexDialog({
                 >
                   <div className='font-medium text-sm'>{tool.label}</div>
                   <div className='text-xs text-muted-foreground'>
-                    {tool.description}
+                    {t(tool.descKey as Parameters<typeof t>[0])}
                   </div>
                   <div className='text-xs mt-0.5'>
                     {status === 'ready' && (
                       <span className='text-emerald-600 dark:text-emerald-400'>
-                        ✓ 已就绪
+                        ✓ {t('genome.status_ready')}
                       </span>
                     )}
                     {status === 'building' && (
                       <span className='text-amber-600 dark:text-amber-400'>
-                        ⟳ 构建中
+                        ⟳ {t('genome.status_building')}
                       </span>
                     )}
                     {status === 'not_built' && (
-                      <span className='text-muted-foreground'>未构建</span>
+                      <span className='text-muted-foreground'>
+                        {t('genome.status_not_built')}
+                      </span>
                     )}
                   </div>
                 </Label>
@@ -130,7 +138,7 @@ export function GenomeBuildIndexDialog({
             onClick={() => handleOpenChange(false)}
             disabled={buildMutation.isPending}
           >
-            取消
+            {t('cancel')}
           </Button>
           <Button
             onClick={handleSubmit}
@@ -138,8 +146,8 @@ export function GenomeBuildIndexDialog({
           >
             <Hammer className='size-4 mr-1.5' />
             {buildMutation.isPending
-              ? '提交中...'
-              : `提交构建（${selected.length} 个）`}
+              ? t('genome.submitting')
+              : t('genome.submit_build', { count: selected.length })}
           </Button>
         </DialogFooter>
       </DialogContent>

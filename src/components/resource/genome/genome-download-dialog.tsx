@@ -1,6 +1,7 @@
 'use client'
 
 import { CheckCircle2, Download, FlaskConical } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useReducer } from 'react'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -73,6 +74,7 @@ export function GenomeDownloadDialog({
   open,
   onOpenChange,
 }: GenomeDownloadDialogProps) {
+  const t = useTranslations('resource')
   const [{ tab, speciesName, ncbiTaxId, selectedIndexes, result }, dispatch] =
     useReducer(dlReducer, INITIAL_DL)
 
@@ -117,16 +119,13 @@ export function GenomeDownloadDialog({
         }
       }}
     >
-      <DialogContent className='sm:max-w-[520px]'>
+      <DialogContent className='sm:max-w-130'>
         <DialogHeader>
           <DialogTitle className='flex items-center gap-2'>
             <Download className='size-5' />
-            下载参考基因组
+            {t('genome.download_title')}
           </DialogTitle>
-          <DialogDescription>
-            从 NCBI RefSeq
-            下载参考基因组（FASTA、GFF、GTF），可同时触发比对索引构建。
-          </DialogDescription>
+          <DialogDescription>{t('genome.download_desc')}</DialogDescription>
         </DialogHeader>
 
         {result ? (
@@ -136,7 +135,9 @@ export function GenomeDownloadDialog({
               <CheckCircle2 className='size-5 text-emerald-500 shrink-0 mt-0.5' />
               <div>
                 <div className='font-medium text-sm text-emerald-700 dark:text-emerald-400'>
-                  {result.task_id ? '下载任务已提交' : '基因组已存在'}
+                  {result.task_id
+                    ? t('genome.task_submitted')
+                    : t('genome.genome_exists')}
                 </div>
                 <div className='text-xs text-muted-foreground mt-1'>
                   {result.message}
@@ -145,7 +146,9 @@ export function GenomeDownloadDialog({
             </div>
             <dl className='grid grid-cols-2 gap-3 text-sm'>
               <div>
-                <dt className='text-xs text-muted-foreground'>物种名</dt>
+                <dt className='text-xs text-muted-foreground'>
+                  {t('genome.col_species_name')}
+                </dt>
                 <dd className='font-medium mt-0.5'>{result.species_name}</dd>
               </div>
               <div>
@@ -161,7 +164,9 @@ export function GenomeDownloadDialog({
                 <dd className='font-medium mt-0.5'>{result.ncbi_tax_id}</dd>
               </div>
               <div>
-                <dt className='text-xs text-muted-foreground'>任务 ID</dt>
+                <dt className='text-xs text-muted-foreground'>
+                  {t('genome.col_task_id')}
+                </dt>
                 <dd className='mt-0.5'>
                   {result.task_id ? (
                     <code className='text-xs bg-muted px-1 py-0.5 rounded break-all'>
@@ -169,7 +174,7 @@ export function GenomeDownloadDialog({
                     </code>
                   ) : (
                     <span className='text-muted-foreground text-xs'>
-                      （无需下载）
+                      {t('genome.no_task_needed')}
                     </span>
                   )}
                 </dd>
@@ -187,7 +192,7 @@ export function GenomeDownloadDialog({
             >
               <TabsList className='w-full'>
                 <TabsTrigger value='name' className='flex-1'>
-                  物种名称
+                  {t('genome.species_name_tab')}
                 </TabsTrigger>
                 <TabsTrigger value='taxid' className='flex-1'>
                   NCBI Tax ID
@@ -195,13 +200,15 @@ export function GenomeDownloadDialog({
               </TabsList>
               <TabsContent value='name' className='mt-3'>
                 <div className='space-y-1.5'>
-                  <Label htmlFor='species-name'>物种名称</Label>
+                  <Label htmlFor='species-name'>
+                    {t('genome.species_name_label')}
+                  </Label>
                   <div className='relative'>
                     <FlaskConical className='absolute left-3 top-2.5 size-4 text-muted-foreground' />
                     <Input
                       id='species-name'
                       className='pl-9'
-                      placeholder='如：Homo sapiens、zebrafish、mouse'
+                      placeholder={t('genome.species_name_placeholder')}
                       value={speciesName}
                       onChange={(e) =>
                         dispatch({ type: 'SET_SPECIES', value: e.target.value })
@@ -210,7 +217,7 @@ export function GenomeDownloadDialog({
                     />
                   </div>
                   <p className='text-xs text-muted-foreground'>
-                    支持学名或常用名，NCBI 自动识别最佳基因组版本
+                    {t('genome.species_name_hint')}
                   </p>
                 </div>
               </TabsContent>
@@ -220,7 +227,7 @@ export function GenomeDownloadDialog({
                   <Input
                     id='tax-id'
                     type='number'
-                    placeholder='如：9606（人类）、10090（小鼠）'
+                    placeholder={t('genome.taxid_placeholder')}
                     value={ncbiTaxId}
                     onChange={(e) =>
                       dispatch({ type: 'SET_TAXID', value: e.target.value })
@@ -228,16 +235,15 @@ export function GenomeDownloadDialog({
                     disabled={downloadMutation.isPending}
                   />
                   <p className='text-xs text-muted-foreground'>
-                    使用精确的 Tax ID 可避免歧义，推荐用于批量操作
+                    {t('genome.taxid_hint')}
                   </p>
                 </div>
               </TabsContent>
             </Tabs>
 
-            {/* 索引选择 */}
             <div className='space-y-2'>
               <Label className='text-sm font-medium'>
-                同时构建索引（可选）
+                {t('genome.build_index_optional')}
               </Label>
               <div className='grid grid-cols-1 gap-2'>
                 {INDEX_TOOLS.map((tool) => (
@@ -259,7 +265,7 @@ export function GenomeDownloadDialog({
                     <div className='flex-1'>
                       <div className='text-sm font-medium'>{tool.label}</div>
                       <div className='text-xs text-muted-foreground'>
-                        {tool.description}
+                        {t(tool.descKey as Parameters<typeof t>[0])}
                       </div>
                     </div>
                   </label>
@@ -271,7 +277,7 @@ export function GenomeDownloadDialog({
 
         <DialogFooter>
           {result ? (
-            <Button onClick={handleClose}>关闭</Button>
+            <Button onClick={handleClose}>{t('cancel')}</Button>
           ) : (
             <>
               <Button
@@ -279,14 +285,16 @@ export function GenomeDownloadDialog({
                 onClick={handleClose}
                 disabled={downloadMutation.isPending}
               >
-                取消
+                {t('cancel')}
               </Button>
               <Button
                 onClick={handleSubmit}
                 disabled={!isValid || downloadMutation.isPending}
               >
                 <Download className='size-4 mr-1.5' />
-                {downloadMutation.isPending ? '查询 NCBI 中...' : '开始下载'}
+                {downloadMutation.isPending
+                  ? t('genome.querying_ncbi')
+                  : t('genome.start_download')}
               </Button>
             </>
           )}
