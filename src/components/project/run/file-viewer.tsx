@@ -1,5 +1,6 @@
 import { AlertCircle, Loader2 } from 'lucide-react'
 import Image from 'next/image'
+import { useTranslations } from 'next-intl'
 import type { FileType } from '@/components/project/run//run-tab-bar'
 import { JsonViewer } from '@/components/project/run/json-viewer'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -21,11 +22,13 @@ export function FileViewer({
   loading,
   error,
 }: FileViewerProps) {
+  const t = useTranslations('Project.runDetail.fileViewer')
+
   if (loading) {
     return (
       <div className='flex h-full items-center justify-center text-muted-foreground'>
         <Loader2 className='mr-2 size-4 animate-spin' />
-        <span className='text-sm'>加载中…</span>
+        <span className='text-sm'>{t('loading')}</span>
       </div>
     )
   }
@@ -59,7 +62,12 @@ export function FileViewer({
 
   if (fileType === 'pdf' && blobUrl) {
     return (
-      <iframe src={blobUrl} title={fileName} className='size-full border-0' />
+      <iframe
+        src={blobUrl}
+        title={fileName}
+        className='size-full border-0'
+        sandbox='allow-same-origin'
+      />
     )
   }
 
@@ -73,7 +81,7 @@ export function FileViewer({
         srcDoc={content}
         title={fileName}
         className='size-full border-0'
-        sandbox='allow-scripts allow-same-origin'
+        sandbox='allow-scripts'
       />
     )
   }
@@ -90,7 +98,7 @@ export function FileViewer({
 
   return (
     <div className='flex h-full items-center justify-center text-muted-foreground'>
-      <p className='text-sm'>无内容</p>
+      <p className='text-sm'>{t('empty')}</p>
     </div>
   )
 }

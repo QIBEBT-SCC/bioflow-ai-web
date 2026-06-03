@@ -1,6 +1,7 @@
 'use client'
 
 import { PlusIcon } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useReducer, useState } from 'react'
 import { TagSelector } from '@/components/project/tag-selector'
 import { Button } from '@/components/ui/button'
@@ -56,6 +57,7 @@ function formReducer(state: FormState, action: FormAction): FormState {
 }
 
 export function NewProjectDialog() {
+  const t = useTranslations('Project.create')
   const [{ name, description, is_public, tags }, dispatch] = useReducer(
     formReducer,
     INITIAL_FORM,
@@ -94,21 +96,21 @@ export function NewProjectDialog() {
       <DialogTrigger asChild>
         <Button>
           <PlusIcon className='size-4 mr-2' />
-          新项目
+          {t('trigger')}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>New Tag</DialogTitle>
-          <DialogDescription>Create new tag</DialogDescription>
+          <DialogTitle>{t('title')}</DialogTitle>
+          <DialogDescription>{t('description')}</DialogDescription>
         </DialogHeader>
         <div className='flex-row gap-y-3'>
           <div className='flex gap-y-2 pt-2'>
             <div className='flex-1/2 gap-y-2 pt-2'>
-              <Label htmlFor='name'>Project Name</Label>
+              <Label htmlFor='name'>{t('name')}</Label>
               <Input
                 id='name'
-                placeholder='project name'
+                placeholder={t('namePlaceholder')}
                 required
                 value={name}
                 onChange={(e) =>
@@ -117,7 +119,7 @@ export function NewProjectDialog() {
               />
             </div>
             <div className='flex-1 space-y-2 pt-2 pl-5'>
-              <Label htmlFor='public'>Public</Label>
+              <Label htmlFor='public'>{t('public')}</Label>
               <Checkbox
                 id='public'
                 className='mx-3 mt-2'
@@ -129,10 +131,10 @@ export function NewProjectDialog() {
             </div>
           </div>
           <div className='space-y-2 pt-2'>
-            <Label htmlFor='description'>Project Description</Label>
+            <Label htmlFor='description'>{t('projectDescription')}</Label>
             <Textarea
               id='description'
-              placeholder='project description'
+              placeholder={t('descriptionPlaceholder')}
               required
               value={description}
               onChange={(e) =>
@@ -141,7 +143,7 @@ export function NewProjectDialog() {
             />
           </div>
           <div className='space-y-2 pt-2'>
-            <Label>Project Tag</Label>
+            <Label>{t('projectTag')}</Label>
             <TagSelector
               availableTags={availableTags}
               onChange={(tags) => dispatch({ type: 'SET_TAGS', value: tags })}
@@ -151,7 +153,7 @@ export function NewProjectDialog() {
         </div>
         <DialogFooter className='sm:justify-end'>
           <Button type='button' onClick={handleCreate} disabled={isPending}>
-            {isPending ? '创建中...' : 'Create'}
+            {isPending ? t('creating') : t('create')}
           </Button>
         </DialogFooter>
       </DialogContent>

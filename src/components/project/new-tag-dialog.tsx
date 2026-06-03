@@ -1,6 +1,7 @@
 'use client'
 
 import { PlusIcon } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
@@ -18,6 +19,7 @@ import { useCreateProjectTag } from '@/hooks/use-project'
 import { colorClassMap, colorList } from '@/types/color'
 
 export function NewTagDialog() {
+  const t = useTranslations('Project.tag')
   const [name, setName] = useState('')
   const [color, setColor] = useState('red')
   const [open, setOpen] = useState(false)
@@ -47,35 +49,36 @@ export function NewTagDialog() {
       <DialogTrigger asChild>
         <Button variant='outline' className='w-full' size='sm'>
           <PlusIcon className='size-4 mr-2' />
-          添加新标签
+          {t('trigger')}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>New Tag</DialogTitle>
-          <DialogDescription>Create new tag</DialogDescription>
+          <DialogTitle>{t('title')}</DialogTitle>
+          <DialogDescription>{t('description')}</DialogDescription>
         </DialogHeader>
         <div className='flex-row px-4 space-y-3'>
           <div className='space-y-1.5'>
-            <Label htmlFor='name'>Tag Name</Label>
+            <Label htmlFor='name'>{t('name')}</Label>
             <Input
               id='name'
-              placeholder='tag name'
+              placeholder={t('namePlaceholder')}
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
           </div>
           <div className='space-y-1.5'>
-            <Label htmlFor='color'>Color</Label>
+            <Label htmlFor='color'>{t('color')}</Label>
             <Button className={`mr-2 ${colorClassMap[color]} border-0`}>
-              标签颜色
+              {t('colorPreview')}
             </Button>
             <div className='grid grid-cols-11 gap-2'>
               {colorList.map((presetColor) => (
                 <button
                   key={presetColor}
                   type='button'
+                  aria-label={t('selectColor', { color: presetColor })}
                   className={`size-5 rounded-full border border-gray-200 ${colorClassMap[presetColor]} transition-all hover:scale-110`}
                   onClick={() => setColor(presetColor)}
                 />
@@ -85,7 +88,7 @@ export function NewTagDialog() {
         </div>
         <DialogFooter className='sm:justify-end'>
           <Button type='button' onClick={handleCreate} disabled={isPending}>
-            {isPending ? '创建中...' : 'Create'}
+            {isPending ? t('creating') : t('create')}
           </Button>
         </DialogFooter>
       </DialogContent>
