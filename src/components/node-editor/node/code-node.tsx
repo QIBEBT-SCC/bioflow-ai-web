@@ -1,6 +1,7 @@
 'use client'
 
 import { type Node, useNodeId, useNodesData, useReactFlow } from '@xyflow/react'
+import { useTranslations } from 'next-intl'
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import { BaseNode } from '@/components/node-editor/node/base-node'
 import { colorSchemes } from '@/components/node-editor/node/color'
@@ -13,6 +14,7 @@ interface CodeCardProps {
 }
 
 const CodeCard = memo(function CodeCard({ nodeType }: CodeCardProps) {
+  const t = useTranslations('editor.node')
   const readOnly = useReadOnly()
   const nodeId = useNodeId() ?? ''
   const nodeData = useNodesData<Node<{ code: string }, typeof nodeType>>(nodeId)
@@ -20,7 +22,6 @@ const CodeCard = memo(function CodeCard({ nodeType }: CodeCardProps) {
 
   const [code, setCode] = useState<string>(nodeData?.data.code ?? '')
 
-  // 同步外部数据变化到本地state
   // biome-ignore lint/correctness/useExhaustiveDependencies: no need
   useEffect(() => {
     if (nodeData?.data.code !== undefined && nodeData.data.code !== code) {
@@ -37,7 +38,7 @@ const CodeCard = memo(function CodeCard({ nodeType }: CodeCardProps) {
       <Label className='pb-2 font-medium'>Code:</Label>
       <Textarea
         className='h-[200px] w-full resize-none overflow-y-auto border-input font-mono text-sm'
-        placeholder='在这里编写或粘贴代码...'
+        placeholder={t('code_placeholder')}
         value={code ?? ''}
         onChange={(e) => setCode(e.target.value)}
         onBlur={handleCodeBlur}
@@ -64,12 +65,13 @@ const CODE_HANDLES = {
 }
 
 const RCodeNode = memo(function RCodeNode() {
+  const t = useTranslations('editor.node')
   const nodeComponent = useMemo(() => <CodeCard nodeType='code_R' />, [])
 
   return (
     <BaseNode
       title='R Code'
-      description='用于编写和执行 R 代码的节点。'
+      description={t('r_code_description')}
       color={colorSchemes.purple}
       handles={CODE_HANDLES}
       nodeComponent={nodeComponent}
@@ -78,12 +80,13 @@ const RCodeNode = memo(function RCodeNode() {
 })
 
 const PythonCodeNode = memo(function PythonCodeNode() {
+  const t = useTranslations('editor.node')
   const nodeComponent = useMemo(() => <CodeCard nodeType='code_python' />, [])
 
   return (
     <BaseNode
       title='Python Code'
-      description='用于编写和执行 Python 代码的节点。'
+      description={t('python_code_description')}
       color={colorSchemes.purple}
       handles={CODE_HANDLES}
       nodeComponent={nodeComponent}
@@ -92,12 +95,13 @@ const PythonCodeNode = memo(function PythonCodeNode() {
 })
 
 const BashCodeNode = memo(function PythonCodeNode() {
+  const t = useTranslations('editor.node')
   const nodeComponent = useMemo(() => <CodeCard nodeType='code_bash' />, [])
 
   return (
     <BaseNode
       title='Bash Code'
-      description='用于编写和执行 Bash 脚本的节点。'
+      description={t('bash_code_description')}
       color={colorSchemes.purple}
       handles={CODE_HANDLES}
       nodeComponent={nodeComponent}
@@ -116,6 +120,7 @@ const DOWNSTREAM_SUMMARY_HANDLES = {
 }
 
 const DownstreamSummaryCard = memo(function DownstreamSummaryCard() {
+  const t = useTranslations('editor.node')
   const readOnly = useReadOnly()
   const nodeId = useNodeId() ?? ''
   const nodeData =
@@ -144,7 +149,7 @@ const DownstreamSummaryCard = memo(function DownstreamSummaryCard() {
       <Textarea
         className='h-[150px] w-full resize-none overflow-y-auto border-input text-sm
         focus-visible:ring focus-visible:ring-purple-400 focus-visible:ring-offset-2'
-        placeholder='输入 prompt...'
+        placeholder={t('prompt_placeholder')}
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
         onBlur={saveNodeData}
@@ -155,12 +160,13 @@ const DownstreamSummaryCard = memo(function DownstreamSummaryCard() {
 })
 
 const DownstreamSummaryNode = memo(function DownstreamSummaryNode() {
+  const t = useTranslations('editor.node')
   const nodeComponent = useMemo(() => <DownstreamSummaryCard />, [])
 
   return (
     <BaseNode
       title='Downstream Summary'
-      description='对下游分析结果进行汇总的代码节点。'
+      description={t('downstream_summary_description')}
       color={colorSchemes.purple}
       handles={DOWNSTREAM_SUMMARY_HANDLES}
       nodeComponent={nodeComponent}

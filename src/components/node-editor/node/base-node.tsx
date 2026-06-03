@@ -8,6 +8,7 @@ import {
   Loader2Icon,
   XCircleIcon,
 } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import React, { type HTMLAttributes, memo, useCallback, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import {
@@ -252,22 +253,22 @@ const NodeCardContent = memo(function NodeCardContent({
 
 const statusConfig = {
   [Status.WAITING]: {
-    label: '等待中',
+    labelKey: 'waiting' as const,
     icon: ClockIcon,
     className: 'bg-yellow-50 text-yellow-700 border-yellow-200',
   },
   [Status.RUNNING]: {
-    label: '运行中',
+    labelKey: 'running' as const,
     icon: Loader2Icon,
     className: 'bg-blue-50 text-blue-700 border-blue-200',
   },
   [Status.SUCCESS]: {
-    label: '成功',
+    labelKey: 'success' as const,
     icon: CheckCircle2Icon,
     className: 'bg-green-50 text-green-700 border-green-200',
   },
   [Status.ERROR]: {
-    label: '失败',
+    labelKey: 'error' as const,
     icon: XCircleIcon,
     className: 'bg-red-50 text-red-700 border-red-200',
   },
@@ -297,6 +298,7 @@ const RunStatusBar = memo(function RunStatusBar({
 }: {
   runData: RunData
 }) {
+  const t = useTranslations('editor.node_status')
   if (runData.status === undefined) return null
   const cfg = statusConfig[runData.status]
   const Icon = cfg.icon
@@ -317,12 +319,12 @@ const RunStatusBar = memo(function RunStatusBar({
             runData.status === Status.RUNNING && 'animate-spin',
           )}
         />
-        {cfg.label}
+        {t(cfg.labelKey)}
       </div>
       {startStr && (
         <div className='text-[10px] opacity-70 flex gap-2'>
-          <span>开始 {startStr}</span>
-          {duration && <span>耗时 {duration}</span>}
+          <span>{t('start_time', { time: startStr })}</span>
+          {duration && <span>{t('duration', { duration })}</span>}
         </div>
       )}
     </div>
