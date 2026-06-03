@@ -1,6 +1,16 @@
 {
   "resource": {
     "add_database": "Add Database",
+    "adding": "Adding...",
+    "cancel": "Cancel",
+    "database_not_found": "Database does not exist or has been deleted",
+    "delete": "Delete",
+    "deleting": "Deleting...",
+    "loading": "Loading...",
+    "next_page": "Next",
+    "no_description": "No description",
+    "pagination": "{total} records, page {current} / {total_pages}",
+    "prev_page": "Previous",
     "add_new_database": "Add New Database",
     "add_new_database_desc": "Add a reference to a bioinformatics database. Fields marked with * are required.",
     "create_failed": "Failed to add database",
