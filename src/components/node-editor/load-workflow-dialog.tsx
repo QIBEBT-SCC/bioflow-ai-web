@@ -6,6 +6,7 @@ import {
   ChevronRightIcon,
   FileTextIcon,
   FolderOpenIcon,
+  LayersIcon,
   Loader2Icon,
   MoreHorizontalIcon,
   PencilIcon,
@@ -24,6 +25,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -47,6 +49,7 @@ import {
   useWorkflows,
 } from '@/hooks/use-workflow'
 import { useNodeEditorStore } from '@/stores/nodeviewStore'
+import { ExecutionScope } from '@/types/workflow'
 
 type InteractionState = {
   deletingUid: string | null
@@ -65,6 +68,10 @@ const INITIAL_INTERACTION: InteractionState = {
   deletingUid: null,
   renamingUid: null,
   renameValue: '',
+}
+
+function getExecutionScopeLabel(executionScope: ExecutionScope) {
+  return executionScope === ExecutionScope.PROJECT_LEVEL ? '项目级' : '样本级'
 }
 
 function interactionReducer(
@@ -245,9 +252,20 @@ export function LoadWorkflowDialog() {
                             >
                               {workflow.name}
                             </p>
-                            <p className='text-xs text-muted-foreground/70 truncate mt-0.5'>
-                              {workflow.uid}
-                            </p>
+                            <div className='mt-1 flex min-w-0 items-center gap-1.5'>
+                              <Badge
+                                variant='outline'
+                                className='h-5 gap-1 rounded px-1.5 text-[11px]'
+                              >
+                                <LayersIcon className='size-3' />
+                                {getExecutionScopeLabel(
+                                  workflow.execution_scope,
+                                )}
+                              </Badge>
+                              <span className='truncate text-xs text-muted-foreground/70'>
+                                {workflow.description || '无描述'}
+                              </span>
+                            </div>
                           </button>
                         )}
 

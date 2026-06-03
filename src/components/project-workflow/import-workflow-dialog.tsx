@@ -1,11 +1,13 @@
 'use client'
 
-import { Loader2, PlusIcon, Search } from 'lucide-react'
+import { LayersIcon, Loader2, PlusIcon, Search } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { ImagePagination } from '@/components/image/image-pagination'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Dialog,
   DialogContent,
@@ -19,6 +21,8 @@ import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useAddWorkflowToProject } from '@/hooks/use-project-workflow'
 import { useWorkflows } from '@/hooks/use-workflow'
+import { cn } from '@/lib/utils'
+import { ExecutionScope } from '@/types/workflow'
 
 interface ImportWorkflowDialogProps {
   projectId: string
@@ -26,6 +30,7 @@ interface ImportWorkflowDialogProps {
 
 export function ImportWorkflowDialog({ projectId }: ImportWorkflowDialogProps) {
   const t = useTranslations('Project.workflow.import')
+  const tWorkflow = useTranslations('Project.workflow')
   const [open, setOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
@@ -38,13 +43,21 @@ export function ImportWorkflowDialog({ projectId }: ImportWorkflowDialogProps) {
   const { data: workflowsPage, isLoading } = useWorkflows(offset, pageSize)
   const workflows = workflowsPage?.data ?? []
   const totalCount = workflowsPage?.total ?? 0
-  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize))
+  const totalPages = Math.ceil(totalCount / pageSize)
   const addWorkflowMutation = useAddWorkflowToProject()
+  const normalizedSearchQuery = searchQuery.trim().toLowerCase()
 
-  // 过滤工作流
-  const filteredWorkflows = workflows.filter((wf) =>
-    wf.name.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
+  const filteredWorkflows = normalizedSearchQuery
+    ? workflows.filter((wf) => {
+        const name = wf.name.toLowerCase()
+        const description = wf.description.toLowerCase()
+
+        return (
+          name.includes(normalizedSearchQuery) ||
+          description.includes(normalizedSearchQuery)
+        )
+      })
+    : workflows
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value)
@@ -105,14 +118,14 @@ export function ImportWorkflowDialog({ projectId }: ImportWorkflowDialogProps) {
           {t('trigger')}
         </Button>
       </DialogTrigger>
-      <DialogContent className='max-w-2xl'>
+      <DialogContent className='w-[calc(100vw-2rem)] overflow-hidden sm:max-w-240'>
         <DialogHeader>
           <DialogTitle>{t('title')}</DialogTitle>
           <DialogDescription>{t('description')}</DialogDescription>
         </DialogHeader>
 
         {/* 搜索框 */}
-        <div className='relative'>
+        <div className='relative min-w-0'>
           <Search className='absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground' />
           <Input
             placeholder={t('searchPlaceholder')}
@@ -123,7 +136,7 @@ export function ImportWorkflowDialog({ projectId }: ImportWorkflowDialogProps) {
         </div>
 
         {/* 工作流列表 */}
-        <ScrollArea className='h-100 rounded-md border p-4'>
+        <ScrollArea className='h-100 w-full rounded-md border p-4'>
           {isLoading ? (
             <div className='flex items-center justify-center py-12'>
               <Loader2 className='size-8 animate-spin text-muted-foreground' />
@@ -133,36 +146,61 @@ export function ImportWorkflowDialog({ projectId }: ImportWorkflowDialogProps) {
               {searchQuery ? t('noMatches') : t('empty')}
             </div>
           ) : (
-            <div className='space-y-2'>
-              {filteredWorkflows.map((workflow) => (
-                <button
-                  key={workflow.uid}
-                  type='button'
-                  className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors text-left w-full ${
-                    selectedWorkflows.has(workflow.uid)
-                      ? 'bg-primary/5 border-primary'
-                      : 'hover:bg-muted/50'
-                  }`}
-                  onClick={() => toggleWorkflow(workflow.uid)}
-                >
-                  <div className='flex items-center h-5'>
-                    <input
-                      type='checkbox'
+            <div className='min-w-0 space-y-2'>
+              {filteredWorkflows.map((workflow) => {
+                const isSelected = selectedWorkflows.has(workflow.uid)
+                const isProjectLevel =
+                  workflow.execution_scope === ExecutionScope.PROJECT_LEVEL
+
+                return (
+                  <div
+                    key={workflow.uid}
+                    className={cn(
+                      'flex w-full min-w-0 items-start gap-3 rounded-lg border p-3 transition-colors',
+                      isSelected
+                        ? 'border-primary bg-primary/5'
+                        : 'hover:bg-muted/50',
+                    )}
+                  >
+                    <Checkbox
                       aria-label={workflow.name}
-                      checked={selectedWorkflows.has(workflow.uid)}
-                      onChange={() => toggleWorkflow(workflow.uid)}
-                      className='size-4 rounded border-gray-300'
-                      onClick={(e) => e.stopPropagation()}
+                      checked={isSelected}
+                      onCheckedChange={() => toggleWorkflow(workflow.uid)}
                     />
+                    <button
+                      type='button'
+                      className='min-w-0 flex-1 space-y-2 text-left'
+                      onClick={() => toggleWorkflow(workflow.uid)}
+                    >
+                      <div className='min-w-0 space-y-1.5'>
+                        <h4
+                          className='truncate text-sm font-medium'
+                          title={workflow.name}
+                        >
+                          {workflow.name}
+                        </h4>
+                        <Badge
+                          variant='outline'
+                          className={cn(
+                            'h-5 max-w-full gap-1 rounded px-1.5 text-[11px]',
+                            isProjectLevel
+                              ? 'border-sky-200 bg-sky-50 text-sky-700'
+                              : 'border-teal-200 bg-teal-50 text-teal-700',
+                          )}
+                        >
+                          <LayersIcon className='size-3' />
+                          {isProjectLevel
+                            ? tWorkflow('projectLevel')
+                            : tWorkflow('sampleLevel')}
+                        </Badge>
+                      </div>
+                      <p className='line-clamp-2 wrap-break-word text-xs text-muted-foreground'>
+                        {workflow.description || t('noDescription')}
+                      </p>
+                    </button>
                   </div>
-                  <div className='flex-1 min-w-0'>
-                    <h4 className='font-medium text-sm'>{workflow.name}</h4>
-                    <p className='text-xs text-muted-foreground mt-1'>
-                      UID: {workflow.uid}
-                    </p>
-                  </div>
-                </button>
-              ))}
+                )
+              })}
             </div>
           )}
         </ScrollArea>

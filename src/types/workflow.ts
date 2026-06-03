@@ -17,6 +17,7 @@ export interface WorkflowDefinition {
 
 export interface Workflow {
   name: string
+  description: string
   workflow: WorkflowDefinition
   public: boolean
   wf_type: WorkflowType
@@ -28,7 +29,8 @@ export interface Workflow {
 export interface SimpleWorkflowInfo {
   uid: string
   name: string
-  execution_scope?: ExecutionScope
+  description: string
+  execution_scope: ExecutionScope
 }
 
 export interface PaginatedWorkflows {

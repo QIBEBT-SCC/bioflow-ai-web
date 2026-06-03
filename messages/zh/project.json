@@ -185,6 +185,7 @@
         "searchPlaceholder": "搜索工作流...",
         "noMatches": "未找到匹配的工作流",
         "empty": "暂无可用的工作流",
+        "noDescription": "无描述",
         "cancel": "取消",
         "importing": "导入中...",
         "importSelected": "导入选中项 ({count})",
