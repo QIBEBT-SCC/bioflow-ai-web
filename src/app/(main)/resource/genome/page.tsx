@@ -1,6 +1,7 @@
 'use client'
 
 import { DnaIcon } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { GenomeManager } from '@/components/resource/genome/genome-manager'
 import {
   Breadcrumb,
@@ -13,20 +14,22 @@ import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 
 export default function ResourcePage() {
+  const t = useTranslations('resource')
+
   return (
     <SidebarInset className='h-screen flex flex-col'>
       <header className='flex flex-col shrink-0 border-b'>
         <div className='flex items-center gap-2 px-4 h-12 bg-background'>
           <SidebarTrigger className='-ml-1' />
-          <Separator orientation='vertical' className='!mr-2 !h-4' />
+          <Separator orientation='vertical' className='mr-2! h-4!' />
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem className='hidden md:block'>
-                <BreadcrumbPage>Resource</BreadcrumbPage>
+                <BreadcrumbPage>{t('title')}</BreadcrumbPage>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem className='hidden md:block'>
-                <BreadcrumbPage>Genome</BreadcrumbPage>
+                <BreadcrumbPage>{t('genome.breadcrumb')}</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
@@ -39,14 +42,10 @@ export default function ResourcePage() {
             <div className='flex items-center gap-3 mb-2'>
               <DnaIcon className='size-8 text-primary' />
               <h1 className='text-4xl font-semibold text-balance'>
-                参考基因组管理
+                {t('genome.title')}
               </h1>
             </div>
-            <p className='text-muted-foreground'>
-              管理本地已下载的参考基因组，查看比对索引状态，从 NCBI RefSeq
-              下载新基因组并构建 Bowtie2 / BWA / HISAT2 / STAR / Minimap2
-              等比对索引。
-            </p>
+            <p className='text-muted-foreground'>{t('genome.description')}</p>
           </div>
 
           {/* 主体 */}

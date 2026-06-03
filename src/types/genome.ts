@@ -64,36 +64,36 @@ export const INDEX_TOOLS: {
   key: keyof GenomeIndexStatus
   field: string
   label: string
-  description: string
+  descKey: string
 }[] = [
   {
     key: 'bowtie2',
     field: 'bowtie2_index',
     label: 'Bowtie2',
-    description: 'DNA 短读比对（ChIP-seq、ATAC-seq）',
+    descKey: 'genome.tool_bowtie2_desc',
   },
   {
     key: 'bwa',
     field: 'bwa_index',
     label: 'BWA',
-    description: 'DNA 短读比对（WGS、WES）',
+    descKey: 'genome.tool_bwa_desc',
   },
   {
     key: 'hisat2',
     field: 'hisat2_index',
     label: 'HISAT2',
-    description: 'RNA-seq 剪接比对',
+    descKey: 'genome.tool_hisat2_desc',
   },
   {
     key: 'star',
     field: 'star_index',
     label: 'STAR',
-    description: 'RNA-seq 剪接比对（高精度）',
+    descKey: 'genome.tool_star_desc',
   },
   {
     key: 'minimap2',
     field: 'minimap2_index',
     label: 'Minimap2',
-    description: '长读（Nanopore、PacBio）比对',
+    descKey: 'genome.tool_minimap2_desc',
   },
 ]

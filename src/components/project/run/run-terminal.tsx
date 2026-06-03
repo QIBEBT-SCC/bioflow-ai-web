@@ -1,4 +1,5 @@
 import { ChevronDownIcon } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { Terminal, TerminalContent } from '@/components/ai-elements/terminal'
 
 interface RunTerminalProps {
@@ -18,17 +19,18 @@ export function RunTerminal({
   height,
   onResizeStart,
 }: RunTerminalProps) {
+  const t = useTranslations('Project.runDetail.terminal')
+
   return (
     <div className='shrink-0 border-t'>
       {/* 拖拽调整把手 */}
       {isOpen && (
-        <hr
-          aria-orientation='horizontal'
-          aria-label='拖拽调整终端高度'
-          tabIndex={0}
+        <button
+          type='button'
+          aria-label={t('resizeHeight')}
           onMouseDown={onResizeStart}
-          className='h-1 w-full cursor-row-resize border-none bg-zinc-800 hover:bg-blue-500 transition-colors'
-          title='拖拽调整终端高度'
+          className='block h-1 w-full cursor-row-resize border-none bg-zinc-800 p-0 hover:bg-blue-500 transition-colors'
+          title={t('resizeHeight')}
         />
       )}
       {/* 终端标题栏：点击展开/收起 */}
@@ -36,10 +38,10 @@ export function RunTerminal({
         type='button'
         onClick={onToggle}
         className='flex w-full items-center justify-between px-3 py-1 bg-zinc-900 hover:bg-zinc-800 transition-colors group'
-        title={isOpen ? '收起终端' : '展开终端'}
+        title={isOpen ? t('collapse') : t('expand')}
       >
         <span className='text-xs text-zinc-400 font-mono flex items-center gap-1.5'>
-          终端
+          {t('title')}
         </span>
         <ChevronDownIcon
           className={`size-3 text-zinc-500 transition-transform duration-200 ${isOpen ? '' : 'rotate-180'}`}

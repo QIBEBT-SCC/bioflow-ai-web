@@ -7,6 +7,7 @@ import {
   Loader2,
   MinusCircle,
 } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -88,6 +89,7 @@ export function GenomeList({
   onSelectGenome,
   selectedId,
 }: GenomeListProps) {
+  const t = useTranslations('resource')
   const [offset, setOffset] = useState(0)
   const pageSize = 10
 
@@ -121,9 +123,11 @@ export function GenomeList({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className='w-[200px]'>物种名</TableHead>
+                  <TableHead className='w-[200px]'>
+                    {t('genome.col_species')}
+                  </TableHead>
                   <TableHead>Accession</TableHead>
-                  <TableHead>索引状态</TableHead>
+                  <TableHead>{t('genome.col_index_status')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -158,11 +162,14 @@ export function GenomeList({
             </Table>
           </div>
 
-          {/* 分页（搜索模式下不显示） */}
           {!isSearch && totalCount > pageSize && (
             <div className='flex items-center justify-between'>
               <div className='text-sm text-muted-foreground'>
-                共 {totalCount} 条，第 {currentPage} / {totalPages} 页
+                {t('pagination', {
+                  total: totalCount,
+                  current: currentPage,
+                  total_pages: totalPages,
+                })}
               </div>
               <div className='flex gap-2'>
                 <Button
@@ -172,7 +179,7 @@ export function GenomeList({
                   disabled={offset === 0}
                 >
                   <ChevronLeftIcon className='size-4' />
-                  上一页
+                  {t('prev_page')}
                 </Button>
                 <Button
                   variant='outline'
@@ -180,7 +187,7 @@ export function GenomeList({
                   onClick={() => setOffset((prev) => prev + pageSize)}
                   disabled={offset + pageSize >= totalCount}
                 >
-                  下一页
+                  {t('next_page')}
                   <ChevronRightIcon className='size-4' />
                 </Button>
               </div>
@@ -190,8 +197,8 @@ export function GenomeList({
       ) : (
         <div className='py-16 text-center text-muted-foreground'>
           {isSearch
-            ? `未找到包含 "${searchQuery}" 的参考基因组`
-            : '暂无参考基因组，请点击"下载基因组"添加'}
+            ? t('genome.search_empty', { query: searchQuery })
+            : t('genome.no_genomes')}
         </div>
       )}
     </div>

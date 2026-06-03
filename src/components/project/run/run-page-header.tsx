@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { ChatSidebarToggle } from '@/components/chat/chat-sidebar-toggle'
 import {
   Breadcrumb,
@@ -23,6 +24,8 @@ export function RunPageHeader({
   projectName,
   runName,
 }: RunPageHeaderProps) {
+  const t = useTranslations('Project.detail.breadcrumb')
+
   return (
     <header className='flex flex-col shrink-0 border-b'>
       <div className='flex h-12 items-center gap-2 bg-background px-4'>
@@ -35,7 +38,7 @@ export function RunPageHeader({
                 href='/project'
                 className='text-muted-foreground hover:text-foreground text-sm'
               >
-                项目
+                {t('projects')}
               </Link>
             </BreadcrumbItem>
             <BreadcrumbSeparator />

@@ -8,6 +8,79 @@
     }
   },
   "Project": {
+    "list": {
+      "breadcrumb": "Projects",
+      "title": "Projects",
+      "searchPlaceholder": "Search projects...",
+      "filter": "Filter",
+      "loading": "Loading...",
+      "tabs": {
+        "all": "All Projects",
+        "starred": "Starred",
+        "my": "Created by Me"
+      },
+      "sort": {
+        "recent": "Recently Updated",
+        "nameAsc": "Name (A-Z)",
+        "nameDesc": "Name (Z-A)",
+        "mostRuns": "Most Runs",
+        "fewestRuns": "Fewest Runs"
+      },
+      "tags": {
+        "title": "Tags",
+        "loading": "Loading...",
+        "loadFailed": "Failed to load",
+        "empty": "No tags yet"
+      },
+      "table": {
+        "projectName": "Project Name",
+        "description": "Description",
+        "tags": "Tags",
+        "owner": "Owner",
+        "lastUpdated": "Last Updated",
+        "created": "Created",
+        "favorite": "Favorite"
+      },
+      "recent": {
+        "emptyTitle": "No recently run projects",
+        "emptyDescription": "Projects you recently ran will appear here.",
+        "lastUpdated": "Last updated:",
+        "dataCount": "-- data items"
+      }
+    },
+    "create": {
+      "trigger": "New Project",
+      "title": "New Project",
+      "description": "Create a new project and select available tags",
+      "name": "Project Name",
+      "namePlaceholder": "Project name",
+      "public": "Public",
+      "projectDescription": "Project Description",
+      "descriptionPlaceholder": "Project description",
+      "projectTag": "Project Tags",
+      "creating": "Creating...",
+      "create": "Create"
+    },
+    "tag": {
+      "trigger": "Add New Tag",
+      "title": "New Tag",
+      "description": "Create a new project tag",
+      "name": "Tag Name",
+      "namePlaceholder": "Tag name",
+      "color": "Color",
+      "colorPreview": "Tag Color",
+      "selectColor": "Select {color} color",
+      "creating": "Creating...",
+      "create": "Create"
+    },
+    "tagSelector": {
+      "placeholder": "Select tags...",
+      "searchPlaceholder": "Search tags...",
+      "createTag": "Create tag \"{name}\"",
+      "empty": "No tags found.",
+      "heading": "Tags",
+      "actions": "Actions"
+    },
     "detail": {
       "breadcrumb": {
         "projects": "Projects"
@@ -22,6 +95,31 @@
         "sampleCount": "Samples",
         "workflowStatus": "Workflow Status",
         "lastUpdated": "Last Updated"
+      }
+    },
+    "runDetail": {
+      "fileViewer": {
+        "loading": "Loading...",
+        "empty": "No content"
+      },
+      "leftPanel": {
+        "statistics": "Run Statistics",
+        "status": "Run Status",
+        "totalTasks": "Total Tasks",
+        "successTasks": "Successful Tasks",
+        "failedTasks": "Failed Tasks",
+        "outputFiles": "Output Files",
+        "resizeOrCollapse": "Drag to resize / click to collapse",
+        "expandPanel": "Expand panel"
+      },
+      "tabs": {
+        "workflow": "Workflow"
+      },
+      "terminal": {
+        "title": "Terminal",
+        "resizeHeight": "Drag to resize terminal height",
+        "collapse": "Collapse terminal",
+        "expand": "Expand terminal"
       }
     },
     "fileMapping": {
@@ -185,6 +283,7 @@
         "searchPlaceholder": "Search workflows...",
         "noMatches": "No matching workflows found",
         "empty": "No workflows available",
+        "noDescription": "No description",
         "cancel": "Cancel",
         "importing": "Importing...",
         "importSelected": "Import Selected ({count})",

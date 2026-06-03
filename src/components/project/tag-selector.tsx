@@ -1,4 +1,5 @@
 import { Check, ChevronsUpDown, Plus, X } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -35,6 +36,7 @@ export function TagSelector({
   allowCreate = true,
   className,
 }: TagSelectorProps) {
+  const t = useTranslations('Project.tagSelector')
   const [open, setOpen] = useState(false)
   const [inputValue, setInputValue] = useState('')
   const listboxId = 'tag-selector-listbox'
@@ -83,7 +85,7 @@ export function TagSelector({
           <div className='flex flex-wrap gap-1'>
             {value.length === 0 && (
               <span className='text-muted-foreground ml-2 font-normal'>
-                Select tags…
+                {t('placeholder')}
               </span>
             )}
             {value.map((tag) => (
@@ -126,7 +128,7 @@ export function TagSelector({
       <PopoverContent className='w-[400px] p-0' align='start'>
         <Command>
           <CommandInput
-            placeholder='Search tags...'
+            placeholder={t('searchPlaceholder')}
             value={inputValue}
             onValueChange={setInputValue}
           />
@@ -139,13 +141,13 @@ export function TagSelector({
                   onClick={handleCreate}
                 >
                   <Plus className='size-4' />
-                  Create tag "{inputValue}"
+                  {t('createTag', { name: inputValue })}
                 </button>
               ) : (
-                'No tags found.'
+                t('empty')
               )}
             </CommandEmpty>
-            <CommandGroup heading='Tags'>
+            <CommandGroup heading={t('heading')}>
               {availableTags.map((tag) => {
                 const isSelected = value.some((t) => t.name === tag.name)
                 return (
@@ -181,13 +183,13 @@ export function TagSelector({
               ) && (
                 <>
                   <CommandSeparator />
-                  <CommandGroup heading='Actions'>
+                  <CommandGroup heading={t('actions')}>
                     <CommandItem
                       onSelect={handleCreate}
                       value={`create-${inputValue}`}
                     >
                       <Plus className='mr-2 size-4' />
-                      Create tag "{inputValue}"
+                      {t('createTag', { name: inputValue })}
                     </CommandItem>
                   </CommandGroup>
                 </>

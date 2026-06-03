@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import type React from 'react'
 import { useReducer } from 'react'
 import { Button } from '@/components/ui/button'
@@ -74,6 +75,7 @@ export function DatabaseAddDialog({
     dispatch,
   ] = useReducer(formReducer, INITIAL_STATE)
 
+  const t = useTranslations('resource')
   const createMutation = useCreateDB()
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -99,14 +101,14 @@ export function DatabaseAddDialog({
             dispatch({
               type: 'SET_ERROR',
               field: 'nameError',
-              value: '数据库名称已存在，请使用其他名称',
+              value: t('name_exists'),
             })
             break
           case 404:
             dispatch({
               type: 'SET_ERROR',
               field: 'pathError',
-              value: '文件路径不存在，请检查路径是否正确',
+              value: t('path_not_found'),
             })
             break
           default:
@@ -122,15 +124,13 @@ export function DatabaseAddDialog({
       <DialogContent className='sm:max-w-[500px]'>
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>添加新数据库</DialogTitle>
-            <DialogDescription>
-              添加生物信息数据库的引用。所有带 * 的字段为必填项。
-            </DialogDescription>
+            <DialogTitle>{t('add_new_database')}</DialogTitle>
+            <DialogDescription>{t('add_new_database_desc')}</DialogDescription>
           </DialogHeader>
           <div className='grid gap-4 py-4'>
             <div className='space-y-2'>
               <Label htmlFor='name'>
-                数据库名称 <span className='text-red-500'>*</span>
+                {t('database_name')} <span className='text-red-500'>*</span>
               </Label>
               <Input
                 id='name'
@@ -160,7 +160,7 @@ export function DatabaseAddDialog({
             </div>
 
             <div className='space-y-2'>
-              <Label htmlFor='description'>描述</Label>
+              <Label htmlFor='description'>{t('description_label')}</Label>
               <Textarea
                 id='description'
                 value={description}
@@ -178,7 +178,7 @@ export function DatabaseAddDialog({
 
             <div className='space-y-2'>
               <Label htmlFor='path'>
-                文件路径 <span className='text-red-500'>*</span>
+                {t('file_path')} <span className='text-red-500'>*</span>
               </Label>
               <Input
                 id='path'
@@ -208,7 +208,7 @@ export function DatabaseAddDialog({
             </div>
 
             <div className='space-y-2'>
-              <Label htmlFor='version'>更新时间</Label>
+              <Label htmlFor='version'>{t('update_time')}</Label>
               <Input
                 id='version'
                 value={lastUpdate}
@@ -233,10 +233,10 @@ export function DatabaseAddDialog({
               }}
               disabled={createMutation.isPending}
             >
-              取消
+              {t('cancel')}
             </Button>
             <Button type='submit' disabled={createMutation.isPending}>
-              {createMutation.isPending ? '添加中...' : '添加数据库'}
+              {createMutation.isPending ? t('adding') : t('add_database')}
             </Button>
           </DialogFooter>
         </form>

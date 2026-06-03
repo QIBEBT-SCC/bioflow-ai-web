@@ -1,7 +1,8 @@
 import { format } from 'date-fns'
-import { zhCN } from 'date-fns/locale'
+import { enUS, zhCN } from 'date-fns/locale'
 import { ClockIcon, PlayIcon, StarIcon, UserIcon } from 'lucide-react'
 import Link from 'next/link'
+import { useLocale, useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { ImagePagination } from '@/components/image/image-pagination'
 import { Badge } from '@/components/ui/badge'
@@ -24,16 +25,20 @@ import {
 import { colorClassMap } from '@/types/color'
 import type { ProjectPublic } from '@/types/project'
 
-function formatDateTime(dateStr?: string) {
+function formatDateTime(dateStr: string | undefined, locale: string) {
   if (!dateStr) return '-'
   try {
-    return format(new Date(dateStr), 'yyyy-MM-dd HH:mm:ss', { locale: zhCN })
+    return format(new Date(dateStr), 'yyyy-MM-dd HH:mm:ss', {
+      locale: locale === 'en' ? enUS : zhCN,
+    })
   } catch {
     return '-'
   }
 }
 
 function ProjectTable({ projects }: { projects: ProjectPublic[] }) {
+  const locale = useLocale()
+  const t = useTranslations('Project.list.table')
   const starProject = useStarProject()
   const unstarProject = useUnstarProject()
 
@@ -56,25 +61,25 @@ function ProjectTable({ projects }: { projects: ProjectPublic[] }) {
         <Table>
           <TableHeader className='bg-muted/50'>
             <TableRow>
-              <TableHead className='h-12 px-4'>项目名称</TableHead>
-              <TableHead className='h-12 px-4'>描述</TableHead>
-              <TableHead className='h-12 px-4'>标签</TableHead>
+              <TableHead className='h-12 px-4'>{t('projectName')}</TableHead>
+              <TableHead className='h-12 px-4'>{t('description')}</TableHead>
+              <TableHead className='h-12 px-4'>{t('tags')}</TableHead>
               <TableHead className='h-12 text-right'>
                 <div className='flex items-center justify-end'>
                   <UserIcon className='size-3 mr-1' />
-                  创建人
+                  {t('owner')}
                 </div>
               </TableHead>
               <TableHead className='h-12 text-right'>
                 <div className='flex items-center justify-end'>
                   <ClockIcon className='size-3 mr-1' />
-                  上次更新
+                  {t('lastUpdated')}
                 </div>
               </TableHead>
               <TableHead className='h-12 text-right'>
                 <div className='flex items-center justify-end'>
                   <ClockIcon className='size-3 mr-1' />
-                  创建
+                  {t('created')}
                 </div>
               </TableHead>
             </TableRow>
@@ -97,7 +102,7 @@ function ProjectTable({ projects }: { projects: ProjectPublic[] }) {
                       disabled={isPending && pendingId === String(project.id)}
                     >
                       <StarIcon className='size-4' />
-                      <span className='sr-only'>收藏</span>
+                      <span className='sr-only'>{t('favorite')}</span>
                     </Button>
                     <Link
                       href={`/project/${project.id}`}
@@ -126,10 +131,10 @@ function ProjectTable({ projects }: { projects: ProjectPublic[] }) {
                   {project.owner.username}
                 </TableCell>
                 <TableCell className='text-right'>
-                  {formatDateTime(project.update_time)}
+                  {formatDateTime(project.update_time, locale)}
                 </TableCell>
                 <TableCell className='text-right'>
-                  {formatDateTime(project.create_time)}
+                  {formatDateTime(project.create_time, locale)}
                 </TableCell>
               </TableRow>
             ))}
@@ -157,7 +162,9 @@ function PaginatedProjectTable({
   const totalCount = projectPage?.total ?? 0
   const totalPages = Math.max(1, Math.ceil(totalCount / itemsPerPage))
 
-  if (isLoading) return <div>加载中...</div>
+  const t = useTranslations('Project.list')
+
+  if (isLoading) return <div>{t('loading')}</div>
 
   return (
     <div className='space-y-4'>
@@ -186,16 +193,16 @@ export function MyProjectTable() {
 }
 
 export function RecentProjectCard() {
+  const locale = useLocale()
+  const t = useTranslations('Project.list.recent')
   const { data: recentProjects = [] } = useRecentProjects(1)
   const recentProject = recentProjects[0]
 
   return !recentProject ? (
     <Card className='border rounded-lg gap-0 py-0'>
       <CardContent className='flex flex-col items-center justify-center py-8 text-center'>
-        <h3 className='text-lg font-medium mb-2'>没有最近运行的项目</h3>
-        <p className='text-muted-foreground'>
-          您最近运行过的项目将显示在这里。
-        </p>
+        <h3 className='text-lg font-medium mb-2'>{t('emptyTitle')}</h3>
+        <p className='text-muted-foreground'>{t('emptyDescription')}</p>
       </CardContent>
     </Card>
   ) : (
@@ -206,11 +213,11 @@ export function RecentProjectCard() {
       >
         <div className='font-medium mb-2'>{recentProject.name}</div>
         <div className='flex items-center text-xs text-muted-foreground'>
-          <ClockIcon className='size-3 mr-1' /> 最后更新:{' '}
-          {formatDateTime(recentProject.update_time)}
+          <ClockIcon className='size-3 mr-1' /> {t('lastUpdated')}{' '}
+          {formatDateTime(recentProject.update_time, locale)}
           <span className='mx-2'>•</span>
           <span className='flex items-center'>
-            <PlayIcon className='size-3 mr-1' /> -- 条数据
+            <PlayIcon className='size-3 mr-1' /> {t('dataCount')}
           </span>
         </div>
       </Link>

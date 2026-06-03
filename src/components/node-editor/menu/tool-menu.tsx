@@ -1,6 +1,7 @@
 'use client'
 
 import { SearchIcon, XIcon } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import type React from 'react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
@@ -15,7 +16,6 @@ interface ToolMenuProps {
   onSelectTool: (toolType: string, toolUid: string) => void
 }
 
-// 工具骨架屏组件
 const ToolSkeleton = () => (
   <div className='p-3 border rounded-lg animate-pulse'>
     <Skeleton className='h-5 w-3/4 mb-2' />
@@ -29,6 +29,7 @@ export const ToolMenu: React.FC<ToolMenuProps> = ({
   onClose,
   onSelectTool,
 }) => {
+  const t = useTranslations('editor.menu')
   const [searchQuery, setSearchQuery] = useState('')
   const isSearchMode = searchQuery.trim() !== ''
 
@@ -49,9 +50,8 @@ export const ToolMenu: React.FC<ToolMenuProps> = ({
   return (
     <div className='fixed inset-0 z-50 bg-black/50 flex items-start justify-center pt-[8vh] animate-in fade-in'>
       <div className='bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[85vh] flex flex-col animate-in zoom-in-95'>
-        {/* 菜单头部 */}
         <div className='p-4 border-b flex justify-between items-center shrink-0'>
-          <h2 className='text-xl font-semibold'>选择工具</h2>
+          <h2 className='text-xl font-semibold'>{t('select_tool')}</h2>
           <Button
             variant='ghost'
             size='icon'
@@ -62,13 +62,12 @@ export const ToolMenu: React.FC<ToolMenuProps> = ({
           </Button>
         </div>
 
-        {/* 搜索框 */}
         <div className='p-4 border-b shrink-0'>
           <div className='relative'>
             <SearchIcon className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 size-5' />
             <Input
               type='text'
-              placeholder='搜索工具...'
+              placeholder={t('search_tools')}
               className='pl-10 pr-10'
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -86,13 +85,11 @@ export const ToolMenu: React.FC<ToolMenuProps> = ({
           </div>
         </div>
 
-        {/* 菜单内容 */}
         <div className='min-h-0 max-h-[calc(85vh-137px)] overflow-y-auto p-4'>
           {isSearchMode ? (
-            // 搜索模式
             <div>
               <h3 className='text-lg font-medium mb-4'>
-                搜索结果: "{searchQuery}"
+                {t('search_results_for', { query: searchQuery })}
               </h3>
               {searchLoading ? (
                 <div className='space-y-3'>
@@ -124,13 +121,13 @@ export const ToolMenu: React.FC<ToolMenuProps> = ({
                 </div>
               ) : (
                 <div className='text-center py-8 text-gray-500'>
-                  没有找到匹配的工具
+                  {t('no_tools_found')}
                 </div>
               )}
             </div>
           ) : (
             <div>
-              <h3 className='text-lg font-medium mb-4'>搜索工具</h3>
+              <h3 className='text-lg font-medium mb-4'>{t('search_prompt')}</h3>
               <div className='grid gap-3 animate-in fade-in-50'>
                 <ToolSkeleton />
               </div>
