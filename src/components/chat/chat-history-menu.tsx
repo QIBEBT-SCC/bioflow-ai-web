@@ -1,7 +1,4 @@
-'use client'
-
 import { HistoryIcon, Loader2Icon, MessageSquareIcon } from 'lucide-react'
-import { useParams, usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { ChatHistoryItem } from '@/components/chat/chat-history-item'
 import { Button } from '@/components/ui/button'
@@ -15,53 +12,53 @@ import { useInfiniteChats } from '@/hooks/use-chat'
 import { useInView } from '@/hooks/use-in-view'
 import type { ChatSessionPublic } from '@/types/chat'
 
-export function ChatHistoryMenu() {
-  const params = useParams()
-  const { push } = useRouter()
-  const currentSessionId = params.uid as string
-
+export function SidebarHistoryMenu({
+  currentSessionId,
+  onSelect,
+}: {
+  currentSessionId: string | null
+  onSelect: (uid: string) => void
+}) {
+  const [open, setOpen] = useState(false)
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useInfiniteChats()
-
   const { ref, inView } = useInView()
-  const pathname = usePathname()
-  const [open, setOpen] = useState(false)
 
   useEffect(() => {
     if (inView && hasNextPage) {
-      fetchNextPage()
+      void fetchNextPage()
     }
   }, [inView, hasNextPage, fetchNextPage])
 
   const flatData = data?.pages.flatMap((page) => page.data) ?? []
 
-  const handleSelectChat = async (chat: ChatSessionPublic) => {
+  const handleSelectChat = (chat: ChatSessionPublic) => {
     setOpen(false)
-    push(`/chat/${chat.uid}`)
+    onSelect(chat.uid)
   }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant='ghost' size='icon' title='History'>
-          <HistoryIcon className='size-5' />
+        <Button variant='ghost' size='icon' className='size-7' title='History'>
+          <HistoryIcon className='size-4' />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className='w-80 p-0' align='end'>
-        <div className='p-4 border-b'>
-          <h4 className='font-medium leading-none'>Chat History</h4>
+      <PopoverContent className='w-72 p-0' align='end'>
+        <div className='p-3 border-b'>
+          <h4 className='font-medium leading-none text-sm'>Chat History</h4>
         </div>
-        <ScrollArea className='h-75'>
+        <ScrollArea className='h-70'>
           <div className='flex flex-col p-2'>
             {isLoading && (
               <div className='flex justify-center p-4'>
-                <Loader2Icon className='animate-spin size-6 text-muted-foreground' />
+                <Loader2Icon className='animate-spin size-5 text-muted-foreground' />
               </div>
             )}
 
             {flatData.length === 0 && !isLoading && (
-              <div className='flex flex-col items-center justify-center gap-2 text-muted-foreground py-8'>
-                <MessageSquareIcon className='size-8 opacity-50' />
+              <div className='flex flex-col items-center justify-center gap-2 text-muted-foreground py-6'>
+                <MessageSquareIcon className='size-7 opacity-50' />
                 <p className='text-sm'>No chat history yet</p>
               </div>
             )}
@@ -71,10 +68,7 @@ export function ChatHistoryMenu() {
                 <ChatHistoryItem
                   key={chat.uid}
                   chat={chat}
-                  isActive={
-                    pathname === `/chat/${chat.uid}` ||
-                    currentSessionId === chat.uid
-                  }
+                  isActive={currentSessionId === chat.uid}
                   onSelect={handleSelectChat}
                 />
               ))}
