@@ -106,7 +106,7 @@ function NavBar({
         <LangToggle />
         <div className='w-px h-5 bg-border' />
         {user ? (
-          <Link href='/chat'>
+          <Link href='/project'>
             <Avatar className='size-8 cursor-pointer ring-2 ring-primary/20 hover:ring-primary/60 transition-all'>
               <AvatarFallback className='text-xs font-semibold bg-primary/10 text-primary'>
                 {user.username.slice(0, 2).toUpperCase()}
@@ -204,7 +204,7 @@ export default function HomePage() {
               </Button>
             ) : user ? (
               <Button size='lg' asChild>
-                <Link href='/chat'>{t('cta_start')}</Link>
+                <Link href='/project'>{t('cta_start')}</Link>
               </Button>
             ) : (
               <>

@@ -22,11 +22,6 @@ import { useSidebarStore } from '@/stores/sidebar-store'
 
 const projects = [
   {
-    name: 'chat',
-    url: '/chat',
-    icon: Bot,
-  },
-  {
     name: 'projects',
     url: '/project',
     icon: FolderOpenIcon,
