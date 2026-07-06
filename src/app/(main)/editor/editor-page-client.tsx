@@ -1,9 +1,11 @@
 'use client'
 
+import { useQueries } from '@tanstack/react-query'
 import {
   Background,
   BackgroundVariant,
   Controls,
+  type Edge,
   MiniMap,
   ReactFlow,
   ReactFlowProvider,
@@ -13,9 +15,10 @@ import {
 import { PlayIcon, SaveIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import type React from 'react'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { useShallow } from 'zustand/react/shallow'
+import { getToolArg } from '@/app/actions/tool'
 import { ChatSidebar } from '@/components/chat/chat-sidebar'
 import { ChatSidebarToggle } from '@/components/chat/chat-sidebar-toggle'
 import { LoadWorkflowDialog } from '@/components/node-editor/load-workflow-dialog'
@@ -76,6 +79,37 @@ function FlowContent() {
 
   const [clickPosition, setClickPosition] = useState<XYPosition>({ x: 0, y: 0 })
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const toolUids = useMemo(() => {
+    const uids = new Set<string>()
+    for (const node of nodes) {
+      if (node.type !== 'tool') {
+        continue
+      }
+
+      const toolUid = node.data?.tool_uid
+      if (typeof toolUid === 'string' && toolUid) {
+        uids.add(toolUid)
+      }
+    }
+
+    return [...uids]
+  }, [nodes])
+
+  const toolQueries = useQueries({
+    queries: toolUids.map((uid) => ({
+      queryKey: ['toolArg', uid],
+      queryFn: () => getToolArg(uid),
+      staleTime: 10 * 60 * 1000,
+    })),
+  })
+
+  const allToolsLoaded =
+    toolUids.length === 0 ||
+    (toolQueries.length === toolUids.length &&
+      toolQueries.every((query) => query.isSuccess))
+  const edgeReadinessKey = `${currentWorkflowUid}:${toolUids.join('|')}:${nodes.map((node) => node.id).join('|')}`
+
+  const [edgesReady, setEdgesReady] = useState(false)
 
   // 加载workflow数据
   useEffect(() => {
@@ -84,6 +118,25 @@ function FlowContent() {
       setEdges(workflowData.workflow.edges || [])
     }
   }, [currentWorkflowUid, workflowData, setNodes, setEdges])
+
+  // Tool 节点的 handles 依赖异步 tool args；等 handles commit 到 DOM 后再渲染 edges，避免 React Flow 008 警告。
+  useEffect(() => {
+    setEdgesReady(false)
+    if (!allToolsLoaded || !edgeReadinessKey) {
+      return
+    }
+
+    const raf1 = requestAnimationFrame(() => {
+      const raf2 = requestAnimationFrame(() => setEdgesReady(true))
+      return () => cancelAnimationFrame(raf2)
+    })
+    return () => cancelAnimationFrame(raf1)
+  }, [allToolsLoaded, edgeReadinessKey])
+
+  const renderedEdges = useMemo<Edge[]>(
+    () => (edgesReady ? edges : []),
+    [edges, edgesReady],
+  )
 
   // 添加节点（通用方法）
   const onAddNode = useCallback(
@@ -220,7 +273,7 @@ function FlowContent() {
         <div className='flex-1 w-full'>
           <ReactFlow
             nodes={nodes}
-            edges={edges}
+            edges={renderedEdges}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
