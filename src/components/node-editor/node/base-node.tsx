@@ -106,10 +106,10 @@ const BaseNode = memo(function BaseNode({
                   type='target'
                   position={Position.Left}
                   className={cn(
-                    '!left-3 size-2.5 rounded-full border !border-border !bg-background shadow-xs transition-all duration-200',
-                    'hover:!border-primary/50 hover:!bg-primary/10 hover:!scale-110',
+                    'left-3! size-2.5 rounded-full border border-border! bg-background! shadow-xs transition-all duration-200',
+                    'hover:border-primary/50! hover:bg-primary/10! hover:scale-110!',
                     isConnected(`${nodeId}-in-${input.name}`) &&
-                      '!border-teal-500 !bg-teal-100',
+                      'border-teal-500! bg-teal-100!',
                   )}
                   style={{
                     top: `calc(var(--spacing) * ${calculateTopPos(index)})`,
@@ -142,10 +142,10 @@ const BaseNode = memo(function BaseNode({
                   type='source'
                   position={Position.Right}
                   className={cn(
-                    '!right-3 size-2.5 rounded-full border border-border !bg-background shadow-xs transition-all duration-200',
-                    'hover:!border-primary/50 hover:!bg-primary/10 hover:!scale-110',
+                    'right-3! size-2.5 rounded-full border border-border bg-background! shadow-xs transition-all duration-200',
+                    'hover:border-primary/50! hover:bg-primary/10! hover:scale-110!',
                     isConnected(`${nodeId}-out-${output.name}`) &&
-                      '!border-indigo-500 !bg-indigo-100',
+                      'border-indigo-500! bg-indigo-100!',
                   )}
                   style={{
                     top: `calc(var(--spacing) * ${calculateTopPos(index)})`,
@@ -172,7 +172,7 @@ const BaseNode = memo(function BaseNode({
         <NodeTitle className={color.primary}>{title}</NodeTitle>
         <Sheet>
           <SheetTrigger asChild>
-            <Button className='text-muted-foreground/70 transition-colors !bg-transparent hover:text-foreground'>
+            <Button className='text-muted-foreground/70 transition-colors bg-transparent! hover:text-foreground'>
               <InfoIcon className='size-3.5' />
             </Button>
           </SheetTrigger>
@@ -209,7 +209,7 @@ const NodeCard = memo(function NodeCard({
     <div
       ref={ref}
       className={cn(
-        'relative min-h-[150px] w-[300px] font-sans',
+        'relative min-h-37.5 w-75 font-sans',
         'rounded-xl border-x border-b border-border bg-white shadow-sm transition-shadow duration-200',
         'hover:shadow-md',
         '[&.selected]:ring-1 [&.selected]:ring-foreground [&.selected]:shadow-lg',

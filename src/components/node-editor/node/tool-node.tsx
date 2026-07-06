@@ -1,6 +1,14 @@
 'use client'
 
-import { type Node, useNodeId, useNodesData, useReactFlow } from '@xyflow/react'
+import {
+  Handle,
+  type Node,
+  Position,
+  useNodeConnections,
+  useNodeId,
+  useNodesData,
+  useReactFlow,
+} from '@xyflow/react'
 import { useTranslations } from 'next-intl'
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import { BaseNode } from '@/components/node-editor/node/base-node'
@@ -9,8 +17,37 @@ import { useReadOnly } from '@/components/node-editor/read-only-context'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useToolArg } from '@/hooks/use-tool'
+import { cn } from '@/lib/utils'
 import type { RunData } from '@/types/run'
 
+const OUTPUT_FOLDER_HANDLE_NAME = 'workdir'
+
+const ToolOutputFolderHandle = memo(function ToolOutputFolderHandle() {
+  const nodeId = useNodeId() ?? ''
+  const connections = useNodeConnections()
+  const handleId = [nodeId, 'out', OUTPUT_FOLDER_HANDLE_NAME].join('-')
+  const isConnected = connections.some(
+    (connection) => connection.sourceHandle === handleId,
+  )
+
+  return (
+    <div className='absolute right-0 bottom-0 left-0 h-10 border-t border-border/50'>
+      <span className='absolute top-1/2 right-6 -translate-y-1/2 select-none text-end text-xs leading-none text-muted-foreground'>
+        {OUTPUT_FOLDER_HANDLE_NAME}
+      </span>
+      <Handle
+        id={handleId}
+        type='source'
+        position={Position.Right}
+        className={cn(
+          'right-3! top-1/2! bottom-auto! size-2.5 rounded-full border border-border bg-background! shadow-xs transition-all duration-200',
+          'hover:border-primary/50! hover:bg-primary/10! hover:scale-110!',
+          isConnected && 'border-indigo-500! bg-indigo-100!',
+        )}
+      />
+    </div>
+  )
+})
 export const ToolNode = memo(function ToolNode() {
   const readOnly = useReadOnly()
   const nodeId = useNodeId() ?? ''
@@ -56,7 +93,10 @@ export const ToolNode = memo(function ToolNode() {
   const handles = useMemo(
     () => ({
       inputs: toolData?.input_handles || [],
-      outputs: toolData?.output_handles || [],
+      outputs:
+        toolData?.output_handles.filter(
+          (handle) => handle.name !== OUTPUT_FOLDER_HANDLE_NAME,
+        ) || [],
     }),
     [toolData?.input_handles, toolData?.output_handles],
   )
@@ -77,14 +117,14 @@ export const ToolNode = memo(function ToolNode() {
         handles={handles}
         color={colorSchemes.pink}
         nodeComponent={
-          <div className='p-3 space-y-3'>
+          <div className='relative p-3 pb-10 space-y-3'>
             {hasImmutableParams && (
               <div>
                 <Label className='pb-2 font-medium text-xs text-muted-foreground'>
                   {t('immutable_params')}
                 </Label>
                 <Textarea
-                  className='h-[60px] w-full resize-none overflow-y-auto border-gray-200 text-sm bg-muted'
+                  className='h-15 w-full resize-none overflow-y-auto border-gray-200 text-sm bg-muted'
                   value='--'
                   disabled={true}
                 />
@@ -95,12 +135,13 @@ export const ToolNode = memo(function ToolNode() {
                 {t('modifiable_params')}
               </Label>
               <Textarea
-                className='h-[100px] w-full resize-none overflow-y-auto border-gray-200 text-sm focus-visible:ring focus-visible:ring-rose-400 focus-visible:ring-offset-2'
+                className='h-25 w-full resize-none overflow-y-auto border-gray-200 text-sm focus-visible:ring focus-visible:ring-rose-400 focus-visible:ring-offset-2'
                 placeholder={t('args_placeholder')}
                 value='--'
                 disabled={true}
               />
             </div>
+            <ToolOutputFolderHandle />
           </div>
         }
       />
@@ -114,14 +155,14 @@ export const ToolNode = memo(function ToolNode() {
       color={colorSchemes.pink}
       runData={nodeData?.data.run_data}
       nodeComponent={
-        <div className='nowheel p-3 space-y-3'>
+        <div className='nowheel relative p-3 pb-10 space-y-3'>
           {hasImmutableParams && (
             <div>
               <Label className='pb-2 font-medium text-xs text-muted-foreground'>
                 {t('immutable_params')}
               </Label>
               <Textarea
-                className='h-[60px] w-full resize-none overflow-y-auto border-gray-200 text-sm bg-muted
+                className='h-15 w-full resize-none overflow-y-auto border-gray-200 text-sm bg-muted
                 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-200 hover:[&::-webkit-scrollbar-thumb]:bg-gray-400 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar]:w-1.5'
                 value={immutableParams}
                 disabled={true}
@@ -132,7 +173,7 @@ export const ToolNode = memo(function ToolNode() {
           <div>
             <Label className='pb-2 font-medium'>{t('modifiable_params')}</Label>
             <Textarea
-              className='h-[100px] w-full resize-none overflow-y-auto border-gray-200 text-sm
+              className='h-25 w-full resize-none overflow-y-auto border-gray-200 text-sm
               focus-visible:ring focus-visible:ring-rose-400 focus-visible:ring-offset-2
               [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-200 hover:[&::-webkit-scrollbar-thumb]:bg-gray-400 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar]:w-1.5'
               placeholder={t('args_placeholder')}
@@ -143,6 +184,7 @@ export const ToolNode = memo(function ToolNode() {
               disabled={readOnly}
             />
           </div>
+          <ToolOutputFolderHandle />
         </div>
       }
     />
