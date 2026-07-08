@@ -43,7 +43,10 @@ next-env.d.ts
 .idea
 
 .agent
+.agents/
 .claude
+AGENTS.md
+CLAUDE.md
 skills-lock.json
 
 documents/
