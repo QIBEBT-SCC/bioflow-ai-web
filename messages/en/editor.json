@@ -31,6 +31,7 @@
       "code_bash": "Bash",
       "code_python": "Python",
       "code_r": "R",
+      "collect_mount_dirs": "Collect Mount Directories",
       "downstream_summary": "Downstream Summary",
       "reference_genome": "Reference Genome",
       "ncbi_genome": "NCBI Genome",

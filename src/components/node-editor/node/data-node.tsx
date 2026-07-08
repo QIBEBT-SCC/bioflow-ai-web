@@ -524,6 +524,34 @@ const BindParamNode = memo(function BindParamNode() {
   )
 })
 
+const COLLECT_MOUNT_DIR_HANDLES = {
+  inputs: [
+    {
+      name: 'dirs',
+      description: 'Tool working directories',
+    },
+  ] as HandleDefine[],
+  outputs: [
+    {
+      name: 'mount_dir_list',
+      description: 'Mount-list manifest for downstream tool input',
+    },
+  ] as HandleDefine[],
+}
+
+const CollectMountDirNode = memo(function GzipNode() {
+  const nodeComponent = useMemo(() => <div />, [])
+  return (
+    <BaseNode
+      title='Collect Mount Directories'
+      description='Collects multiple upstream tool working directories and outputs a mount-list manifest.'
+      handles={COLLECT_MOUNT_DIR_HANDLES}
+      color={colorSchemes.orange}
+      nodeComponent={nodeComponent}
+    />
+  )
+})
+
 export {
   Copy2FolderNode,
   GzipNode,
@@ -532,4 +560,5 @@ export {
   SelectFileInFolderNode,
   LlmValueOutputNode,
   BindParamNode,
+  CollectMountDirNode,
 }
