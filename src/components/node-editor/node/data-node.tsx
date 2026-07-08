@@ -181,7 +181,7 @@ const RenameFileNode = memo(function RenameFileNode() {
 const GLOBAL_MARKER_HANDLES = {
   inputs: [
     {
-      name: 'files',
+      name: 'file',
       description: 'File to be marked as global use',
     },
   ] as HandleDefine[],
