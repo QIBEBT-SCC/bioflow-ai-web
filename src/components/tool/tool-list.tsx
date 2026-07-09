@@ -4,7 +4,7 @@ import { CopyIcon, MoreHorizontalIcon, Trash2Icon } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -66,25 +66,18 @@ interface ToolListProps {
   viewMode: 'list' | 'grid'
   searchQuery?: string
   selectedGroupId?: number | null
+  currentPage: number
+  onPageChange: (page: number) => void
 }
 
 export function ToolList({
   viewMode,
   searchQuery = '',
   selectedGroupId = null,
+  currentPage,
+  onPageChange,
 }: ToolListProps) {
   const t = useTranslations('tool.List')
-  const [currentPage, setCurrentPage] = useState(1)
-  const prevSearchQueryRef = useRef(searchQuery)
-  const prevSelectedGroupIdRef = useRef(selectedGroupId)
-  if (
-    searchQuery !== prevSearchQueryRef.current ||
-    selectedGroupId !== prevSelectedGroupIdRef.current
-  ) {
-    prevSearchQueryRef.current = searchQuery
-    prevSelectedGroupIdRef.current = selectedGroupId
-    setCurrentPage(1)
-  }
   const [deleteConfirmTool, setDeleteConfirmTool] = useState<{
     uid: string
     name: string
@@ -228,7 +221,7 @@ export function ToolList({
           currentPage={currentPage}
           totalPages={safeTotalPages}
           pageNumbers={getPageNumbers()}
-          onPageChange={setCurrentPage}
+          onPageChange={onPageChange}
           onCopy={handleCopyTool}
           onDelete={(uid, name) => setDeleteConfirmTool({ uid, name })}
           t={t}
@@ -239,7 +232,7 @@ export function ToolList({
           currentPage={currentPage}
           totalPages={safeTotalPages}
           pageNumbers={getPageNumbers()}
-          onPageChange={setCurrentPage}
+          onPageChange={onPageChange}
           onCopy={handleCopyTool}
           onDelete={(uid, name) => setDeleteConfirmTool({ uid, name })}
           t={t}

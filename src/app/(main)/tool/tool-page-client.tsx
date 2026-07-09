@@ -11,8 +11,9 @@ import {
   Search,
 } from 'lucide-react'
 import Link from 'next/link'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { useState } from 'react'
+import { useCallback } from 'react'
 import { ToolGroupSidebar } from '@/components/tool/tool-group-sidebar'
 import { ToolList } from '@/components/tool/tool-list'
 import {
@@ -35,9 +36,46 @@ import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 
 export default function ToolsPage() {
   const t = useTranslations('tool.Page')
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null)
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+
+  const viewMode: 'list' | 'grid' =
+    searchParams.get('view') === 'grid' ? 'grid' : 'list'
+  const searchQuery = searchParams.get('q') ?? ''
+  const groupParam = searchParams.get('group')
+  const selectedGroupId = groupParam ? Number(groupParam) : null
+  const currentPage = Number(searchParams.get('page') ?? '1')
+
+  const updateParams = useCallback(
+    (updates: Record<string, string | null>, resetPage = false) => {
+      const params = new URLSearchParams(searchParams.toString())
+      for (const [key, value] of Object.entries(updates)) {
+        if (value) {
+          params.set(key, value)
+        } else {
+          params.delete(key)
+        }
+      }
+      if (resetPage) {
+        params.delete('page')
+      }
+      const query = params.toString()
+      router.replace(query ? `${pathname}?${query}` : pathname, {
+        scroll: false,
+      })
+    },
+    [pathname, router, searchParams],
+  )
+
+  const setViewMode = (mode: 'list' | 'grid') =>
+    updateParams({ view: mode === 'grid' ? 'grid' : null })
+  const setSearchQuery = (value: string) =>
+    updateParams({ q: value || null }, true)
+  const setSelectedGroupId = (groupId: number | null) =>
+    updateParams({ group: groupId !== null ? String(groupId) : null }, true)
+  const setCurrentPage = (page: number) =>
+    updateParams({ page: page > 1 ? String(page) : null })
 
   return (
     <SidebarInset>
@@ -145,6 +183,8 @@ export default function ToolsPage() {
                 viewMode={viewMode}
                 searchQuery={searchQuery}
                 selectedGroupId={selectedGroupId}
+                currentPage={currentPage}
+                onPageChange={setCurrentPage}
               />
             </main>
           </div>
