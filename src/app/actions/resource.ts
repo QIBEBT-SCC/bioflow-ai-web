@@ -1,9 +1,11 @@
-import { clientFetch } from '@/lib/api-client'
+import {clientFetch} from '@/lib/api-client'
 import type {
   BioDb,
   BioDbCreate,
-  PaginatedBioDbSimple,
+  BioDbDownloadResponse,
+  BioDbDownloadStatusResponse,
   PaginatedBioDbs,
+  PaginatedBioDbSimple,
 } from '@/types/resource'
 
 /**
@@ -32,11 +34,10 @@ export async function getDB(id: number): Promise<BioDb> {
  * 创建数据库
  */
 export async function createDB(data: BioDbCreate): Promise<BioDb> {
-  const result = await clientFetch<BioDb>('/bio_dbs', {
+  return await clientFetch<BioDb>('/bio_dbs', {
     method: 'POST',
     body: JSON.stringify(data),
   })
-  return result
 }
 
 /**
@@ -46,6 +47,26 @@ export async function deleteDB(id: number): Promise<void> {
   await clientFetch(`/bio_dbs/${id}`, {
     method: 'DELETE',
   })
+}
+
+/**
+ * 提交数据库下载任务
+ */
+export async function downloadDB(id: number): Promise<BioDbDownloadResponse> {
+  return await clientFetch<BioDbDownloadResponse>(`/bio_dbs/${id}/download`, {
+    method: 'POST',
+  })
+}
+
+/**
+ * 获取数据库下载状态
+ */
+export async function getDownloadStatus(
+  id: number,
+): Promise<BioDbDownloadStatusResponse> {
+  return await clientFetch<BioDbDownloadStatusResponse>(
+    `/bio_dbs/${id}/download/status`,
+  )
 }
 
 /**

@@ -26,9 +26,11 @@ type FormState = {
   name: string
   description: string
   path: string
+  downloadCommand: string
+  downloadImage: string
   lastUpdate: string
   nameError: string
-  pathError: string
+  sourceError: string
 }
 
 type FormAction =
@@ -36,11 +38,16 @@ type FormAction =
       type: 'SET_FIELD'
       field: keyof Pick<
         FormState,
-        'name' | 'description' | 'path' | 'lastUpdate'
+        | 'name'
+        | 'description'
+        | 'path'
+        | 'downloadCommand'
+        | 'downloadImage'
+        | 'lastUpdate'
       >
       value: string
     }
-  | { type: 'SET_ERROR'; field: 'nameError' | 'pathError'; value: string }
+  | { type: 'SET_ERROR'; field: 'nameError' | 'sourceError'; value: string }
   | { type: 'CLEAR_ERRORS' }
   | { type: 'RESET' }
 
@@ -48,9 +55,11 @@ const INITIAL_STATE: FormState = {
   name: '',
   description: '',
   path: '',
+  downloadCommand: '',
+  downloadImage: '',
   lastUpdate: '',
   nameError: '',
-  pathError: '',
+  sourceError: '',
 }
 
 function formReducer(state: FormState, action: FormAction): FormState {
@@ -60,7 +69,7 @@ function formReducer(state: FormState, action: FormAction): FormState {
     case 'SET_ERROR':
       return { ...state, [action.field]: action.value }
     case 'CLEAR_ERRORS':
-      return { ...state, nameError: '', pathError: '' }
+      return { ...state, nameError: '', sourceError: '' }
     case 'RESET':
       return INITIAL_STATE
   }
@@ -70,10 +79,17 @@ export function DatabaseAddDialog({
   open,
   onOpenChange,
 }: DatabaseAddDialogProps) {
-  const [
-    { name, description, path, lastUpdate, nameError, pathError },
-    dispatch,
-  ] = useReducer(formReducer, INITIAL_STATE)
+  const [state, dispatch] = useReducer(formReducer, INITIAL_STATE)
+  const {
+    name,
+    description,
+    path,
+    downloadCommand,
+    downloadImage,
+    lastUpdate,
+    nameError,
+    sourceError,
+  } = state
 
   const t = useTranslations('resource')
   const createMutation = useCreateDB()
@@ -82,11 +98,24 @@ export function DatabaseAddDialog({
     e.preventDefault()
     dispatch({ type: 'CLEAR_ERRORS' })
 
+    const trimmedPath = path.trim()
+    const trimmedCommand = downloadCommand.trim()
+    if (!trimmedPath && !trimmedCommand) {
+      dispatch({
+        type: 'SET_ERROR',
+        field: 'sourceError',
+        value: t('source_required'),
+      })
+      return
+    }
+
     const newDb = {
       name,
       description: description || undefined,
-      path,
-      last_update: lastUpdate || '',
+      path: trimmedPath || undefined,
+      download_command: trimmedCommand || undefined,
+      download_image: downloadImage.trim() || undefined,
+      last_update: lastUpdate || undefined,
     }
 
     createMutation.mutate(newDb, {
@@ -95,8 +124,7 @@ export function DatabaseAddDialog({
         dispatch({ type: 'RESET' })
       },
       onError: (error: Error & { status?: number }) => {
-        const status = error.status
-        switch (status) {
+        switch (error.status) {
           case 409:
             dispatch({
               type: 'SET_ERROR',
@@ -104,11 +132,11 @@ export function DatabaseAddDialog({
               value: t('name_exists'),
             })
             break
-          case 404:
+          case 422:
             dispatch({
               type: 'SET_ERROR',
-              field: 'pathError',
-              value: t('path_not_found'),
+              field: 'sourceError',
+              value: t('source_required'),
             })
             break
           default:
@@ -177,34 +205,79 @@ export function DatabaseAddDialog({
             </div>
 
             <div className='space-y-2'>
-              <Label htmlFor='path'>
-                {t('file_path')} <span className='text-red-500'>*</span>
-              </Label>
+              <Label htmlFor='path'>{t('file_path')}</Label>
               <Input
                 id='path'
                 value={path}
+                placeholder={t('path_placeholder')}
                 onChange={(e) => {
                   dispatch({
                     type: 'SET_FIELD',
                     field: 'path',
                     value: e.target.value,
                   })
-                  if (pathError)
+                  if (sourceError)
                     dispatch({
                       type: 'SET_ERROR',
-                      field: 'pathError',
+                      field: 'sourceError',
                       value: '',
                     })
                 }}
-                required
                 disabled={createMutation.isPending}
                 className={
-                  pathError ? 'border-red-500 focus-visible:ring-red-500' : ''
+                  sourceError ? 'border-red-500 focus-visible:ring-red-500' : ''
                 }
               />
-              {pathError && (
-                <p className='text-sm text-red-500 mt-1'>{pathError}</p>
+            </div>
+
+            <div className='space-y-2'>
+              <Label htmlFor='download_command'>{t('download_command')}</Label>
+              <Textarea
+                id='download_command'
+                value={downloadCommand}
+                placeholder={t('download_command_placeholder')}
+                onChange={(e) => {
+                  dispatch({
+                    type: 'SET_FIELD',
+                    field: 'downloadCommand',
+                    value: e.target.value,
+                  })
+                  if (sourceError)
+                    dispatch({
+                      type: 'SET_ERROR',
+                      field: 'sourceError',
+                      value: '',
+                    })
+                }}
+                disabled={createMutation.isPending}
+                className={`font-mono ${sourceError ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
+              />
+              <p className='text-sm text-muted-foreground'>
+                {t('source_hint')}
+              </p>
+              {sourceError && (
+                <p className='text-sm text-red-500 mt-1'>{sourceError}</p>
               )}
+            </div>
+
+            <div className='space-y-2'>
+              <Label htmlFor='download_image'>{t('download_image')}</Label>
+              <Input
+                id='download_image'
+                value={downloadImage}
+                placeholder={t('download_image_placeholder')}
+                onChange={(e) =>
+                  dispatch({
+                    type: 'SET_FIELD',
+                    field: 'downloadImage',
+                    value: e.target.value,
+                  })
+                }
+                disabled={createMutation.isPending}
+              />
+              <p className='text-sm text-muted-foreground'>
+                {t('download_image_hint')}
+              </p>
             </div>
 
             <div className='space-y-2'>

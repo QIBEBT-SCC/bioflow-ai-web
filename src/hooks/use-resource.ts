@@ -1,19 +1,25 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import {
   createDB,
   deleteDB,
+  downloadDB,
   getDB,
   getDBList,
+  getDownloadStatus,
   searchDB,
 } from '@/app/actions/resource'
 import type {
   BioDbCreate,
+  BioDbDownloadStatus,
   PaginatedBioDbSimple,
   PaginatedBioDbs,
 } from '@/types/resource'
+
+const FASTAPI_URL = process.env.NEXT_PUBLIC_API_URL ?? '/api/v1'
 
 // ============================================
 // Query Hooks (数据查询)
@@ -105,6 +111,104 @@ export const useDeleteDB = () => {
       toast.error(`删除失败: ${error.message || '未知错误'}`)
     },
   })
+}
+
+/**
+ * 提交数据库下载任务
+ */
+export const useDownloadDB = () => {
+  return useMutation({
+    mutationFn: (id: number) => downloadDB(id),
+    onSuccess: (result) => {
+      toast.success(result.message)
+    },
+    onError: (error: Error & { status?: number }) => {
+      if (error.status === 409) {
+        toast.error('下载任务已在进行中')
+      } else if (error.status === 422) {
+        toast.error('未配置下载命令')
+      } else {
+        toast.error(`提交下载任务失败: ${error.message || '未知错误'}`)
+      }
+    },
+  })
+}
+
+/**
+ * 数据库下载状态（SSE 实时推送版）
+ * - 先 GET 获取初始状态
+ * - 若处于下载中，则建立 SSE 连接，后端推送直至到达终态
+ */
+export const useDownloadStatusStream = (
+  id: number | null,
+  restartToken: number = 0,
+) => {
+  const queryClient = useQueryClient()
+  const [status, setStatus] = useState<BioDbDownloadStatus | null>(null)
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: restartToken 用于在提交下载任务后手动重启 SSE 连接
+  useEffect(() => {
+    if (id === null) {
+      setStatus(null)
+      return
+    }
+
+    let controller: AbortController | undefined
+    let cancelled = false
+
+    async function init(dbId: number) {
+      const initial = await getDownloadStatus(dbId)
+      if (cancelled) return
+      setStatus(initial.status)
+
+      if (initial.status !== 'downloading') return
+
+      controller = new AbortController()
+      const res = await fetch(
+        `${FASTAPI_URL}/bio_dbs/${dbId}/download/events`,
+        {
+          credentials: 'include',
+          signal: controller.signal,
+        },
+      )
+      if (!res.ok || !res.body) return
+
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true })
+
+        const lines = buffer.split('\n')
+        buffer = lines.pop() ?? ''
+
+        for (const line of lines) {
+          if (!line.startsWith('data:')) continue
+          const json = line.slice(5).trim()
+          if (!json) continue
+          try {
+            const data = JSON.parse(json) as { status: BioDbDownloadStatus }
+            setStatus(data.status)
+            if (data.status === 'ready') {
+              queryClient.invalidateQueries({ queryKey: ['database', dbId] })
+              queryClient.invalidateQueries({ queryKey: ['databases', 'list'] })
+            }
+          } catch {}
+        }
+      }
+    }
+
+    init(id).catch(() => {})
+    return () => {
+      cancelled = true
+      controller?.abort()
+    }
+  }, [id, restartToken, queryClient])
+
+  return status
 }
 
 // ============================================
