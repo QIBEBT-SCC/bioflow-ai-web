@@ -21,6 +21,7 @@ import {
   FilePenIcon,
   FolderInputIcon,
   FolderOutputIcon,
+  GroupIcon,
   PenToolIcon,
   StickyNoteIcon,
   TagIcon,
@@ -34,6 +35,7 @@ import {
 } from '@/components/node-editor/node/code-node'
 import {
   BindParamNode,
+  CollectMountDirNode,
   Copy2FolderNode,
   GlobalMarkerNode,
   GzipNode,
@@ -75,6 +77,7 @@ export const nodeTypes: Record<string, React.ComponentType<any>> = {
   select_file_in_folder: SelectFileInFolderNode,
   llm_value_output: LlmValueOutputNode,
   bind_param: BindParamNode,
+  collect_mount_dirs: CollectMountDirNode,
   // code
   code_r: RCodeNode,
   code_python: PythonCodeNode,
@@ -106,6 +109,7 @@ export const nodeDefaultData: Record<string, Record<string, unknown>> = {
   select_file_in_folder: { file_name: '' },
   llm_value_output: { prompt: '', value_name: '', value_type: 'string' },
   bind_param: { parameter: '' },
+  collect_mount_dirs: {},
   code_r: { code: '' },
   code_python: { code: '' },
   code_bash: { code: '' },
@@ -196,6 +200,11 @@ export const menuData: Record<string, MenuGroup> = {
       { type: 'global_mark', labelKey: 'global_marker', Icon: TagIcon },
       { type: 'llm_value_output', labelKey: 'llm_value_output', Icon: BotIcon },
       { type: 'bind_param', labelKey: 'bind_param', Icon: TagIcon },
+      {
+        type: 'collect_mount_dirs',
+        labelKey: 'collect_mount_dirs',
+        Icon: GroupIcon,
+      },
     ],
   },
   other: {

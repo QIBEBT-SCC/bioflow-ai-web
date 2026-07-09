@@ -119,7 +119,7 @@ export function ToolParamCard({
                 onUpdateAction(
                   index,
                   'index',
-                  Number.parseInt(e.target.value, -1) || 0,
+                  Number.parseInt(e.target.value, 10) || 0,
                 )
               }
               disabled={!param.is_position}
