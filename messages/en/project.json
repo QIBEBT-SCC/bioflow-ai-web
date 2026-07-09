@@ -245,6 +245,7 @@
       "projectLevel": "Project-level Analysis",
       "sampleLevel": "Sample-level Analysis",
       "run": "Run",
+      "editWorkflow": "Edit workflow",
       "downloadResults": "Download results",
       "removeWorkflow": "Remove workflow",
       "removeSuccess": "Workflow removed successfully",

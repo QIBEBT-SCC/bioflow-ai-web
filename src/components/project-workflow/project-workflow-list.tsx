@@ -5,10 +5,12 @@ import {
   ChevronRight,
   DownloadIcon,
   Loader2,
+  PencilIcon,
   PlayIcon,
   SparklesIcon,
   Trash2Icon,
 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -62,6 +64,7 @@ interface ProjectWorkflowListProps {
 
 export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
   const t = useTranslations('Project.workflow')
+  const router = useRouter()
   const [removingWorkflow, setRemovingWorkflow] = useState<string | null>(null)
   const [runningWorkflow, setRunningWorkflow] = useState<{
     uid: string
@@ -225,6 +228,23 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
                             <PlayIcon className='size-4 mr-1.5' />
                             {t('run')}
                           </Button>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant='outline'
+                                size='icon'
+                                className='text-muted-foreground hover:text-primary'
+                                onClick={() =>
+                                  router.push(
+                                    `/editor?workflowUid=${workflow.workflow_uid}&projectId=${projectId}`,
+                                  )
+                                }
+                              >
+                                <PencilIcon className='size-4' />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>{t('editWorkflow')}</TooltipContent>
+                          </Tooltip>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button

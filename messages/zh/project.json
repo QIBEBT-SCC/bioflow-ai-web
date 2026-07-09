@@ -245,6 +245,7 @@
       "projectLevel": "全局分析",
       "sampleLevel": "样本级分析",
       "run": "运行",
+      "editWorkflow": "编辑工作流",
       "downloadResults": "下载运行结果",
       "removeWorkflow": "移除工作流",
       "removeSuccess": "工作流移除成功",
