@@ -50,6 +50,7 @@
       "db_path": "Path: {path}",
       "search_prompt": "Search Tools"
     },
+    "exit": "Exit",
     "node_added": "Node added",
     "no_workflow_loaded": "Please load a workflow first",
     "right_click_to_add": "Right click on canvas to add nodes",

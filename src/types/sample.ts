@@ -1,21 +1,9 @@
 /**
- * 样本文件类型枚举
- */
-export enum SampleFileType {
-  SEQUENCING_R1 = 0,
-  SEQUENCING_R2 = 1,
-  SEQUENCING = 2,
-  SPECTRUM = 3,
-  IMAGE = 4,
-}
-
-/**
  * 样本文件对象
  */
 export interface SampleFile {
   uid: string
   sample_uid: string
-  data_type: SampleFileType
   file_path: string
   file_format: string
   file_size: number
@@ -75,9 +63,8 @@ export interface UpdateSampleRequest {
  * 添加样本文件请求
  */
 export interface AddSampleFileRequest {
-  data_type: SampleFileType
   file_path: string
-  tag?: string
+  tag: string
 }
 
 /**

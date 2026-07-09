@@ -53,7 +53,7 @@ import {
   useSample,
   useSamplesPage,
 } from '@/hooks/use-sample'
-import type { Sample, SampleFileType } from '@/types/sample'
+import type { Sample } from '@/types/sample'
 import { AddSampleFileDialog } from './add-sample-file-dialog'
 import { CreateSampleDialog } from './create-sample-dialog'
 import { EditSampleDialog } from './edit-sample-dialog'
@@ -83,14 +83,6 @@ interface SampleDialogsProps {
   onDeleteFile: (sampleUid: string, fileUid: string) => void
 }
 
-const fileTypeLabelKeys: Record<SampleFileType, string> = {
-  0: 'sequencingR1',
-  1: 'sequencingR2',
-  2: 'sequencingSingle',
-  3: 'spectrum',
-  4: 'image',
-}
-
 function SampleFilesSection({
   projectId,
   sampleDetails,
@@ -113,7 +105,7 @@ function SampleFilesSection({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className='w-45'>{t('fileType')}</TableHead>
+              <TableHead className='w-45'>{t('tag')}</TableHead>
               <TableHead>{t('filePath')}</TableHead>
               <TableHead className='w-25'>{t('format')}</TableHead>
               <TableHead className='w-25'>{t('size')}</TableHead>
@@ -123,89 +115,53 @@ function SampleFilesSection({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sampleDetails.files.map((file) => {
-              const isDefaultTag = file.tag === defaultTags[file.data_type]
-              return (
-                <TableRow key={file.uid}>
-                  <TableCell>
-                    <div className='flex flex-wrap gap-1'>
-                      <Badge className={fileTypeColors[file.data_type]}>
-                        {t(`types.${fileTypeLabelKeys[file.data_type]}`)}
-                      </Badge>
-                      {file.tag && (
-                        <Badge
-                          variant='outline'
-                          className={
-                            isDefaultTag
-                              ? 'text-muted-foreground'
-                              : 'bg-blue-50 text-blue-700 border-blue-200'
-                          }
-                        >
-                          {file.tag}
-                        </Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className='font-mono text-xs'>
-                    {file.file_path}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant='outline'>{file.file_format}</Badge>
-                  </TableCell>
-                  <TableCell>{formatFileSize(file.file_size)}</TableCell>
-                  <TableCell>
-                    <div className='flex items-center'>
-                      <CheckIcon className='size-4 text-green-500 mr-1' />
-                      <span
-                        className='text-xs truncate w-16'
-                        title={file.md5_checksum}
-                      >
-                        {file.md5_checksum.substring(0, 8)}...
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className='text-xs' suppressHydrationWarning>
-                    {format(
-                      parseISO(file.uploaded_time),
-                      'yyyy-MM-dd HH:mm:ss',
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant='ghost'
-                      size='icon'
-                      onClick={() => onDeleteFile(file.uid)}
+            {sampleDetails.files.map((file) => (
+              <TableRow key={file.uid}>
+                <TableCell>
+                  <Badge
+                    variant='outline'
+                    className='bg-blue-50 text-blue-700 border-blue-200'
+                  >
+                    {file.tag}
+                  </Badge>
+                </TableCell>
+                <TableCell className='font-mono text-xs'>
+                  {file.file_path}
+                </TableCell>
+                <TableCell>
+                  <Badge variant='outline'>{file.file_format}</Badge>
+                </TableCell>
+                <TableCell>{formatFileSize(file.file_size)}</TableCell>
+                <TableCell>
+                  <div className='flex items-center'>
+                    <CheckIcon className='size-4 text-green-500 mr-1' />
+                    <span
+                      className='text-xs truncate w-16'
+                      title={file.md5_checksum}
                     >
-                      <Trash2Icon className='size-4 text-destructive' />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              )
-            })}
+                      {file.md5_checksum.substring(0, 8)}...
+                    </span>
+                  </div>
+                </TableCell>
+                <TableCell className='text-xs' suppressHydrationWarning>
+                  {format(parseISO(file.uploaded_time), 'yyyy-MM-dd HH:mm:ss')}
+                </TableCell>
+                <TableCell>
+                  <Button
+                    variant='ghost'
+                    size='icon'
+                    onClick={() => onDeleteFile(file.uid)}
+                  >
+                    <Trash2Icon className='size-4 text-destructive' />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
       )}
     </div>
   )
-}
-
-// 文件类型标签映射
-// 文件类型颜色映射
-const fileTypeColors: Record<SampleFileType, string> = {
-  0: 'bg-blue-100 text-blue-800',
-  1: 'bg-blue-100 text-blue-800',
-  2: 'bg-cyan-100 text-cyan-800',
-  3: 'bg-purple-100 text-purple-800',
-  4: 'bg-green-100 text-green-800',
-}
-
-// 默认标签映射
-const defaultTags: Record<SampleFileType, string> = {
-  0: 'r1',
-  1: 'r2',
-  2: 'single',
-  3: 'spectrum',
-  4: 'image',
 }
 
 // 格式化文件大小

@@ -10,7 +10,8 @@ import {
   useReactFlow,
   type XYPosition,
 } from '@xyflow/react'
-import { PlayIcon, SaveIcon } from 'lucide-react'
+import { LogOutIcon, PlayIcon, SaveIcon } from 'lucide-react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import type React from 'react'
 import { useCallback, useEffect, useState } from 'react'
@@ -46,6 +47,7 @@ function FlowContent() {
 
   const {
     currentWorkflowUid,
+    setCurrentWorkflowUid,
     nodes,
     edges,
     onNodesChange,
@@ -56,6 +58,7 @@ function FlowContent() {
   } = useNodeEditorStore(
     useShallow((state) => ({
       currentWorkflowUid: state.currentWorkflowUid,
+      setCurrentWorkflowUid: state.setCurrentWorkflowUid,
       nodes: state.nodes,
       edges: state.edges,
       onNodesChange: state.onNodesChange,
@@ -69,6 +72,12 @@ function FlowContent() {
   const isOpen = useChatSidebarStore((s) => s.isOpen)
   const { chatSidebarWidth, handleChatResizeStart } = useChatSidebarResize()
 
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const projectId = searchParams.get('projectId')
+  const workflowUidParam = searchParams.get('workflowUid')
+  const isProjectMode = !!projectId
+
   const { screenToFlowPosition } = useReactFlow()
   const { data: workflowData } = useWorkflow(currentWorkflowUid)
   const updateWorkflowMutation = useUpdateWorkflow()
@@ -76,6 +85,13 @@ function FlowContent() {
 
   const [clickPosition, setClickPosition] = useState<XYPosition>({ x: 0, y: 0 })
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+
+  // 从项目页跳转时，将 URL 中指定的 workflow 加载到编辑器
+  useEffect(() => {
+    if (workflowUidParam && workflowUidParam !== currentWorkflowUid) {
+      setCurrentWorkflowUid(workflowUidParam)
+    }
+  }, [workflowUidParam, currentWorkflowUid, setCurrentWorkflowUid])
 
   // 加载workflow数据
   useEffect(() => {
@@ -131,6 +147,13 @@ function FlowContent() {
     })
   }, [currentWorkflowUid, nodes, edges, updateWorkflowMutation, t])
 
+  // 退出项目内编辑模式，返回项目页
+  const onExit = useCallback(() => {
+    if (projectId) {
+      router.push(`/project/${projectId}`)
+    }
+  }, [projectId, router])
+
   // 运行workflow
   const onRun = useCallback(() => {
     const workflow = { nodes, edges }
@@ -176,42 +199,65 @@ function FlowContent() {
           {/* 工具栏 */}
           <div className='flex h-12 items-center border-t bg-muted/30 px-3'>
             <div className='flex items-center gap-1'>
-              <LoadWorkflowDialog />
+              {isProjectMode ? (
+                <>
+                  <Button
+                    variant='ghost'
+                    size='sm'
+                    onClick={onSave}
+                    disabled={
+                      !currentWorkflowUid || updateWorkflowMutation.isPending
+                    }
+                  >
+                    <SaveIcon className='size-4 mr-2' />
+                    {updateWorkflowMutation.isPending ? t('saving') : t('save')}
+                  </Button>
 
-              <Button
-                variant='ghost'
-                size='sm'
-                onClick={onSave}
-                disabled={
-                  !currentWorkflowUid || updateWorkflowMutation.isPending
-                }
-              >
-                <SaveIcon className='size-4 mr-2' />
-                {updateWorkflowMutation.isPending ? t('saving') : t('save')}
-              </Button>
+                  <Button variant='ghost' size='sm' onClick={onExit}>
+                    <LogOutIcon className='size-4 mr-2' />
+                    {t('exit')}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <LoadWorkflowDialog />
 
-              <SaveAsDialog
-                currentWorkflowName={workflowData?.name}
-                disabled={nodes.length === 0}
-              />
+                  <Button
+                    variant='ghost'
+                    size='sm'
+                    onClick={onSave}
+                    disabled={
+                      !currentWorkflowUid || updateWorkflowMutation.isPending
+                    }
+                  >
+                    <SaveIcon className='size-4 mr-2' />
+                    {updateWorkflowMutation.isPending ? t('saving') : t('save')}
+                  </Button>
 
-              <Separator orientation='vertical' className='h-8! mx-2' />
+                  <SaveAsDialog
+                    currentWorkflowName={workflowData?.name}
+                    disabled={nodes.length === 0}
+                  />
 
-              <Button
-                variant='ghost'
-                size='sm'
-                onClick={onRun}
-                disabled={runMutation.isPending}
-              >
-                <PlayIcon className='size-4 mr-2 text-green-500' />
-                {runMutation.isPending ? t('running') : t('run')}
-              </Button>
+                  <Separator orientation='vertical' className='h-8! mx-2' />
 
-              <Separator orientation='vertical' className='h-8! mx-2' />
+                  <Button
+                    variant='ghost'
+                    size='sm'
+                    onClick={onRun}
+                    disabled={runMutation.isPending}
+                  >
+                    <PlayIcon className='size-4 mr-2 text-green-500' />
+                    {runMutation.isPending ? t('running') : t('run')}
+                  </Button>
 
-              <div className='text-sm text-muted-foreground'>
-                {t('right_click_to_add')}
-              </div>
+                  <Separator orientation='vertical' className='h-8! mx-2' />
+
+                  <div className='text-sm text-muted-foreground'>
+                    {t('right_click_to_add')}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </header>
