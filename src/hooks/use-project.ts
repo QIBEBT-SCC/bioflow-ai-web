@@ -18,6 +18,7 @@ import type {
   ProjectCreateProp,
   ProjectPublic,
   ProjectTagProp,
+  ProjectUpdateProp,
   TagWithCount,
 } from '@/types/project'
 // ============================================
@@ -92,13 +93,8 @@ export function useCreateProject() {
 export function useUpdateProject() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({
-      id,
-      data,
-    }: {
-      id: string
-      data: Partial<ProjectCreateProp>
-    }) => updateProject(id, data),
+    mutationFn: ({ id, data }: { id: string; data: ProjectUpdateProp }) =>
+      updateProject(id, data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['projects'] })
       queryClient.invalidateQueries({ queryKey: ['projects', 'recent'] })

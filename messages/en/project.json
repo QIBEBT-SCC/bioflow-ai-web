@@ -11,6 +11,7 @@
     "list": {
       "breadcrumb": "Projects",
       "title": "Projects",
+      "subtitle": "Manage your projects, tags, and collaboration data in one place.",
       "searchPlaceholder": "Search projects...",
       "filter": "Filter",
       "loading": "Loading...",
@@ -60,6 +61,32 @@
       "projectTag": "Project Tags",
       "creating": "Creating...",
       "create": "Create"
+    },
+    "actions": {
+      "label": "Project actions",
+      "edit": "Edit project",
+      "delete": "Delete project",
+      "empty": "No matching projects found.",
+      "deleteTitle": "Delete project?",
+      "deleteDescription": "Delete “{name}”? All data in this project will be removed and this cannot be undone.",
+      "cancel": "Cancel",
+      "confirmDelete": "Delete",
+      "deleting": "Deleting...",
+      "deleteSuccess": "Project deleted",
+      "deleteFailed": "Failed to delete project"
+    },
+    "edit": {
+      "title": "Edit project",
+      "description": "Update the project name, description, and tags.",
+      "name": "Project name",
+      "projectDescription": "Project description",
+      "projectTag": "Project tags",
+      "nameRequired": "Enter a project name",
+      "cancel": "Cancel",
+      "save": "Save changes",
+      "saving": "Saving...",
+      "success": "Project updated",
+      "failed": "Failed to update project"
     },
     "tag": {
       "trigger": "Add New Tag",

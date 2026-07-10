@@ -11,6 +11,7 @@
     "list": {
       "breadcrumb": "项目",
       "title": "项目",
+      "subtitle": "集中管理项目、标签和协作数据。",
       "searchPlaceholder": "搜索项目...",
       "filter": "筛选",
       "loading": "加载中...",
@@ -60,6 +61,32 @@
       "projectTag": "项目标签",
       "creating": "创建中...",
       "create": "创建"
+    },
+    "actions": {
+      "label": "项目操作",
+      "edit": "编辑项目信息",
+      "delete": "删除项目",
+      "empty": "未找到匹配的项目。",
+      "deleteTitle": "确认删除项目",
+      "deleteDescription": "确定要删除“{name}”吗？此操作将同时删除该项目中的所有数据，且无法撤销。",
+      "cancel": "取消",
+      "confirmDelete": "删除",
+      "deleting": "删除中...",
+      "deleteSuccess": "项目已删除",
+      "deleteFailed": "删除项目失败"
+    },
+    "edit": {
+      "title": "编辑项目",
+      "description": "更新项目名称、描述和标签。",
+      "name": "项目名称",
+      "projectDescription": "项目描述",
+      "projectTag": "项目标签",
+      "nameRequired": "请输入项目名称",
+      "cancel": "取消",
+      "save": "保存更改",
+      "saving": "保存中...",
+      "success": "项目信息已更新",
+      "failed": "更新项目失败"
     },
     "tag": {
       "trigger": "添加新标签",

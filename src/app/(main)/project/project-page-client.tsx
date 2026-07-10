@@ -1,11 +1,13 @@
 'use client'
 
-import { ChevronDownIcon, FilterIcon, SearchIcon } from 'lucide-react'
+import { ChevronDownIcon, SearchIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { useState } from 'react'
 import { NewProjectDialog } from '@/components/project/new-project-dialog'
 import {
   AllProjectTable,
   MyProjectTable,
+  type ProjectSort,
   StarredProjectTable,
 } from '@/components/project/project-list'
 import { TagList } from '@/components/project/tag-list'
@@ -29,12 +31,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 export default function ProjectsPageClient() {
   const t = useTranslations('Project.list')
+  const [search, setSearch] = useState('')
+  const [sort, setSort] = useState<ProjectSort>('recent')
 
   return (
     <SidebarInset>
-      <div className='flex-1 flex flex-col min-w-0'>
-        <header className='flex flex-col shrink-0 border-b'>
-          <div className='flex items-center gap-2 px-4 h-12 bg-background'>
+      <div className='flex min-w-0 flex-1 flex-col'>
+        <header className='shrink-0 border-b'>
+          <div className='flex h-12 items-center gap-2 bg-background px-4'>
             <SidebarTrigger className='-ml-1' />
             <Separator orientation='vertical' className='mr-2! h-4!' />
             <Breadcrumb>
@@ -47,92 +51,74 @@ export default function ProjectsPageClient() {
           </div>
         </header>
         <div className='flex-1 overflow-auto'>
-          <div className='container px-4 mx-auto py-6'>
-            <div className='flex flex-col md:flex-row gap-6'>
-              {/* 侧边栏 - 标签筛选 */}
+          <div className='container mx-auto px-4 py-6'>
+            <div className='flex flex-col gap-6 md:flex-row'>
               <TagList />
-
-              {/* 主内容区 */}
-              <main className='flex-1 space-y-6'>
-                {/* 顶部操作栏 */}
-                <div className='flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center'>
-                  <h1 className='text-2xl font-semibold'>{t('title')}</h1>
-                  <div className='flex gap-2 w-full sm:w-auto'>
-                    <div className='relative flex-1 sm:flex-initial'>
-                      <SearchIcon className='absolute left-2.5 top-2.5 size-4 text-muted-foreground' />
-                      <Input
-                        type='search'
-                        placeholder={t('searchPlaceholder')}
-                        className='pl-8 w-full sm:w-62.5'
-                      />
-                    </div>
-                    <NewProjectDialog />
+              <main className='min-w-0 flex-1 space-y-6'>
+                <div className='flex flex-col justify-between gap-4 sm:flex-row sm:items-center'>
+                  <div>
+                    <h1 className='text-2xl font-semibold'>{t('title')}</h1>
+                    <p className='mt-1 text-sm text-muted-foreground'>
+                      {t('subtitle')}
+                    </p>
                   </div>
+                  <NewProjectDialog />
                 </div>
 
-                {/* 筛选选项和项目列表 */}
-                <div className='space-y-6'>
-                  <div className='flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center'>
-                    <Tabs defaultValue='all' className='w-full'>
-                      <div className='flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center w-full'>
-                        <TabsList>
-                          <TabsTrigger value='all'>{t('tabs.all')}</TabsTrigger>
-                          <TabsTrigger value='starred'>
-                            {t('tabs.starred')}
-                          </TabsTrigger>
-                          <TabsTrigger value='my'>{t('tabs.my')}</TabsTrigger>
-                        </TabsList>
+                <Tabs defaultValue='all' className='w-full'>
+                  <div className='flex flex-col justify-between gap-4 xl:flex-row xl:items-center'>
+                    <TabsList>
+                      <TabsTrigger value='all'>{t('tabs.all')}</TabsTrigger>
+                      <TabsTrigger value='starred'>
+                        {t('tabs.starred')}
+                      </TabsTrigger>
+                      <TabsTrigger value='my'>{t('tabs.my')}</TabsTrigger>
+                    </TabsList>
 
-                        <div className='flex items-center gap-2'>
-                          <Button variant='outline' size='sm'>
-                            <FilterIcon className='size-4 mr-2' />
-                            {t('filter')}
-                          </Button>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant='outline' size='sm'>
-                                {t('sort.recent')}
-                                <ChevronDownIcon className='ml-2 size-4' />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align='end'>
-                              <DropdownMenuItem>
-                                {t('sort.recent')}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                {t('sort.nameAsc')}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                {t('sort.nameDesc')}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                {t('sort.mostRuns')}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                {t('sort.fewestRuns')}
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
+                    <div className='flex w-full flex-col gap-2 sm:w-auto sm:flex-row'>
+                      <div className='relative sm:w-72'>
+                        <SearchIcon className='absolute left-2.5 top-2.5 size-4 text-muted-foreground' />
+                        <Input
+                          type='search'
+                          placeholder={t('searchPlaceholder')}
+                          value={search}
+                          onChange={(event) => setSearch(event.target.value)}
+                          className='pl-8'
+                        />
                       </div>
-
-                      {/* 项目列表 - 全部 */}
-                      <TabsContent value='all' className='mt-6'>
-                        <AllProjectTable />
-                      </TabsContent>
-
-                      {/* 项目列表 - 已收藏 */}
-                      <TabsContent value='starred' className='mt-6'>
-                        <StarredProjectTable />
-                      </TabsContent>
-
-                      {/* 项目列表 - 我的 */}
-                      <TabsContent value='my' className='mt-6'>
-                        <MyProjectTable />
-                      </TabsContent>
-                    </Tabs>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant='outline'>
+                            {t(`sort.${sort}`)}
+                            <ChevronDownIcon className='ml-2 size-4' />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align='end'>
+                          {(['recent', 'nameAsc', 'nameDesc'] as const).map(
+                            (option) => (
+                              <DropdownMenuItem
+                                key={option}
+                                onSelect={() => setSort(option)}
+                              >
+                                {t(`sort.${option}`)}
+                              </DropdownMenuItem>
+                            ),
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
-                </div>
+
+                  <TabsContent value='all' className='mt-6'>
+                    <AllProjectTable search={search} sort={sort} />
+                  </TabsContent>
+                  <TabsContent value='starred' className='mt-6'>
+                    <StarredProjectTable search={search} sort={sort} />
+                  </TabsContent>
+                  <TabsContent value='my' className='mt-6'>
+                    <MyProjectTable search={search} sort={sort} />
+                  </TabsContent>
+                </Tabs>
               </main>
             </div>
           </div>
