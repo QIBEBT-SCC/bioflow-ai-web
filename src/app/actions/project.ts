@@ -5,6 +5,7 @@ import type {
   ProjectPublic,
   ProjectTag,
   ProjectTagProp,
+  ProjectUpdateProp,
   TagWithCount,
 } from '@/types/project'
 
@@ -65,10 +66,10 @@ export async function createProject(
  */
 export async function updateProject(
   id: string,
-  data: Partial<ProjectCreateProp>,
+  data: ProjectUpdateProp,
 ): Promise<ProjectPublic> {
   return await clientFetch<ProjectPublic>(`/projects/${id}`, {
-    method: 'PATCH',
+    method: 'PUT',
     body: JSON.stringify(data),
   })
 }

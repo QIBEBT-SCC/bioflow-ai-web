@@ -20,6 +20,12 @@ export interface ProjectCreateProp {
   tag_ids: number[]
 }
 
+export interface ProjectUpdateProp {
+  name?: string
+  description?: string
+  tags?: ProjectTag[]
+}
+
 export interface ProjectPublic {
   id: number
   name: string

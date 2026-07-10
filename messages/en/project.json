@@ -11,9 +11,19 @@
     "list": {
       "breadcrumb": "Projects",
       "title": "Projects",
+      "subtitle": "Manage your projects, tags, and collaboration data in one place.",
       "searchPlaceholder": "Search projects...",
       "filter": "Filter",
       "loading": "Loading...",
+      "pagination": {
+        "summary": "{count} projects · Page {current} of {total}",
+        "previous": "Previous page",
+        "next": "Next page"
+      },
+      "view": {
+        "list": "List view",
+        "grid": "Card view"
+      },
       "tabs": {
         "all": "All Projects",
         "starred": "Starred",
@@ -29,6 +39,11 @@
       "tags": {
         "title": "Tags",
         "loading": "Loading...",
+        "pagination": {
+          "summary": "{count} projects · Page {current} of {total}",
+          "previous": "Previous page",
+          "next": "Next page"
+        },
         "loadFailed": "Failed to load",
         "empty": "No tags yet"
       },
@@ -61,6 +76,32 @@
       "creating": "Creating...",
       "create": "Create"
     },
+    "actions": {
+      "label": "Project actions",
+      "edit": "Edit project",
+      "delete": "Delete project",
+      "empty": "No matching projects found.",
+      "deleteTitle": "Delete project?",
+      "deleteDescription": "Delete “{name}”? All data in this project will be removed and this cannot be undone.",
+      "cancel": "Cancel",
+      "confirmDelete": "Delete",
+      "deleting": "Deleting...",
+      "deleteSuccess": "Project deleted",
+      "deleteFailed": "Failed to delete project"
+    },
+    "edit": {
+      "title": "Edit project",
+      "description": "Update the project name, description, and tags.",
+      "name": "Project name",
+      "projectDescription": "Project description",
+      "projectTag": "Project tags",
+      "nameRequired": "Enter a project name",
+      "cancel": "Cancel",
+      "save": "Save changes",
+      "saving": "Saving...",
+      "success": "Project updated",
+      "failed": "Failed to update project"
+    },
     "tag": {
       "trigger": "Add New Tag",
       "title": "New Tag",
@@ -85,6 +126,10 @@
       "breadcrumb": {
         "projects": "Projects"
       },
+      "view": {
+        "list": "List view",
+        "grid": "Card view"
+      },
       "tabs": {
         "samples": "Samples",
         "fileMappings": "Global Files",
@@ -100,6 +145,11 @@
     "runDetail": {
       "fileViewer": {
         "loading": "Loading...",
+        "pagination": {
+          "summary": "{count} projects · Page {current} of {total}",
+          "previous": "Previous page",
+          "next": "Next page"
+        },
         "empty": "No content"
       },
       "leftPanel": {
@@ -111,6 +161,10 @@
         "outputFiles": "Output Files",
         "resizeOrCollapse": "Drag to resize / click to collapse",
         "expandPanel": "Expand panel"
+      },
+      "view": {
+        "list": "List view",
+        "grid": "Card view"
       },
       "tabs": {
         "workflow": "Workflow"
