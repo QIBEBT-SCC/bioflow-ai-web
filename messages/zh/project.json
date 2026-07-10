@@ -15,6 +15,15 @@
       "searchPlaceholder": "搜索项目...",
       "filter": "筛选",
       "loading": "加载中...",
+      "pagination": {
+        "summary": "共 {count} 个项目，第 {current} / {total} 页",
+        "previous": "上一页",
+        "next": "下一页"
+      },
+      "view": {
+        "list": "列表视图",
+        "grid": "卡片视图"
+      },
       "tabs": {
         "all": "全部项目",
         "starred": "已收藏",
@@ -30,6 +39,11 @@
       "tags": {
         "title": "标签",
         "loading": "加载中...",
+        "pagination": {
+          "summary": "共 {count} 个项目，第 {current} / {total} 页",
+          "previous": "上一页",
+          "next": "下一页"
+        },
         "loadFailed": "加载失败",
         "empty": "暂无标签"
       },
@@ -112,6 +126,10 @@
       "breadcrumb": {
         "projects": "项目"
       },
+      "view": {
+        "list": "列表视图",
+        "grid": "卡片视图"
+      },
       "tabs": {
         "samples": "样本",
         "fileMappings": "全局文件",
@@ -127,6 +145,11 @@
     "runDetail": {
       "fileViewer": {
         "loading": "加载中...",
+        "pagination": {
+          "summary": "共 {count} 个项目，第 {current} / {total} 页",
+          "previous": "上一页",
+          "next": "下一页"
+        },
         "empty": "无内容"
       },
       "leftPanel": {
@@ -138,6 +161,10 @@
         "outputFiles": "输出文件",
         "resizeOrCollapse": "拖拽调整宽度 / 点击收起",
         "expandPanel": "展开面板"
+      },
+      "view": {
+        "list": "列表视图",
+        "grid": "卡片视图"
       },
       "tabs": {
         "workflow": "工作流"

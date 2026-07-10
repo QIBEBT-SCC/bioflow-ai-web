@@ -1,7 +1,7 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { toast } from 'sonner'
 import { TagSelector } from '@/components/project/tag-selector'
 import { Button } from '@/components/ui/button'
@@ -20,7 +20,7 @@ import { useProjectTags, useUpdateProject } from '@/hooks/use-project'
 import type { ProjectPublic, ProjectTag } from '@/types/project'
 
 interface EditProjectDialogProps {
-  project: ProjectPublic | null
+  project: ProjectPublic
   open: boolean
   onOpenChange: (open: boolean) => void
 }
@@ -31,22 +31,14 @@ export function EditProjectDialog({
   onOpenChange,
 }: EditProjectDialogProps) {
   const t = useTranslations('Project.edit')
-  const [name, setName] = useState('')
-  const [description, setDescription] = useState('')
-  const [tags, setTags] = useState<ProjectTag[]>([])
+  const [name, setName] = useState(project.name)
+  const [description, setDescription] = useState(project.description)
+  const [tags, setTags] = useState<ProjectTag[]>(project.tags)
   const { data: availableTags = [] } = useProjectTags()
   const updateProject = useUpdateProject()
 
-  useEffect(() => {
-    if (project && open) {
-      setName(project.name)
-      setDescription(project.description)
-      setTags(project.tags)
-    }
-  }, [project, open])
-
   const handleSubmit = async () => {
-    if (!project || !name.trim()) {
+    if (!name.trim()) {
       toast.error(t('nameRequired'))
       return
     }

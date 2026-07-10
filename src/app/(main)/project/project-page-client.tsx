@@ -1,6 +1,11 @@
 'use client'
 
-import { ChevronDownIcon, SearchIcon } from 'lucide-react'
+import {
+  ChevronDownIcon,
+  Grid2X2Icon,
+  ListIcon,
+  SearchIcon,
+} from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { NewProjectDialog } from '@/components/project/new-project-dialog'
@@ -8,6 +13,7 @@ import {
   AllProjectTable,
   MyProjectTable,
   type ProjectSort,
+  type ProjectViewMode,
   StarredProjectTable,
 } from '@/components/project/project-list'
 import { TagList } from '@/components/project/tag-list'
@@ -33,6 +39,7 @@ export default function ProjectsPageClient() {
   const t = useTranslations('Project.list')
   const [search, setSearch] = useState('')
   const [sort, setSort] = useState<ProjectSort>('recent')
+  const [viewMode, setViewMode] = useState<ProjectViewMode>('list')
 
   return (
     <SidebarInset>
@@ -106,17 +113,49 @@ export default function ProjectsPageClient() {
                           )}
                         </DropdownMenuContent>
                       </DropdownMenu>
+                      <div className='flex rounded-md border'>
+                        <Button
+                          variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+                          size='icon'
+                          className='rounded-r-none'
+                          onClick={() => setViewMode('list')}
+                          aria-label={t('view.list')}
+                        >
+                          <ListIcon className='size-4' />
+                        </Button>
+                        <Button
+                          variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+                          size='icon'
+                          className='rounded-l-none'
+                          onClick={() => setViewMode('grid')}
+                          aria-label={t('view.grid')}
+                        >
+                          <Grid2X2Icon className='size-4' />
+                        </Button>
+                      </div>
                     </div>
                   </div>
 
                   <TabsContent value='all' className='mt-6'>
-                    <AllProjectTable search={search} sort={sort} />
+                    <AllProjectTable
+                      search={search}
+                      sort={sort}
+                      viewMode={viewMode}
+                    />
                   </TabsContent>
                   <TabsContent value='starred' className='mt-6'>
-                    <StarredProjectTable search={search} sort={sort} />
+                    <StarredProjectTable
+                      search={search}
+                      sort={sort}
+                      viewMode={viewMode}
+                    />
                   </TabsContent>
                   <TabsContent value='my' className='mt-6'>
-                    <MyProjectTable search={search} sort={sort} />
+                    <MyProjectTable
+                      search={search}
+                      sort={sort}
+                      viewMode={viewMode}
+                    />
                   </TabsContent>
                 </Tabs>
               </main>

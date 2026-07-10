@@ -15,6 +15,15 @@
       "searchPlaceholder": "Search projects...",
       "filter": "Filter",
       "loading": "Loading...",
+      "pagination": {
+        "summary": "{count} projects · Page {current} of {total}",
+        "previous": "Previous page",
+        "next": "Next page"
+      },
+      "view": {
+        "list": "List view",
+        "grid": "Card view"
+      },
       "tabs": {
         "all": "All Projects",
         "starred": "Starred",
@@ -30,6 +39,11 @@
       "tags": {
         "title": "Tags",
         "loading": "Loading...",
+        "pagination": {
+          "summary": "{count} projects · Page {current} of {total}",
+          "previous": "Previous page",
+          "next": "Next page"
+        },
         "loadFailed": "Failed to load",
         "empty": "No tags yet"
       },
@@ -112,6 +126,10 @@
       "breadcrumb": {
         "projects": "Projects"
       },
+      "view": {
+        "list": "List view",
+        "grid": "Card view"
+      },
       "tabs": {
         "samples": "Samples",
         "fileMappings": "Global Files",
@@ -127,6 +145,11 @@
     "runDetail": {
       "fileViewer": {
         "loading": "Loading...",
+        "pagination": {
+          "summary": "{count} projects · Page {current} of {total}",
+          "previous": "Previous page",
+          "next": "Next page"
+        },
         "empty": "No content"
       },
       "leftPanel": {
@@ -138,6 +161,10 @@
         "outputFiles": "Output Files",
         "resizeOrCollapse": "Drag to resize / click to collapse",
         "expandPanel": "Expand panel"
+      },
+      "view": {
+        "list": "List view",
+        "grid": "Card view"
       },
       "tabs": {
         "workflow": "Workflow"

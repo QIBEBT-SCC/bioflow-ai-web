@@ -55,6 +55,7 @@ import { colorClassMap } from '@/types/color'
 import type { ProjectPublic } from '@/types/project'
 
 export type ProjectSort = 'recent' | 'nameAsc' | 'nameDesc'
+export type ProjectViewMode = 'list' | 'grid'
 
 function formatDateTime(dateStr: string | undefined, locale: string) {
   if (!dateStr) return '-'
@@ -71,10 +72,12 @@ function ProjectTable({
   projects,
   search,
   sort,
+  viewMode,
 }: {
   projects: ProjectPublic[]
   search: string
   sort: ProjectSort
+  viewMode: ProjectViewMode
 }) {
   const locale = useLocale()
   const t = useTranslations('Project.list.table')
@@ -139,137 +142,195 @@ function ProjectTable({
 
   return (
     <>
-      <div className='rounded-lg border bg-card shadow-sm'>
-        <div className='relative w-full overflow-auto'>
-          <Table>
-            <TableHeader className='bg-muted/50'>
-              <TableRow>
-                <TableHead className='h-12 px-4'>{t('projectName')}</TableHead>
-                <TableHead className='h-12 px-4'>{t('description')}</TableHead>
-                <TableHead className='h-12 px-4'>{t('tags')}</TableHead>
-                <TableHead className='h-12 text-right'>
-                  <div className='flex items-center justify-end'>
-                    <UserIcon className='mr-1 size-3' />
-                    {t('owner')}
-                  </div>
-                </TableHead>
-                <TableHead className='h-12 text-right'>
-                  <div className='flex items-center justify-end'>
-                    <ClockIcon className='mr-1 size-3' />
-                    {t('lastUpdated')}
-                  </div>
-                </TableHead>
-                <TableHead className='h-12 w-12'>
-                  <span className='sr-only'>{tActions('label')}</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {visibleProjects.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={6}
-                    className='h-32 text-center text-muted-foreground'
+      <div
+        className={
+          viewMode === 'grid'
+            ? 'grid gap-3 sm:grid-cols-2 2xl:grid-cols-3'
+            : 'hidden'
+        }
+      >
+        {visibleProjects.length === 0 ? (
+          <Card className='gap-0 py-0'>
+            <CardContent className='py-10 text-center text-muted-foreground'>
+              {tActions('empty')}
+            </CardContent>
+          </Card>
+        ) : (
+          visibleProjects.map((project) => (
+            <Card key={project.id} className='gap-0 py-0'>
+              <CardContent className='space-y-3 p-4'>
+                <div className='flex items-start gap-2'>
+                  <Button
+                    variant='ghost'
+                    size='icon'
+                    className={
+                      project.starred
+                        ? 'text-amber-400'
+                        : 'text-muted-foreground'
+                    }
+                    onClick={() => handleStar(project)}
+                    disabled={isStarPending && pendingId === String(project.id)}
                   >
-                    {tActions('empty')}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                visibleProjects.map((project) => (
-                  <TableRow key={project.id}>
-                    <TableCell>
-                      <div className='flex items-center gap-2'>
-                        <Button
-                          variant='ghost'
-                          size='icon'
-                          className={
-                            project.starred
-                              ? 'text-amber-400'
-                              : 'text-muted-foreground'
-                          }
-                          onClick={() => handleStar(project)}
-                          disabled={
-                            isStarPending && pendingId === String(project.id)
-                          }
-                        >
-                          <StarIcon
-                            className='size-4'
-                            fill={project.starred ? 'currentColor' : 'none'}
-                          />
-                          <span className='sr-only'>{t('favorite')}</span>
-                        </Button>
-                        <Link
-                          href={`/project/${project.id}`}
-                          className='font-medium hover:underline'
-                        >
-                          {project.name}
-                        </Link>
-                      </div>
-                    </TableCell>
-                    <TableCell className='max-w-72'>
-                      <div className='line-clamp-1 text-muted-foreground'>
-                        {project.description || '-'}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className='flex flex-wrap gap-1'>
-                        {project.tags.map((tag) => (
-                          <Badge
-                            key={tag.id}
-                            className={`${colorClassMap[tag.color]} border-0`}
-                          >
-                            {tag.name}
-                          </Badge>
-                        ))}
-                      </div>
-                    </TableCell>
-                    <TableCell className='text-right'>
-                      {project.owner.username}
-                    </TableCell>
-                    <TableCell className='whitespace-nowrap text-right text-muted-foreground'>
-                      {formatDateTime(project.update_time, locale)}
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant='ghost'
-                            size='icon'
-                            aria-label={tActions('label')}
-                          >
-                            <MoreHorizontalIcon className='size-4' />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align='end'>
-                          <DropdownMenuItem
-                            onSelect={() => setEditingProject(project)}
-                          >
-                            <PencilIcon className='mr-2 size-4' />
-                            {tActions('edit')}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className='text-destructive focus:text-destructive'
-                            onSelect={() => setDeletingProject(project)}
-                          >
-                            <Trash2Icon className='mr-2 size-4' />
-                            {tActions('delete')}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
+                    <StarIcon
+                      className='size-4'
+                      fill={project.starred ? 'currentColor' : 'none'}
+                    />
+                    <span className='sr-only'>{t('favorite')}</span>
+                  </Button>
+                  <div className='min-w-0 flex-1'>
+                    <Link
+                      href={`/project/${project.id}`}
+                      className='block truncate font-medium hover:underline'
+                    >
+                      {project.name}
+                    </Link>
+                    <p className='mt-1 line-clamp-2 text-sm text-muted-foreground'>
+                      {project.description || '-'}
+                    </p>
+                  </div>
+                  <ProjectActions
+                    project={project}
+                    onEdit={setEditingProject}
+                    onDelete={setDeletingProject}
+                    t={tActions}
+                  />
+                </div>
+                <div className='flex flex-wrap gap-1'>
+                  {project.tags.map((tag) => (
+                    <Badge
+                      key={tag.id}
+                      className={`${colorClassMap[tag.color]} border-0`}
+                    >
+                      {tag.name}
+                    </Badge>
+                  ))}
+                </div>
+                <div className='flex flex-wrap justify-between gap-x-4 gap-y-1 text-xs text-muted-foreground'>
+                  <span>{project.owner.username}</span>
+                  <span>{formatDateTime(project.update_time, locale)}</span>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
 
-      <EditProjectDialog
-        project={editingProject}
-        open={!!editingProject}
-        onOpenChange={(open) => !open && setEditingProject(null)}
-      />
+      <div
+        className={
+          viewMode === 'list' ? 'rounded-lg border bg-card shadow-sm' : 'hidden'
+        }
+      >
+        <Table className='min-w-[1000px]'>
+          <TableHeader className='bg-muted/50'>
+            <TableRow>
+              <TableHead className='h-12 px-4'>{t('projectName')}</TableHead>
+              <TableHead className='h-12 px-4'>{t('description')}</TableHead>
+              <TableHead className='h-12 px-4'>{t('tags')}</TableHead>
+              <TableHead className='h-12 text-right'>
+                <div className='flex items-center justify-end'>
+                  <UserIcon className='mr-1 size-3' />
+                  {t('owner')}
+                </div>
+              </TableHead>
+              <TableHead className='h-12 text-right'>
+                <div className='flex items-center justify-end'>
+                  <ClockIcon className='mr-1 size-3' />
+                  {t('lastUpdated')}
+                </div>
+              </TableHead>
+              <TableHead className='h-12 w-12'>
+                <span className='sr-only'>{tActions('label')}</span>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {visibleProjects.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={6}
+                  className='h-32 text-center text-muted-foreground'
+                >
+                  {tActions('empty')}
+                </TableCell>
+              </TableRow>
+            ) : (
+              visibleProjects.map((project) => (
+                <TableRow key={project.id}>
+                  <TableCell>
+                    <div className='flex items-center gap-2'>
+                      <Button
+                        variant='ghost'
+                        size='icon'
+                        className={
+                          project.starred
+                            ? 'text-amber-400'
+                            : 'text-muted-foreground'
+                        }
+                        onClick={() => handleStar(project)}
+                        disabled={
+                          isStarPending && pendingId === String(project.id)
+                        }
+                      >
+                        <StarIcon
+                          className='size-4'
+                          fill={project.starred ? 'currentColor' : 'none'}
+                        />
+                        <span className='sr-only'>{t('favorite')}</span>
+                      </Button>
+                      <Link
+                        href={`/project/${project.id}`}
+                        className='font-medium hover:underline'
+                      >
+                        {project.name}
+                      </Link>
+                    </div>
+                  </TableCell>
+                  <TableCell className='max-w-72'>
+                    <div className='line-clamp-1 text-muted-foreground'>
+                      {project.description || '-'}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className='flex flex-wrap gap-1'>
+                      {project.tags.map((tag) => (
+                        <Badge
+                          key={tag.id}
+                          className={`${colorClassMap[tag.color]} border-0`}
+                        >
+                          {tag.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  </TableCell>
+                  <TableCell className='text-right'>
+                    {project.owner.username}
+                  </TableCell>
+                  <TableCell className='whitespace-nowrap text-right text-muted-foreground'>
+                    {formatDateTime(project.update_time, locale)}
+                  </TableCell>
+                  <TableCell>
+                    <ProjectActions
+                      project={project}
+                      onEdit={setEditingProject}
+                      onDelete={setDeletingProject}
+                      t={tActions}
+                    />
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {editingProject && (
+        <EditProjectDialog
+          key={editingProject.id}
+          project={editingProject}
+          open
+          onOpenChange={(open) => !open && setEditingProject(null)}
+        />
+      )}
       <AlertDialog
         open={!!deletingProject}
         onOpenChange={(open) => !open && setDeletingProject(null)}
@@ -301,14 +362,51 @@ function ProjectTable({
   )
 }
 
+function ProjectActions({
+  project,
+  onEdit,
+  onDelete,
+  t,
+}: {
+  project: ProjectPublic
+  onEdit: (project: ProjectPublic) => void
+  onDelete: (project: ProjectPublic) => void
+  t: ReturnType<typeof useTranslations>
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant='ghost' size='icon' aria-label={t('label')}>
+          <MoreHorizontalIcon className='size-4' />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align='end'>
+        <DropdownMenuItem onSelect={() => onEdit(project)}>
+          <PencilIcon className='mr-2 size-4' />
+          {t('edit')}
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className='text-destructive focus:text-destructive'
+          onSelect={() => onDelete(project)}
+        >
+          <Trash2Icon className='mr-2 size-4' />
+          {t('delete')}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
 function PaginatedProjectTable({
   filter,
   search = '',
   sort = 'recent',
+  viewMode = 'list',
 }: {
   filter: 'all' | 'starred' | 'my'
   search?: string
   sort?: ProjectSort
+  viewMode?: ProjectViewMode
 }) {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 20
@@ -332,14 +430,17 @@ function PaginatedProjectTable({
 
   return (
     <div className='space-y-4'>
-      <ProjectTable projects={projects} search={search} sort={sort} />
-      {totalPages > 1 && (
-        <ImagePagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-        />
-      )}
+      <ProjectTable
+        projects={projects}
+        search={search}
+        sort={sort}
+        viewMode={viewMode}
+      />
+      <ImagePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
     </div>
   )
 }
@@ -347,6 +448,7 @@ function PaginatedProjectTable({
 export function AllProjectTable(props: {
   search?: string
   sort?: ProjectSort
+  viewMode?: ProjectViewMode
 }) {
   return <PaginatedProjectTable filter='all' {...props} />
 }
@@ -354,11 +456,16 @@ export function AllProjectTable(props: {
 export function StarredProjectTable(props: {
   search?: string
   sort?: ProjectSort
+  viewMode?: ProjectViewMode
 }) {
   return <PaginatedProjectTable filter='starred' {...props} />
 }
 
-export function MyProjectTable(props: { search?: string; sort?: ProjectSort }) {
+export function MyProjectTable(props: {
+  search?: string
+  sort?: ProjectSort
+  viewMode?: ProjectViewMode
+}) {
   return <PaginatedProjectTable filter='my' {...props} />
 }
 
