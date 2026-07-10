@@ -150,12 +150,12 @@ export function DatabaseAddDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='sm:max-w-[500px]'>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className='min-w-0'>
           <DialogHeader>
             <DialogTitle>{t('add_new_database')}</DialogTitle>
             <DialogDescription>{t('add_new_database_desc')}</DialogDescription>
           </DialogHeader>
-          <div className='grid gap-4 py-4'>
+          <div className='grid grid-cols-[minmax(0,1fr)] gap-4 py-4'>
             <div className='space-y-2'>
               <Label htmlFor='name'>
                 {t('database_name')} <span className='text-red-500'>*</span>

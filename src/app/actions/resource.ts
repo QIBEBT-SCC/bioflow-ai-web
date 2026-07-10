@@ -1,11 +1,11 @@
-import {clientFetch} from '@/lib/api-client'
+import { clientFetch } from '@/lib/api-client'
 import type {
   BioDb,
   BioDbCreate,
   BioDbDownloadResponse,
   BioDbDownloadStatusResponse,
-  PaginatedBioDbs,
   PaginatedBioDbSimple,
+  PaginatedBioDbs,
 } from '@/types/resource'
 
 /**
