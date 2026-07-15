@@ -1,8 +1,5 @@
 "use client";
 
-import type { LanguageModelUsage } from "ai";
-import type { ComponentProps } from "react";
-
 import { Button } from "@/components/ui/button";
 import {
   HoverCard,
@@ -11,7 +8,8 @@ import {
 } from "@/components/ui/hover-card";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
-import { createContext, use, useMemo } from "react";
+import type { LanguageModelUsage } from "ai";
+import { type ComponentProps, createContext, useContext } from "react";
 import { getUsage } from "tokenlens";
 
 const PERCENT_MAX = 100;
@@ -22,17 +20,17 @@ const ICON_STROKE_WIDTH = 2;
 
 type ModelId = string;
 
-interface ContextSchema {
+type ContextSchema = {
   usedTokens: number;
   maxTokens: number;
   usage?: LanguageModelUsage;
   modelId?: ModelId;
-}
+};
 
 const ContextContext = createContext<ContextSchema | null>(null);
 
 const useContextValue = () => {
-  const context = use(ContextContext);
+  const context = useContext(ContextContext);
 
   if (!context) {
     throw new Error("Context components must be used within Context");
@@ -49,18 +47,18 @@ export const Context = ({
   usage,
   modelId,
   ...props
-}: ContextProps) => {
-  const contextValue = useMemo(
-    () => ({ maxTokens, modelId, usage, usedTokens }),
-    [maxTokens, modelId, usage, usedTokens]
-  );
-
-  return (
-    <ContextContext.Provider value={contextValue}>
-      <HoverCard closeDelay={0} openDelay={0} {...props} />
-    </ContextContext.Provider>
-  );
-};
+}: ContextProps) => (
+  <ContextContext.Provider
+    value={{
+      usedTokens,
+      maxTokens,
+      usage,
+      modelId,
+    }}
+  >
+    <HoverCard closeDelay={0} openDelay={0} {...props} />
+  </ContextContext.Provider>
+);
 
 const ContextIcon = () => {
   const { usedTokens, maxTokens } = useContextValue();
@@ -97,7 +95,7 @@ const ContextIcon = () => {
         strokeDashoffset={dashOffset}
         strokeLinecap="round"
         strokeWidth={ICON_STROKE_WIDTH}
-        style={{ transform: "rotate(-90deg)", transformOrigin: "center" }}
+        style={{ transformOrigin: "center", transform: "rotate(-90deg)" }}
       />
     </svg>
   );
@@ -109,8 +107,8 @@ export const ContextTrigger = ({ children, ...props }: ContextTriggerProps) => {
   const { usedTokens, maxTokens } = useContextValue();
   const usedPercent = usedTokens / maxTokens;
   const renderedPercent = new Intl.NumberFormat("en-US", {
-    maximumFractionDigits: 1,
     style: "percent",
+    maximumFractionDigits: 1,
   }).format(usedPercent);
 
   return (
@@ -149,8 +147,8 @@ export const ContextContentHeader = ({
   const { usedTokens, maxTokens } = useContextValue();
   const usedPercent = usedTokens / maxTokens;
   const displayPct = new Intl.NumberFormat("en-US", {
-    maximumFractionDigits: 1,
     style: "percent",
+    maximumFractionDigits: 1,
   }).format(usedPercent);
   const used = new Intl.NumberFormat("en-US", {
     notation: "compact",
@@ -208,8 +206,8 @@ export const ContextContentFooter = ({
       }).costUSD?.totalUSD
     : undefined;
   const totalCost = new Intl.NumberFormat("en-US", {
-    currency: "USD",
     style: "currency",
+    currency: "USD",
   }).format(costUSD ?? 0);
 
   return (
@@ -255,8 +253,8 @@ export const ContextInputUsage = ({
       }).costUSD?.totalUSD
     : undefined;
   const inputCostText = new Intl.NumberFormat("en-US", {
-    currency: "USD",
     style: "currency",
+    currency: "USD",
   }).format(inputCost ?? 0);
 
   return (
@@ -295,8 +293,8 @@ export const ContextOutputUsage = ({
       }).costUSD?.totalUSD
     : undefined;
   const outputCostText = new Intl.NumberFormat("en-US", {
-    currency: "USD",
     style: "currency",
+    currency: "USD",
   }).format(outputCost ?? 0);
 
   return (
@@ -335,8 +333,8 @@ export const ContextReasoningUsage = ({
       }).costUSD?.totalUSD
     : undefined;
   const reasoningCostText = new Intl.NumberFormat("en-US", {
-    currency: "USD",
     style: "currency",
+    currency: "USD",
   }).format(reasoningCost ?? 0);
 
   return (
@@ -375,8 +373,8 @@ export const ContextCacheUsage = ({
       }).costUSD?.totalUSD
     : undefined;
   const cacheCostText = new Intl.NumberFormat("en-US", {
-    currency: "USD",
     style: "currency",
+    currency: "USD",
   }).format(cacheCost ?? 0);
 
   return (

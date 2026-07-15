@@ -1,7 +1,5 @@
 "use client";
 
-import type { ComponentProps, ReactNode } from "react";
-
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,
@@ -17,25 +15,20 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { ChevronDownIcon } from "lucide-react";
-import {
-  createContext,
-  use,
-  useCallback,
-  useMemo,
-  useState,
-} from "react";
+import type { ComponentProps, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
-export interface WebPreviewContextValue {
+export type WebPreviewContextValue = {
   url: string;
   setUrl: (url: string) => void;
   consoleOpen: boolean;
   setConsoleOpen: (open: boolean) => void;
-}
+};
 
 const WebPreviewContext = createContext<WebPreviewContextValue | null>(null);
 
 const useWebPreview = () => {
-  const context = use(WebPreviewContext);
+  const context = useContext(WebPreviewContext);
   if (!context) {
     throw new Error("WebPreview components must be used within a WebPreview");
   }
@@ -57,23 +50,17 @@ export const WebPreview = ({
   const [url, setUrl] = useState(defaultUrl);
   const [consoleOpen, setConsoleOpen] = useState(false);
 
-  const handleUrlChange = useCallback(
-    (newUrl: string) => {
-      setUrl(newUrl);
-      onUrlChange?.(newUrl);
-    },
-    [onUrlChange]
-  );
+  const handleUrlChange = (newUrl: string) => {
+    setUrl(newUrl);
+    onUrlChange?.(newUrl);
+  };
 
-  const contextValue = useMemo<WebPreviewContextValue>(
-    () => ({
-      consoleOpen,
-      setConsoleOpen,
-      setUrl: handleUrlChange,
-      url,
-    }),
-    [consoleOpen, handleUrlChange, url]
-  );
+  const contextValue: WebPreviewContextValue = {
+    url,
+    setUrl: handleUrlChange,
+    consoleOpen,
+    setConsoleOpen,
+  };
 
   return (
     <WebPreviewContext.Provider value={contextValue}>
@@ -120,7 +107,7 @@ export const WebPreviewNavigationButton = ({
     <Tooltip>
       <TooltipTrigger asChild>
         <Button
-          className="size-8 p-0 hover:text-foreground"
+          className="h-8 w-8 p-0 hover:text-foreground"
           disabled={disabled}
           onClick={onClick}
           size="sm"
@@ -146,30 +133,25 @@ export const WebPreviewUrl = ({
   ...props
 }: WebPreviewUrlProps) => {
   const { url, setUrl } = useWebPreview();
-  const [prevUrl, setPrevUrl] = useState(url);
   const [inputValue, setInputValue] = useState(url);
 
-  // Sync input value with context URL when it changes externally (derived state pattern)
-  if (url !== prevUrl) {
-    setPrevUrl(url);
+  // Sync input value with context URL when it changes externally
+  useEffect(() => {
     setInputValue(url);
-  }
+  }, [url]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(event.target.value);
     onChange?.(event);
   };
 
-  const handleKeyDown = useCallback(
-    (event: React.KeyboardEvent<HTMLInputElement>) => {
-      if (event.key === "Enter") {
-        const target = event.target as HTMLInputElement;
-        setUrl(target.value);
-      }
-      onKeyDown?.(event);
-    },
-    [setUrl, onKeyDown]
-  );
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      const target = event.target as HTMLInputElement;
+      setUrl(target.value);
+    }
+    onKeyDown?.(event);
+  };
 
   return (
     <Input
@@ -199,7 +181,6 @@ export const WebPreviewBody = ({
     <div className="flex-1">
       <iframe
         className={cn("size-full", className)}
-        // oxlint-disable-next-line eslint-plugin-react(iframe-missing-sandbox)
         sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation"
         src={(src ?? url) || undefined}
         title="Preview"
@@ -211,11 +192,11 @@ export const WebPreviewBody = ({
 };
 
 export type WebPreviewConsoleProps = ComponentProps<"div"> & {
-  logs?: {
+  logs?: Array<{
     level: "log" | "warn" | "error";
     message: string;
     timestamp: Date;
-  }[];
+  }>;
 };
 
 export const WebPreviewConsole = ({
@@ -241,7 +222,7 @@ export const WebPreviewConsole = ({
           Console
           <ChevronDownIcon
             className={cn(
-              "size-4 transition-transform duration-200",
+              "h-4 w-4 transition-transform duration-200",
               consoleOpen && "rotate-180"
             )}
           />
@@ -258,7 +239,6 @@ export const WebPreviewConsole = ({
             <p className="text-muted-foreground">No console output</p>
           ) : (
             logs.map((log, index) => (
-              // biome-ignore lint/suspicious/noArrayIndexKey: log entries may share identical timestamps
               <div
                 className={cn(
                   "text-xs",
