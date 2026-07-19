@@ -1,7 +1,9 @@
 'use client'
 
-import { Package, Plus } from 'lucide-react'
+import { ClipboardPaste, Package, Plus } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useReducer, useState } from 'react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -15,7 +17,14 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { useCreateImage } from '@/hooks/use-tool'
+import { parseImageUrl } from '@/lib/image-utils'
 import type { ToolImage } from '@/types/tool'
 
 type ImageFormState = {
@@ -31,6 +40,13 @@ type ImageFormState = {
 }
 type ImageFormAction =
   | { type: 'SET'; field: keyof ImageFormState; value: string }
+  | {
+      type: 'IMPORT_IMAGE_URL'
+      value: Pick<
+        ImageFormState,
+        'registry' | 'namespace' | 'repository' | 'tag'
+      >
+    }
   | { type: 'RESET' }
 
 const INITIAL_IMAGE_FORM: ImageFormState = {
@@ -52,6 +68,8 @@ function imageFormReducer(
   switch (action.type) {
     case 'SET':
       return { ...state, [action.field]: action.value }
+    case 'IMPORT_IMAGE_URL':
+      return { ...state, ...action.value }
     case 'RESET':
       return INITIAL_IMAGE_FORM
   }
@@ -66,6 +84,67 @@ const DEFAULT_TRIGGER = (
 
 interface CreateImageDialogProps {
   trigger?: React.ReactNode
+}
+
+type ImportImageUrlButtonProps = {
+  onImport: (
+    value: Pick<
+      ImageFormState,
+      'registry' | 'namespace' | 'repository' | 'tag'
+    >,
+  ) => void
+}
+
+function ImportImageUrlButton({ onImport }: ImportImageUrlButtonProps) {
+  const t = useTranslations('image.dialog')
+  const [isImporting, setIsImporting] = useState(false)
+
+  const handleImport = async () => {
+    if (!navigator.clipboard?.readText) {
+      toast.error(t('clipboardUnavailable'))
+      return
+    }
+
+    setIsImporting(true)
+    try {
+      const parsedUrl = parseImageUrl(await navigator.clipboard.readText())
+      if (!parsedUrl) {
+        toast.error(t('importInvalid'))
+        return
+      }
+
+      onImport(parsedUrl)
+      toast.success(t('importSuccess'))
+    } catch {
+      toast.error(t('clipboardReadFail'))
+    } finally {
+      setIsImporting(false)
+    }
+  }
+
+  const label = isImporting ? t('importing') : t('importFromClipboard')
+
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            type='button'
+            variant='outline'
+            size='icon-sm'
+            disabled={isImporting}
+            aria-label={label}
+            onClick={handleImport}
+          >
+            <ClipboardPaste
+              className={isImporting ? 'size-4 animate-pulse' : 'size-4'}
+            />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>{label}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  )
 }
 
 export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
@@ -224,9 +303,16 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
 
           {/* Docker 镜像配置 */}
           <div className='space-y-4'>
-            <h3 className='text-sm font-semibold text-foreground'>
-              Docker 镜像配置
-            </h3>
+            <div className='flex items-center justify-between gap-3'>
+              <h3 className='text-sm font-semibold text-foreground'>
+                Docker 镜像配置
+              </h3>
+              <ImportImageUrlButton
+                onImport={(value) =>
+                  dispatch({ type: 'IMPORT_IMAGE_URL', value })
+                }
+              />
+            </div>
 
             <div className='grid grid-cols-2 gap-4'>
               <div className='space-y-2'>
