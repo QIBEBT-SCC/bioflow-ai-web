@@ -449,6 +449,7 @@ function FlowContent() {
       {isOpen && (
         <ChatSidebar
           pageKey='editor'
+          projectId={projectId ?? undefined}
           width={chatSidebarWidth}
           onResizeStartAction={handleChatResizeStart}
         />

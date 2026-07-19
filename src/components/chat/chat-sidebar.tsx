@@ -1,12 +1,23 @@
 'use client'
 
-import {useChat} from '@ai-sdk/react'
-import {DefaultChatTransport} from 'ai'
-import {Loader2Icon, PlusIcon,} from 'lucide-react'
+import { useChat } from '@ai-sdk/react'
+import { DefaultChatTransport } from 'ai'
+import {
+  FlaskConicalIcon,
+  Loader2Icon,
+  PlusIcon,
+  TestTubeDiagonalIcon,
+  WrenchIcon,
+} from 'lucide-react'
 import type React from 'react'
-import {useCallback, useRef, useState} from 'react'
-import {Conversation, ConversationContent, ConversationEmptyState, ConversationScrollButton,} from '@/components/ai-elements/conversation'
-import {Loader} from '@/components/ai-elements/loader'
+import { useCallback, useMemo, useRef, useState } from 'react'
+import {
+  Conversation,
+  ConversationContent,
+  ConversationEmptyState,
+  ConversationScrollButton,
+} from '@/components/ai-elements/conversation'
+import { Loader } from '@/components/ai-elements/loader'
 import {
   PromptInput,
   PromptInputBody,
@@ -15,50 +26,115 @@ import {
   PromptInputSubmit,
   PromptInputTextarea,
 } from '@/components/ai-elements/prompt-input'
-import {ChatMessageParts} from '@/components/chat/chat-message-parts'
-import {Button} from '@/components/ui/button'
-import {useChatHistory, useCreateChatSession,} from '@/hooks/use-chat'
-import {useChatSidebarStore} from '@/stores/chat-sidebar-store'
-import {SidebarHistoryMenu} from "@/components/chat/chat-history-menu";
+import { SidebarHistoryMenu } from '@/components/chat/chat-history-menu'
+import { ChatMessageParts } from '@/components/chat/chat-message-parts'
+import {
+  type SlashCommand,
+  SlashCommandItem,
+  SlashCommandItemDescription,
+  SlashCommandItemLabel,
+  SlashCommandMenu,
+  useSlashCommand,
+} from '@/components/chat/slash-commannd'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { useChatHistory, useCreateChatSession } from '@/hooks/use-chat'
+import { useChatSidebarStore } from '@/stores/chat-sidebar-store'
+
+const CHAT_COMMANDS: SlashCommand[] = [
+  {
+    key: 'workflow-builder',
+    label: 'Workflow Builder',
+    description: 'Create or update a project workflow',
+    icon: FlaskConicalIcon,
+  },
+  {
+    key: 'sample-manager',
+    label: 'Sample Manager',
+    description: 'Organize and inspect project samples',
+    icon: TestTubeDiagonalIcon,
+  },
+  {
+    key: 'tool-generator',
+    label: 'Tool Generator',
+    description: 'Create a reusable bioinformatics tool',
+    icon: WrenchIcon,
+  },
+]
 
 function ChatSidebarInner({
   pageKey,
+  projectId,
   width,
   onResizeStart,
 }: {
   pageKey: string
+  projectId?: string
   width: number
   onResizeStart: (e: React.MouseEvent) => void
 }) {
   const { sessions, setSessionId } = useChatSidebarStore()
   const sessionId = sessions[pageKey] ?? null
-
   const { mutateAsync: createChatSession } = useCreateChatSession()
-  const { data: initMessages } = useChatHistory(sessionId ?? '')
-
+  const { data: initMessages, isLoading: isHistoryLoading } = useChatHistory(
+    sessionId ?? '',
+  )
   const [text, setText] = useState('')
   const [isCreating, setIsCreating] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  const transport = sessionId
-    ? new DefaultChatTransport({
-        api: `${process.env.NEXT_PUBLIC_API_URL}/chat/${sessionId}/completions`,
-        credentials: 'include',
-      })
-    : undefined
+  const numericProjectId = projectId ? Number(projectId) : undefined
+  const transport = useMemo(
+    () =>
+      sessionId
+        ? new DefaultChatTransport({
+            api: `${process.env.NEXT_PUBLIC_API_URL}/chat/${sessionId}/completions`,
+            credentials: 'include',
+            body:
+              numericProjectId !== undefined
+                ? { project_id: numericProjectId }
+                : undefined,
+          })
+        : undefined,
+    [numericProjectId, sessionId],
+  )
 
-  const { messages, sendMessage, status } = useChat({
-    transport,
-    messages: initMessages,
+  const { messages, sendMessage, status, error, regenerate, stop, clearError } =
+    useChat({ transport, messages: initMessages })
+  const availableCommands = projectId
+    ? CHAT_COMMANDS
+    : CHAT_COMMANDS.filter((command) => command.key === 'tool-generator')
+  const slashCommand = useSlashCommand({
+    commands: availableCommands,
+    value: text,
+    onValueChange: setText,
   })
 
   const handleSubmit = useCallback(
     async (message: PromptInputMessage) => {
       if (!message.text?.trim() || !sessionId) return
+      clearError()
       await sendMessage({ text: message.text })
       setText('')
     },
-    [sessionId, sendMessage],
+    [clearError, sessionId, sendMessage],
+  )
+
+  const handleResume = useCallback(
+    async (approved: boolean, feedback?: string) => {
+      clearError()
+      if (feedback) {
+        await sendMessage(
+          { text: feedback },
+          { body: { resume: true, approved: false } },
+        )
+        return
+      }
+      await sendMessage(undefined, {
+        body: { resume: true, approved },
+      })
+    },
+    [clearError, sendMessage],
   )
 
   const handleNewChat = useCallback(async () => {
@@ -72,33 +148,28 @@ function ChatSidebarInner({
   }, [pageKey, createChatSession, setSessionId])
 
   const handleSelectHistory = useCallback(
-    (uid: string) => {
-      setSessionId(pageKey, uid)
-    },
+    (uid: string) => setSessionId(pageKey, uid),
     [pageKey, setSessionId],
   )
 
-  // New Chat is disabled when already on an empty session (no messages yet)
+  const isBusy = status === 'submitted' || status === 'streaming'
   const newChatDisabled =
     isCreating || (sessionId !== null && messages.length === 0)
-  const inputDisabled = sessionId === null
+  const inputDisabled = sessionId === null || isHistoryLoading
 
   return (
-    <div className='shrink-0 flex h-full'>
-      {/* 左侧拖拽把手 */}
+    <div className='flex h-full shrink-0'>
       <button
         type='button'
-        aria-label='拖拽调整宽度'
+        aria-label='Resize chat sidebar'
         onMouseDown={onResizeStart}
-        className='w-1 shrink-0 border-l hover:bg-primary/40 transition-colors cursor-col-resize bg-background p-0'
+        className='w-1 shrink-0 cursor-col-resize border-l bg-background p-0 transition-colors hover:bg-primary/40'
       />
-
       <div
-        className='flex flex-col h-full bg-background overflow-hidden'
+        className='flex h-full flex-col overflow-hidden bg-background'
         style={{ width }}
       >
-        {/* Header */}
-        <div className='flex items-center justify-between h-12 px-3 border-b'>
+        <div className='flex h-12 items-center justify-between border-b px-3'>
           <span className='text-sm font-medium'>AI Chat</span>
           <div className='flex items-center gap-1'>
             <Button
@@ -106,7 +177,7 @@ function ChatSidebarInner({
               size='icon'
               className='size-7'
               onClick={handleNewChat}
-              disabled={newChatDisabled}
+              disabled={newChatDisabled || isBusy}
               title='New Chat'
             >
               {isCreating ? (
@@ -122,53 +193,104 @@ function ChatSidebarInner({
           </div>
         </div>
 
-        {/* Conversation */}
-        <Conversation className='flex-1 min-h-0'>
+        <Conversation className='min-h-0 flex-1'>
           <ConversationContent className='px-3'>
-            {messages.length === 0 ? (
+            {isHistoryLoading ? (
+              <Loader />
+            ) : messages.length === 0 ? (
               <ConversationEmptyState
                 title='AI Assistant'
-                description='Ask anything about your project'
+                description='Choose an assistant with /, then describe what you need.'
               />
             ) : (
-              messages.map((message, idx) => (
+              messages.map((message, index) => (
                 <ChatMessageParts
                   key={message.id}
                   message={message}
                   messages={messages}
-                  messageIndex={idx}
+                  messageIndex={index}
                   status={status}
+                  onRegenerate={(messageId) => void regenerate({ messageId })}
+                  onResume={handleResume}
                 />
               ))
             )}
             {status === 'submitted' && <Loader />}
+            {error && (
+              <Alert variant='destructive'>
+                <AlertDescription>
+                  {error.message ||
+                    'The chat request failed. Please try again.'}
+                </AlertDescription>
+              </Alert>
+            )}
           </ConversationContent>
           <ConversationScrollButton />
         </Conversation>
 
-        {/* Input */}
-        <PromptInput onSubmit={handleSubmit} className='px-3 pb-3'>
-          <PromptInputBody>
-            <PromptInputTextarea
-              onChange={(e) => setText(e.target.value)}
-              ref={textareaRef}
-              value={text}
-              placeholder={
-                inputDisabled
-                  ? 'Create or load a conversation to start chatting'
-                  : 'Ask a question...'
-              }
-              disabled={inputDisabled}
-            />
-          </PromptInputBody>
-          <PromptInputFooter>
-            <div />
-            <PromptInputSubmit
-              disabled={inputDisabled || (!text && !status)}
-              status={status}
-            />
-          </PromptInputFooter>
-        </PromptInput>
+        <div className='relative mx-3 mb-3'>
+          {slashCommand.open && (
+            <SlashCommandMenu className='absolute inset-x-0 bottom-full z-20 mb-2'>
+              {slashCommand.suggestions.map((command, index) => {
+                const Icon = command.icon
+                return (
+                  <SlashCommandItem
+                    key={command.key}
+                    active={index === slashCommand.activeIndex}
+                    onMouseDown={(event) => event.preventDefault()}
+                    onMouseEnter={() => slashCommand.setActiveIndex(index)}
+                    onClick={() => slashCommand.select(command)}
+                  >
+                    {Icon && <Icon className='size-4 shrink-0' />}
+                    <div className='min-w-0'>
+                      <SlashCommandItemLabel>
+                        /{command.key}
+                      </SlashCommandItemLabel>
+                      <SlashCommandItemDescription className='block'>
+                        {command.description}
+                      </SlashCommandItemDescription>
+                    </div>
+                  </SlashCommandItem>
+                )
+              })}
+            </SlashCommandMenu>
+          )}
+          <PromptInput onSubmit={handleSubmit}>
+            <PromptInputBody>
+              <PromptInputTextarea
+                onChange={(event) =>
+                  slashCommand.onValueChange(event.target.value)
+                }
+                onKeyDown={slashCommand.onKeyDown}
+                ref={textareaRef}
+                value={text}
+                placeholder={
+                  inputDisabled
+                    ? 'Create or load a conversation to start chatting'
+                    : 'Type / to choose an assistant…'
+                }
+                disabled={inputDisabled}
+              />
+            </PromptInputBody>
+            <PromptInputFooter>
+              <span className='truncate text-muted-foreground text-xs'>
+                {projectId ? 'Project context enabled' : 'Global chat'}
+              </span>
+              <PromptInputSubmit
+                disabled={inputDisabled || (!text.trim() && !isBusy)}
+                status={status}
+                onClick={
+                  isBusy
+                    ? (event) => {
+                        event.preventDefault()
+                        void stop()
+                      }
+                    : undefined
+                }
+              />
+            </PromptInputFooter>
+          </PromptInput>
+        </div>
       </div>
     </div>
   )
@@ -176,10 +298,12 @@ function ChatSidebarInner({
 
 export function ChatSidebar({
   pageKey,
+  projectId,
   width,
   onResizeStartAction,
 }: {
   pageKey: string
+  projectId?: string
   width: number
   onResizeStartAction: (e: React.MouseEvent) => void
 }) {
@@ -189,6 +313,7 @@ export function ChatSidebar({
     <ChatSidebarInner
       key={sessionId || 'new'}
       pageKey={pageKey}
+      projectId={projectId}
       width={width}
       onResizeStart={onResizeStartAction}
     />
