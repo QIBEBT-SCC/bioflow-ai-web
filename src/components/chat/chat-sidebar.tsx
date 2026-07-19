@@ -230,7 +230,13 @@ function ChatSidebarInner({
 
         <div className='relative mx-3 mb-3'>
           {slashCommand.open && (
-            <SlashCommandMenu className='absolute inset-x-0 bottom-full z-20 mb-2'>
+            <SlashCommandMenu
+              aria-label='Available assistants'
+              className='absolute inset-x-0 bottom-full z-20 mb-2'
+            >
+              <div className='px-2.5 pt-1.5 pb-1 font-medium text-[11px] text-muted-foreground'>
+                Assistants
+              </div>
               {slashCommand.suggestions.map((command, index) => {
                 const Icon = command.icon
                 return (
@@ -241,18 +247,30 @@ function ChatSidebarInner({
                     onMouseEnter={() => slashCommand.setActiveIndex(index)}
                     onClick={() => slashCommand.select(command)}
                   >
-                    {Icon && <Icon className='size-4 shrink-0' />}
-                    <div className='min-w-0'>
-                      <SlashCommandItemLabel>
-                        /{command.key}
-                      </SlashCommandItemLabel>
-                      <SlashCommandItemDescription className='block'>
-                        {command.description}
-                      </SlashCommandItemDescription>
-                    </div>
+                    {Icon && (
+                      <Icon
+                        aria-hidden='true'
+                        className='size-4 shrink-0 text-muted-foreground group-aria-selected:text-foreground'
+                        strokeWidth={1.75}
+                      />
+                    )}
+                    <SlashCommandItemLabel>
+                      {command.label}
+                    </SlashCommandItemLabel>
+                    <SlashCommandItemDescription>
+                      {command.description}
+                    </SlashCommandItemDescription>
                   </SlashCommandItem>
                 )
               })}
+              <div
+                className='mt-1 flex items-center gap-3 border-border/60 border-t px-2.5 pt-2 pb-1 text-[10px] text-muted-foreground'
+                aria-hidden='true'
+              >
+                <span>↑↓ Navigate</span>
+                <span>↵ Select</span>
+                <span>Esc Close</span>
+              </div>
             </SlashCommandMenu>
           )}
           <PromptInput onSubmit={handleSubmit}>

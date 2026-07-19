@@ -196,10 +196,11 @@ export const SlashCommandMenu = ({
 }: SlashCommandMenuProps) => (
   <div
     className={cn(
-      'max-h-72 overflow-y-auto rounded-xl border bg-popover p-1.5 shadow-lg',
+      'max-h-80 overflow-y-auto rounded-2xl border border-border/70 bg-popover/95 p-1.5 shadow-[0_12px_40px_-16px_rgb(0_0_0/0.28)] backdrop-blur-xl',
       className,
     )}
     {...props}
+    role='listbox'
   />
 )
 
@@ -215,13 +216,15 @@ export const SlashCommandItem = ({
   ...props
 }: SlashCommandItemProps) => (
   <button
+    aria-selected={active}
     className={cn(
-      'flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors',
-      active ? 'bg-accent' : 'hover:bg-accent/50',
+      'group flex h-10 w-full items-center gap-2.5 rounded-xl px-2.5 text-left outline-none transition-colors',
+      active ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/60',
       className,
     )}
     type='button'
     {...props}
+    role='option'
   />
 )
 
@@ -233,7 +236,10 @@ export const SlashCommandItemLabel = ({
   ...props
 }: SlashCommandItemLabelProps) => (
   <span
-    className={cn('shrink-0 font-medium text-foreground text-sm', className)}
+    className={cn(
+      'shrink-0 font-normal text-foreground text-sm leading-none',
+      className,
+    )}
     {...props}
   />
 )
@@ -246,7 +252,10 @@ export const SlashCommandItemDescription = ({
   ...props
 }: SlashCommandItemDescriptionProps) => (
   <span
-    className={cn('truncate text-muted-foreground text-sm', className)}
+    className={cn(
+      'ml-auto min-w-0 truncate text-right text-muted-foreground text-xs',
+      className,
+    )}
     {...props}
   />
 )
