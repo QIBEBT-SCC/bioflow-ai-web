@@ -78,7 +78,7 @@ export default function ToolsPage() {
     updateParams({ page: page > 1 ? String(page) : null })
 
   return (
-    <SidebarInset>
+    <SidebarInset className='h-screen overflow-hidden'>
       <header className='flex flex-col shrink-0 border-b'>
         <div className='flex items-center gap-2 px-4 h-12 bg-background'>
           <SidebarTrigger className='-ml-1' />

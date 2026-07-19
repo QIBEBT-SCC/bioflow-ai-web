@@ -42,8 +42,8 @@ export default function ProjectsPageClient() {
   const [viewMode, setViewMode] = useState<ProjectViewMode>('list')
 
   return (
-    <SidebarInset>
-      <div className='flex min-w-0 flex-1 flex-col'>
+    <SidebarInset className='h-screen overflow-hidden'>
+      <div className='flex min-h-0 min-w-0 flex-1 flex-col'>
         <header className='shrink-0 border-b'>
           <div className='flex h-12 items-center gap-2 bg-background px-4'>
             <SidebarTrigger className='-ml-1' />
