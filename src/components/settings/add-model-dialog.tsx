@@ -26,6 +26,7 @@ interface AddModelDialogProps {
 }
 
 const defaultModel: Omit<LLMModelCreate, 'provider_id'> = {
+  display_name: '',
   name: '',
   input_price: 0,
   output_price: 0,
@@ -59,6 +60,7 @@ export function AddModelDialog({
     }
     await createModelMutation.mutateAsync({
       provider_id: providerId,
+      display_name: newModel.display_name,
       name: newModel.name,
       input_price: Number(newModel.input_price),
       output_price: Number(newModel.output_price),
@@ -89,7 +91,23 @@ export function AddModelDialog({
         </DialogHeader>
         <div className='space-y-4 py-4'>
           <div className='space-y-2'>
-            <Label htmlFor='new-model-name'>{t('model_name')}</Label>
+            <Label htmlFor='new-model-display-name'>
+              {t('model_display_name')}
+            </Label>
+            <Input
+              id='new-model-display-name'
+              value={newModel.display_name}
+              onChange={(e) =>
+                setNewModel((prev) => ({
+                  ...prev,
+                  display_name: e.target.value,
+                }))
+              }
+              placeholder='GPT-5, Claude Sonnet, etc.'
+            />
+          </div>
+          <div className='space-y-2'>
+            <Label htmlFor='new-model-name'>{t('model_api_name')}</Label>
             <Input
               id='new-model-name'
               value={newModel.name}
@@ -187,7 +205,10 @@ export function AddModelDialog({
           <Button variant='outline' onClick={() => setOpen(false)}>
             {t('cancel')}
           </Button>
-          <Button onClick={handleAdd} disabled={!newModel.name}>
+          <Button
+            onClick={handleAdd}
+            disabled={!newModel.display_name.trim() || !newModel.name.trim()}
+          >
             {t('add')}
           </Button>
         </DialogFooter>

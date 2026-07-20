@@ -113,11 +113,9 @@ export function ModelConfigTab() {
                     {availableModels.map((model) => (
                       <SelectItem key={model.id} value={model.id.toString()}>
                         <div className='flex items-center gap-2'>
-                          <span className='font-mono text-sm'>
-                            {model.name}
-                          </span>
+                          <span className='text-sm'>{model.display_name}</span>
                           <span className='text-xs text-muted-foreground'>
-                            ({model.provider_name})
+                            ({model.name} · {model.provider_name})
                           </span>
                         </div>
                       </SelectItem>
@@ -173,12 +171,21 @@ export function ModelConfigTab() {
                 <p className='text-xs text-muted-foreground'>{key}</p>
               </div>
               <div className='flex items-center gap-2'>
-                <Badge variant='secondary' className='font-mono text-xs'>
-                  {model?.name ?? item?.model_name ?? t('not_configured')}
-                </Badge>
-                {model && (
+                <div className='text-right'>
+                  <p className='text-sm font-medium'>
+                    {model?.display_name ??
+                      item?.display_name ??
+                      t('not_configured')}
+                  </p>
+                  {(model?.name ?? item?.name) && (
+                    <p className='font-mono text-xs text-muted-foreground'>
+                      {model?.name ?? item?.name}
+                    </p>
+                  )}
+                </div>
+                {(model?.provider_name ?? item?.provider_name) && (
                   <Badge variant='outline' className='text-xs'>
-                    {model.provider_name}
+                    {model?.provider_name ?? item?.provider_name}
                   </Badge>
                 )}
               </div>
