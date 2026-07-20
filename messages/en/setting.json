@@ -1,5 +1,13 @@
 {
   "setting": {
+    "llm_management": {
+      "breadcrumb": "LLM Management",
+      "title": "LLM Management",
+      "description": "Review model usage, assign models to modules, and manage providers",
+      "tab_statistics": "Usage Statistics",
+      "tab_assignment": "Model Assignment",
+      "tab_providers": "Providers & Models"
+    },
     "llm_setting": {
       "breadcrumb": "Model Statistics",
       "title": "LLM Settings",

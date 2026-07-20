@@ -1,5 +1,13 @@
 {
   "setting": {
+    "llm_management": {
+      "breadcrumb": "LLM 管理",
+      "title": "LLM 管理",
+      "description": "查看模型使用情况，配置模块模型并管理服务商",
+      "tab_statistics": "使用统计",
+      "tab_assignment": "模型分配",
+      "tab_providers": "服务商与模型"
+    },
     "llm_setting": {
       "breadcrumb": "模型统计",
       "title": "模型设置",
