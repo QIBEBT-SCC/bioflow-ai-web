@@ -1,5 +1,13 @@
 {
   "setting": {
+    "llm_management": {
+      "breadcrumb": "LLM 管理",
+      "title": "LLM 管理",
+      "description": "查看模型使用情况，配置模块模型并管理服务商",
+      "tab_statistics": "使用统计",
+      "tab_assignment": "模型分配",
+      "tab_providers": "服务商与模型"
+    },
     "llm_setting": {
       "breadcrumb": "模型统计",
       "title": "模型设置",
@@ -32,7 +40,8 @@
       "add_model": "添加模型",
       "add_model_title": "添加新模型",
       "add_model_desc": "为 {name} 添加一个新的 LLM 模型",
-      "model_name": "模型名称",
+      "model_display_name": "显示名称",
+      "model_api_name": "API 模型名称",
       "input_price": "输入价格 ($/1M tokens)",
       "output_price": "输出价格 ($/1M tokens)",
       "cache_price": "缓存价格 ($/1M tokens)",

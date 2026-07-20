@@ -52,6 +52,7 @@ import type { LLMStatisticDetail, LLMStatisticOverview } from '@/types/setting'
 
 interface StatsBreakdownItem {
   name: string
+  secondaryName?: string
   count: number
   total_price: number
   total_input_tokens: number
@@ -77,10 +78,20 @@ function StatsBreakdownList({
       {items.map((item) => {
         const percentage = (item.total_price / totalPrice) * 100
         return (
-          <div key={item.name} className='space-y-2'>
+          <div
+            key={`${item.name}-${item.secondaryName ?? ''}`}
+            className='space-y-2'
+          >
             <div className='flex items-center justify-between'>
               <div className='flex items-center gap-3'>
-                {item.name}
+                <div>
+                  <p>{item.name}</p>
+                  {item.secondaryName && (
+                    <p className='font-mono text-xs text-muted-foreground'>
+                      {item.secondaryName}
+                    </p>
+                  )}
+                </div>
                 <Badge variant='secondary' className='text-xs'>
                   {t('call_count', { count: item.count })}
                 </Badge>
@@ -165,9 +176,14 @@ function UsageDetailTable({
                 </Badge>
               </TableCell>
               <TableCell>
-                <Badge variant='secondary' className='font-mono text-xs'>
-                  {record.model_name || '-'}
-                </Badge>
+                <div>
+                  <p className='text-sm'>{record.display_name || '-'}</p>
+                  {record.name && (
+                    <p className='font-mono text-xs text-muted-foreground'>
+                      {record.name}
+                    </p>
+                  )}
+                </div>
               </TableCell>
               <TableCell>
                 {record.setting_key ? (
@@ -354,7 +370,8 @@ function DetailStatsCard({
         <TabsContent value='by_model'>
           <StatsBreakdownList
             items={statsData.by_model.map((s) => ({
-              name: s.model_name,
+              name: s.display_name,
+              secondaryName: s.name,
               count: s.count,
               total_price: s.total_price,
               total_input_tokens: s.total_input_tokens,

@@ -33,6 +33,7 @@ export interface LLMProviderPublic {
 // ==================== LLMModel Schemas ====================
 export interface LLMModelCreate {
   provider_id: number
+  display_name: string
   name: string
   input_price: number
   output_price: number
@@ -43,6 +44,7 @@ export interface LLMModelCreate {
 }
 
 export interface LLMModelUpdate {
+  display_name?: string
   name?: string
   input_price?: number
   output_price?: number
@@ -54,7 +56,8 @@ export interface LLMModelUpdate {
 
 export interface LLMModelPublic {
   id: number
-  provider_name: string
+  provider_name?: string
+  display_name: string
   name: string
   input_price: number
   output_price: number
@@ -68,7 +71,8 @@ export interface LLMModelPublic {
 
 export interface LLMSettingItem {
   model_id: number
-  model_name: string
+  display_name: string
+  name: string
   provider_name: string
 }
 
@@ -111,7 +115,8 @@ export interface LLMStatisticByAgent extends LLMStatisticSummary {
 
 export interface LLMStatisticByModel extends LLMStatisticSummary {
   count: number
-  model_name: string
+  display_name: string
+  name: string
 }
 
 export interface LLMStatisticByType extends LLMStatisticSummary {
@@ -135,7 +140,8 @@ export interface LLMStatisticOverview {
 export interface LLMStatisticDetail {
   id: number
   agent_name: string
-  model_name?: string
+  display_name?: string
+  name?: string
   setting_key?: string
   input_tokens: number
   output_tokens: number

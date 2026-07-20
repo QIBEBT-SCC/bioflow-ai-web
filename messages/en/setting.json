@@ -1,5 +1,13 @@
 {
   "setting": {
+    "llm_management": {
+      "breadcrumb": "LLM Management",
+      "title": "LLM Management",
+      "description": "Review model usage, assign models to modules, and manage providers",
+      "tab_statistics": "Usage Statistics",
+      "tab_assignment": "Model Assignment",
+      "tab_providers": "Providers & Models"
+    },
     "llm_setting": {
       "breadcrumb": "Model Statistics",
       "title": "LLM Settings",
@@ -32,7 +40,8 @@
       "add_model": "Add Model",
       "add_model_title": "Add New Model",
       "add_model_desc": "Add a new LLM model for {name}",
-      "model_name": "Model Name",
+      "model_display_name": "Display Name",
+      "model_api_name": "API Model Name",
       "input_price": "Input Price ($/1M tokens)",
       "output_price": "Output Price ($/1M tokens)",
       "cache_price": "Cache Price ($/1M tokens)",

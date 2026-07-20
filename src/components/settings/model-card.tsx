@@ -29,6 +29,7 @@ export function ModelCard({ model }: ModelCardProps) {
 
   const startEditing = () => {
     setDraft({
+      display_name: model.display_name,
       name: model.name,
       input_price: model.input_price,
       output_price: model.output_price,
@@ -89,18 +90,50 @@ export function ModelCard({ model }: ModelCardProps) {
   return (
     <Card className='border bg-muted/30 pt-2'>
       <div className='p-4'>
-        <div className='flex items-center justify-between mb-3'>
-          <div className='flex items-center gap-3'>
+        <div className='flex items-start justify-between gap-3 mb-3'>
+          <div className='flex min-w-0 items-center gap-3'>
             {isEditing ? (
-              <Input
-                value={draft?.name || ''}
-                onChange={(e) => updateDraft('name', e.target.value)}
-                className='h-8 w-[180px] font-mono text-sm bg-background'
-              />
+              <div className='grid grid-cols-1 gap-2 sm:grid-cols-2'>
+                <div className='space-y-1'>
+                  <Label
+                    htmlFor={`display-name-${model.id}`}
+                    className='text-xs'
+                  >
+                    {t('model_display_name')}
+                  </Label>
+                  <Input
+                    id={`display-name-${model.id}`}
+                    value={draft?.display_name || ''}
+                    onChange={(e) =>
+                      updateDraft('display_name', e.target.value)
+                    }
+                    className='h-8 w-[180px] text-sm bg-background'
+                  />
+                </div>
+                <div className='space-y-1'>
+                  <Label htmlFor={`api-name-${model.id}`} className='text-xs'>
+                    {t('model_api_name')}
+                  </Label>
+                  <Input
+                    id={`api-name-${model.id}`}
+                    value={draft?.name || ''}
+                    onChange={(e) => updateDraft('name', e.target.value)}
+                    className='h-8 w-[180px] font-mono text-sm bg-background'
+                  />
+                </div>
+              </div>
             ) : (
-              <Badge variant='secondary' className='font-mono text-sm'>
-                {model.name}
-              </Badge>
+              <div className='min-w-0'>
+                <p className='truncate text-sm font-medium'>
+                  {model.display_name}
+                </p>
+                <Badge
+                  variant='secondary'
+                  className='mt-1 max-w-full truncate font-mono text-xs'
+                >
+                  {model.name}
+                </Badge>
+              </div>
             )}
             <div className='flex items-center gap-2'>
               <span className='text-xs text-muted-foreground'>
