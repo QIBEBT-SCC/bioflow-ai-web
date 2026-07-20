@@ -115,7 +115,11 @@ export function WorkflowRunInstances({
   const runWorkflowMutation = useRunWorkflow()
   const isProjectLevel = executionScope === ExecutionScope.PROJECT_LEVEL
 
-  const { data: samples, isLoading: samplesLoading } = useSamples(projectId)
+  const { data: samples, isLoading: samplesLoading } = useSamples(
+    projectId,
+    0,
+    100,
+  )
 
   // 有运行中的实例时自动轮询
   const { data: allRuns, isLoading: runsLoading } = useProjectRuns(

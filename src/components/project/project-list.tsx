@@ -409,7 +409,7 @@ function PaginatedProjectTable({
   viewMode?: ProjectViewMode
 }) {
   const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 20
+  const itemsPerPage = 10
   const offset = (currentPage - 1) * itemsPerPage
   const { data: projectPage, isLoading } = useProjects(
     offset,

@@ -76,7 +76,7 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
     new Set(),
   )
 
-  const { data: workflows, isLoading } = useProjectWorkflows(projectId)
+  const { data: workflows, isLoading } = useProjectWorkflows(projectId, 0, 100)
   const removeWorkflowMutation = useRemoveWorkflowFromProject()
   const downloadMutation = useDownloadWorkflowPackage()
 

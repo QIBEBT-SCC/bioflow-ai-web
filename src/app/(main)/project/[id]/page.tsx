@@ -62,8 +62,8 @@ export default function ProjectDetailPage() {
   }
 
   return (
-    <SidebarInset className='h-screen flex flex-row'>
-      <div className='flex-1 flex flex-col min-w-0'>
+    <SidebarInset className='flex h-screen flex-row overflow-hidden'>
+      <div className='flex min-h-0 min-w-0 flex-1 flex-col'>
         <header className='flex flex-col shrink-0 border-b'>
           <div className='flex items-center gap-2 px-4 h-12 bg-background'>
             <SidebarTrigger className='-ml-1' />
@@ -86,13 +86,13 @@ export default function ProjectDetailPage() {
             </div>
           </div>
         </header>
-        <div className='container mx-auto px-4 py-6 space-y-6'>
+        <div className='container mx-auto min-h-0 flex-1 space-y-6 overflow-y-auto px-4 py-6'>
           {/* 返回和项目标题 */}
           <ProjectDetailCard />
 
           {/* 项目内容标签页 */}
           <Tabs defaultValue='samples' className='w-full'>
-            <TabsList className='grid grid-cols-4 md:w-auto md:inline-flex'>
+            <TabsList className='grid grid-cols-3 md:inline-flex md:w-auto'>
               <TabsTrigger value='samples' className='flex items-center'>
                 <TestTubeDiagonal className='size-4 mr-2' />
                 {t('tabs.samples')}
