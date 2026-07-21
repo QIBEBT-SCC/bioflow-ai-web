@@ -17,21 +17,36 @@ const CodeCard = memo(function CodeCard({ nodeType }: CodeCardProps) {
   const t = useTranslations('editor.node')
   const readOnly = useReadOnly()
   const nodeId = useNodeId() ?? ''
-  const nodeData = useNodesData<Node<{ code: string }, typeof nodeType>>(nodeId)
+  const nodeData =
+    useNodesData<
+      Node<{ code: string; dependencies?: string[] }, typeof nodeType>
+    >(nodeId)
   const { updateNodeData } = useReactFlow()
 
   const [code, setCode] = useState<string>(nodeData?.data.code ?? '')
+  const [dependencies, setDependencies] = useState(
+    nodeData?.data.dependencies?.join('\n') ?? '',
+  )
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: no need
   useEffect(() => {
-    if (nodeData?.data.code !== undefined && nodeData.data.code !== code) {
-      setCode(nodeData.data.code)
-    }
+    setCode(nodeData?.data.code ?? '')
   }, [nodeData?.data.code])
 
+  useEffect(() => {
+    setDependencies(nodeData?.data.dependencies?.join('\n') ?? '')
+  }, [nodeData?.data.dependencies])
+
   const handleCodeBlur = useCallback(() => {
-    updateNodeData(nodeId, { code })
-  }, [nodeId, code, updateNodeData])
+    updateNodeData(nodeId, {
+      code,
+      ...(nodeType === 'code_python' && {
+        dependencies: dependencies.split('\n').flatMap((dependency) => {
+          const normalized = dependency.trim()
+          return normalized ? [normalized] : []
+        }),
+      }),
+    })
+  }, [code, dependencies, nodeId, nodeType, updateNodeData])
 
   return (
     <div className='p-3'>
@@ -45,6 +60,20 @@ const CodeCard = memo(function CodeCard({ nodeType }: CodeCardProps) {
         spellCheck={false}
         disabled={readOnly}
       />
+      {nodeType === 'code_python' && (
+        <>
+          <Label className='pt-4 pb-2 font-medium'>Dependencies:</Label>
+          <Textarea
+            className='h-[100px] w-full resize-y border-input font-mono text-sm'
+            placeholder={'One PEP 508 requirement per line, e.g.\npandas>=2'}
+            value={dependencies}
+            onChange={(event) => setDependencies(event.target.value)}
+            onBlur={handleCodeBlur}
+            spellCheck={false}
+            disabled={readOnly}
+          />
+        </>
+      )}
     </div>
   )
 })
@@ -129,14 +158,8 @@ const DownstreamSummaryCard = memo(function DownstreamSummaryCard() {
 
   const [prompt, setPrompt] = useState<string>(nodeData?.data.prompt ?? '')
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: no need
   useEffect(() => {
-    if (
-      nodeData?.data.prompt !== undefined &&
-      nodeData.data.prompt !== prompt
-    ) {
-      setPrompt(nodeData.data.prompt)
-    }
+    setPrompt(nodeData?.data.prompt ?? '')
   }, [nodeData?.data.prompt])
 
   const saveNodeData = useCallback(() => {

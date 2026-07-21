@@ -15,6 +15,7 @@ import { colorSchemes } from '@/components/node-editor/node/color'
 import { useReadOnly } from '@/components/node-editor/read-only-context'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import { useDB } from '@/hooks/use-resource'
 import type { HandleDefine } from '@/types/node.tsx'
 
@@ -31,11 +32,8 @@ const StringInputCard = memo(function StringInputCard() {
 
   const [args, setArgs] = useState<string>(nodeData?.data.value ?? '')
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: no need
   useEffect(() => {
-    if (nodeData?.data.value !== undefined && nodeData.data.value !== args) {
-      setArgs(nodeData.data.value)
-    }
+    setArgs(nodeData?.data.value ?? '')
   }, [nodeData?.data.value])
 
   const saveNodeData = useCallback(() => {
@@ -88,15 +86,8 @@ const FileInputCard = memo(() => {
 
   const [args, setArgs] = useState<string>(nodeData?.data.file_path ?? '')
 
-  // 同步外部数据变化
-  // biome-ignore lint/correctness/useExhaustiveDependencies: no need
   useEffect(() => {
-    if (
-      nodeData?.data.file_path !== undefined &&
-      nodeData.data.file_path !== args
-    ) {
-      setArgs(nodeData.data.file_path)
-    }
+    setArgs(nodeData?.data.file_path ?? '')
   }, [nodeData?.data.file_path])
 
   const saveNodeData = useCallback(() => {
@@ -133,6 +124,77 @@ const FileInputNode = memo(function FileInputNode() {
   )
 })
 
+const TEXT_FILE_INPUT_HANDLES = {
+  inputs: [] as HandleDefine[],
+  outputs: [
+    { name: 'file_path', description: 'Generated text file path' },
+  ] as HandleDefine[],
+}
+
+const TextFileInputCard = memo(function TextFileInputCard() {
+  const readOnly = useReadOnly()
+  const nodeId = useNodeId() ?? ''
+  const nodeData =
+    useNodesData<
+      Node<{ file_name: string; content: string }, 'resource_text_file'>
+    >(nodeId)
+  const { updateNodeData } = useReactFlow()
+
+  const [fileName, setFileName] = useState(nodeData?.data.file_name ?? '')
+  const [content, setContent] = useState(nodeData?.data.content ?? '')
+
+  useEffect(() => {
+    setFileName(nodeData?.data.file_name ?? '')
+  }, [nodeData?.data.file_name])
+
+  useEffect(() => {
+    setContent(nodeData?.data.content ?? '')
+  }, [nodeData?.data.content])
+
+  const saveNodeData = useCallback(() => {
+    updateNodeData(nodeId, { file_name: fileName, content })
+  }, [content, fileName, nodeId, updateNodeData])
+
+  return (
+    <div className='p-3'>
+      <Label className='pb-2 font-medium'>File Name:</Label>
+      <Input
+        className='w-full border-input focus-visible:ring-ring'
+        placeholder='e.g. config.txt'
+        value={fileName}
+        onChange={(event) => setFileName(event.target.value)}
+        onBlur={saveNodeData}
+        spellCheck={false}
+        disabled={readOnly}
+      />
+      <Label className='pt-4 pb-2 font-medium'>Content:</Label>
+      <Textarea
+        className='h-[200px] w-full resize-y border-input font-mono text-sm'
+        placeholder='Enter UTF-8 text content...'
+        value={content}
+        onChange={(event) => setContent(event.target.value)}
+        onBlur={saveNodeData}
+        spellCheck={false}
+        disabled={readOnly}
+      />
+    </div>
+  )
+})
+
+const TextFileInputNode = memo(function TextFileInputNode() {
+  const nodeComponent = useMemo(() => <TextFileInputCard />, [])
+
+  return (
+    <BaseNode
+      title='Text File'
+      description='Create a UTF-8 text file from inline content.'
+      handles={TEXT_FILE_INPUT_HANDLES}
+      color={colorSchemes.green}
+      nodeComponent={nodeComponent}
+    />
+  )
+})
+
 const SEQUENCE_INPUT_HANDLES = {
   inputs: [] as HandleDefine[],
   outputs: [
@@ -151,19 +213,12 @@ const SequenceInputCard = memo(function SequenceInputCard() {
   const [r1, setR1] = useState<string>(nodeData?.data.r1 ?? '')
   const [r2, setR2] = useState<string>(nodeData?.data.r2 ?? '')
 
-  // 同步外部数据变化
-  // biome-ignore lint/correctness/useExhaustiveDependencies: no need
   useEffect(() => {
-    if (nodeData?.data.r1 !== undefined && nodeData.data.r1 !== r1) {
-      setR1(nodeData.data.r1)
-    }
+    setR1(nodeData?.data.r1 ?? '')
   }, [nodeData?.data.r1])
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: no need
   useEffect(() => {
-    if (nodeData?.data.r2 !== undefined && nodeData.data.r2 !== r2) {
-      setR2(nodeData.data.r2)
-    }
+    setR2(nodeData?.data.r2 ?? '')
   }, [nodeData?.data.r2])
 
   const saveNodeData = useCallback(() => {
@@ -391,6 +446,7 @@ const GRCm39Node = memo(function GRCm39Node() {
 export {
   StringInputNode,
   FileInputNode,
+  TextFileInputNode,
   SequenceInputNode,
   DBInputNode,
   NcbiGenomeNode,
