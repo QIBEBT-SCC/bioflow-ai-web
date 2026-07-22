@@ -65,7 +65,21 @@
     "tool_node": {
       "immutable_params": "不可变参数:",
       "modifiable_params": "可修改参数:",
-      "args_placeholder": "在此输入参数..."
+      "args_placeholder": "在此输入参数...",
+      "details": {
+        "completeCommand": "完整命令",
+        "completeCommandDescription": "已拼合工具参数与文件占位符的完整命令",
+        "fileMounts": "文件挂载",
+        "inputFiles": "输入文件 ({count})",
+        "outputFiles": "输出文件 ({count})",
+        "filePath": "文件路径",
+        "mountPath": "挂载路径",
+        "noInputFiles": "没有输入文件挂载",
+        "noOutputFiles": "没有输出文件挂载",
+        "noCommand": "暂无完整命令",
+        "loadError": "工具详情加载失败",
+        "retry": "重试"
+      }
     },
     "load_workflow_dialog": {
       "trigger": "加载",

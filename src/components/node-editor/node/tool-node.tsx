@@ -14,6 +14,7 @@ import { useTranslations } from 'next-intl'
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import { BaseNode } from '@/components/node-editor/node/base-node'
 import { colorSchemes } from '@/components/node-editor/node/color'
+import { ToolNodeDetails } from '@/components/node-editor/node/tool-node-details'
 import { useReadOnly } from '@/components/node-editor/read-only-context'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -195,6 +196,9 @@ export const ToolNode = memo(function ToolNode() {
           <ToolCategoryIcon className='size-3' />
           {toolCategory.label}
         </Button>
+      }
+      detailsContent={
+        <ToolNodeDetails toolUid={nodeData?.data.tool_uid ?? ''} />
       }
       handles={handles}
       color={colorSchemes.pink}

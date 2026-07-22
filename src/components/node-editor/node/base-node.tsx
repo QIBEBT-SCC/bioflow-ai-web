@@ -40,6 +40,7 @@ interface BaseNodeProps {
   title: string
   description: string
   detailsTrigger?: React.ReactElement | null
+  detailsContent?: React.ReactNode
   handles: {
     inputs: HandleDefine[]
     outputs: HandleDefine[]
@@ -58,6 +59,7 @@ const BaseNode = memo(function BaseNode({
   title,
   description,
   detailsTrigger,
+  detailsContent,
   handles,
   color,
   nodeComponent,
@@ -186,11 +188,16 @@ const BaseNode = memo(function BaseNode({
               </Button>
             </SheetTrigger>
           )}
-          <SheetContent>
-            <SheetHeader>
+          <SheetContent
+            className={cn(
+              detailsContent && 'gap-0 overflow-hidden sm:max-w-xl',
+            )}
+          >
+            <SheetHeader className={cn(detailsContent && 'shrink-0')}>
               <SheetTitle>{title}</SheetTitle>
               <SheetDescription>{description}</SheetDescription>
             </SheetHeader>
+            {detailsContent}
           </SheetContent>
         </Sheet>
       </NodeCardHeader>
