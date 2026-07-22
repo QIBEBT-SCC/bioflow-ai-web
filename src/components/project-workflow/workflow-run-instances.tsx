@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/table'
 import { useProjectRuns, useRunWorkflow } from '@/hooks/use-project-workflow'
 import { useSamples } from '@/hooks/use-sample'
+import { ClientApiError } from '@/lib/api-client'
 import type { RunInstance } from '@/types/project-workflow'
 import { Status } from '@/types/run'
 import { ExecutionScope } from '@/types/workflow'
@@ -156,8 +157,8 @@ export function WorkflowRunInstances({
       })
       toast.success(t('rerunSubmitted'))
     } catch (error) {
-      if (error instanceof Error && error.message.includes('409')) {
-        toast.error(t('sampleRunning'))
+      if (error instanceof ClientApiError && error.status === 409) {
+        toast.error(t(isProjectLevel ? 'projectRunning' : 'sampleRunning'))
       } else {
         toast.error(t('runFailed'))
       }

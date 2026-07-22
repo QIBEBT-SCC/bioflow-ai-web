@@ -363,6 +363,7 @@
       "runs": {
         "rerunSubmitted": "已重新提交运行",
         "sampleRunning": "该样本正在运行中，请等待完成后再重跑",
+        "projectRunning": "该项目级工作流正在运行中，请等待完成后再重跑",
         "runFailed": "运行失败，请重试",
         "projectNotRun": "尚未运行，请点击“运行”按钮启动",
         "projectRuns": "运行实例",

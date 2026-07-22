@@ -363,6 +363,7 @@
       "runs": {
         "rerunSubmitted": "Run resubmitted",
         "sampleRunning": "This sample is currently running. Please wait for it to finish before rerunning.",
+        "projectRunning": "This project-level workflow is currently running. Please wait for it to finish before rerunning.",
         "runFailed": "Run failed, please try again",
         "projectNotRun": "Not run yet. Click the \"Run\" button to start.",
         "projectRuns": "Run Instances",
