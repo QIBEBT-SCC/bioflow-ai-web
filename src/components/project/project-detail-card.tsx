@@ -13,7 +13,11 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
-import { useProject } from '@/hooks/use-project'
+import {
+  useProject,
+  useStarProject,
+  useUnstarProject,
+} from '@/hooks/use-project'
 import { useProjectRunStats } from '@/hooks/use-project-workflow'
 import { useSampleCount } from '@/hooks/use-sample'
 import { colorClassMap } from '@/types/color'
@@ -24,6 +28,8 @@ export function ProjectDetailCard() {
   const params = useParams()
   const projectId = params.id as string
   const { data: project, isLoading } = useProject(projectId)
+  const starProject = useStarProject()
+  const unstarProject = useUnstarProject()
   const { data: sampleCount } = useSampleCount(projectId)
   const { data: runStats } = useProjectRunStats(projectId)
 
@@ -36,6 +42,15 @@ export function ProjectDetailCard() {
   const waitingRuns = runStats?.waiting ?? 0
   const errorRuns = runStats?.error ?? 0
   const successRate = totalRuns > 0 ? (successRuns / totalRuns) * 100 : 0
+  const isStarPending = starProject.isPending || unstarProject.isPending
+
+  const handleStar = () => {
+    if (project.starred) {
+      unstarProject.mutate(projectId)
+    } else {
+      starProject.mutate(projectId)
+    }
+  }
 
   return (
     <div>
@@ -60,8 +75,14 @@ export function ProjectDetailCard() {
               className={
                 project.starred ? 'text-amber-400' : 'text-muted-foreground'
               }
+              onClick={handleStar}
+              disabled={isStarPending}
+              aria-pressed={project.starred}
             >
-              <Star className='size-5' />
+              <Star
+                className='size-5'
+                fill={project.starred ? 'currentColor' : 'none'}
+              />
               <span className='sr-only'>{t('favorite')}</span>
             </Button>
           </div>
