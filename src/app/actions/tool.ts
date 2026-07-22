@@ -116,3 +116,12 @@ export async function updateTool(
     body: JSON.stringify(tool),
   })
 }
+
+/**
+ * 将工具标记为 AI Checked，同时保留其他标签
+ */
+export async function markToolAIChecked(uid: string): Promise<SimpleToolInfo> {
+  return await clientFetch<SimpleToolInfo>(`/tools/${uid}/ai-checked`, {
+    method: 'PATCH',
+  })
+}

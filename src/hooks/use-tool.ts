@@ -20,6 +20,7 @@ import {
   getToolGroupList,
   getToolList,
   getToolTagList,
+  markToolAIChecked,
   searchTools,
   updateTool,
 } from '@/app/actions/tool'
@@ -183,6 +184,28 @@ export const useUpdateTool = () => {
     },
     onError: (error: Error) => {
       toast.error(`工具更新失败: ${error.message}`)
+    },
+  })
+}
+
+/**
+ * 将 AI Unchecked 工具标记为 AI Checked
+ */
+export const useMarkToolAIChecked = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (uid: string) => markToolAIChecked(uid),
+    onSuccess: (data, uid) => {
+      queryClient.setQueryData<ToolInfo>(['tool', uid], (tool) =>
+        tool ? { ...tool, tags: data.tags } : tool,
+      )
+      queryClient.setQueryData<ToolArgPublic>(['toolArg', uid], (tool) =>
+        tool ? { ...tool, tags: data.tags } : tool,
+      )
+      queryClient.invalidateQueries({ queryKey: ['toolList'] })
+      queryClient.invalidateQueries({ queryKey: ['groupTools'] })
+      queryClient.invalidateQueries({ queryKey: ['searchTools'] })
     },
   })
 }

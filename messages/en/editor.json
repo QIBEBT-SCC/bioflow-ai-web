@@ -79,7 +79,11 @@
         "noCommand": "No complete command available",
         "loadError": "Failed to load tool details",
         "retry": "Retry",
-        "viewToolDetails": "Open Tool Details"
+        "viewToolDetails": "Open Tool Details",
+        "markAsChecked": "Mark as AI Checked",
+        "markingAsChecked": "Marking...",
+        "markSuccess": "Marked as AI Checked",
+        "markError": "Failed to mark tool: {error}"
       }
     },
     "load_workflow_dialog": {

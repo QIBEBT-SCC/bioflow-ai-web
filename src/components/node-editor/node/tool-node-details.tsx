@@ -4,18 +4,21 @@ import {
   ExternalLinkIcon,
   FileInputIcon,
   FileOutputIcon,
+  Loader2Icon,
   RefreshCwIcon,
+  ShieldCheckIcon,
   TerminalIcon,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
+import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { CopyButton } from '@/components/ui/copy-button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAuth } from '@/hooks/use-auth-query'
-import { useTool } from '@/hooks/use-tool'
+import { useMarkToolAIChecked, useTool } from '@/hooks/use-tool'
 import { UserRole } from '@/types/auth'
 import type { FileMount } from '@/types/tool'
 
@@ -113,6 +116,7 @@ export function ToolNodeDetails({ toolUid }: { toolUid: string }) {
   const t = useTranslations('editor.tool_node.details')
   const { user } = useAuth()
   const { data: tool, isLoading, isError, refetch } = useTool(toolUid)
+  const markAIChecked = useMarkToolAIChecked()
 
   if (isLoading) return <ToolDetailsSkeleton />
 
@@ -135,16 +139,46 @@ export function ToolNodeDetails({ toolUid }: { toolUid: string }) {
   const outputFiles = tool.file_mounts.filter(
     (file) => file.file_type === 'OUTPUT',
   )
+  const isAdmin = !!user && user.role >= UserRole.ADMIN
+  const isAIUnchecked = tool.tags.some((tag) => tag.name === 'AI Unchecked')
+
+  const handleMarkAIChecked = () => {
+    markAIChecked.mutate(toolUid, {
+      onSuccess: () => toast.success(t('markSuccess')),
+      onError: (error) => toast.error(t('markError', { error: error.message })),
+    })
+  }
 
   return (
     <div className='min-h-0 flex-1 space-y-6 overflow-y-auto px-4 pb-6'>
-      {user && user.role >= UserRole.ADMIN && (
-        <Button variant='outline' size='sm' className='w-full' asChild>
-          <Link href={`/tool/${toolUid}`}>
-            <ExternalLinkIcon className='size-3.5' />
-            {t('viewToolDetails')}
-          </Link>
-        </Button>
+      {isAdmin && (
+        <div className='grid gap-2 sm:grid-cols-2'>
+          <Button variant='outline' size='sm' className='w-full' asChild>
+            <Link href={`/tool/${toolUid}`}>
+              <ExternalLinkIcon className='size-3.5' />
+              {t('viewToolDetails')}
+            </Link>
+          </Button>
+          {isAIUnchecked && (
+            <Button
+              type='button'
+              variant='outline'
+              size='sm'
+              className='w-full border-green-200 bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800'
+              disabled={markAIChecked.isPending}
+              onClick={handleMarkAIChecked}
+            >
+              {markAIChecked.isPending ? (
+                <Loader2Icon className='size-3.5 animate-spin' />
+              ) : (
+                <ShieldCheckIcon className='size-3.5' />
+              )}
+              {markAIChecked.isPending
+                ? t('markingAsChecked')
+                : t('markAsChecked')}
+            </Button>
+          )}
+        </div>
       )}
 
       <section className='space-y-3'>
