@@ -10,7 +10,6 @@
  */
 
 import {
-  BotIcon,
   CaseSensitiveIcon,
   CodeIcon,
   CpuIcon,
@@ -36,10 +35,10 @@ import {
 import {
   BindParamNode,
   CollectMountDirNode,
+  CompressNode,
   Copy2FolderNode,
+  DecompressNode,
   GlobalMarkerNode,
-  GzipNode,
-  LlmValueOutputNode,
   RenameFileNode,
   SelectFileInFolderNode,
 } from '@/components/node-editor/node/data-node'
@@ -51,6 +50,7 @@ import {
   NcbiGenomeNode,
   SequenceInputNode,
   StringInputNode,
+  TextFileInputNode,
 } from '@/components/node-editor/node/input-node'
 import { NoteNode } from '@/components/node-editor/node/note-node'
 import { ToolNode } from '@/components/node-editor/node/tool-node'
@@ -64,6 +64,7 @@ export const nodeTypes: Record<string, React.ComponentType<any>> = {
   // resource / input
   value_string: StringInputNode,
   resource_file: FileInputNode,
+  resource_text_file: TextFileInputNode,
   resource_sequence: SequenceInputNode,
   resource_db: DBInputNode,
   resource_ncbi_genome: NcbiGenomeNode,
@@ -71,15 +72,15 @@ export const nodeTypes: Record<string, React.ComponentType<any>> = {
   resource_GRCm39: GRCm39Node,
   // processor
   copy2folder: Copy2FolderNode,
-  gzip: GzipNode,
+  compress: CompressNode,
+  decompress: DecompressNode,
   global_mark: GlobalMarkerNode,
   rename_file: RenameFileNode,
   select_file_in_folder: SelectFileInFolderNode,
-  llm_value_output: LlmValueOutputNode,
   bind_param: BindParamNode,
   collect_mount_dirs: CollectMountDirNode,
   // code
-  code_r: RCodeNode,
+  code_R: RCodeNode,
   code_python: PythonCodeNode,
   code_bash: BashCodeNode,
   downstream_summary: DownstreamSummaryNode,
@@ -96,22 +97,22 @@ export const nodeDefaultData: Record<string, Record<string, unknown>> = {
   tool: { tool_uid: '', modifiable_params: '' },
   value_string: { value: '' },
   resource_file: { file_path: '' },
+  resource_text_file: { file_name: '', content: '' },
   resource_sequence: { r1: '', r2: '' },
   resource_db: { db_id: '', db_name: '' },
   resource_ncbi_genome: { required_index: [] },
   resource_GRCh38: {},
   resource_GRCm39: {},
-  resource_global_file: { mark_name: '' },
   copy2folder: {},
-  gzip: {},
+  compress: { compressed_file_name: '' },
+  decompress: {},
   global_mark: { mark_name: '', description: '' },
   rename_file: { new_file_name: '' },
   select_file_in_folder: { file_name: '' },
-  llm_value_output: { prompt: '', value_name: '', value_type: 'string' },
   bind_param: { parameter: '' },
   collect_mount_dirs: {},
-  code_r: { code: '' },
-  code_python: { code: '' },
+  code_R: { code: '' },
+  code_python: { code: '', dependencies: [] },
   code_bash: { code: '' },
   downstream_summary: { prompt: '' },
   note: { content: '' },
@@ -151,6 +152,11 @@ export const menuData: Record<string, MenuGroup> = {
     items: [
       { type: 'value_string', labelKey: 'text_input', Icon: CaseSensitiveIcon },
       { type: 'resource_file', labelKey: 'file_input', Icon: FileInputIcon },
+      {
+        type: 'resource_text_file',
+        labelKey: 'text_file_input',
+        Icon: FilePenIcon,
+      },
       { type: 'resource_sequence', labelKey: 'sequence_input', Icon: DnaIcon },
       { type: 'resource_db', labelKey: 'database', Icon: DatabaseIcon },
       {
@@ -175,7 +181,7 @@ export const menuData: Record<string, MenuGroup> = {
     submenuType: 'inline',
     items: [
       { type: 'code_bash', labelKey: 'code_bash', Icon: CodeIcon },
-      { type: 'code_r', labelKey: 'code_r', Icon: CodeIcon },
+      { type: 'code_R', labelKey: 'code_r', Icon: CodeIcon },
       { type: 'code_python', labelKey: 'code_python', Icon: CodeIcon },
       {
         type: 'downstream_summary',
@@ -195,10 +201,10 @@ export const menuData: Record<string, MenuGroup> = {
         labelKey: 'select_file_in_folder',
         Icon: FolderOutputIcon,
       },
-      { type: 'gzip', labelKey: 'gzip', Icon: FileArchiveIcon },
+      { type: 'compress', labelKey: 'compress', Icon: FileArchiveIcon },
+      { type: 'decompress', labelKey: 'decompress', Icon: FileArchiveIcon },
       { type: 'rename_file', labelKey: 'rename_file', Icon: FilePenIcon },
       { type: 'global_mark', labelKey: 'global_marker', Icon: TagIcon },
-      { type: 'llm_value_output', labelKey: 'llm_value_output', Icon: BotIcon },
       { type: 'bind_param', labelKey: 'bind_param', Icon: TagIcon },
       {
         type: 'collect_mount_dirs',

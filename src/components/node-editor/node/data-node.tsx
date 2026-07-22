@@ -7,14 +7,6 @@ import { colorSchemes } from '@/components/node-editor/node/color'
 import { useReadOnly } from '@/components/node-editor/read-only-context'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
 import type { HandleDefine } from '@/types/node'
 
 const COPY2FOLDER_HANDLES = {
@@ -43,14 +35,8 @@ const Copy2FolderCard = memo(function Copy2FolderCard() {
     nodeData?.data.folder_name ?? '',
   )
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: no need
   useEffect(() => {
-    if (
-      nodeData?.data.folder_name !== undefined &&
-      nodeData.data.folder_name !== folder_name
-    ) {
-      setFolderName(nodeData.data.folder_name)
-    }
+    setFolderName(nodeData?.data.folder_name ?? '')
   }, [nodeData?.data.folder_name])
 
   const saveNodeData = useCallback(() => {
@@ -87,28 +73,91 @@ const Copy2FolderNode = memo(function Copy2FolderNode() {
   )
 })
 
-const GZIP_HANDLES = {
+const COMPRESS_HANDLES = {
   inputs: [
     {
-      name: 'file',
-      description: 'File to be compressed',
+      name: 'input_path',
+      description: 'File or directory to compress',
     },
   ] as HandleDefine[],
   outputs: [
     {
-      name: 'zipped_file',
-      description: 'Gzip compressed file',
+      name: 'compressed_path',
+      description: 'Generated compressed file',
     },
   ] as HandleDefine[],
 }
 
-const GzipNode = memo(function GzipNode() {
+const CompressCard = memo(function CompressCard() {
+  const readOnly = useReadOnly()
+  const nodeId = useNodeId() ?? ''
+  const nodeData =
+    useNodesData<Node<{ compressed_file_name: string }, 'compress'>>(nodeId)
+  const { updateNodeData } = useReactFlow()
+
+  const [fileName, setFileName] = useState(
+    nodeData?.data.compressed_file_name ?? '',
+  )
+
+  useEffect(() => {
+    setFileName(nodeData?.data.compressed_file_name ?? '')
+  }, [nodeData?.data.compressed_file_name])
+
+  const saveNodeData = useCallback(() => {
+    updateNodeData(nodeId, { compressed_file_name: fileName })
+  }, [fileName, nodeId, updateNodeData])
+
+  return (
+    <div className='p-3'>
+      <Label className='pb-2 font-medium'>Compressed File Name:</Label>
+      <Input
+        className='w-full border-input focus-visible:ring-ring'
+        placeholder='e.g. results.tar.gz'
+        value={fileName}
+        onChange={(event) => setFileName(event.target.value)}
+        onBlur={saveNodeData}
+        spellCheck={false}
+        disabled={readOnly}
+      />
+    </div>
+  )
+})
+
+const CompressNode = memo(function CompressNode() {
+  const nodeComponent = useMemo(() => <CompressCard />, [])
+  return (
+    <BaseNode
+      title='Compress'
+      description='Compress a file or directory using the format selected by the output file suffix.'
+      handles={COMPRESS_HANDLES}
+      color={colorSchemes.orange}
+      nodeComponent={nodeComponent}
+    />
+  )
+})
+
+const DECOMPRESS_HANDLES = {
+  inputs: [
+    {
+      name: 'compressed_path',
+      description: 'Compressed file or archive',
+    },
+  ] as HandleDefine[],
+  outputs: [
+    {
+      name: 'output_path',
+      description: 'Decompressed file or extracted directory',
+    },
+  ] as HandleDefine[],
+}
+
+const DecompressNode = memo(function DecompressNode() {
   const nodeComponent = useMemo(() => <div />, [])
   return (
     <BaseNode
-      title='Gzip'
-      description='Compress a file using gzip.'
-      handles={GZIP_HANDLES}
+      title='Decompress'
+      description='Automatically detect and decompress a supported file or archive.'
+      handles={DECOMPRESS_HANDLES}
       color={colorSchemes.orange}
       nodeComponent={nodeComponent}
     />
@@ -135,14 +184,8 @@ const RenameFileCard = memo(function RenameFileCard() {
     nodeData?.data.new_file_name ?? '',
   )
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: no need
   useEffect(() => {
-    if (
-      nodeData?.data.new_file_name !== undefined &&
-      nodeData.data.new_file_name !== newFileName
-    ) {
-      setNewFileName(nodeData.data.new_file_name)
-    }
+    setNewFileName(nodeData?.data.new_file_name ?? '')
   }, [nodeData?.data.new_file_name])
 
   const saveNodeData = useCallback(() => {
@@ -204,25 +247,12 @@ const GlobalFileCard = memo(function GlobalFileCard() {
     nodeData?.data.description ?? '',
   )
 
-  // 同步外部数据变化
-  // biome-ignore lint/correctness/useExhaustiveDependencies: no need
   useEffect(() => {
-    if (
-      nodeData?.data.mark_name !== undefined &&
-      nodeData.data.mark_name !== mark_name
-    ) {
-      setMarkName(nodeData.data.mark_name)
-    }
+    setMarkName(nodeData?.data.mark_name ?? '')
   }, [nodeData?.data.mark_name])
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: no need
   useEffect(() => {
-    if (
-      nodeData?.data.description !== undefined &&
-      nodeData.data.description !== description
-    ) {
-      setDescription(nodeData.data.description)
-    }
+    setDescription(nodeData?.data.description ?? '')
   }, [nodeData?.data.description])
 
   const saveNodeData = useCallback(() => {
@@ -292,14 +322,8 @@ const SelectFileInFolderCard = memo(function SelectFileInFolderCard() {
     nodeData?.data.file_name ?? '',
   )
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: no need
   useEffect(() => {
-    if (
-      nodeData?.data.file_name !== undefined &&
-      nodeData.data.file_name !== file_name
-    ) {
-      setFileName(nodeData.data.file_name)
-    }
+    setFileName(nodeData?.data.file_name ?? '')
   }, [nodeData?.data.file_name])
 
   const saveNodeData = useCallback(() => {
@@ -335,132 +359,6 @@ const SelectFileInFolderNode = memo(function SelectFileInFolderNode() {
   )
 })
 
-const LLM_VALUE_OUTPUT_HANDLES = {
-  inputs: [
-    { name: 'file', description: 'Input file to process' },
-  ] as HandleDefine[],
-  outputs: [
-    { name: 'value', description: 'Extracted value from the file' },
-  ] as HandleDefine[],
-}
-
-type ValueType = 'string' | 'number'
-
-const LlmValueOutputCard = memo(function LlmValueOutputCard() {
-  const readOnly = useReadOnly()
-  const nodeId = useNodeId() ?? ''
-  const nodeData =
-    useNodesData<
-      Node<
-        { prompt: string; value_name: string; value_type: ValueType },
-        'llm_value_output'
-      >
-    >(nodeId)
-  const { updateNodeData } = useReactFlow()
-
-  const [prompt, setPrompt] = useState<string>(nodeData?.data.prompt ?? '')
-  const [value_name, setValueName] = useState<string>(
-    nodeData?.data.value_name ?? '',
-  )
-  const [value_type, setValueType] = useState<ValueType>(
-    nodeData?.data.value_type ?? 'string',
-  )
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: no need
-  useEffect(() => {
-    if (
-      nodeData?.data.prompt !== undefined &&
-      nodeData.data.prompt !== prompt
-    ) {
-      setPrompt(nodeData.data.prompt)
-    }
-  }, [nodeData?.data.prompt])
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: no need
-  useEffect(() => {
-    if (
-      nodeData?.data.value_name !== undefined &&
-      nodeData.data.value_name !== value_name
-    ) {
-      setValueName(nodeData.data.value_name)
-    }
-  }, [nodeData?.data.value_name])
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: no need
-  useEffect(() => {
-    if (
-      nodeData?.data.value_type !== undefined &&
-      nodeData.data.value_type !== value_type
-    ) {
-      setValueType(nodeData.data.value_type)
-    }
-  }, [nodeData?.data.value_type])
-
-  const saveNodeData = useCallback(() => {
-    updateNodeData(nodeId, { prompt, value_name, value_type })
-  }, [nodeId, prompt, value_name, value_type, updateNodeData])
-
-  const handleValueTypeChange = useCallback(
-    (val: ValueType) => {
-      setValueType(val)
-      updateNodeData(nodeId, { prompt, value_name, value_type: val })
-    },
-    [nodeId, prompt, value_name, updateNodeData],
-  )
-
-  return (
-    <div className='p-3'>
-      <Label className='pb-2 font-medium'>Prompt:</Label>
-      <Textarea
-        className='w-full border-input focus-visible:ring-ring'
-        placeholder='Enter prompt...'
-        value={prompt}
-        onChange={(e) => setPrompt(e.target.value)}
-        onBlur={saveNodeData}
-        spellCheck={false}
-        disabled={readOnly}
-      />
-      <Label className='pt-4 pb-2 font-medium'>Value Name:</Label>
-      <Input
-        className='w-full border-input focus-visible:ring-ring'
-        placeholder='Enter value name...'
-        value={value_name}
-        onChange={(e) => setValueName(e.target.value)}
-        onBlur={saveNodeData}
-        spellCheck={false}
-        disabled={readOnly}
-      />
-      <Label className='pt-4 pb-2 font-medium'>Value Type:</Label>
-      <Select
-        value={value_type}
-        onValueChange={handleValueTypeChange}
-        disabled={readOnly}
-      >
-        <SelectTrigger className='w-full'>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value='string'>string</SelectItem>
-          <SelectItem value='number'>number</SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
-  )
-})
-
-const LlmValueOutputNode = memo(function LlmValueOutputNode() {
-  const nodeComponent = useMemo(() => <LlmValueOutputCard />, [])
-  return (
-    <BaseNode
-      title='LLM Value Output'
-      description='Use an LLM to extract a named value from a file.'
-      handles={LLM_VALUE_OUTPUT_HANDLES}
-      color={colorSchemes.orange}
-      nodeComponent={nodeComponent}
-    />
-  )
-})
-
 const BIND_PARAM_HANDLES = {
   inputs: [
     { name: 'file', description: 'Input file to bind parameter to' },
@@ -481,14 +379,8 @@ const BindParamCard = memo(function BindParamCard() {
     nodeData?.data.parameter ?? '',
   )
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: no need
   useEffect(() => {
-    if (
-      nodeData?.data.parameter !== undefined &&
-      nodeData.data.parameter !== parameter
-    ) {
-      setParameter(nodeData.data.parameter)
-    }
+    setParameter(nodeData?.data.parameter ?? '')
   }, [nodeData?.data.parameter])
 
   const saveNodeData = useCallback(() => {
@@ -539,7 +431,7 @@ const COLLECT_MOUNT_DIR_HANDLES = {
   ] as HandleDefine[],
 }
 
-const CollectMountDirNode = memo(function GzipNode() {
+const CollectMountDirNode = memo(function CollectMountDirNode() {
   const nodeComponent = useMemo(() => <div />, [])
   return (
     <BaseNode
@@ -554,11 +446,11 @@ const CollectMountDirNode = memo(function GzipNode() {
 
 export {
   Copy2FolderNode,
-  GzipNode,
+  CompressNode,
+  DecompressNode,
   RenameFileNode,
   GlobalMarkerNode,
   SelectFileInFolderNode,
-  LlmValueOutputNode,
   BindParamNode,
   CollectMountDirNode,
 }
