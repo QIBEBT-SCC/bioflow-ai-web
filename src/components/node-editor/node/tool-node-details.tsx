@@ -1,18 +1,22 @@
 'use client'
 
 import {
+  ExternalLinkIcon,
   FileInputIcon,
   FileOutputIcon,
   RefreshCwIcon,
   TerminalIcon,
 } from 'lucide-react'
+import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { CopyButton } from '@/components/ui/copy-button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useAuth } from '@/hooks/use-auth-query'
 import { useTool } from '@/hooks/use-tool'
+import { UserRole } from '@/types/auth'
 import type { FileMount } from '@/types/tool'
 
 function FileMountItem({ file }: { file: FileMount }) {
@@ -107,6 +111,7 @@ function ToolDetailsSkeleton() {
 
 export function ToolNodeDetails({ toolUid }: { toolUid: string }) {
   const t = useTranslations('editor.tool_node.details')
+  const { user } = useAuth()
   const { data: tool, isLoading, isError, refetch } = useTool(toolUid)
 
   if (isLoading) return <ToolDetailsSkeleton />
@@ -133,6 +138,15 @@ export function ToolNodeDetails({ toolUid }: { toolUid: string }) {
 
   return (
     <div className='min-h-0 flex-1 space-y-6 overflow-y-auto px-4 pb-6'>
+      {user && user.role >= UserRole.ADMIN && (
+        <Button variant='outline' size='sm' className='w-full' asChild>
+          <Link href={`/tool/${toolUid}`}>
+            <ExternalLinkIcon className='size-3.5' />
+            {t('viewToolDetails')}
+          </Link>
+        </Button>
+      )}
+
       <section className='space-y-3'>
         <div>
           <h3 className='flex items-center gap-2 font-semibold text-sm'>

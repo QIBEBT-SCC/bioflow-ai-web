@@ -78,7 +78,8 @@
         "noOutputFiles": "No output file mounts",
         "noCommand": "No complete command available",
         "loadError": "Failed to load tool details",
-        "retry": "Retry"
+        "retry": "Retry",
+        "viewToolDetails": "Open Tool Details"
       }
     },
     "load_workflow_dialog": {
