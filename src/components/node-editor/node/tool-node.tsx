@@ -9,11 +9,13 @@ import {
   useNodesData,
   useReactFlow,
 } from '@xyflow/react'
+import { ShieldAlertIcon, ShieldCheckIcon, UserRoundIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import { BaseNode } from '@/components/node-editor/node/base-node'
 import { colorSchemes } from '@/components/node-editor/node/color'
 import { useReadOnly } from '@/components/node-editor/read-only-context'
+import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useToolArg } from '@/hooks/use-tool'
@@ -21,6 +23,27 @@ import { cn } from '@/lib/utils'
 import type { RunData } from '@/types/run'
 
 const OUTPUT_FOLDER_HANDLE_NAME = 'workdir'
+
+const toolCategoryConfig = {
+  aiChecked: {
+    label: 'AI Checked',
+    icon: ShieldCheckIcon,
+    className:
+      'border-green-200 bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800',
+  },
+  aiUnchecked: {
+    label: 'AI Unchecked',
+    icon: ShieldAlertIcon,
+    className:
+      'border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 hover:text-amber-800',
+  },
+  userCustom: {
+    label: 'User custom',
+    icon: UserRoundIcon,
+    className:
+      'border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800',
+  },
+} as const
 
 const ToolOutputFolderHandle = memo(function ToolOutputFolderHandle() {
   const nodeId = useNodeId() ?? ''
@@ -108,12 +131,19 @@ export const ToolNode = memo(function ToolNode() {
 
   const immutableParams = toolData?.immutable_static_params ?? ''
   const hasImmutableParams = immutableParams.trim().length > 0
+  const toolCategory = toolData?.tags.some((tag) => tag.name === 'AI Checked')
+    ? toolCategoryConfig.aiChecked
+    : toolData?.tags.some((tag) => tag.name === 'AI Unchecked')
+      ? toolCategoryConfig.aiUnchecked
+      : toolCategoryConfig.userCustom
+  const ToolCategoryIcon = toolCategory.icon
 
   if (isLoading)
     return (
       <BaseNode
         title='--'
         description='--'
+        detailsTrigger={null}
         handles={handles}
         color={colorSchemes.pink}
         nodeComponent={
@@ -151,6 +181,21 @@ export const ToolNode = memo(function ToolNode() {
     <BaseNode
       title={toolData?.name ?? '--'}
       description={toolData?.description ?? ''}
+      detailsTrigger={
+        <Button
+          type='button'
+          variant='outline'
+          aria-label={`Open ${toolCategory.label} tool details`}
+          title={toolCategory.label}
+          className={cn(
+            'nodrag h-5 shrink-0 gap-1 rounded-full px-1.5 text-[10px] shadow-none',
+            toolCategory.className,
+          )}
+        >
+          <ToolCategoryIcon className='size-3' />
+          {toolCategory.label}
+        </Button>
+      }
       handles={handles}
       color={colorSchemes.pink}
       runData={nodeData?.data.run_data}

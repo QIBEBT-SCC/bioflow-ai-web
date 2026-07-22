@@ -39,6 +39,7 @@ const calculateTopPos = (index: number): number => {
 interface BaseNodeProps {
   title: string
   description: string
+  detailsTrigger?: React.ReactElement | null
   handles: {
     inputs: HandleDefine[]
     outputs: HandleDefine[]
@@ -56,6 +57,7 @@ interface BaseNodeProps {
 const BaseNode = memo(function BaseNode({
   title,
   description,
+  detailsTrigger,
   handles,
   color,
   nodeComponent,
@@ -165,17 +167,25 @@ const BaseNode = memo(function BaseNode({
     }),
     [maxRows],
   )
+  const usesCustomDetailsTrigger = detailsTrigger !== undefined
 
   return (
     <NodeCard className={cn('border-t-4', color.border)}>
       <NodeCardHeader className={cn(color.bg, 'border-b border-border/50')}>
-        <NodeTitle className={color.primary}>{title}</NodeTitle>
         <Sheet>
-          <SheetTrigger asChild>
-            <Button className='text-muted-foreground/70 transition-colors bg-transparent! hover:text-foreground'>
-              <InfoIcon className='size-3.5' />
-            </Button>
-          </SheetTrigger>
+          <div className='flex min-w-0 items-center gap-2'>
+            <NodeTitle className={color.primary}>{title}</NodeTitle>
+            {detailsTrigger && (
+              <SheetTrigger asChild>{detailsTrigger}</SheetTrigger>
+            )}
+          </div>
+          {!usesCustomDetailsTrigger && (
+            <SheetTrigger asChild>
+              <Button className='text-muted-foreground/70 transition-colors bg-transparent! hover:text-foreground'>
+                <InfoIcon className='size-3.5' />
+              </Button>
+            </SheetTrigger>
+          )}
           <SheetContent>
             <SheetHeader>
               <SheetTitle>{title}</SheetTitle>
@@ -241,7 +251,12 @@ const NodeTitle = memo(function NodeTitle({
   ...props
 }: React.ComponentProps<'div'>) {
   // 字体加粗，颜色加深
-  return <span className={cn('font-semibold text-sm', className)} {...props} />
+  return (
+    <span
+      className={cn('min-w-0 truncate font-semibold text-sm', className)}
+      {...props}
+    />
+  )
 })
 
 const NodeCardContent = memo(function NodeCardContent({
