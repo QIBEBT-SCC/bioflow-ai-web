@@ -1,5 +1,7 @@
 import type { User } from '@/types/auth'
 
+export type ProjectSort = 'recent' | 'nameAsc' | 'nameDesc'
+
 export interface ProjectTagProp {
   name: string
   color: string

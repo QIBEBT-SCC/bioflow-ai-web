@@ -17,6 +17,7 @@ import type {
   PaginatedProjects,
   ProjectCreateProp,
   ProjectPublic,
+  ProjectSort,
   ProjectTagProp,
   ProjectUpdateProp,
   TagWithCount,
@@ -31,10 +32,11 @@ export function useProjects(
   offset: number = 0,
   limit: number = 20,
   filter?: string,
+  sort: ProjectSort = 'recent',
 ) {
   return useQuery<PaginatedProjects>({
-    queryKey: ['projects', offset, limit, filter],
-    queryFn: () => getProjects(offset, limit, filter),
+    queryKey: ['projects', offset, limit, filter, sort],
+    queryFn: () => getProjects(offset, limit, filter, sort),
     staleTime: 30 * 1000,
   })
 }

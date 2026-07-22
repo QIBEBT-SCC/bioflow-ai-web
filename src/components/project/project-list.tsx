@@ -52,9 +52,9 @@ import {
   useUnstarProject,
 } from '@/hooks/use-project'
 import { colorClassMap } from '@/types/color'
-import type { ProjectPublic } from '@/types/project'
+import type { ProjectPublic, ProjectSort } from '@/types/project'
 
-export type ProjectSort = 'recent' | 'nameAsc' | 'nameDesc'
+export type { ProjectSort } from '@/types/project'
 export type ProjectViewMode = 'list' | 'grid'
 
 function formatDateTime(dateStr: string | undefined, locale: string) {
@@ -71,12 +71,10 @@ function formatDateTime(dateStr: string | undefined, locale: string) {
 function ProjectTable({
   projects,
   search,
-  sort,
   viewMode,
 }: {
   projects: ProjectPublic[]
   search: string
-  sort: ProjectSort
   viewMode: ProjectViewMode
 }) {
   const locale = useLocale()
@@ -94,7 +92,7 @@ function ProjectTable({
 
   const visibleProjects = useMemo(() => {
     const keyword = search.trim().toLowerCase()
-    const filtered = keyword
+    return keyword
       ? projects.filter((project) =>
           [
             project.name,
@@ -106,15 +104,7 @@ function ProjectTable({
             .includes(keyword),
         )
       : projects
-
-    return [...filtered].sort((a, b) => {
-      if (sort === 'nameAsc') return a.name.localeCompare(b.name)
-      if (sort === 'nameDesc') return b.name.localeCompare(a.name)
-      return (
-        new Date(b.update_time).getTime() - new Date(a.update_time).getTime()
-      )
-    })
-  }, [projects, search, sort])
+  }, [projects, search])
 
   const handleStar = (project: ProjectPublic) => {
     if (project.starred) {
@@ -238,7 +228,7 @@ function ProjectTable({
                   {t('lastUpdated')}
                 </div>
               </TableHead>
-              <TableHead className='h-12 w-12'>
+              <TableHead className='size-12'>
                 <span className='sr-only'>{tActions('label')}</span>
               </TableHead>
             </TableRow>
@@ -415,6 +405,7 @@ function PaginatedProjectTable({
     offset,
     itemsPerPage,
     filter,
+    sort,
   )
   const projects = projectPage?.data ?? []
   const totalCount = projectPage?.total ?? 0
@@ -430,12 +421,7 @@ function PaginatedProjectTable({
 
   return (
     <div className='space-y-4'>
-      <ProjectTable
-        projects={projects}
-        search={search}
-        sort={sort}
-        viewMode={viewMode}
-      />
+      <ProjectTable projects={projects} search={search} viewMode={viewMode} />
       <ImagePagination
         currentPage={currentPage}
         totalPages={totalPages}
@@ -450,7 +436,13 @@ export function AllProjectTable(props: {
   sort?: ProjectSort
   viewMode?: ProjectViewMode
 }) {
-  return <PaginatedProjectTable filter='all' {...props} />
+  return (
+    <PaginatedProjectTable
+      key={props.sort ?? 'recent'}
+      filter='all'
+      {...props}
+    />
+  )
 }
 
 export function StarredProjectTable(props: {
@@ -458,7 +450,13 @@ export function StarredProjectTable(props: {
   sort?: ProjectSort
   viewMode?: ProjectViewMode
 }) {
-  return <PaginatedProjectTable filter='starred' {...props} />
+  return (
+    <PaginatedProjectTable
+      key={props.sort ?? 'recent'}
+      filter='starred'
+      {...props}
+    />
+  )
 }
 
 export function MyProjectTable(props: {
@@ -466,7 +464,13 @@ export function MyProjectTable(props: {
   sort?: ProjectSort
   viewMode?: ProjectViewMode
 }) {
-  return <PaginatedProjectTable filter='my' {...props} />
+  return (
+    <PaginatedProjectTable
+      key={props.sort ?? 'recent'}
+      filter='my'
+      {...props}
+    />
+  )
 }
 
 export function RecentProjectCard() {

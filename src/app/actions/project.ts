@@ -3,6 +3,7 @@ import type {
   PaginatedProjects,
   ProjectCreateProp,
   ProjectPublic,
+  ProjectSort,
   ProjectTag,
   ProjectTagProp,
   ProjectUpdateProp,
@@ -16,10 +17,12 @@ export async function getProjects(
   offset: number = 0,
   limit: number = 20,
   filter?: string,
+  sort: ProjectSort = 'recent',
 ): Promise<PaginatedProjects> {
   const params: Record<string, string> = {
     offset: String(offset),
     limit: String(limit),
+    sort,
   }
   if (filter) {
     params.filter = filter
