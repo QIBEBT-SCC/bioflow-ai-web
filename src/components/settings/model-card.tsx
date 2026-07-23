@@ -9,23 +9,33 @@ import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { Textarea } from '@/components/ui/textarea'
 import { useDeleteLLMModel, useUpdateLLMModel } from '@/hooks/use-setting'
-import type { LLMModelPublic, LLMModelUpdate } from '@/types/setting'
+import type {
+  LLMModelPublic,
+  LLMModelUpdate,
+  ProviderType,
+} from '@/types/setting'
+import { ReasoningEffortSelect } from './reasoning-effort-select'
 
 interface ModelCardProps {
   model: LLMModelPublic
+  providerType: ProviderType
+  providerName: string
+  providerBaseUrl?: string
 }
 
-export function ModelCard({ model }: ModelCardProps) {
+export function ModelCard({
+  model,
+  providerType,
+  providerName,
+  providerBaseUrl,
+}: ModelCardProps) {
   const t = useTranslations('setting.llm_setting')
   const updateModelMutation = useUpdateLLMModel()
   const deleteModelMutation = useDeleteLLMModel()
 
   const [isEditing, setIsEditing] = useState(false)
   const [draft, setDraft] = useState<LLMModelUpdate | null>(null)
-  const [extraBodyText, setExtraBodyText] = useState('')
-  const [extraBodyError, setExtraBodyError] = useState(false)
 
   const startEditing = () => {
     setDraft({
@@ -34,32 +44,17 @@ export function ModelCard({ model }: ModelCardProps) {
       input_price: model.input_price,
       output_price: model.output_price,
       cache_read_price: model.cache_read_price,
-      extra_body: model.extra_body,
+      reasoning_effort: model.reasoning_effort,
       is_active: model.is_active,
     })
-    setExtraBodyText(
-      Object.keys(model.extra_body).length > 0
-        ? JSON.stringify(model.extra_body, null, 2)
-        : '',
-    )
-    setExtraBodyError(false)
     setIsEditing(true)
   }
 
   const saveModel = async () => {
     if (!draft) return
-    let parsedExtraBody = {}
-    if (extraBodyText.trim()) {
-      try {
-        parsedExtraBody = JSON.parse(extraBodyText)
-      } catch {
-        setExtraBodyError(true)
-        return
-      }
-    }
     await updateModelMutation.mutateAsync({
       id: model.id,
-      data: { ...draft, extra_body: parsedExtraBody },
+      data: draft,
     })
     setIsEditing(false)
     setDraft(null)
@@ -68,7 +63,6 @@ export function ModelCard({ model }: ModelCardProps) {
   const cancelEdit = () => {
     setIsEditing(false)
     setDraft(null)
-    setExtraBodyError(false)
   }
 
   const deleteModel = async () => {
@@ -251,31 +245,33 @@ export function ModelCard({ model }: ModelCardProps) {
                   }
                 />
               </div>
+              <div className='space-y-1'>
+                <Label
+                  htmlFor={`reasoning-effort-${model.id}`}
+                  className='text-xs'
+                >
+                  {t('reasoning_effort')}
+                </Label>
+                <ReasoningEffortSelect
+                  id={`reasoning-effort-${model.id}`}
+                  providerType={providerType}
+                  providerName={providerName}
+                  providerBaseUrl={providerBaseUrl}
+                  value={draft?.reasoning_effort}
+                  onValueChange={(reasoningEffort) =>
+                    updateDraft('reasoning_effort', reasoningEffort)
+                  }
+                  className='h-8 w-full bg-background text-xs'
+                />
+              </div>
             </div>
-            <div className='space-y-1'>
-              <Label htmlFor={`extra-body-${model.id}`} className='text-xs'>
-                {t('extra_body')}
-              </Label>
-              <Textarea
-                id={`extra-body-${model.id}`}
-                value={extraBodyText}
-                onChange={(e) => {
-                  setExtraBodyText(e.target.value)
-                  setExtraBodyError(false)
-                }}
-                placeholder='{}'
-                className='font-mono text-xs bg-background min-h-[80px] resize-y'
-              />
-              {extraBodyError && (
-                <p className='text-xs text-destructive'>
-                  {t('extra_body_invalid')}
-                </p>
-              )}
-            </div>
+            <p className='text-xs text-muted-foreground'>
+              {t('reasoning_effort_desc')}
+            </p>
           </div>
         ) : (
           <div className='space-y-3 text-sm'>
-            <div className='grid grid-cols-2 md:grid-cols-3 gap-4'>
+            <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
               <div className='space-y-1'>
                 <p className='text-xs text-muted-foreground'>Input Price</p>
                 <p className='font-medium'>${model.input_price}/1M tokens</p>
@@ -292,17 +288,17 @@ export function ModelCard({ model }: ModelCardProps) {
                   ${model.cache_read_price}/1M tokens
                 </p>
               </div>
-            </div>
-            {Object.keys(model.extra_body).length > 0 && (
               <div className='space-y-1'>
                 <p className='text-xs text-muted-foreground'>
-                  {t('extra_body')}
+                  {t('reasoning_effort')}
                 </p>
-                <pre className='text-xs font-mono bg-muted rounded p-2 overflow-x-auto'>
-                  {JSON.stringify(model.extra_body, null, 2)}
-                </pre>
+                <p className='font-medium'>
+                  {model.reasoning_effort
+                    ? t(`reasoning_effort_${model.reasoning_effort}`)
+                    : t('reasoning_effort_default')}
+                </p>
               </div>
-            )}
+            </div>
           </div>
         )}
       </div>

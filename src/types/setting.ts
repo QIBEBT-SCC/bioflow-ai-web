@@ -1,5 +1,13 @@
 // ==================== LLMProvider Schemas ====================
 export type ProviderType = 'openai' | 'anthropic' | 'google'
+export type ReasoningEffort =
+  | 'none'
+  | 'minimal'
+  | 'low'
+  | 'medium'
+  | 'high'
+  | 'xhigh'
+  | 'max'
 
 export interface LLMProviderCreate {
   name: string
@@ -38,8 +46,7 @@ export interface LLMModelCreate {
   input_price: number
   output_price: number
   cache_read_price: number
-  // biome-ignore lint/suspicious/noExplicitAny: no need
-  extra_body?: Record<string, any>
+  reasoning_effort?: ReasoningEffort | null
   is_active?: boolean
 }
 
@@ -49,8 +56,7 @@ export interface LLMModelUpdate {
   input_price?: number
   output_price?: number
   cache_read_price?: number
-  // biome-ignore lint/suspicious/noExplicitAny: no need
-  extra_body?: Record<string, any>
+  reasoning_effort?: ReasoningEffort | null
   is_active?: boolean
 }
 
@@ -62,8 +68,7 @@ export interface LLMModelPublic {
   input_price: number
   output_price: number
   cache_read_price: number
-  // biome-ignore lint/suspicious/noExplicitAny: no need
-  extra_body: Record<string, any>
+  reasoning_effort: ReasoningEffort | null
   is_active: boolean
 }
 

@@ -16,13 +16,15 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { Textarea } from '@/components/ui/textarea'
 import { useCreateLLMModel } from '@/hooks/use-setting'
-import type { LLMModelCreate } from '@/types/setting'
+import type { LLMModelCreate, ProviderType } from '@/types/setting'
+import { ReasoningEffortSelect } from './reasoning-effort-select'
 
 interface AddModelDialogProps {
   providerId: number
   providerName: string
+  providerType: ProviderType
+  providerBaseUrl?: string
 }
 
 const defaultModel: Omit<LLMModelCreate, 'provider_id'> = {
@@ -31,13 +33,15 @@ const defaultModel: Omit<LLMModelCreate, 'provider_id'> = {
   input_price: 0,
   output_price: 0,
   cache_read_price: 0,
-  extra_body: {},
+  reasoning_effort: null,
   is_active: true,
 }
 
 export function AddModelDialog({
   providerId,
   providerName,
+  providerType,
+  providerBaseUrl,
 }: AddModelDialogProps) {
   const t = useTranslations('setting.llm_setting')
   const createModelMutation = useCreateLLMModel()
@@ -45,19 +49,8 @@ export function AddModelDialog({
   const [open, setOpen] = useState(false)
   const [newModel, setNewModel] =
     useState<Omit<LLMModelCreate, 'provider_id'>>(defaultModel)
-  const [extraBodyText, setExtraBodyText] = useState('')
-  const [extraBodyError, setExtraBodyError] = useState(false)
 
   const handleAdd = async () => {
-    let parsedExtraBody = {}
-    if (extraBodyText.trim()) {
-      try {
-        parsedExtraBody = JSON.parse(extraBodyText)
-      } catch {
-        setExtraBodyError(true)
-        return
-      }
-    }
     await createModelMutation.mutateAsync({
       provider_id: providerId,
       display_name: newModel.display_name,
@@ -65,13 +58,11 @@ export function AddModelDialog({
       input_price: Number(newModel.input_price),
       output_price: Number(newModel.output_price),
       cache_read_price: Number(newModel.cache_read_price),
-      extra_body: parsedExtraBody,
+      reasoning_effort: newModel.reasoning_effort,
       is_active: newModel.is_active,
     })
     setOpen(false)
     setNewModel(defaultModel)
-    setExtraBodyText('')
-    setExtraBodyError(false)
   }
 
   return (
@@ -165,24 +156,25 @@ export function AddModelDialog({
             </div>
           </div>
           <div className='space-y-2'>
-            <Label htmlFor='new-model-extra-body'>{t('extra_body')}</Label>
-            <Textarea
-              id='new-model-extra-body'
-              value={extraBodyText}
-              onChange={(e) => {
-                setExtraBodyText(e.target.value)
-                setExtraBodyError(false)
-              }}
-              placeholder='{}'
-              className='font-mono text-sm min-h-[80px] resize-y'
+            <Label htmlFor='new-model-reasoning-effort'>
+              {t('reasoning_effort')}
+            </Label>
+            <ReasoningEffortSelect
+              id='new-model-reasoning-effort'
+              providerType={providerType}
+              providerName={providerName}
+              providerBaseUrl={providerBaseUrl}
+              value={newModel.reasoning_effort}
+              onValueChange={(reasoningEffort) =>
+                setNewModel((prev) => ({
+                  ...prev,
+                  reasoning_effort: reasoningEffort,
+                }))
+              }
+              className='w-full'
             />
-            {extraBodyError && (
-              <p className='text-xs text-destructive'>
-                {t('extra_body_invalid')}
-              </p>
-            )}
             <p className='text-xs text-muted-foreground'>
-              {t('extra_body_desc')}
+              {t('reasoning_effort_desc')}
             </p>
           </div>
           <div className='flex items-center justify-between'>
