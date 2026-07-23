@@ -30,11 +30,12 @@ interface AddModelDialogProps {
 const defaultModel: Omit<LLMModelCreate, 'provider_id'> = {
   display_name: '',
   name: '',
-  input_price: 0,
-  output_price: 0,
-  cache_read_price: 0,
   reasoning_effort: null,
   is_active: true,
+}
+
+function parseOptionalPrice(value: string): number | undefined {
+  return value === '' ? undefined : Number(value)
 }
 
 export function AddModelDialog({
@@ -55,9 +56,9 @@ export function AddModelDialog({
       provider_id: providerId,
       display_name: newModel.display_name,
       name: newModel.name,
-      input_price: Number(newModel.input_price),
-      output_price: Number(newModel.output_price),
-      cache_read_price: Number(newModel.cache_read_price),
+      input_price: newModel.input_price,
+      output_price: newModel.output_price,
+      cache_read_price: newModel.cache_read_price,
       reasoning_effort: newModel.reasoning_effort,
       is_active: newModel.is_active,
     })
@@ -115,11 +116,11 @@ export function AddModelDialog({
                 id='new-model-input'
                 type='number'
                 step='0.0001'
-                value={newModel.input_price}
+                value={newModel.input_price ?? ''}
                 onChange={(e) =>
                   setNewModel((prev) => ({
                     ...prev,
-                    input_price: Number(e.target.value),
+                    input_price: parseOptionalPrice(e.target.value),
                   }))
                 }
               />
@@ -130,11 +131,11 @@ export function AddModelDialog({
                 id='new-model-output'
                 type='number'
                 step='0.0001'
-                value={newModel.output_price}
+                value={newModel.output_price ?? ''}
                 onChange={(e) =>
                   setNewModel((prev) => ({
                     ...prev,
-                    output_price: Number(e.target.value),
+                    output_price: parseOptionalPrice(e.target.value),
                   }))
                 }
               />
@@ -145,11 +146,11 @@ export function AddModelDialog({
                 id='new-model-cache'
                 type='number'
                 step='0.0001'
-                value={newModel.cache_read_price}
+                value={newModel.cache_read_price ?? ''}
                 onChange={(e) =>
                   setNewModel((prev) => ({
                     ...prev,
-                    cache_read_price: Number(e.target.value),
+                    cache_read_price: parseOptionalPrice(e.target.value),
                   }))
                 }
               />

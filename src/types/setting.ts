@@ -43,9 +43,9 @@ export interface LLMModelCreate {
   provider_id: number
   display_name: string
   name: string
-  input_price: number
-  output_price: number
-  cache_read_price: number
+  input_price?: number
+  output_price?: number
+  cache_read_price?: number
   reasoning_effort?: ReasoningEffort | null
   is_active?: boolean
 }
