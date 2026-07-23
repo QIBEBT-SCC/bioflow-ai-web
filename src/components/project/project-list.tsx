@@ -51,11 +51,15 @@ import {
   useStarProject,
   useUnstarProject,
 } from '@/hooks/use-project'
+import { getProjectDetailHref } from '@/lib/project-navigation'
 import { colorClassMap } from '@/types/color'
-import type { ProjectPublic, ProjectSort } from '@/types/project'
+import type {
+  ProjectPublic,
+  ProjectSort,
+  ProjectViewMode,
+} from '@/types/project'
 
-export type { ProjectSort } from '@/types/project'
-export type ProjectViewMode = 'list' | 'grid'
+export type { ProjectSort, ProjectViewMode } from '@/types/project'
 
 function formatDateTime(dateStr: string | undefined, locale: string) {
   if (!dateStr) return '-'
@@ -72,10 +76,12 @@ function ProjectTable({
   projects,
   search,
   viewMode,
+  projectListHref,
 }: {
   projects: ProjectPublic[]
   search: string
   viewMode: ProjectViewMode
+  projectListHref: string
 }) {
   const locale = useLocale()
   const t = useTranslations('Project.list.table')
@@ -169,7 +175,7 @@ function ProjectTable({
                   </Button>
                   <div className='min-w-0 flex-1'>
                     <Link
-                      href={`/project/${project.id}`}
+                      href={getProjectDetailHref(project.id, projectListHref)}
                       className='block truncate font-medium hover:underline'
                     >
                       {project.name}
@@ -268,7 +274,7 @@ function ProjectTable({
                         <span className='sr-only'>{t('favorite')}</span>
                       </Button>
                       <Link
-                        href={`/project/${project.id}`}
+                        href={getProjectDetailHref(project.id, projectListHref)}
                         className='font-medium hover:underline'
                       >
                         {project.name}
@@ -392,13 +398,18 @@ function PaginatedProjectTable({
   search = '',
   sort = 'recent',
   viewMode = 'list',
+  currentPage,
+  onPageChange,
+  projectListHref,
 }: {
   filter: 'all' | 'starred' | 'my'
   search?: string
   sort?: ProjectSort
   viewMode?: ProjectViewMode
+  currentPage: number
+  onPageChange: (page: number) => void
+  projectListHref: string
 }) {
-  const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
   const offset = (currentPage - 1) * itemsPerPage
   const { data: projectPage, isLoading } = useProjects(
@@ -421,11 +432,16 @@ function PaginatedProjectTable({
 
   return (
     <div className='space-y-4'>
-      <ProjectTable projects={projects} search={search} viewMode={viewMode} />
+      <ProjectTable
+        projects={projects}
+        search={search}
+        viewMode={viewMode}
+        projectListHref={projectListHref}
+      />
       <ImagePagination
         currentPage={currentPage}
         totalPages={totalPages}
-        onPageChange={setCurrentPage}
+        onPageChange={onPageChange}
       />
     </div>
   )
@@ -435,42 +451,33 @@ export function AllProjectTable(props: {
   search?: string
   sort?: ProjectSort
   viewMode?: ProjectViewMode
+  currentPage: number
+  onPageChange: (page: number) => void
+  projectListHref: string
 }) {
-  return (
-    <PaginatedProjectTable
-      key={props.sort ?? 'recent'}
-      filter='all'
-      {...props}
-    />
-  )
+  return <PaginatedProjectTable filter='all' {...props} />
 }
 
 export function StarredProjectTable(props: {
   search?: string
   sort?: ProjectSort
   viewMode?: ProjectViewMode
+  currentPage: number
+  onPageChange: (page: number) => void
+  projectListHref: string
 }) {
-  return (
-    <PaginatedProjectTable
-      key={props.sort ?? 'recent'}
-      filter='starred'
-      {...props}
-    />
-  )
+  return <PaginatedProjectTable filter='starred' {...props} />
 }
 
 export function MyProjectTable(props: {
   search?: string
   sort?: ProjectSort
   viewMode?: ProjectViewMode
+  currentPage: number
+  onPageChange: (page: number) => void
+  projectListHref: string
 }) {
-  return (
-    <PaginatedProjectTable
-      key={props.sort ?? 'recent'}
-      filter='my'
-      {...props}
-    />
-  )
+  return <PaginatedProjectTable filter='my' {...props} />
 }
 
 export function RecentProjectCard() {

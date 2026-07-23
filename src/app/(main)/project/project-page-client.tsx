@@ -1,13 +1,15 @@
 'use client'
 
+import Cookies from 'js-cookie'
 import {
   ChevronDownIcon,
   Grid2X2Icon,
   ListIcon,
   SearchIcon,
 } from 'lucide-react'
+import { usePathname, useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { NewProjectDialog } from '@/components/project/new-project-dialog'
 import {
   AllProjectTable,
@@ -34,12 +36,75 @@ import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  PROJECT_SORT_COOKIE,
+  PROJECT_VIEW_COOKIE,
+} from '@/lib/project-preferences'
 
-export default function ProjectsPageClient() {
+export default function ProjectsPageClient({
+  activeTab,
+  search,
+  currentPage,
+  projectListHref,
+  initialSort,
+  initialViewMode,
+}: {
+  activeTab: 'all' | 'starred' | 'my'
+  search: string
+  currentPage: number
+  projectListHref: string
+  initialSort: ProjectSort
+  initialViewMode: ProjectViewMode
+}) {
   const t = useTranslations('Project.list')
-  const [search, setSearch] = useState('')
-  const [sort, setSort] = useState<ProjectSort>('recent')
-  const [viewMode, setViewMode] = useState<ProjectViewMode>('list')
+  const { replace } = useRouter()
+  const pathname = usePathname()
+  const [sort, setSortPreference] = useState(initialSort)
+  const [viewMode, setViewModePreference] = useState(initialViewMode)
+  const currentQuery = projectListHref.split('?')[1] ?? ''
+
+  const updateParams = useCallback(
+    (updates: Record<string, string | null>, resetPage = false) => {
+      const params = new URLSearchParams(currentQuery)
+      for (const [key, value] of Object.entries(updates)) {
+        if (value) {
+          params.set(key, value)
+        } else {
+          params.delete(key)
+        }
+      }
+      if (resetPage) params.delete('page')
+
+      const nextQuery = params.toString()
+      replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, {
+        scroll: false,
+      })
+    },
+    [currentQuery, pathname, replace],
+  )
+
+  const setActiveTab = (tab: string) =>
+    updateParams({ tab: tab === 'all' ? null : tab }, true)
+  const setSearch = (value: string) => updateParams({ q: value || null }, true)
+  const setSort = (value: ProjectSort) => {
+    setSortPreference(value)
+    Cookies.set(PROJECT_SORT_COOKIE, value, {
+      expires: 365,
+      path: '/',
+      sameSite: 'lax',
+    })
+    updateParams({}, true)
+  }
+  const setViewMode = (value: ProjectViewMode) => {
+    setViewModePreference(value)
+    Cookies.set(PROJECT_VIEW_COOKIE, value, {
+      expires: 365,
+      path: '/',
+      sameSite: 'lax',
+    })
+  }
+  const setCurrentPage = (page: number) =>
+    updateParams({ page: page > 1 ? String(page) : null })
 
   return (
     <SidebarInset className='h-screen overflow-hidden'>
@@ -72,7 +137,11 @@ export default function ProjectsPageClient() {
                   <NewProjectDialog />
                 </div>
 
-                <Tabs defaultValue='all' className='w-full'>
+                <Tabs
+                  value={activeTab}
+                  onValueChange={setActiveTab}
+                  className='w-full'
+                >
                   <div className='flex flex-col justify-between gap-4 xl:flex-row xl:items-center'>
                     <TabsList>
                       <TabsTrigger value='all'>{t('tabs.all')}</TabsTrigger>
@@ -141,6 +210,9 @@ export default function ProjectsPageClient() {
                       search={search}
                       sort={sort}
                       viewMode={viewMode}
+                      currentPage={currentPage}
+                      onPageChange={setCurrentPage}
+                      projectListHref={projectListHref}
                     />
                   </TabsContent>
                   <TabsContent value='starred' className='mt-6'>
@@ -148,6 +220,9 @@ export default function ProjectsPageClient() {
                       search={search}
                       sort={sort}
                       viewMode={viewMode}
+                      currentPage={currentPage}
+                      onPageChange={setCurrentPage}
+                      projectListHref={projectListHref}
                     />
                   </TabsContent>
                   <TabsContent value='my' className='mt-6'>
@@ -155,6 +230,9 @@ export default function ProjectsPageClient() {
                       search={search}
                       sort={sort}
                       viewMode={viewMode}
+                      currentPage={currentPage}
+                      onPageChange={setCurrentPage}
+                      projectListHref={projectListHref}
                     />
                   </TabsContent>
                 </Tabs>

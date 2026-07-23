@@ -123,6 +123,7 @@
       "actions": "Actions"
     },
     "detail": {
+      "backToList": "Back to projects",
       "breadcrumb": {
         "projects": "Projects"
       },

@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
+import { ProjectListBackLink } from '@/components/project/project-list-navigation'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -22,7 +23,11 @@ import { useProjectRunStats } from '@/hooks/use-project-workflow'
 import { useSampleCount } from '@/hooks/use-sample'
 import { colorClassMap } from '@/types/color'
 
-export function ProjectDetailCard() {
+export function ProjectDetailCard({
+  projectListHref,
+}: {
+  projectListHref: string
+}) {
   const locale = useLocale()
   const t = useTranslations('Project.detail.card')
   const params = useParams()
@@ -55,6 +60,7 @@ export function ProjectDetailCard() {
   return (
     <div>
       {/* 返回和项目标题 */}
+      <ProjectListBackLink href={projectListHref} />
       <div className='flex flex-col sm:flex-row gap-4 justify-between items-start mb-3'>
         <div>
           <div className='flex items-start gap-2'>

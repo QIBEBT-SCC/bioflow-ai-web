@@ -123,6 +123,7 @@
       "actions": "操作"
     },
     "detail": {
+      "backToList": "返回项目列表",
       "breadcrumb": {
         "projects": "项目"
       },

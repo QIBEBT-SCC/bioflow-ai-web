@@ -1,6 +1,7 @@
 import type { User } from '@/types/auth'
 
 export type ProjectSort = 'recent' | 'nameAsc' | 'nameDesc'
+export type ProjectViewMode = 'list' | 'grid'
 
 export interface ProjectTagProp {
   name: string
