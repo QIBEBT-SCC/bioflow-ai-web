@@ -368,11 +368,22 @@ function ProviderModelsSection({ provider }: { provider: LLMProviderPublic }) {
     <div className='pl-11 space-y-4'>
       <div className='flex justify-between items-center mb-4'>
         <h4 className='text-sm font-medium'>{t('model_list')}</h4>
-        <AddModelDialog providerId={provider.id} providerName={provider.name} />
+        <AddModelDialog
+          providerId={provider.id}
+          providerName={provider.name}
+          providerType={provider.provider_type}
+          providerBaseUrl={provider.base_url}
+        />
       </div>
       <div className='space-y-3'>
         {provider.models.map((model) => (
-          <ModelCard key={model.id} model={model} />
+          <ModelCard
+            key={model.id}
+            model={model}
+            providerType={provider.provider_type}
+            providerName={provider.name}
+            providerBaseUrl={provider.base_url}
+          />
         ))}
         {provider.models.length === 0 && (
           <div className='text-center py-8 text-muted-foreground text-sm'>
