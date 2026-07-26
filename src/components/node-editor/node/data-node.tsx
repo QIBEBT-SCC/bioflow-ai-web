@@ -221,22 +221,25 @@ const RenameFileNode = memo(function RenameFileNode() {
   )
 })
 
-const GLOBAL_MARKER_HANDLES = {
+const ARTIFACT_MARK_HANDLES = {
   inputs: [
     {
       name: 'file',
-      description: 'File to be marked as global use',
+      description: 'File or directory to publish',
     },
   ] as HandleDefine[],
   outputs: [] as HandleDefine[],
 }
 
-const GlobalFileCard = memo(function GlobalFileCard() {
+const ArtifactMarkCard = memo(function ArtifactMarkCard() {
   const readOnly = useReadOnly()
   const nodeId = useNodeId() ?? ''
   const nodeData =
     useNodesData<
-      Node<{ mark_name: string; description: string }, 'global_mark'>
+      Node<
+        { mark_name: string; description: string },
+        'project_mark' | 'sample_mark'
+      >
     >(nodeId)
   const { updateNodeData } = useReactFlow()
 
@@ -288,14 +291,28 @@ const GlobalFileCard = memo(function GlobalFileCard() {
   )
 })
 
-const GlobalMarkerNode = memo(function FileInputNode() {
-  const nodeComponent = useMemo(() => <GlobalFileCard />, [])
+const ProjectMarkNode = memo(function ProjectMarkNode() {
+  const nodeComponent = useMemo(() => <ArtifactMarkCard />, [])
 
   return (
     <BaseNode
-      title='Global Marker'
-      description='load file from local path.'
-      handles={GLOBAL_MARKER_HANDLES}
+      title='Project Mark'
+      description='Register a project-level output as soon as this node succeeds.'
+      handles={ARTIFACT_MARK_HANDLES}
+      color={colorSchemes.orange}
+      nodeComponent={nodeComponent}
+    />
+  )
+})
+
+const SampleMarkNode = memo(function SampleMarkNode() {
+  const nodeComponent = useMemo(() => <ArtifactMarkCard />, [])
+
+  return (
+    <BaseNode
+      title='Sample Mark'
+      description='Register an output immediately for the current sample.'
+      handles={ARTIFACT_MARK_HANDLES}
       color={colorSchemes.orange}
       nodeComponent={nodeComponent}
     />
@@ -449,7 +466,8 @@ export {
   CompressNode,
   DecompressNode,
   RenameFileNode,
-  GlobalMarkerNode,
+  ProjectMarkNode,
+  SampleMarkNode,
   SelectFileInFolderNode,
   BindParamNode,
   CollectMountDirNode,

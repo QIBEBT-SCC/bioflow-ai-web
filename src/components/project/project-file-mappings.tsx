@@ -21,6 +21,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -131,7 +132,12 @@ export function ProjectFileMappings({ projectId }: ProjectFileMappingsProps) {
                 {mappings.map((mapping) => (
                   <TableRow key={mapping.id}>
                     <TableCell className='font-mono font-medium'>
-                      proj:{mapping.keyword}
+                      <div className='flex items-center gap-2'>
+                        <span>proj:{mapping.keyword}</span>
+                        {mapping.is_dynamic && (
+                          <Badge variant='secondary'>{t('dynamic')}</Badge>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className='font-mono text-xs'>
                       {mapping.file_path}

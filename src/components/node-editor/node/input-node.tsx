@@ -124,6 +124,110 @@ const FileInputNode = memo(function FileInputNode() {
   )
 })
 
+const SAMPLE_MARK_COLLECTION_HANDLES = {
+  inputs: [] as HandleDefine[],
+  outputs: [
+    {
+      name: 'mount_collection',
+      description: 'Virtual root containing collected sample artifacts',
+    },
+    {
+      name: 'collection_manifest',
+      description: 'Frozen collection provenance manifest',
+    },
+  ] as HandleDefine[],
+}
+
+const parseMarkNames = (value: string) =>
+  Array.from(
+    new Set(
+      value
+        .split(/[\s,]+/)
+        .flatMap((name) => (name.trim() ? [name.trim()] : [])),
+    ),
+  )
+
+const SampleMarkCollectionCard = memo(function SampleMarkCollectionCard() {
+  const readOnly = useReadOnly()
+  const nodeId = useNodeId() ?? ''
+  const nodeData =
+    useNodesData<
+      Node<
+        { mark_names: string[]; require_all_samples: boolean },
+        'resource_sample_mark_collection'
+      >
+    >(nodeId)
+  const { updateNodeData } = useReactFlow()
+  const [markNames, setMarkNames] = useState(() =>
+    (nodeData?.data.mark_names ?? []).join('\n'),
+  )
+  const [requireAllSamples, setRequireAllSamples] = useState(
+    nodeData?.data.require_all_samples ?? true,
+  )
+
+  useEffect(() => {
+    setMarkNames((nodeData?.data.mark_names ?? []).join('\n'))
+    setRequireAllSamples(nodeData?.data.require_all_samples ?? true)
+  }, [nodeData?.data.mark_names, nodeData?.data.require_all_samples])
+
+  const saveNodeData = useCallback(() => {
+    updateNodeData(nodeId, {
+      mark_names: parseMarkNames(markNames),
+      require_all_samples: requireAllSamples,
+    })
+  }, [markNames, nodeId, requireAllSamples, updateNodeData])
+
+  return (
+    <div className='space-y-3 p-3'>
+      <div>
+        <Label className='pb-2 font-medium' htmlFor={`${nodeId}-mark-names`}>
+          Mark Names:
+        </Label>
+        <Textarea
+          id={`${nodeId}-mark-names`}
+          className='min-h-20'
+          placeholder={'fastqc_raw\nstar\npicard'}
+          value={markNames}
+          onChange={(event) => setMarkNames(event.target.value)}
+          onBlur={saveNodeData}
+          spellCheck={false}
+          disabled={readOnly}
+        />
+      </div>
+      <label className='flex items-center gap-2 text-sm'>
+        <input
+          type='checkbox'
+          aria-label='Require every project sample'
+          checked={requireAllSamples}
+          onChange={(event) => {
+            const checked = event.target.checked
+            setRequireAllSamples(checked)
+            updateNodeData(nodeId, {
+              mark_names: parseMarkNames(markNames),
+              require_all_samples: checked,
+            })
+          }}
+          disabled={readOnly}
+        />
+        Require every project sample
+      </label>
+    </div>
+  )
+})
+
+const SampleMarkCollectionNode = memo(function SampleMarkCollectionNode() {
+  const nodeComponent = useMemo(() => <SampleMarkCollectionCard />, [])
+  return (
+    <BaseNode
+      title='Sample Mark Collection'
+      description='Freeze current dynamic sample marks into a manifest and virtual mounted collection.'
+      handles={SAMPLE_MARK_COLLECTION_HANDLES}
+      color={colorSchemes.green}
+      nodeComponent={nodeComponent}
+    />
+  )
+})
+
 const TEXT_FILE_INPUT_HANDLES = {
   inputs: [] as HandleDefine[],
   outputs: [
@@ -446,6 +550,7 @@ const GRCm39Node = memo(function GRCm39Node() {
 export {
   StringInputNode,
   FileInputNode,
+  SampleMarkCollectionNode,
   TextFileInputNode,
   SequenceInputNode,
   DBInputNode,

@@ -5,10 +5,14 @@ export interface SampleFile {
   uid: string
   sample_uid: string
   file_path: string
-  file_format: string
+  file_format: string | null
   file_size: number
-  md5_checksum: string
+  md5_checksum: string | null
   tag: string
+  description: string
+  is_dynamic: boolean
+  producer_workflow_uid: string | null
+  producer_run_uid: string | null
   uploaded_time: string
 }
 
@@ -76,6 +80,9 @@ export interface ProjectFileMapping {
   keyword: string
   file_path: string
   description: string
+  is_dynamic: boolean
+  producer_workflow_uid: string | null
+  producer_run_uid: string | null
   create_time: string
   update_time: string
 }

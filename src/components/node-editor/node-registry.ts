@@ -38,8 +38,9 @@ import {
   CompressNode,
   Copy2FolderNode,
   DecompressNode,
-  GlobalMarkerNode,
+  ProjectMarkNode,
   RenameFileNode,
+  SampleMarkNode,
   SelectFileInFolderNode,
 } from '@/components/node-editor/node/data-node'
 import {
@@ -48,6 +49,7 @@ import {
   GRCh38Node,
   GRCm39Node,
   NcbiGenomeNode,
+  SampleMarkCollectionNode,
   SequenceInputNode,
   StringInputNode,
   TextFileInputNode,
@@ -64,6 +66,7 @@ export const nodeTypes: Record<string, React.ComponentType<any>> = {
   // resource / input
   value_string: StringInputNode,
   resource_file: FileInputNode,
+  resource_sample_mark_collection: SampleMarkCollectionNode,
   resource_text_file: TextFileInputNode,
   resource_sequence: SequenceInputNode,
   resource_db: DBInputNode,
@@ -74,7 +77,8 @@ export const nodeTypes: Record<string, React.ComponentType<any>> = {
   copy2folder: Copy2FolderNode,
   compress: CompressNode,
   decompress: DecompressNode,
-  global_mark: GlobalMarkerNode,
+  project_mark: ProjectMarkNode,
+  sample_mark: SampleMarkNode,
   rename_file: RenameFileNode,
   select_file_in_folder: SelectFileInFolderNode,
   bind_param: BindParamNode,
@@ -97,6 +101,10 @@ export const nodeDefaultData: Record<string, Record<string, unknown>> = {
   tool: { tool_uid: '', modifiable_params: '' },
   value_string: { value: '' },
   resource_file: { file_path: '' },
+  resource_sample_mark_collection: {
+    mark_names: [],
+    require_all_samples: true,
+  },
   resource_text_file: { file_name: '', content: '' },
   resource_sequence: { r1: '', r2: '' },
   resource_db: { db_id: '', db_name: '' },
@@ -106,7 +114,8 @@ export const nodeDefaultData: Record<string, Record<string, unknown>> = {
   copy2folder: {},
   compress: { compressed_file_name: '' },
   decompress: {},
-  global_mark: { mark_name: '', description: '' },
+  project_mark: { mark_name: '', description: '' },
+  sample_mark: { mark_name: '', description: '' },
   rename_file: { new_file_name: '' },
   select_file_in_folder: { file_name: '' },
   bind_param: { parameter: '' },
@@ -152,6 +161,11 @@ export const menuData: Record<string, MenuGroup> = {
     items: [
       { type: 'value_string', labelKey: 'text_input', Icon: CaseSensitiveIcon },
       { type: 'resource_file', labelKey: 'file_input', Icon: FileInputIcon },
+      {
+        type: 'resource_sample_mark_collection',
+        labelKey: 'sample_mark_collection',
+        Icon: GroupIcon,
+      },
       {
         type: 'resource_text_file',
         labelKey: 'text_file_input',
@@ -204,7 +218,8 @@ export const menuData: Record<string, MenuGroup> = {
       { type: 'compress', labelKey: 'compress', Icon: FileArchiveIcon },
       { type: 'decompress', labelKey: 'decompress', Icon: FileArchiveIcon },
       { type: 'rename_file', labelKey: 'rename_file', Icon: FilePenIcon },
-      { type: 'global_mark', labelKey: 'global_marker', Icon: TagIcon },
+      { type: 'project_mark', labelKey: 'project_marker', Icon: TagIcon },
+      { type: 'sample_mark', labelKey: 'sample_marker', Icon: TagIcon },
       { type: 'bind_param', labelKey: 'bind_param', Icon: TagIcon },
       {
         type: 'collect_mount_dirs',

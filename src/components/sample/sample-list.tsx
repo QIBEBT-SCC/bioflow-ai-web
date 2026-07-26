@@ -118,30 +118,39 @@ function SampleFilesSection({
             {sampleDetails.files.map((file) => (
               <TableRow key={file.uid}>
                 <TableCell>
-                  <Badge
-                    variant='outline'
-                    className='bg-blue-50 text-blue-700 border-blue-200'
-                  >
-                    {file.tag}
-                  </Badge>
+                  <div className='flex items-center gap-1'>
+                    <Badge
+                      variant='outline'
+                      className='bg-blue-50 text-blue-700 border-blue-200'
+                    >
+                      {file.tag}
+                    </Badge>
+                    {file.is_dynamic && (
+                      <Badge variant='secondary'>{t('dynamic')}</Badge>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell className='font-mono text-xs'>
                   {file.file_path}
                 </TableCell>
                 <TableCell>
-                  <Badge variant='outline'>{file.file_format}</Badge>
+                  <Badge variant='outline'>{file.file_format ?? '—'}</Badge>
                 </TableCell>
                 <TableCell>{formatFileSize(file.file_size)}</TableCell>
                 <TableCell>
-                  <div className='flex items-center'>
-                    <CheckIcon className='size-4 text-green-500 mr-1' />
-                    <span
-                      className='text-xs truncate w-16'
-                      title={file.md5_checksum}
-                    >
-                      {file.md5_checksum.substring(0, 8)}...
-                    </span>
-                  </div>
+                  {file.md5_checksum ? (
+                    <div className='flex items-center'>
+                      <CheckIcon className='size-4 text-green-500 mr-1' />
+                      <span
+                        className='text-xs truncate w-16'
+                        title={file.md5_checksum}
+                      >
+                        {file.md5_checksum.substring(0, 8)}...
+                      </span>
+                    </div>
+                  ) : (
+                    '—'
+                  )}
                 </TableCell>
                 <TableCell className='text-xs' suppressHydrationWarning>
                   {format(parseISO(file.uploaded_time), 'yyyy-MM-dd HH:mm:ss')}
