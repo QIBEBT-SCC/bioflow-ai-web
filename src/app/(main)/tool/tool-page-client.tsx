@@ -13,7 +13,14 @@ import {
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { useCallback } from 'react'
+import {
+  type ChangeEvent,
+  type CompositionEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
 import { ToolGroupSidebar } from '@/components/tool/tool-group-sidebar'
 import { ToolList } from '@/components/tool/tool-list'
 import {
@@ -34,18 +41,104 @@ import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 
+const SEARCH_DEBOUNCE_MS = 300
+
+function ToolSearchInput({
+  initialValue,
+  placeholder,
+  onSearch,
+}: {
+  initialValue: string
+  placeholder: string
+  onSearch: (value: string) => void
+}) {
+  const [value, setValue] = useState(initialValue)
+  const isComposingRef = useRef(false)
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const previousInitialValueRef = useRef(initialValue)
+  const lastSubmittedValueRef = useRef(initialValue)
+  const onSearchRef = useRef(onSearch)
+  onSearchRef.current = onSearch
+
+  // Keep newer drafts intact when the URL catches up, but honor back/forward navigation.
+  if (initialValue !== previousInitialValueRef.current) {
+    previousInitialValueRef.current = initialValue
+    if (initialValue !== lastSubmittedValueRef.current) {
+      lastSubmittedValueRef.current = initialValue
+      setValue(initialValue)
+    }
+  }
+
+  const cancelPendingSearch = useCallback(() => {
+    if (searchTimerRef.current !== null) {
+      clearTimeout(searchTimerRef.current)
+      searchTimerRef.current = null
+    }
+  }, [])
+
+  const scheduleSearch = useCallback(
+    (nextValue: string) => {
+      cancelPendingSearch()
+      searchTimerRef.current = setTimeout(() => {
+        searchTimerRef.current = null
+        lastSubmittedValueRef.current = nextValue
+        onSearchRef.current(nextValue)
+      }, SEARCH_DEBOUNCE_MS)
+    },
+    [cancelPendingSearch],
+  )
+
+  useEffect(() => cancelPendingSearch, [cancelPendingSearch])
+
+  const updateSearchDraft = (event: ChangeEvent<HTMLInputElement>) => {
+    const nextValue = event.target.value
+    setValue(nextValue)
+    if (!isComposingRef.current) {
+      scheduleSearch(nextValue)
+    }
+  }
+
+  const handleCompositionStart = () => {
+    isComposingRef.current = true
+    cancelPendingSearch()
+  }
+
+  const handleCompositionEnd = (event: CompositionEvent<HTMLInputElement>) => {
+    const nextValue = event.currentTarget.value
+    isComposingRef.current = false
+    setValue(nextValue)
+    scheduleSearch(nextValue)
+  }
+
+  return (
+    <div className='relative flex-1 sm:flex-initial'>
+      <Search className='absolute left-2.5 top-2.5 size-4 text-muted-foreground' />
+      <Input
+        type='search'
+        placeholder={placeholder}
+        className='pl-8 w-full sm:w-62.5'
+        value={value}
+        onChange={updateSearchDraft}
+        onCompositionStart={handleCompositionStart}
+        onCompositionEnd={handleCompositionEnd}
+      />
+    </div>
+  )
+}
+
 export default function ToolsPage() {
   const t = useTranslations('tool.Page')
-  const router = useRouter()
+  const { replace } = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const getSearchParam = searchParams.get.bind(searchParams)
 
   const viewMode: 'list' | 'grid' =
-    searchParams.get('view') === 'grid' ? 'grid' : 'list'
-  const searchQuery = searchParams.get('q') ?? ''
-  const groupParam = searchParams.get('group')
+    getSearchParam('view') === 'grid' ? 'grid' : 'list'
+  const searchQuery = getSearchParam('q') ?? ''
+  const groupParam = getSearchParam('group')
   const selectedGroupId = groupParam ? Number(groupParam) : null
-  const currentPage = Number(searchParams.get('page') ?? '1')
+  const currentPage = Number(getSearchParam('page') ?? '1')
 
   const updateParams = useCallback(
     (updates: Record<string, string | null>, resetPage = false) => {
@@ -61,17 +154,19 @@ export default function ToolsPage() {
         params.delete('page')
       }
       const query = params.toString()
-      router.replace(query ? `${pathname}?${query}` : pathname, {
+      replace(query ? `${pathname}?${query}` : pathname, {
         scroll: false,
       })
     },
-    [pathname, router, searchParams],
+    [pathname, replace, searchParams],
   )
 
   const setViewMode = (mode: 'list' | 'grid') =>
     updateParams({ view: mode === 'grid' ? 'grid' : null })
-  const setSearchQuery = (value: string) =>
-    updateParams({ q: value || null }, true)
+  const setSearchQuery = useCallback(
+    (value: string) => updateParams({ q: value || null }, true),
+    [updateParams],
+  )
   const setSelectedGroupId = (groupId: number | null) =>
     updateParams({ group: groupId !== null ? String(groupId) : null }, true)
   const setCurrentPage = (page: number) =>
@@ -99,16 +194,11 @@ export default function ToolsPage() {
           <div className='flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center mb-6'>
             <h1 className='text-2xl font-semibold'>{t('management')}</h1>
             <div className='flex gap-2 w-full sm:w-auto'>
-              <div className='relative flex-1 sm:flex-initial'>
-                <Search className='absolute left-2.5 top-2.5 size-4 text-muted-foreground' />
-                <Input
-                  type='search'
-                  placeholder={t('searchPlaceholder')}
-                  className='pl-8 w-full sm:w-62.5'
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
+              <ToolSearchInput
+                initialValue={searchQuery}
+                placeholder={t('searchPlaceholder')}
+                onSearch={setSearchQuery}
+              />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant='outline'>
