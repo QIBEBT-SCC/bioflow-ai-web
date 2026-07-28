@@ -12,6 +12,7 @@ const namespaces = [
   'setting',
   'image',
   'tool',
+  'code',
   'project',
 ]
 

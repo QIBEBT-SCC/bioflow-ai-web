@@ -9,6 +9,7 @@
   "Sidebar": {
     "admin": "Admin",
     "chat": "Chat",
+    "code_nodes": "Code",
     "homepage": "Home",
     "databases": "Bio Databases",
     "editor": "Editor",

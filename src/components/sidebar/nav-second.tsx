@@ -33,6 +33,7 @@ const projects = [
     items: [
       { name: 'images', url: '/image' },
       { name: 'tools', url: '/tool' },
+      { name: 'code_nodes', url: '/code' },
     ],
   },
   {
