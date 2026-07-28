@@ -12,7 +12,7 @@ import {
   useReactFlow,
   type XYPosition,
 } from '@xyflow/react'
-import { LogOutIcon, PlayIcon, SaveIcon } from 'lucide-react'
+import { LogOutIcon, PlayIcon, SaveIcon, WandSparklesIcon } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import type React from 'react'
@@ -42,6 +42,7 @@ import { useChatSidebarResize } from '@/hooks/use-chat-sidebar-resize'
 import { useNewRunInstance } from '@/hooks/use-run'
 import { useUpdateWorkflow, useWorkflow } from '@/hooks/use-workflow'
 import { generateLetterId } from '@/lib/id-generator'
+import { layoutWorkflowNodes } from '@/lib/workflow-layout'
 import { useChatSidebarStore } from '@/stores/chat-sidebar-store'
 import { useNodeEditorStore } from '@/stores/nodeviewStore'
 import type { CodeInfo } from '@/types/code'
@@ -82,7 +83,7 @@ function FlowContent() {
   const workflowUidParam = searchParams.get('workflowUid')
   const isProjectMode = !!projectId
 
-  const { screenToFlowPosition } = useReactFlow()
+  const { fitView, getNodes, screenToFlowPosition } = useReactFlow()
   const { data: workflowData } = useWorkflow(currentWorkflowUid)
   const updateWorkflowMutation = useUpdateWorkflow()
   const runMutation = useNewRunInstance()
@@ -244,6 +245,16 @@ function FlowContent() {
     runMutation.mutate({ workflow, template_name })
   }, [nodes, edges, workflowData?.name, runMutation])
 
+  const onAutoLayout = useCallback(() => {
+    const layoutedNodes = layoutWorkflowNodes(getNodes(), edges)
+    setNodes(layoutedNodes)
+    toast.success(t('layout_complete'))
+
+    requestAnimationFrame(() => {
+      void fitView({ padding: 0.15, duration: 500 })
+    })
+  }, [edges, fitView, getNodes, setNodes, t])
+
   // 右键菜单 - 记录点击位置并打开菜单
   const onPaneContextMenu = useCallback(
     (event: MouseEvent | React.MouseEvent<Element, MouseEvent>) => {
@@ -295,6 +306,16 @@ function FlowContent() {
                     {updateWorkflowMutation.isPending ? t('saving') : t('save')}
                   </Button>
 
+                  <Button
+                    variant='ghost'
+                    size='sm'
+                    onClick={onAutoLayout}
+                    disabled={nodes.length === 0}
+                  >
+                    <WandSparklesIcon className='size-4 mr-2' />
+                    {t('auto_layout')}
+                  </Button>
+
                   <Button variant='ghost' size='sm' onClick={onExit}>
                     <LogOutIcon className='size-4 mr-2' />
                     {t('exit')}
@@ -314,6 +335,16 @@ function FlowContent() {
                   >
                     <SaveIcon className='size-4 mr-2' />
                     {updateWorkflowMutation.isPending ? t('saving') : t('save')}
+                  </Button>
+
+                  <Button
+                    variant='ghost'
+                    size='sm'
+                    onClick={onAutoLayout}
+                    disabled={nodes.length === 0}
+                  >
+                    <WandSparklesIcon className='size-4 mr-2' />
+                    {t('auto_layout')}
                   </Button>
 
                   <SaveAsDialog
