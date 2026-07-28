@@ -194,6 +194,11 @@ export const menuData: Record<string, MenuGroup> = {
     Icon: CodeIcon,
     submenuType: 'inline',
     items: [
+      {
+        type: '__existing_code__',
+        labelKey: 'existing_code',
+        Icon: CodeIcon,
+      },
       { type: 'code_bash', labelKey: 'code_bash', Icon: CodeIcon },
       { type: 'code_R', labelKey: 'code_r', Icon: CodeIcon },
       { type: 'code_python', labelKey: 'code_python', Icon: CodeIcon },

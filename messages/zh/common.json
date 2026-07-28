@@ -9,6 +9,7 @@
   "Sidebar": {
     "admin": "管理员",
     "chat": "对话",
+    "code_nodes": "代码",
     "homepage": "首页",
     "databases": "生物信息数据库",
     "editor": "编辑器",
