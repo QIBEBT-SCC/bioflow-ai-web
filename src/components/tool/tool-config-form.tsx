@@ -356,13 +356,16 @@ function BasicConfigTab({
         </div>
 
         <div className='space-y-2'>
-          <Label htmlFor='tool-description'>{t('description')}</Label>
+          <Label htmlFor='tool-description'>
+            {t('description')} <span className='text-red-500'>*</span>
+          </Label>
           <Textarea
             id='tool-description'
             value={value.description}
             onChange={(e) => onFieldChange('description', e.target.value)}
             placeholder={t('descriptionPlaceholder')}
             rows={3}
+            required
           />
         </div>
 

@@ -162,6 +162,7 @@ export function useToolFormState(
   const canSave =
     !!formState &&
     formState.name.trim().length > 0 &&
+    formState.description.trim().length > 0 &&
     formState.command_template.trim().length > 0
 
   return {

@@ -375,19 +375,21 @@ function AddToolPageContent() {
     })
   }
 
+  const hasRequiredToolConfig =
+    toolConfig.name.trim().length > 0 &&
+    toolConfig.description.trim().length > 0 &&
+    toolConfig.command_template.trim().length > 0 &&
+    toolConfig.help_command.trim().length > 0
+
   // 检查当前步骤是否可以继续
   const canProceed = () => {
     switch (currentStep) {
       case 1:
         return currentImage.uid !== undefined
       case 2:
-        return (
-          toolConfig.name &&
-          toolConfig.command_template &&
-          toolConfig.help_command
-        )
+        return hasRequiredToolConfig
       case 3:
-        return true
+        return hasRequiredToolConfig
       default:
         return false
     }
