@@ -23,9 +23,9 @@ function getNodeSize(node: Node): NodeSize {
 /**
  * Arrange executable workflow nodes from left to right.
  *
- * Note nodes are intentionally left in place because they are annotations rather
- * than part of the executable graph. Other disconnected nodes are placed below
- * the connected graph so they remain easy to find.
+ * Notes anchored to an executable node follow that node by the same displacement.
+ * Global notes remain in place. Other disconnected nodes are placed below the
+ * connected graph so they remain easy to find.
  */
 export function layoutWorkflowNodes(nodes: Node[], edges: Edge[]): Node[] {
   const layoutableNodes = nodes.filter((node) => node.type !== 'note')
@@ -53,6 +53,9 @@ export function layoutWorkflowNodes(nodes: Node[], edges: Edge[]): Node[] {
     (node) => !connectedNodeIds.has(node.id),
   )
   const positions = new Map<string, Node['position']>()
+  const originalPositions = new Map(
+    layoutableNodes.map((node) => [node.id, node.position]),
+  )
   const sizes = new Map(
     layoutableNodes.map((node) => [node.id, getNodeSize(node)]),
   )
@@ -140,6 +143,33 @@ export function layoutWorkflowNodes(nodes: Node[], edges: Edge[]): Node[] {
 
   return nodes.map((node) => {
     const position = positions.get(node.id)
-    return position ? { ...node, position } : node
+    if (position) {
+      return { ...node, position }
+    }
+
+    if (node.type !== 'note') {
+      return node
+    }
+
+    const anchorNodeId = node.data.anchor_node_id
+    if (typeof anchorNodeId !== 'string') {
+      return node
+    }
+
+    const originalAnchorPosition = originalPositions.get(anchorNodeId)
+    const layoutedAnchorPosition = positions.get(anchorNodeId)
+    if (!originalAnchorPosition || !layoutedAnchorPosition) {
+      return node
+    }
+
+    return {
+      ...node,
+      position: {
+        x:
+          node.position.x + layoutedAnchorPosition.x - originalAnchorPosition.x,
+        y:
+          node.position.y + layoutedAnchorPosition.y - originalAnchorPosition.y,
+      },
+    }
   })
 }

@@ -13,10 +13,15 @@ import { useReadOnly } from '@/components/node-editor/read-only-context'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 
+interface NoteNodeData extends Record<string, unknown> {
+  content: string
+  anchor_node_id?: string | null
+}
+
 export const NoteNode = memo(function NoteNode() {
   const readOnly = useReadOnly()
   const nodeId = useNodeId() ?? ''
-  const nodeData = useNodesData<Node<{ content: string }, 'note'>>(nodeId)
+  const nodeData = useNodesData<Node<NoteNodeData, 'note'>>(nodeId)
   const { updateNodeData } = useReactFlow()
   const [args, setArgs] = useState<string>(nodeData?.data.content ?? '')
 

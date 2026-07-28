@@ -161,6 +161,12 @@ function FlowContent() {
     (nodeType: string, resourceId?: string, resourceName?: string) => {
       const nodeId = generateLetterId()
       const position = screenToFlowPosition(clickPosition, { snapToGrid: true })
+      const selectedNodes =
+        nodeType === 'note'
+          ? nodes.filter((node) => node.selected && node.type !== 'note')
+          : []
+      const anchorNodeId =
+        selectedNodes.length === 1 ? selectedNodes[0].id : null
 
       // 节点默认 data（特殊节点覆盖 registry 默认值）
       const defaultData = {
@@ -170,6 +176,7 @@ function FlowContent() {
           db_id: resourceId,
           db_name: resourceName ?? '',
         }),
+        ...(nodeType === 'note' && { anchor_node_id: anchorNodeId }),
       }
 
       const config = { data: defaultData }
@@ -185,7 +192,7 @@ function FlowContent() {
       setNodes((prev) => [...prev, newNode])
       toast.success(t('node_added'))
     },
-    [clickPosition, screenToFlowPosition, setNodes, t],
+    [clickPosition, nodes, screenToFlowPosition, setNodes, t],
   )
 
   const onAddExistingCode = useCallback(
