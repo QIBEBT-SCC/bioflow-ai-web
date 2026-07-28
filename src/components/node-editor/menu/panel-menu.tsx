@@ -10,10 +10,12 @@ import {
   useReducer,
   useRef,
 } from 'react'
+import { CodeMenu } from '@/components/node-editor/menu/code-menu'
 import { DbMenu } from '@/components/node-editor/menu/db-menu'
 import { ToolMenu } from '@/components/node-editor/menu/tool-menu'
 import { menuData } from '@/components/node-editor/node-registry'
 import { cn } from '@/lib/utils'
+import type { CodeInfo } from '@/types/code'
 
 interface Position {
   x: number
@@ -29,10 +31,12 @@ interface PanelMenuProps {
     toolUid?: string,
     resourceName?: string,
   ) => void
+  onSelectCode: (code: CodeInfo) => void
 }
 
 type MenuState = {
   isAnalysisMenuOpen: boolean
+  isCodeMenuOpen: boolean
   isDBMenuOpen: boolean
   activeMenu: string | null
   activeSubItem: string | null
@@ -40,8 +44,10 @@ type MenuState = {
 }
 type MenuAction =
   | { type: 'OPEN_ANALYSIS' }
+  | { type: 'OPEN_CODE' }
   | { type: 'OPEN_DB' }
   | { type: 'SET_ANALYSIS_OPEN'; open: boolean }
+  | { type: 'SET_CODE_OPEN'; open: boolean }
   | { type: 'SET_DB_OPEN'; open: boolean }
   | { type: 'SET_ACTIVE_MENU'; key: string | null }
   | { type: 'SET_ACTIVE_SUB'; key: string | null }
@@ -50,6 +56,7 @@ type MenuAction =
 
 const INITIAL_MENU_STATE: MenuState = {
   isAnalysisMenuOpen: false,
+  isCodeMenuOpen: false,
   isDBMenuOpen: false,
   activeMenu: null,
   activeSubItem: null,
@@ -60,10 +67,14 @@ function menuReducer(state: MenuState, action: MenuAction): MenuState {
   switch (action.type) {
     case 'OPEN_ANALYSIS':
       return { ...state, isAnalysisMenuOpen: true }
+    case 'OPEN_CODE':
+      return { ...state, isCodeMenuOpen: true }
     case 'OPEN_DB':
       return { ...state, isDBMenuOpen: true }
     case 'SET_ANALYSIS_OPEN':
       return { ...state, isAnalysisMenuOpen: action.open }
+    case 'SET_CODE_OPEN':
+      return { ...state, isCodeMenuOpen: action.open }
     case 'SET_DB_OPEN':
       return { ...state, isDBMenuOpen: action.open }
     case 'SET_ACTIVE_MENU':
@@ -82,11 +93,13 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({
   position,
   onClose,
   onSelectTool,
+  onSelectCode,
 }) => {
   const t = useTranslations('editor.menu')
   const [
     {
       isAnalysisMenuOpen,
+      isCodeMenuOpen,
       isDBMenuOpen,
       activeMenu,
       activeSubItem,
@@ -166,6 +179,9 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({
       if (itemType === 'resource_db') {
         dispatch({ type: 'OPEN_DB' })
         onClose()
+      } else if (itemType === '__existing_code__') {
+        dispatch({ type: 'OPEN_CODE' })
+        onClose()
       } else if (itemType !== '__genome_submenu__') {
         onSelectTool(itemType)
         onClose()
@@ -178,7 +194,9 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({
     }
   }
 
-  if (!isOpen && !isAnalysisMenuOpen && !isDBMenuOpen) return null
+  if (!isOpen && !isAnalysisMenuOpen && !isCodeMenuOpen && !isDBMenuOpen) {
+    return null
+  }
 
   return (
     <>
@@ -304,6 +322,13 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({
         onClose={() => dispatch({ type: 'SET_ANALYSIS_OPEN', open: false })}
         onSelectTool={onSelectTool}
       />
+
+      {isCodeMenuOpen && (
+        <CodeMenu
+          onClose={() => dispatch({ type: 'SET_CODE_OPEN', open: false })}
+          onSelectCode={onSelectCode}
+        />
+      )}
 
       <DbMenu
         isOpen={isDBMenuOpen}

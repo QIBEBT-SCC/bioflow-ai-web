@@ -44,6 +44,7 @@ import { useUpdateWorkflow, useWorkflow } from '@/hooks/use-workflow'
 import { generateLetterId } from '@/lib/id-generator'
 import { useChatSidebarStore } from '@/stores/chat-sidebar-store'
 import { useNodeEditorStore } from '@/stores/nodeviewStore'
+import type { CodeInfo } from '@/types/code'
 
 function FlowContent() {
   const t = useTranslations('editor')
@@ -181,6 +182,34 @@ function FlowContent() {
       }
 
       setNodes((prev) => [...prev, newNode])
+      toast.success(t('node_added'))
+    },
+    [clickPosition, screenToFlowPosition, setNodes, t],
+  )
+
+  const onAddExistingCode = useCallback(
+    (code: CodeInfo) => {
+      const nodeId = generateLetterId()
+      const position = screenToFlowPosition(clickPosition, { snapToGrid: true })
+      const data = {
+        code: code.code,
+        description: code.description,
+        ...(code.node_type === 'code_python' && {
+          dependencies: [...code.dependencies],
+        }),
+      }
+
+      setNodes((prev) => [
+        ...prev,
+        {
+          id: nodeId,
+          type: code.node_type,
+          dragHandle: '.nodeDragable',
+          position,
+          data,
+          zIndex: 20,
+        },
+      ])
       toast.success(t('node_added'))
     },
     [clickPosition, screenToFlowPosition, setNodes, t],
@@ -344,6 +373,7 @@ function FlowContent() {
             position={clickPosition}
             onClose={closeMenu}
             onSelectTool={onAddNode}
+            onSelectCode={onAddExistingCode}
           />
         </div>
       </div>
