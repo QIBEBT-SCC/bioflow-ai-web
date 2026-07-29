@@ -124,7 +124,7 @@ export const nodeDefaultData: Record<string, Record<string, unknown>> = {
   code_python: { code: '', dependencies: [] },
   code_bash: { code: '' },
   downstream_summary: { prompt: '' },
-  note: { content: '' },
+  note: { content: '', anchor_node_id: null },
 }
 
 // ─────────────────────────────────────────────

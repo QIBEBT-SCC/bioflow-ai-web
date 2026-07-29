@@ -1,5 +1,6 @@
-import type { Edge, Node } from '@xyflow/react'
+import type { Edge } from '@xyflow/react'
 import type { User } from '@/types/auth'
+import type { WorkflowNode } from '@/types/workflow'
 
 export enum Status {
   WAITING = 0,
@@ -35,7 +36,7 @@ export interface SimpleRunPublic {
 }
 
 export interface RunPublic extends SimpleRunPublic {
-  nodes: Node[]
+  nodes: WorkflowNode[]
   edges: Edge[]
 }
 

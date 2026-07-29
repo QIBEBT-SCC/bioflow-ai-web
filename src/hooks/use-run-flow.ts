@@ -3,17 +3,68 @@
 import { useQueries } from '@tanstack/react-query'
 import type { Edge, Node as FlowNode, NodeChange } from '@xyflow/react'
 import { useNodesState } from '@xyflow/react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { getToolArg } from '@/app/actions/tool'
+import { useInitialWorkflowLayout } from '@/hooks/use-initial-workflow-layout'
+import { prepareWorkflowNodes } from '@/lib/workflow-layout'
 import type { RunData, RunPublic } from '@/types/run'
 import { Status } from '@/types/run'
+import type { WorkflowNode } from '@/types/workflow'
+
+function getTopologyKey(run: RunPublic): string {
+  return [
+    run.uid,
+    ...run.nodes.map((node) => `${node.id}:${node.type}`),
+    ...run.edges.map((edge) => `${edge.source}>${edge.target}`),
+  ].join('|')
+}
+
+function mergeRunNodes(
+  currentNodes: FlowNode[],
+  incomingNodes: WorkflowNode[],
+): FlowNode[] {
+  const currentNodeMap = new Map(currentNodes.map((node) => [node.id, node]))
+  const preparedIncomingNodes = prepareWorkflowNodes(incomingNodes).nodes
+
+  return preparedIncomingNodes.map((node) => {
+    const currentNode = currentNodeMap.get(node.id)
+    if (!currentNode) {
+      return node
+    }
+
+    return {
+      ...node,
+      position: currentNode.position,
+      measured: currentNode.measured,
+      selected: currentNode.selected,
+    }
+  })
+}
 
 export function useRunFlow(run: RunPublic | null) {
   const [flowNodes, setFlowNodes, onNodesChange] = useNodesState<FlowNode>([])
+  const topologyKeyRef = useRef<string | null>(null)
+  const [initialLayoutKey, setInitialLayoutKey] = useState<string | null>(null)
+  const topologyKey = useMemo(() => (run ? getTopologyKey(run) : null), [run])
 
   useEffect(() => {
-    if (run?.nodes) setFlowNodes(run.nodes)
-  }, [run?.nodes, setFlowNodes])
+    if (!run || !topologyKey) {
+      topologyKeyRef.current = null
+      setInitialLayoutKey(null)
+      setFlowNodes([])
+      return
+    }
+
+    if (topologyKeyRef.current !== topologyKey) {
+      const prepared = prepareWorkflowNodes(run.nodes)
+      topologyKeyRef.current = topologyKey
+      setFlowNodes(prepared.nodes)
+      setInitialLayoutKey(prepared.needsLayout ? topologyKey : null)
+      return
+    }
+
+    setFlowNodes((currentNodes) => mergeRunNodes(currentNodes, run.nodes))
+  }, [run, setFlowNodes, topologyKey])
 
   const handleNodesChange = useCallback(
     (changes: NodeChange<FlowNode>[]) => {
@@ -64,6 +115,13 @@ export function useRunFlow(run: RunPublic | null) {
     })
     return () => cancelAnimationFrame(raf1)
   }, [allToolsLoaded])
+
+  useInitialWorkflowLayout({
+    edges: run?.edges ?? [],
+    layoutKey: initialLayoutKey,
+    nodesReady: allToolsLoaded,
+    setNodes: setFlowNodes,
+  })
 
   const edges = useMemo<Edge[]>(() => {
     if (!run?.edges || !run?.nodes || !edgesReady) return []
