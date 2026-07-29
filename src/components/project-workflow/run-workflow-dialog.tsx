@@ -2,7 +2,7 @@
 
 import { Loader2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -27,7 +27,6 @@ interface RunWorkflowDialogProps {
   workflowUid: string
   workflowName: string
   executionScope: ExecutionScope
-  defaultAutoSummary: boolean
   open: boolean
   onOpenChange: (open: boolean) => void
 }
@@ -37,24 +36,30 @@ export function RunWorkflowDialog({
   workflowUid,
   workflowName,
   executionScope,
-  defaultAutoSummary,
   open,
   onOpenChange,
 }: RunWorkflowDialogProps) {
   const t = useTranslations('Project.workflow.runDialog')
-  const [selectedSamples, setSelectedSamples] = useState<Set<string>>(new Set())
+  const [selectedSamples, setSelectedSamples] = useState<Set<string> | null>(
+    null,
+  )
   const [runNamePrefix, setRunNamePrefix] = useState('')
-  const [autoSummary, setAutoSummary] = useState(defaultAutoSummary)
+  const [autoSummary, setAutoSummary] = useState(false)
 
   const isProjectLevel = executionScope === ExecutionScope.PROJECT_LEVEL
 
   const { data: samples = [], isLoading } = useSamples(projectId, 0, 100)
   const runWorkflowMutation = useRunWorkflow()
+  const allSampleUids = useMemo(
+    () => new Set(samples.map((sample) => sample.uid)),
+    [samples],
+  )
+  const selectedSampleUids = selectedSamples ?? allSampleUids
 
   // 切换样本选择
   const toggleSample = (sampleUid: string) => {
     setSelectedSamples((prev) => {
-      const newSet = new Set(prev)
+      const newSet = new Set(prev ?? allSampleUids)
       if (newSet.has(sampleUid)) {
         newSet.delete(sampleUid)
       } else {
@@ -66,16 +71,16 @@ export function RunWorkflowDialog({
 
   // 全选/取消全选
   const toggleAll = () => {
-    if (selectedSamples.size === samples.length) {
+    if (selectedSampleUids.size === samples.length) {
       setSelectedSamples(new Set())
     } else {
-      setSelectedSamples(new Set(samples.map((s) => s.uid)))
+      setSelectedSamples(new Set(allSampleUids))
     }
   }
 
   // 运行工作流
   const handleRun = async () => {
-    if (!isProjectLevel && selectedSamples.size === 0) {
+    if (!isProjectLevel && selectedSampleUids.size === 0) {
       toast.error(t('selectAtLeastOneSample'))
       return
     }
@@ -85,7 +90,9 @@ export function RunWorkflowDialog({
         projectId,
         workflowUid,
         data: {
-          sample_uids: isProjectLevel ? undefined : Array.from(selectedSamples),
+          sample_uids: isProjectLevel
+            ? undefined
+            : Array.from(selectedSampleUids),
           run_name_prefix: runNamePrefix || undefined,
           auto_summary: autoSummary,
         },
@@ -98,9 +105,9 @@ export function RunWorkflowDialog({
       )
 
       // 重置状态
-      setSelectedSamples(new Set())
+      setSelectedSamples(null)
       setRunNamePrefix('')
-      setAutoSummary(defaultAutoSummary)
+      setAutoSummary(false)
       onOpenChange(false)
     } catch (error) {
       if (error instanceof Error && error.message.includes('409')) {
@@ -137,7 +144,7 @@ export function RunWorkflowDialog({
                   onClick={toggleAll}
                   disabled={samples.length === 0}
                 >
-                  {selectedSamples.size === samples.length
+                  {selectedSampleUids.size === samples.length
                     ? t('deselectAll')
                     : t('selectAll')}
                 </Button>
@@ -155,15 +162,13 @@ export function RunWorkflowDialog({
                 ) : (
                   <div className='space-y-2'>
                     {samples.map((sample) => (
-                      <button
+                      <label
                         key={sample.uid}
-                        type='button'
                         className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors text-left w-full ${
-                          selectedSamples.has(sample.uid)
+                          selectedSampleUids.has(sample.uid)
                             ? 'bg-primary/5 border-primary'
                             : 'hover:bg-muted/50'
                         }`}
-                        onClick={() => toggleSample(sample.uid)}
                       >
                         <div className='flex items-center h-5'>
                           <input
@@ -171,10 +176,9 @@ export function RunWorkflowDialog({
                             aria-label={t('selectSampleAria', {
                               name: sample.sample_name,
                             })}
-                            checked={selectedSamples.has(sample.uid)}
+                            checked={selectedSampleUids.has(sample.uid)}
                             onChange={() => toggleSample(sample.uid)}
                             className='size-4 rounded border-gray-300'
-                            onClick={(e) => e.stopPropagation()}
                           />
                         </div>
                         <div className='flex-1 min-w-0'>
@@ -202,7 +206,7 @@ export function RunWorkflowDialog({
                             </div>
                           )}
                         </div>
-                      </button>
+                      </label>
                     ))}
                   </div>
                 )}
@@ -251,12 +255,12 @@ export function RunWorkflowDialog({
               </p>
             </div>
           ) : (
-            selectedSamples.size > 0 && (
+            selectedSampleUids.size > 0 && (
               <div className='rounded-lg bg-muted p-3'>
                 <p className='text-sm'>
                   {t('willCreate')}{' '}
                   <span className='font-semibold text-primary'>
-                    {selectedSamples.size}
+                    {selectedSampleUids.size}
                   </span>{' '}
                   {t('instanceCountSuffix')}
                 </p>
@@ -272,7 +276,7 @@ export function RunWorkflowDialog({
           <Button
             onClick={handleRun}
             disabled={
-              (!isProjectLevel && selectedSamples.size === 0) ||
+              (!isProjectLevel && selectedSampleUids.size === 0) ||
               runWorkflowMutation.isPending
             }
           >

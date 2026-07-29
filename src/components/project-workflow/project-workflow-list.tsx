@@ -70,7 +70,6 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
     uid: string
     name: string
     executionScope: ExecutionScope
-    autoSummary: boolean
   } | null>(null)
   const [expandedWorkflows, setExpandedWorkflows] = useState<Set<string>>(
     new Set(),
@@ -220,7 +219,6 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
                                 executionScope:
                                   workflow.execution_scope ??
                                   ExecutionScope.SAMPLE_LEVEL,
-                                autoSummary: workflow.auto_summary ?? false,
                               })
                             }
                             disabled={!workflow.enabled}
@@ -315,7 +313,6 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
           workflowUid={runningWorkflow.uid}
           workflowName={runningWorkflow.name}
           executionScope={runningWorkflow.executionScope}
-          defaultAutoSummary={runningWorkflow.autoSummary}
           open={!!runningWorkflow}
           onOpenChange={(open) => !open && setRunningWorkflow(null)}
         />
