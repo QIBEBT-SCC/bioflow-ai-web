@@ -7,6 +7,13 @@ import { colorSchemes } from '@/components/node-editor/node/color'
 import { useReadOnly } from '@/components/node-editor/read-only-context'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import type { HandleDefine } from '@/types/node'
 
 const COPY2FOLDER_HANDLES = {
@@ -88,37 +95,146 @@ const COMPRESS_HANDLES = {
   ] as HandleDefine[],
 }
 
+const COMPRESSION_FORMATS = [
+  { suffix: '.zip', label: 'ZIP (.zip)' },
+  { suffix: '.tar.gz', label: 'TAR + Gzip (.tar.gz)' },
+  { suffix: '.tar.bz2', label: 'TAR + Bzip2 (.tar.bz2)' },
+  { suffix: '.tar.xz', label: 'TAR + XZ (.tar.xz)' },
+  { suffix: '.tar', label: 'TAR (.tar)' },
+  { suffix: '.gz', label: 'Gzip (.gz, files only)' },
+  { suffix: '.bz2', label: 'Bzip2 (.bz2, files only)' },
+  { suffix: '.xz', label: 'XZ (.xz, files only)' },
+] as const
+
+type CompressionFormat = (typeof COMPRESSION_FORMATS)[number]['suffix']
+
+const COMPRESSION_SUFFIXES = [
+  '.tar.bz2',
+  '.tar.gz',
+  '.tar.xz',
+  '.bz2',
+  '.tar',
+  '.zip',
+  '.gz',
+  '.xz',
+] as const
+
+function resolveCompressionFormat(
+  format: string | undefined,
+): CompressionFormat {
+  const savedFormat = COMPRESSION_FORMATS.find(
+    (item) => item.suffix === format,
+  )?.suffix
+  return savedFormat ?? '.zip'
+}
+
+function applyCompressionFormat(
+  fileName: string,
+  format: CompressionFormat,
+): string {
+  const trimmedFileName = fileName.trim()
+  if (!trimmedFileName) return ''
+
+  const currentSuffix = COMPRESSION_SUFFIXES.find((suffix) =>
+    trimmedFileName.endsWith(suffix),
+  )
+  const baseName = currentSuffix
+    ? trimmedFileName.slice(0, -currentSuffix.length)
+    : trimmedFileName
+
+  return `${baseName}${format}`
+}
+
 const CompressCard = memo(function CompressCard() {
   const readOnly = useReadOnly()
   const nodeId = useNodeId() ?? ''
   const nodeData =
-    useNodesData<Node<{ compressed_file_name: string }, 'compress'>>(nodeId)
+    useNodesData<
+      Node<
+        {
+          compressed_file_name: string
+          compression_format: CompressionFormat
+        },
+        'compress'
+      >
+    >(nodeId)
   const { updateNodeData } = useReactFlow()
 
   const [fileName, setFileName] = useState(
     nodeData?.data.compressed_file_name ?? '',
   )
+  const [compressionFormat, setCompressionFormat] = useState<CompressionFormat>(
+    () => resolveCompressionFormat(nodeData?.data.compression_format),
+  )
 
   useEffect(() => {
-    setFileName(nodeData?.data.compressed_file_name ?? '')
-  }, [nodeData?.data.compressed_file_name])
+    const nextFileName = nodeData?.data.compressed_file_name ?? ''
+    setFileName(nextFileName)
+    setCompressionFormat(
+      resolveCompressionFormat(nodeData?.data.compression_format),
+    )
+  }, [nodeData?.data.compressed_file_name, nodeData?.data.compression_format])
 
   const saveNodeData = useCallback(() => {
-    updateNodeData(nodeId, { compressed_file_name: fileName })
-  }, [fileName, nodeId, updateNodeData])
+    const formattedFileName = applyCompressionFormat(
+      fileName,
+      compressionFormat,
+    )
+    setFileName(formattedFileName)
+    updateNodeData(nodeId, {
+      compressed_file_name: formattedFileName,
+      compression_format: compressionFormat,
+    })
+  }, [compressionFormat, fileName, nodeId, updateNodeData])
+
+  const changeCompressionFormat = useCallback(
+    (format: CompressionFormat) => {
+      const formattedFileName = applyCompressionFormat(fileName, format)
+      setCompressionFormat(format)
+      setFileName(formattedFileName)
+      updateNodeData(nodeId, {
+        compressed_file_name: formattedFileName,
+        compression_format: format,
+      })
+    },
+    [fileName, nodeId, updateNodeData],
+  )
 
   return (
-    <div className='p-3'>
-      <Label className='pb-2 font-medium'>Compressed File Name:</Label>
-      <Input
-        className='w-full border-input focus-visible:ring-ring'
-        placeholder='e.g. results.tar.gz'
-        value={fileName}
-        onChange={(event) => setFileName(event.target.value)}
-        onBlur={saveNodeData}
-        spellCheck={false}
-        disabled={readOnly}
-      />
+    <div className='space-y-3 p-3'>
+      <div>
+        <Label className='pb-2 font-medium'>Compression Format:</Label>
+        <Select
+          value={compressionFormat}
+          onValueChange={(value) =>
+            changeCompressionFormat(value as CompressionFormat)
+          }
+          disabled={readOnly}
+        >
+          <SelectTrigger className='w-full'>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {COMPRESSION_FORMATS.map((format) => (
+              <SelectItem key={format.suffix} value={format.suffix}>
+                {format.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label className='pb-2 font-medium'>Compressed File Name:</Label>
+        <Input
+          className='w-full border-input focus-visible:ring-ring'
+          placeholder={`e.g. results${compressionFormat}`}
+          value={fileName}
+          onChange={(event) => setFileName(event.target.value)}
+          onBlur={saveNodeData}
+          spellCheck={false}
+          disabled={readOnly}
+        />
+      </div>
     </div>
   )
 })
@@ -128,7 +244,7 @@ const CompressNode = memo(function CompressNode() {
   return (
     <BaseNode
       title='Compress'
-      description='Compress a file or directory using the format selected by the output file suffix.'
+      description='Compress a file or directory using the selected compression format.'
       handles={COMPRESS_HANDLES}
       color={colorSchemes.orange}
       nodeComponent={nodeComponent}

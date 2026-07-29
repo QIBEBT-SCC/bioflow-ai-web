@@ -112,7 +112,7 @@ export const nodeDefaultData: Record<string, Record<string, unknown>> = {
   resource_GRCh38: {},
   resource_GRCm39: {},
   copy2folder: {},
-  compress: { compressed_file_name: '' },
+  compress: { compressed_file_name: '', compression_format: '.zip' },
   decompress: {},
   project_mark: { mark_name: '', description: '' },
   sample_mark: { mark_name: '', description: '' },
