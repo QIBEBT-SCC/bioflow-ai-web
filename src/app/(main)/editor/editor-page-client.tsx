@@ -39,10 +39,14 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { useChatSidebarResize } from '@/hooks/use-chat-sidebar-resize'
+import { useInitialWorkflowLayout } from '@/hooks/use-initial-workflow-layout'
 import { useNewRunInstance } from '@/hooks/use-run'
 import { useUpdateWorkflow, useWorkflow } from '@/hooks/use-workflow'
 import { generateLetterId } from '@/lib/id-generator'
-import { layoutWorkflowNodes } from '@/lib/workflow-layout'
+import {
+  layoutWorkflowNodes,
+  prepareWorkflowNodes,
+} from '@/lib/workflow-layout'
 import { useChatSidebarStore } from '@/stores/chat-sidebar-store'
 import { useNodeEditorStore } from '@/stores/nodeviewStore'
 import type { CodeInfo } from '@/types/code'
@@ -84,12 +88,32 @@ function FlowContent() {
   const isProjectMode = !!projectId
 
   const { fitView, getNodes, screenToFlowPosition } = useReactFlow()
-  const { data: workflowData } = useWorkflow(currentWorkflowUid)
+  const { data: workflowData, dataUpdatedAt: workflowDataUpdatedAt } =
+    useWorkflow(currentWorkflowUid)
   const updateWorkflowMutation = useUpdateWorkflow()
   const runMutation = useNewRunInstance()
 
   const [clickPosition, setClickPosition] = useState<XYPosition>({ x: 0, y: 0 })
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const preparedWorkflow = useMemo(() => {
+    if (!currentWorkflowUid || !workflowData?.workflow) {
+      return null
+    }
+
+    const workflowNodes = workflowData.workflow.nodes || []
+    const workflowEdges = workflowData.workflow.edges || []
+    const prepared = prepareWorkflowNodes(workflowNodes)
+    const layoutKey = prepared.needsLayout
+      ? [
+          currentWorkflowUid,
+          workflowDataUpdatedAt,
+          ...workflowNodes.map((node) => node.id),
+          ...workflowEdges.map((edge) => `${edge.source}>${edge.target}`),
+        ].join('|')
+      : null
+
+    return { ...prepared, edges: workflowEdges, layoutKey }
+  }, [currentWorkflowUid, workflowData, workflowDataUpdatedAt])
   const toolUids = useMemo(() => {
     const uids = new Set<string>()
     for (const node of nodes) {
@@ -122,6 +146,13 @@ function FlowContent() {
 
   const [edgesReady, setEdgesReady] = useState(false)
 
+  useInitialWorkflowLayout({
+    edges,
+    layoutKey: preparedWorkflow?.layoutKey ?? null,
+    nodesReady: allToolsLoaded,
+    setNodes,
+  })
+
   // 从项目页跳转时，将 URL 中指定的 workflow 加载到编辑器
   useEffect(() => {
     if (workflowUidParam && workflowUidParam !== currentWorkflowUid) {
@@ -131,11 +162,11 @@ function FlowContent() {
 
   // 加载workflow数据
   useEffect(() => {
-    if (currentWorkflowUid && workflowData?.workflow) {
-      setNodes(workflowData.workflow.nodes || [])
-      setEdges(workflowData.workflow.edges || [])
+    if (preparedWorkflow) {
+      setNodes(preparedWorkflow.nodes)
+      setEdges(preparedWorkflow.edges)
     }
-  }, [currentWorkflowUid, workflowData, setNodes, setEdges])
+  }, [preparedWorkflow, setNodes, setEdges])
 
   // Tool 节点的 handles 依赖异步 tool args；等 handles commit 到 DOM 后再渲染 edges，避免 React Flow 008 警告。
   useEffect(() => {

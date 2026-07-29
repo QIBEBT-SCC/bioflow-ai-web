@@ -1,4 +1,4 @@
-import type { Edge, Node } from '@xyflow/react'
+import type { Edge, Node, XYPosition } from '@xyflow/react'
 
 export enum WorkflowType {
   SUBMODULE = 0,
@@ -10,8 +10,12 @@ export enum ExecutionScope {
   PROJECT_LEVEL = 1,
 }
 
+export type WorkflowNode = Omit<Node, 'position'> & {
+  position?: XYPosition | null
+}
+
 export interface WorkflowDefinition {
-  nodes: Node[]
+  nodes: WorkflowNode[]
   edges: Edge[]
 }
 

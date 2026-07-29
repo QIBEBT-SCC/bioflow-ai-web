@@ -1,5 +1,6 @@
 import { Graph, layout } from '@dagrejs/dagre'
-import type { Edge, Node } from '@xyflow/react'
+import type { Edge, Node, XYPosition } from '@xyflow/react'
+import type { WorkflowNode } from '@/types/workflow'
 
 const DEFAULT_NODE_WIDTH = 300
 const DEFAULT_NODE_HEIGHT = 200
@@ -13,10 +14,145 @@ interface NodeSize {
   height: number
 }
 
+interface WorkflowLayoutOptions {
+  initialLayout?: boolean
+}
+
+interface PreparedWorkflowNodes {
+  needsLayout: boolean
+  nodes: Node[]
+}
+
+interface NodeRect extends NodeSize, XYPosition {}
+
 function getNodeSize(node: Node): NodeSize {
   return {
     width: node.measured?.width ?? node.width ?? DEFAULT_NODE_WIDTH,
     height: node.measured?.height ?? node.height ?? DEFAULT_NODE_HEIGHT,
+  }
+}
+
+function hasValidPosition(node: WorkflowNode): boolean {
+  return Number.isFinite(node.position?.x) && Number.isFinite(node.position?.y)
+}
+
+/**
+ * Convert API nodes into renderable React Flow nodes.
+ *
+ * Workflow layouts are all-or-nothing: if any node has no valid position, all
+ * nodes receive a temporary origin and the whole graph is marked for layout.
+ */
+export function prepareWorkflowNodes(
+  nodes: WorkflowNode[],
+): PreparedWorkflowNodes {
+  const needsLayout =
+    nodes.length > 0 && !nodes.every((node) => hasValidPosition(node))
+
+  if (!needsLayout) {
+    return {
+      needsLayout,
+      nodes: nodes.map((node) => ({
+        ...node,
+        position: node.position as XYPosition,
+      })),
+    }
+  }
+
+  return {
+    needsLayout,
+    nodes: nodes.map((node) => ({ ...node, position: { x: 0, y: 0 } })),
+  }
+}
+
+function overlaps(a: NodeRect, b: NodeRect): boolean {
+  return (
+    a.x < b.x + b.width &&
+    a.x + a.width > b.x &&
+    a.y < b.y + b.height &&
+    a.y + a.height > b.y
+  )
+}
+
+function placeInitialNotes(
+  nodes: Node[],
+  positions: Map<string, Node['position']>,
+  sizes: Map<string, NodeSize>,
+): void {
+  const notes = nodes.filter((node) => node.type === 'note')
+  if (notes.length === 0) {
+    return
+  }
+
+  const occupied: NodeRect[] = nodes
+    .filter((node) => node.type !== 'note')
+    .map((node) => {
+      const position = positions.get(node.id) ?? node.position
+      const size = sizes.get(node.id) ?? getNodeSize(node)
+      return { ...position, ...size }
+    })
+  const globalNotes: Node[] = []
+
+  for (const note of notes) {
+    const anchorNodeId = note.data.anchor_node_id
+    const anchorPosition =
+      typeof anchorNodeId === 'string' ? positions.get(anchorNodeId) : undefined
+    const anchorSize =
+      typeof anchorNodeId === 'string' ? sizes.get(anchorNodeId) : undefined
+
+    if (!anchorPosition || !anchorSize) {
+      globalNotes.push(note)
+      continue
+    }
+
+    const noteSize = sizes.get(note.id) ?? getNodeSize(note)
+    const candidate: NodeRect = {
+      x: anchorPosition.x,
+      y: anchorPosition.y + anchorSize.height + NODE_GAP,
+      ...noteSize,
+    }
+
+    let collisions = occupied.filter((rect) => overlaps(candidate, rect))
+    while (collisions.length > 0) {
+      candidate.y =
+        Math.max(...collisions.map((rect) => rect.y + rect.height)) + NODE_GAP
+      collisions = occupied.filter((rect) => overlaps(candidate, rect))
+    }
+
+    positions.set(note.id, { x: candidate.x, y: candidate.y })
+    occupied.push(candidate)
+  }
+
+  if (globalNotes.length === 0) {
+    return
+  }
+
+  const minX =
+    occupied.length > 0 ? Math.min(...occupied.map((rect) => rect.x)) : 0
+  const maxX =
+    occupied.length > 0
+      ? Math.max(...occupied.map((rect) => rect.x + rect.width))
+      : MIN_ISOLATED_ROW_WIDTH
+  const maxY =
+    occupied.length > 0
+      ? Math.max(...occupied.map((rect) => rect.y + rect.height))
+      : -SECTION_GAP
+  const rowEndX = minX + Math.max(maxX - minX, MIN_ISOLATED_ROW_WIDTH)
+
+  let x = minX
+  let y = maxY + SECTION_GAP
+  let rowHeight = 0
+
+  for (const note of globalNotes) {
+    const size = sizes.get(note.id) ?? getNodeSize(note)
+    if (x > minX && x + size.width > rowEndX) {
+      x = minX
+      y += rowHeight + NODE_GAP
+      rowHeight = 0
+    }
+
+    positions.set(note.id, { x, y })
+    x += size.width + NODE_GAP
+    rowHeight = Math.max(rowHeight, size.height)
   }
 }
 
@@ -27,9 +163,13 @@ function getNodeSize(node: Node): NodeSize {
  * Global notes remain in place. Other disconnected nodes are placed below the
  * connected graph so they remain easy to find.
  */
-export function layoutWorkflowNodes(nodes: Node[], edges: Edge[]): Node[] {
+export function layoutWorkflowNodes(
+  nodes: Node[],
+  edges: Edge[],
+  options: WorkflowLayoutOptions = {},
+): Node[] {
   const layoutableNodes = nodes.filter((node) => node.type !== 'note')
-  if (layoutableNodes.length === 0) {
+  if (layoutableNodes.length === 0 && !options.initialLayout) {
     return nodes
   }
 
@@ -56,9 +196,7 @@ export function layoutWorkflowNodes(nodes: Node[], edges: Edge[]): Node[] {
   const originalPositions = new Map(
     layoutableNodes.map((node) => [node.id, node.position]),
   )
-  const sizes = new Map(
-    layoutableNodes.map((node) => [node.id, getNodeSize(node)]),
-  )
+  const sizes = new Map(nodes.map((node) => [node.id, getNodeSize(node)]))
 
   let connectedMinX = 0
   let connectedMaxX = 0
@@ -139,6 +277,10 @@ export function layoutWorkflowNodes(nodes: Node[], edges: Edge[]): Node[] {
       x += size.width + NODE_GAP
       rowHeight = Math.max(rowHeight, size.height)
     }
+  }
+
+  if (options.initialLayout) {
+    placeInitialNotes(nodes, positions, sizes)
   }
 
   return nodes.map((node) => {
