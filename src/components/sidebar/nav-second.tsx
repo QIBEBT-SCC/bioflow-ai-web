@@ -49,6 +49,7 @@ const projects = [
     icon: SettingsIcon,
     items: [
       { name: 'llm_management', url: '/setting/llm' },
+      { name: 'skill_management', url: '/setting/skills' },
       { name: 'user_management', url: '/setting/user-management' },
     ],
   },

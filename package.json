@@ -14,6 +14,7 @@
     "@ai-sdk/deepseek": "^1.0.32",
     "@ai-sdk/openai": "^2.0.88",
     "@ai-sdk/react": "^2.0.68",
+    "@codemirror/lang-markdown": "^6.5.1",
     "@codemirror/lang-python": "^6.2.1",
     "@codemirror/language": "^6.12.4",
     "@codemirror/legacy-modes": "^6.5.3",
