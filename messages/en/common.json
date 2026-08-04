@@ -16,6 +16,7 @@
     "genomes": "Genomes",
     "images": "Images",
     "llm_management": "LLM Management",
+    "notification_management": "Notifications",
     "projects": "Project",
     "resource": "Resource Management",
     "setting": "Settings",
