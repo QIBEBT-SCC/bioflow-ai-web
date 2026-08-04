@@ -32,7 +32,7 @@ export interface LLMProviderPublic {
   name: string
   provider_type: ProviderType
   base_url?: string
-  api_key?: string
+  credential_configured: boolean
   use_proxy: boolean
   is_active: boolean
   models: LLMModelPublic[]

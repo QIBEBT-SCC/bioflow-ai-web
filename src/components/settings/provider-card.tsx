@@ -58,7 +58,7 @@ export function ProviderCard({ provider }: ProviderCardProps) {
       name: provider.name,
       provider_type: provider.provider_type,
       base_url: provider.base_url,
-      api_key: provider.api_key,
+      api_key: '',
       use_proxy: provider.use_proxy,
       is_active: provider.is_active,
     })
@@ -67,7 +67,13 @@ export function ProviderCard({ provider }: ProviderCardProps) {
 
   const saveProvider = async () => {
     if (!draft) return
-    await updateProviderMutation.mutateAsync({ id: provider.id, data: draft })
+    const { api_key: apiKey, ...providerData } = draft
+    await updateProviderMutation.mutateAsync({
+      id: provider.id,
+      data: apiKey?.trim()
+        ? { ...providerData, api_key: apiKey.trim() }
+        : providerData,
+    })
     setIsEditing(false)
     setDraft(null)
   }
@@ -275,7 +281,11 @@ function ProviderEditForm({
               type={showApiKey ? 'text' : 'password'}
               value={draft?.api_key || ''}
               onChange={(e) => onUpdateDraft('api_key', e.target.value)}
-              placeholder='sk-...'
+              placeholder={
+                provider.credential_configured
+                  ? t('api_key_update_placeholder')
+                  : 'sk-...'
+              }
               className='font-mono text-sm pr-10 bg-background'
             />
             <Button
@@ -342,9 +352,9 @@ function ProviderReadView({ provider }: { provider: LLMProviderPublic }) {
         <div className='space-y-1 min-w-[120px]'>
           <p className='text-muted-foreground'>API Key</p>
           <p className='font-mono'>
-            {provider.api_key
-              ? `••••••••${provider.api_key.slice(-4)}`
-              : t('base_url_not_set')}
+            {provider.credential_configured
+              ? t('api_key_configured')
+              : t('api_key_not_configured')}
           </p>
         </div>
         <div className='space-y-1 min-w-[120px]'>

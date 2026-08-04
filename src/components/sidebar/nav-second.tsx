@@ -50,6 +50,7 @@ const projects = [
     items: [
       { name: 'llm_management', url: '/setting/llm' },
       { name: 'skill_management', url: '/setting/skills' },
+      { name: 'notification_management', url: '/setting/notifications' },
       { name: 'user_management', url: '/setting/user-management' },
     ],
   },
