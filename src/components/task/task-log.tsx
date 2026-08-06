@@ -1,6 +1,7 @@
 'use client'
 
 import { FileTextIcon } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { Terminal, TerminalContent } from '@/components/ai-elements/terminal'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useTaskLog } from '@/hooks/use-task'
@@ -10,6 +11,7 @@ interface TaskLogProps {
 }
 
 export function TaskLog({ taskUid }: TaskLogProps) {
+  const t = useTranslations('task.log')
   const { data: logData, isLoading, error } = useTaskLog(taskUid)
 
   if (isLoading) {
@@ -28,7 +30,7 @@ export function TaskLog({ taskUid }: TaskLogProps) {
     return (
       <div className='text-center text-muted-foreground py-12'>
         <FileTextIcon className='size-12 mx-auto mb-3 opacity-50' />
-        <p>日志文件不存在或无法读取</p>
+        <p>{t('unavailable')}</p>
       </div>
     )
   }
@@ -37,7 +39,7 @@ export function TaskLog({ taskUid }: TaskLogProps) {
     return (
       <div className='text-center text-muted-foreground py-12'>
         <FileTextIcon className='size-12 mx-auto mb-3 opacity-50' />
-        <p>暂无日志内容</p>
+        <p>{t('empty')}</p>
       </div>
     )
   }
@@ -46,7 +48,7 @@ export function TaskLog({ taskUid }: TaskLogProps) {
     <>
       <div className='flex justify-between items-center mb-3'>
         <span className='text-sm text-muted-foreground'>
-          共 {logData.content.split('\n').length} 行
+          {t('lineCount', { count: logData.content.split('\n').length })}
         </span>
       </div>
       <Terminal output={logData.content} autoScroll={false}>

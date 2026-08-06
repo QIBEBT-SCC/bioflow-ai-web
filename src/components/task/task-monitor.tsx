@@ -1,7 +1,5 @@
 'use client'
 
-import { format } from 'date-fns'
-import { zhCN } from 'date-fns/locale'
 import {
   ActivityIcon,
   CpuIcon,
@@ -9,6 +7,7 @@ import {
   MemoryStickIcon,
 } from 'lucide-react'
 import dynamic from 'next/dynamic'
+import { useLocale, useTranslations } from 'next-intl'
 import { useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -46,7 +45,19 @@ function formatBytes(
 }
 
 export function TaskMonitor({ taskUid }: TaskMonitorProps) {
+  const locale = useLocale()
+  const t = useTranslations('task.monitor')
   const { data: monitors = [], isLoading } = useTaskMonitor(taskUid)
+  const timeFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat(locale, {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hourCycle: 'h23',
+      }),
+    [locale],
+  )
 
   // 计算平均值和最大值
   const stats = useMemo(() => {
@@ -93,14 +104,14 @@ export function TaskMonitor({ taskUid }: TaskMonitorProps) {
   // 准备图表数据
   const chartData = useMemo(() => {
     return monitors.map((m) => ({
-      time: format(new Date(m.time), 'HH:mm:ss', { locale: zhCN }),
+      time: timeFormatter.format(new Date(m.time)),
       cpu: Number(m.cpu_usage.toFixed(2)),
       memory: Number(m.mem_usage.toFixed(2)),
       memUsed: m.mem_used / 1024, // GB
       ioIn: m.io_in, // MB
       ioOut: m.io_out, // MB
     }))
-  }, [monitors])
+  }, [monitors, timeFormatter])
 
   if (isLoading) {
     return (
@@ -120,7 +131,7 @@ export function TaskMonitor({ taskUid }: TaskMonitorProps) {
     return (
       <div className='text-center text-muted-foreground py-12'>
         <ActivityIcon className='size-12 mx-auto mb-3 opacity-50' />
-        <p>暂无监控数据</p>
+        <p>{t('empty')}</p>
       </div>
     )
   }
@@ -134,7 +145,7 @@ export function TaskMonitor({ taskUid }: TaskMonitorProps) {
           <CardHeader className='pb-3'>
             <CardTitle className='text-sm font-medium flex items-center gap-2 text-blue-700 dark:text-blue-300'>
               <CpuIcon className='size-4' />
-              CPU使用率
+              {t('cpuUsage')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -142,7 +153,7 @@ export function TaskMonitor({ taskUid }: TaskMonitorProps) {
               {stats.avgCpu.toFixed(2)}%
             </div>
             <p className='text-xs text-blue-600/70 dark:text-blue-400/70 mt-1'>
-              峰值: {stats.maxCpu.toFixed(2)}%
+              {t('peak', { value: `${stats.maxCpu.toFixed(2)}%` })}
             </p>
           </CardContent>
         </Card>
@@ -152,7 +163,7 @@ export function TaskMonitor({ taskUid }: TaskMonitorProps) {
           <CardHeader className='pb-3'>
             <CardTitle className='text-sm font-medium flex items-center gap-2 text-purple-700 dark:text-purple-300'>
               <MemoryStickIcon className='size-4' />
-              内存使用率
+              {t('memoryUsage')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -160,7 +171,7 @@ export function TaskMonitor({ taskUid }: TaskMonitorProps) {
               {stats.avgMem.toFixed(2)}%
             </div>
             <p className='text-xs text-purple-600/70 dark:text-purple-400/70 mt-1'>
-              峰值: {stats.maxMem.toFixed(2)}%
+              {t('peak', { value: `${stats.maxMem.toFixed(2)}%` })}
             </p>
           </CardContent>
         </Card>
@@ -170,7 +181,7 @@ export function TaskMonitor({ taskUid }: TaskMonitorProps) {
           <CardHeader className='pb-3'>
             <CardTitle className='text-sm font-medium flex items-center gap-2 text-green-700 dark:text-green-300'>
               <MemoryStickIcon className='size-4' />
-              内存用量
+              {t('memoryUsed')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -178,7 +189,9 @@ export function TaskMonitor({ taskUid }: TaskMonitorProps) {
               {(stats.avgMemUsed / 1024).toFixed(2)} GB
             </div>
             <p className='text-xs text-green-600/70 dark:text-green-400/70 mt-1'>
-              峰值: {(stats.maxMemUsed / 1024).toFixed(2)} GB
+              {t('peak', {
+                value: `${(stats.maxMemUsed / 1024).toFixed(2)} GB`,
+              })}
             </p>
           </CardContent>
         </Card>
@@ -188,14 +201,14 @@ export function TaskMonitor({ taskUid }: TaskMonitorProps) {
           <CardHeader className='pb-3'>
             <CardTitle className='text-sm font-medium flex items-center gap-2 text-orange-700 dark:text-orange-300'>
               <HardDriveIcon className='size-4' />
-              IO统计
+              {t('ioStats')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className='text-sm space-y-1 text-orange-700 dark:text-orange-300'>
               <div className='flex justify-between'>
                 <span className='text-orange-600/70 dark:text-orange-400/70'>
-                  输入:
+                  {t('input')}
                 </span>
                 <span className='font-medium'>
                   {(() => {
@@ -206,7 +219,7 @@ export function TaskMonitor({ taskUid }: TaskMonitorProps) {
               </div>
               <div className='flex justify-between'>
                 <span className='text-orange-600/70 dark:text-orange-400/70'>
-                  输出:
+                  {t('output')}
                 </span>
                 <span className='font-medium'>
                   {(() => {

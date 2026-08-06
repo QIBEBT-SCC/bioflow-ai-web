@@ -1,0 +1,88 @@
+{
+  "task": {
+    "title": "Task Monitor",
+    "status": {
+      "waiting": "Waiting",
+      "running": "Running",
+      "failed": "Failed",
+      "success": "Success"
+    },
+    "duration": {
+      "seconds": "{seconds}s",
+      "minutesSeconds": "{minutes}m {seconds}s",
+      "hoursMinutes": "{hours}h {minutes}m"
+    },
+    "table": {
+      "statusFilter": "Status:",
+      "all": "All",
+      "total": "Total: {count}",
+      "taskName": "Task Name",
+      "workflow": "Workflow",
+      "status": "Status",
+      "owner": "Owner",
+      "createdAt": "Created At",
+      "startedAt": "Started At",
+      "duration": "Duration",
+      "empty": "No tasks found",
+      "page": "Page {current} of {total}",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "timeline": {
+      "title": "Task Timeline",
+      "empty": "No task activity in the last 24 hours",
+      "summary": "Last 24 hours · {count, plural, one {# task} other {# tasks}}",
+      "workflow": "Workflow: {name}",
+      "owner": "Owner: {name}"
+    },
+    "detail": {
+      "loading": "Loading...",
+      "notFound": "Task not found",
+      "taskId": "Task ID:",
+      "workflow": "Workflow:",
+      "duration": "Duration:",
+      "result": "Result",
+      "log": "Task Log",
+      "monitor": "System Monitor",
+      "noResult": "No output available",
+      "command": "Command",
+      "basicInfo": "Basic Information",
+      "tool": "Tool",
+      "owner": "Owner",
+      "timeInfo": "Time Information",
+      "createdAt": "Created At",
+      "startedAt": "Started At",
+      "endedAt": "Ended At",
+      "systemInfo": "System Information",
+      "host": "Host",
+      "system": "System"
+    },
+    "log": {
+      "unavailable": "The log file does not exist or cannot be read",
+      "empty": "No log content",
+      "lineCount": "{count, plural, one {# line} other {# lines}}"
+    },
+    "monitor": {
+      "empty": "No monitoring data",
+      "cpuUsage": "CPU Usage",
+      "memoryUsage": "Memory Usage",
+      "memoryUsed": "Memory Used",
+      "peak": "Peak: {value}",
+      "ioStats": "I/O Statistics",
+      "input": "Input:",
+      "output": "Output:"
+    },
+    "charts": {
+      "cpuMemoryTrend": "CPU & Memory Usage",
+      "usageAxis": "Usage (%)",
+      "cpuUsage": "CPU Usage",
+      "memoryUsage": "Memory Usage",
+      "memoryTrend": "Memory Usage Trend",
+      "memoryAxis": "Memory (GB)",
+      "memoryUsed": "Memory Used",
+      "ioTrend": "I/O Read/Write Trend",
+      "ioInput": "I/O Input",
+      "ioOutput": "I/O Output"
+    }
+  }
+}

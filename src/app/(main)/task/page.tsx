@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server'
 import { TaskTable } from '@/components/task/task-table'
 import { TaskTimeline } from '@/components/task/task-timeline'
 import {
@@ -9,7 +10,9 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 
-export default function TaskPage() {
+export default async function TaskPage() {
+  const t = await getTranslations('task')
+
   return (
     <SidebarInset className='h-screen flex flex-col'>
       <header className='flex flex-col shrink-0 border-b'>
@@ -20,7 +23,7 @@ export default function TaskPage() {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className='hidden md:block'>
-                  <BreadcrumbPage>任务监控</BreadcrumbPage>
+                  <BreadcrumbPage>{t('title')}</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>

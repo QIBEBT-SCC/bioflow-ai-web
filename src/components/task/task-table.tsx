@@ -1,7 +1,5 @@
 'use client'
 
-import { format } from 'date-fns'
-import { zhCN } from 'date-fns/locale'
 import {
   CheckCircle2Icon,
   ChevronLeftIcon,
@@ -11,7 +9,8 @@ import {
   XCircleIcon,
 } from 'lucide-react'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useLocale, useTranslations } from 'next-intl'
+import { useMemo, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -36,25 +35,25 @@ import { Status } from '@/types/run'
 // 状态配置
 const statusConfig = {
   [Status.WAITING]: {
-    label: '等待中',
+    labelKey: 'waiting',
     variant: 'secondary' as const,
     icon: ClockIcon,
     color: 'text-yellow-600',
   },
   [Status.RUNNING]: {
-    label: '运行中',
+    labelKey: 'running',
     variant: 'default' as const,
     icon: Loader2Icon,
     color: 'text-blue-600',
   },
   [Status.ERROR]: {
-    label: '失败',
+    labelKey: 'failed',
     variant: 'destructive' as const,
     icon: XCircleIcon,
     color: 'text-red-600',
   },
   [Status.SUCCESS]: {
-    label: '成功',
+    labelKey: 'success',
     variant: 'outline' as const,
     icon: CheckCircle2Icon,
     color: 'text-green-600',
@@ -62,36 +61,56 @@ const statusConfig = {
 }
 
 // 格式化时间
-function formatDateTime(dateStr?: string) {
+function formatDateTime(dateFormatter: Intl.DateTimeFormat, dateStr?: string) {
   if (!dateStr) return '-'
   try {
-    return format(new Date(dateStr), 'yyyy-MM-dd HH:mm:ss', { locale: zhCN })
+    return dateFormatter.format(new Date(dateStr))
   } catch {
     return '-'
   }
 }
 
-// 计算运行时长
-function calculateDuration(startTime?: string, endTime?: string) {
-  if (!startTime) return '-'
-  const start = new Date(startTime).getTime()
-  const end = endTime ? new Date(endTime).getTime() : Date.now()
-  const duration = Math.floor((end - start) / 1000)
-
-  if (duration < 60) return `${duration}s`
-  if (duration < 3600) return `${Math.floor(duration / 60)}m ${duration % 60}s`
-  const hours = Math.floor(duration / 3600)
-  const mins = Math.floor((duration % 3600) / 60)
-  return `${hours}h ${mins}m`
-}
-
 export function TaskTable() {
+  const locale = useLocale()
+  const t = useTranslations('task')
   const [page, setPage] = useState(0)
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const limit = 20
 
   const { data: taskCount = 0 } = useTaskCount()
   const { data: tasks = [], isLoading } = useTasks(page * limit, limit)
+  const dateFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat(locale, {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hourCycle: 'h23',
+      }),
+    [locale],
+  )
+
+  const formatDuration = (startTime?: string, endTime?: string) => {
+    if (!startTime) return '-'
+    const start = new Date(startTime).getTime()
+    const end = endTime ? new Date(endTime).getTime() : Date.now()
+    const duration = Math.floor((end - start) / 1000)
+
+    if (duration < 60) return t('duration.seconds', { seconds: duration })
+    if (duration < 3600) {
+      return t('duration.minutesSeconds', {
+        minutes: Math.floor(duration / 60),
+        seconds: duration % 60,
+      })
+    }
+    return t('duration.hoursMinutes', {
+      hours: Math.floor(duration / 3600),
+      minutes: Math.floor((duration % 3600) / 60),
+    })
+  }
 
   // 过滤任务
   const filteredTasks = tasks.filter((task) => {
@@ -106,22 +125,32 @@ export function TaskTable() {
       {/* 筛选器 */}
       <div className='flex items-center justify-between'>
         <div className='flex items-center gap-2'>
-          <span className='text-sm text-muted-foreground'>状态筛选:</span>
+          <span className='text-sm text-muted-foreground'>
+            {t('table.statusFilter')}
+          </span>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className='w-[140px]'>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value='all'>全部</SelectItem>
-              <SelectItem value={String(Status.WAITING)}>等待中</SelectItem>
-              <SelectItem value={String(Status.RUNNING)}>运行中</SelectItem>
-              <SelectItem value={String(Status.SUCCESS)}>成功</SelectItem>
-              <SelectItem value={String(Status.ERROR)}>失败</SelectItem>
+              <SelectItem value='all'>{t('table.all')}</SelectItem>
+              <SelectItem value={String(Status.WAITING)}>
+                {t('status.waiting')}
+              </SelectItem>
+              <SelectItem value={String(Status.RUNNING)}>
+                {t('status.running')}
+              </SelectItem>
+              <SelectItem value={String(Status.SUCCESS)}>
+                {t('status.success')}
+              </SelectItem>
+              <SelectItem value={String(Status.ERROR)}>
+                {t('status.failed')}
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
         <div className='text-sm text-muted-foreground'>
-          共 {taskCount} 个任务
+          {t('table.total', { count: taskCount })}
         </div>
       </div>
 
@@ -130,13 +159,17 @@ export function TaskTable() {
         <Table>
           <TableHeader>
             <TableRow className='bg-muted/50'>
-              <TableHead className='w-[200px]'>任务名称</TableHead>
-              <TableHead className='w-[200px]'>所属工作流</TableHead>
-              <TableHead className='w-[100px]'>状态</TableHead>
-              <TableHead className='w-[100px]'>创建者</TableHead>
-              <TableHead className='w-[180px]'>创建时间</TableHead>
-              <TableHead className='w-[180px]'>开始时间</TableHead>
-              <TableHead className='w-[100px]'>运行时长</TableHead>
+              <TableHead className='w-[200px]'>{t('table.taskName')}</TableHead>
+              <TableHead className='w-[200px]'>{t('table.workflow')}</TableHead>
+              <TableHead className='w-[100px]'>{t('table.status')}</TableHead>
+              <TableHead className='w-[100px]'>{t('table.owner')}</TableHead>
+              <TableHead className='w-[180px]'>
+                {t('table.createdAt')}
+              </TableHead>
+              <TableHead className='w-[180px]'>
+                {t('table.startedAt')}
+              </TableHead>
+              <TableHead className='w-[100px]'>{t('table.duration')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -183,7 +216,7 @@ export function TaskTable() {
                 <TableCell colSpan={7} className='h-32 text-center'>
                   <div className='flex flex-col items-center justify-center text-muted-foreground'>
                     <ClockIcon className='size-8 mb-2' />
-                    <p>暂无任务记录</p>
+                    <p>{t('table.empty')}</p>
                   </div>
                 </TableCell>
               </TableRow>
@@ -225,7 +258,7 @@ export function TaskTable() {
                             config.icon === Loader2Icon ? 'animate-spin' : ''
                           }`}
                         />
-                        {config.label}
+                        {t(`status.${config.labelKey}`)}
                       </Badge>
                     </TableCell>
 
@@ -236,17 +269,17 @@ export function TaskTable() {
 
                     {/* 创建时间 */}
                     <TableCell className='text-sm'>
-                      {formatDateTime(task.create_time)}
+                      {formatDateTime(dateFormatter, task.create_time)}
                     </TableCell>
 
                     {/* 开始时间 */}
                     <TableCell className='text-sm'>
-                      {formatDateTime(task.start_time)}
+                      {formatDateTime(dateFormatter, task.start_time)}
                     </TableCell>
 
                     {/* 运行时长 */}
                     <TableCell className='text-sm'>
-                      {calculateDuration(task.start_time, task.end_time)}
+                      {formatDuration(task.start_time, task.end_time)}
                     </TableCell>
                   </TableRow>
                 )
@@ -260,7 +293,7 @@ export function TaskTable() {
       {!isLoading && totalPages > 1 && (
         <div className='flex items-center justify-between'>
           <div className='text-sm text-muted-foreground'>
-            第 {page + 1} / {totalPages} 页
+            {t('table.page', { current: page + 1, total: totalPages })}
           </div>
           <div className='flex gap-2'>
             <Button
@@ -270,7 +303,7 @@ export function TaskTable() {
               disabled={page === 0}
             >
               <ChevronLeftIcon className='size-4 mr-1' />
-              上一页
+              {t('table.previous')}
             </Button>
             <Button
               variant='outline'
@@ -278,7 +311,7 @@ export function TaskTable() {
               onClick={() => setPage(Math.min(totalPages - 1, page + 1))}
               disabled={page >= totalPages - 1}
             >
-              下一页
+              {t('table.next')}
               <ChevronRightIcon className='size-4 ml-1' />
             </Button>
           </div>

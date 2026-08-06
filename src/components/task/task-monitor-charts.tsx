@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import {
   Area,
   AreaChart,
@@ -46,10 +47,12 @@ export function TaskMonitorCharts({
 }: {
   chartData: ChartDataPoint[]
 }) {
+  const t = useTranslations('task.charts')
+
   return (
     <>
       <div>
-        <h3 className='text-sm font-semibold mb-4'>CPU & 内存使用率趋势</h3>
+        <h3 className='text-sm font-semibold mb-4'>{t('cpuMemoryTrend')}</h3>
         <div className='border rounded-lg p-4'>
           <ResponsiveContainer width='100%' height={300}>
             <AreaChart data={chartData}>
@@ -63,7 +66,7 @@ export function TaskMonitorCharts({
                 className='text-xs'
                 tick={{ fill: 'currentColor' }}
                 label={{
-                  value: '使用率 (%)',
+                  value: t('usageAxis'),
                   angle: -90,
                   position: 'insideLeft',
                 }}
@@ -77,7 +80,7 @@ export function TaskMonitorCharts({
                 strokeWidth={2}
                 fill='#3b82f6'
                 fillOpacity={0.2}
-                name='CPU使用率'
+                name={t('cpuUsage')}
                 dot={false}
               />
               <Area
@@ -87,7 +90,7 @@ export function TaskMonitorCharts({
                 strokeWidth={2}
                 fill='#a855f7'
                 fillOpacity={0.2}
-                name='内存使用率'
+                name={t('memoryUsage')}
                 dot={false}
               />
             </AreaChart>
@@ -96,7 +99,7 @@ export function TaskMonitorCharts({
       </div>
 
       <div>
-        <h3 className='text-sm font-semibold mb-4'>内存用量趋势</h3>
+        <h3 className='text-sm font-semibold mb-4'>{t('memoryTrend')}</h3>
         <div className='border rounded-lg p-4'>
           <ResponsiveContainer width='100%' height={250}>
             <AreaChart data={chartData}>
@@ -110,14 +113,14 @@ export function TaskMonitorCharts({
                 className='text-xs'
                 tick={{ fill: 'currentColor' }}
                 label={{
-                  value: '内存 (GB)',
+                  value: t('memoryAxis'),
                   angle: -90,
                   position: 'insideLeft',
                 }}
               />
               <Tooltip
                 contentStyle={tooltipStyle}
-                formatter={(value: number) => `${value.toFixed(2)} GB`}
+                formatter={(value) => `${Number(value ?? 0).toFixed(2)} GB`}
               />
               <Legend />
               <Area
@@ -127,7 +130,7 @@ export function TaskMonitorCharts({
                 strokeWidth={2}
                 fill='#10b981'
                 fillOpacity={0.2}
-                name='内存用量'
+                name={t('memoryUsed')}
                 dot={false}
               />
             </AreaChart>
@@ -136,7 +139,7 @@ export function TaskMonitorCharts({
       </div>
 
       <div>
-        <h3 className='text-sm font-semibold mb-4'>IO 读写趋势</h3>
+        <h3 className='text-sm font-semibold mb-4'>{t('ioTrend')}</h3>
         <div className='border rounded-lg p-4'>
           <ResponsiveContainer width='100%' height={250}>
             <AreaChart data={chartData}>
@@ -153,8 +156,10 @@ export function TaskMonitorCharts({
               />
               <Tooltip
                 contentStyle={tooltipStyle}
-                formatter={(value: number) => {
-                  const formatted = formatBytes(value * 1024 * 1024)
+                formatter={(value) => {
+                  const formatted = formatBytes(
+                    Number(value ?? 0) * 1024 * 1024,
+                  )
                   return `${formatted.value} ${formatted.unit}`
                 }}
               />
@@ -166,7 +171,7 @@ export function TaskMonitorCharts({
                 strokeWidth={2}
                 fill='#f97316'
                 fillOpacity={0.2}
-                name='IO输入'
+                name={t('ioInput')}
                 dot={false}
               />
               <Area
@@ -176,7 +181,7 @@ export function TaskMonitorCharts({
                 strokeWidth={2}
                 fill='#ef4444'
                 fillOpacity={0.2}
-                name='IO输出'
+                name={t('ioOutput')}
                 dot={false}
               />
             </AreaChart>

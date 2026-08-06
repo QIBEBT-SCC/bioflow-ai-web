@@ -1,7 +1,5 @@
 'use client'
 
-import { format } from 'date-fns'
-import { zhCN } from 'date-fns/locale'
 import {
   CheckCircle2Icon,
   ClockIcon,
@@ -11,7 +9,8 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
-import { useState } from 'react'
+import { useLocale, useTranslations } from 'next-intl'
+import { useMemo, useState } from 'react'
 import {
   Snippet,
   SnippetAddon,
@@ -41,28 +40,28 @@ import type { TaskPublic } from '@/types/task'
 // 状态配置
 const statusConfig = {
   [Status.WAITING]: {
-    label: '等待中',
+    labelKey: 'waiting',
     variant: 'secondary' as const,
     icon: ClockIcon,
     color: 'text-yellow-600',
     bgColor: 'bg-yellow-50 dark:bg-yellow-950',
   },
   [Status.RUNNING]: {
-    label: '运行中',
+    labelKey: 'running',
     variant: 'default' as const,
     icon: Loader2Icon,
     color: 'text-blue-600',
     bgColor: 'bg-blue-50 dark:bg-blue-950',
   },
   [Status.ERROR]: {
-    label: '失败',
+    labelKey: 'failed',
     variant: 'destructive' as const,
     icon: XCircleIcon,
     color: 'text-red-600',
     bgColor: 'bg-red-50 dark:bg-red-950',
   },
   [Status.SUCCESS]: {
-    label: '成功',
+    labelKey: 'success',
     variant: 'outline' as const,
     icon: CheckCircle2Icon,
     color: 'text-green-600',
@@ -71,44 +70,63 @@ const statusConfig = {
 }
 
 // 格式化时间
-function formatDateTime(dateStr?: string) {
+function formatDateTime(dateFormatter: Intl.DateTimeFormat, dateStr?: string) {
   if (!dateStr) return '-'
   try {
-    return format(new Date(dateStr), 'yyyy-MM-dd HH:mm:ss', { locale: zhCN })
+    return dateFormatter.format(new Date(dateStr))
   } catch {
     return '-'
   }
 }
 
-// 计算运行时长
-function calculateDuration(startTime?: string, endTime?: string) {
-  if (!startTime) return '-'
-  const start = new Date(startTime).getTime()
-  const end = endTime ? new Date(endTime).getTime() : Date.now()
-  const duration = Math.floor((end - start) / 1000)
-
-  if (duration < 60) return `${duration}秒`
-  if (duration < 3600)
-    return `${Math.floor(duration / 60)}分 ${duration % 60}秒`
-  const hours = Math.floor(duration / 3600)
-  const mins = Math.floor((duration % 3600) / 60)
-  return `${hours}小时 ${mins}分`
-}
-
 export default function TaskDetailPage() {
   const params = useParams()
+  const locale = useLocale()
+  const t = useTranslations('task')
   const taskUid = params.uid as string
   const { data: task, isLoading } = useTask(taskUid)
   const [activeView, setActiveView] = useState<'result' | 'log' | 'monitor'>(
     'result',
   )
+  const dateFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat(locale, {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hourCycle: 'h23',
+      }),
+    [locale],
+  )
+
+  const formatDuration = (startTime?: string, endTime?: string) => {
+    if (!startTime) return '-'
+    const start = new Date(startTime).getTime()
+    const end = endTime ? new Date(endTime).getTime() : Date.now()
+    const duration = Math.floor((end - start) / 1000)
+
+    if (duration < 60) return t('duration.seconds', { seconds: duration })
+    if (duration < 3600) {
+      return t('duration.minutesSeconds', {
+        minutes: Math.floor(duration / 60),
+        seconds: duration % 60,
+      })
+    }
+    return t('duration.hoursMinutes', {
+      hours: Math.floor(duration / 3600),
+      minutes: Math.floor((duration % 3600) / 60),
+    })
+  }
 
   if (isLoading) {
     return (
       <SidebarInset className='h-screen flex items-center justify-center'>
         <div className='text-center'>
           <div className='animate-spin rounded-full size-8 border-b-2 border-primary mx-auto mb-2'></div>
-          <p className='text-muted-foreground'>加载中...</p>
+          <p className='text-muted-foreground'>{t('detail.loading')}</p>
         </div>
       </SidebarInset>
     )
@@ -119,7 +137,7 @@ export default function TaskDetailPage() {
       <SidebarInset className='h-screen flex items-center justify-center'>
         <div className='text-center'>
           <XCircleIcon className='size-12 text-muted-foreground mx-auto mb-3' />
-          <p className='text-muted-foreground'>任务不存在</p>
+          <p className='text-muted-foreground'>{t('detail.notFound')}</p>
         </div>
       </SidebarInset>
     )
@@ -138,7 +156,7 @@ export default function TaskDetailPage() {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem>
-                  <BreadcrumbLink href='/task'>任务监控</BreadcrumbLink>
+                  <BreadcrumbLink href='/task'>{t('title')}</BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
@@ -165,7 +183,7 @@ export default function TaskDetailPage() {
                           config.icon === Loader2Icon ? 'animate-spin' : ''
                         }`}
                       />
-                      {config.label}
+                      {t(`status.${config.labelKey}`)}
                     </Badge>
                   </div>
                   <p className='text-sm text-muted-foreground'>
@@ -173,12 +191,14 @@ export default function TaskDetailPage() {
                   </p>
                   <div className='flex items-center gap-6 text-sm text-muted-foreground'>
                     <div>
-                      <span className='font-medium'>任务ID:</span>{' '}
+                      <span className='font-medium'>{t('detail.taskId')}</span>{' '}
                       <span className='font-mono'>{task.uid}</span>
                     </div>
                     <Separator orientation='vertical' className='h-4' />
                     <div>
-                      <span className='font-medium'>所属工作流:</span>{' '}
+                      <span className='font-medium'>
+                        {t('detail.workflow')}
+                      </span>{' '}
                       <Link
                         href={`/workflow/${task.run_instance.uid}`}
                         className='text-primary hover:underline'
@@ -188,9 +208,11 @@ export default function TaskDetailPage() {
                     </div>
                     <Separator orientation='vertical' className='h-4' />
                     <div>
-                      <span className='font-medium'>运行时长:</span>{' '}
+                      <span className='font-medium'>
+                        {t('detail.duration')}
+                      </span>{' '}
                       <span className='font-semibold text-foreground'>
-                        {calculateDuration(task.start_time, task.end_time)}
+                        {formatDuration(task.start_time, task.end_time)}
                       </span>
                     </div>
                   </div>
@@ -211,7 +233,7 @@ export default function TaskDetailPage() {
                   onClick={() => setActiveView('result')}
                   className={activeView === 'result' ? 'bg-muted' : ''}
                 >
-                  运行结果
+                  {t('detail.result')}
                 </Button>
                 <Button
                   variant='outline'
@@ -219,7 +241,7 @@ export default function TaskDetailPage() {
                   onClick={() => setActiveView('log')}
                   className={activeView === 'log' ? 'bg-muted' : ''}
                 >
-                  任务日志
+                  {t('detail.log')}
                 </Button>
                 <Button
                   variant='outline'
@@ -227,7 +249,7 @@ export default function TaskDetailPage() {
                   onClick={() => setActiveView('monitor')}
                   className={activeView === 'monitor' ? 'bg-muted' : ''}
                 >
-                  系统监控
+                  {t('detail.monitor')}
                 </Button>
               </div>
 
@@ -238,7 +260,7 @@ export default function TaskDetailPage() {
               {activeView === 'monitor' && (
                 <Card>
                   <CardHeader>
-                    <CardTitle>系统监控</CardTitle>
+                    <CardTitle>{t('detail.monitor')}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <TaskMonitor taskUid={taskUid} />
@@ -247,7 +269,7 @@ export default function TaskDetailPage() {
               )}
             </div>
 
-            <TaskSidebar task={task} />
+            <TaskSidebar task={task} dateFormatter={dateFormatter} />
           </div>
         </div>
       </main>
@@ -256,10 +278,12 @@ export default function TaskDetailPage() {
 }
 
 function TaskResultView({ task }: { task: TaskPublic }) {
+  const t = useTranslations('task.detail')
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>运行结果</CardTitle>
+        <CardTitle>{t('result')}</CardTitle>
       </CardHeader>
       <CardContent>
         {task.tool_output?.result ? (
@@ -281,7 +305,7 @@ function TaskResultView({ task }: { task: TaskPublic }) {
         ) : (
           <div className='text-center text-muted-foreground py-12'>
             <TerminalIcon className='size-12 mx-auto mb-3 opacity-50' />
-            <p>暂无输出结果</p>
+            <p>{t('noResult')}</p>
           </div>
         )}
       </CardContent>
@@ -290,12 +314,14 @@ function TaskResultView({ task }: { task: TaskPublic }) {
 }
 
 function TaskLogView({ task, taskUid }: { task: TaskPublic; taskUid: string }) {
+  const t = useTranslations('task.detail')
+
   return (
     <div className='space-y-4'>
       {task.commands && (
         <Card>
           <CardHeader>
-            <CardTitle className='text-base'>执行命令</CardTitle>
+            <CardTitle className='text-base'>{t('command')}</CardTitle>
           </CardHeader>
           <CardContent>
             <Snippet
@@ -315,7 +341,7 @@ function TaskLogView({ task, taskUid }: { task: TaskPublic; taskUid: string }) {
       )}
       <Card>
         <CardHeader>
-          <CardTitle>任务日志</CardTitle>
+          <CardTitle>{t('log')}</CardTitle>
         </CardHeader>
         <CardContent>
           <TaskLog taskUid={taskUid} />
@@ -325,21 +351,29 @@ function TaskLogView({ task, taskUid }: { task: TaskPublic; taskUid: string }) {
   )
 }
 
-function TaskSidebar({ task }: { task: TaskPublic }) {
+function TaskSidebar({
+  task,
+  dateFormatter,
+}: {
+  task: TaskPublic
+  dateFormatter: Intl.DateTimeFormat
+}) {
+  const t = useTranslations('task.detail')
+
   return (
     <div className='space-y-4'>
       <Card>
         <CardHeader className='pb-3'>
-          <CardTitle className='text-sm'>基本信息</CardTitle>
+          <CardTitle className='text-sm'>{t('basicInfo')}</CardTitle>
         </CardHeader>
         <CardContent className='space-y-3 text-sm'>
           <div>
-            <p className='text-xs text-muted-foreground mb-1'>工具</p>
+            <p className='text-xs text-muted-foreground mb-1'>{t('tool')}</p>
             <p className='font-medium'>{task.tool.name}</p>
           </div>
           <Separator />
           <div>
-            <p className='text-xs text-muted-foreground mb-1'>创建者</p>
+            <p className='text-xs text-muted-foreground mb-1'>{t('owner')}</p>
             <p className='font-medium'>{task.owner.username}</p>
           </div>
         </CardContent>
@@ -347,26 +381,32 @@ function TaskSidebar({ task }: { task: TaskPublic }) {
 
       <Card>
         <CardHeader className='pb-3'>
-          <CardTitle className='text-sm'>时间信息</CardTitle>
+          <CardTitle className='text-sm'>{t('timeInfo')}</CardTitle>
         </CardHeader>
         <CardContent className='space-y-3 text-sm'>
           <div>
-            <p className='text-xs text-muted-foreground mb-1'>创建时间</p>
+            <p className='text-xs text-muted-foreground mb-1'>
+              {t('createdAt')}
+            </p>
             <p className='font-mono text-xs'>
-              {formatDateTime(task.create_time)}
+              {formatDateTime(dateFormatter, task.create_time)}
             </p>
           </div>
           <Separator />
           <div>
-            <p className='text-xs text-muted-foreground mb-1'>开始时间</p>
+            <p className='text-xs text-muted-foreground mb-1'>
+              {t('startedAt')}
+            </p>
             <p className='font-mono text-xs'>
-              {formatDateTime(task.start_time)}
+              {formatDateTime(dateFormatter, task.start_time)}
             </p>
           </div>
           <Separator />
           <div>
-            <p className='text-xs text-muted-foreground mb-1'>结束时间</p>
-            <p className='font-mono text-xs'>{formatDateTime(task.end_time)}</p>
+            <p className='text-xs text-muted-foreground mb-1'>{t('endedAt')}</p>
+            <p className='font-mono text-xs'>
+              {formatDateTime(dateFormatter, task.end_time)}
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -374,13 +414,15 @@ function TaskSidebar({ task }: { task: TaskPublic }) {
       {(task.system || task.hostname) && (
         <Card>
           <CardHeader className='pb-3'>
-            <CardTitle className='text-sm'>系统信息</CardTitle>
+            <CardTitle className='text-sm'>{t('systemInfo')}</CardTitle>
           </CardHeader>
           <CardContent className='space-y-3 text-sm'>
             {task.hostname && (
               <>
                 <div>
-                  <p className='text-xs text-muted-foreground mb-1'>主机</p>
+                  <p className='text-xs text-muted-foreground mb-1'>
+                    {t('host')}
+                  </p>
                   <p className='font-mono text-xs'>{task.hostname}</p>
                 </div>
                 {task.system && <Separator />}
@@ -388,7 +430,9 @@ function TaskSidebar({ task }: { task: TaskPublic }) {
             )}
             {task.system && (
               <div>
-                <p className='text-xs text-muted-foreground mb-1'>系统</p>
+                <p className='text-xs text-muted-foreground mb-1'>
+                  {t('system')}
+                </p>
                 <p className='font-mono text-xs break-all'>{task.system}</p>
               </div>
             )}

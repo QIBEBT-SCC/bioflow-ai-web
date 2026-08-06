@@ -1,8 +1,7 @@
 'use client'
 
-import { format } from 'date-fns'
-import { zhCN } from 'date-fns/locale'
 import { Clock, Loader2 } from 'lucide-react'
+import { useLocale, useTranslations } from 'next-intl'
 import { useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -26,7 +25,18 @@ interface TimelineTask {
 }
 
 export function TaskTimeline() {
+  const locale = useLocale()
+  const t = useTranslations('task')
   const { data: tasks = [], isLoading } = useRecentTasks(24) // 获取最近24小时的任务
+  const timeFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat(locale, {
+        hour: '2-digit',
+        minute: '2-digit',
+        hourCycle: 'h23',
+      }),
+    [locale],
+  )
 
   // 计算时间线数据
   const timelineData = useMemo(() => {
@@ -87,19 +97,19 @@ export function TaskTimeline() {
     for (let i = 0; i < labelCount; i++) {
       const time = minTime + (timeRange * i) / (labelCount - 1)
       timeLabels.push({
-        time: format(new Date(time), 'HH:mm', { locale: zhCN }),
+        time: timeFormatter.format(new Date(time)),
         percent: (i / (labelCount - 1)) * 100,
       })
     }
 
     return { tasks: positioned, timeLabels, minTime, maxTime }
-  }, [tasks])
+  }, [tasks, timeFormatter])
 
   if (isLoading) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>任务时间线</CardTitle>
+          <CardTitle>{t('timeline.title')}</CardTitle>
         </CardHeader>
         <CardContent>
           <Skeleton className='h-48 w-full' />
@@ -112,12 +122,12 @@ export function TaskTimeline() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>任务时间线</CardTitle>
+          <CardTitle>{t('timeline.title')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className='flex flex-col items-center justify-center h-48 text-muted-foreground'>
             <Clock className='size-12 mb-3' />
-            <p>最近24小时内暂无任务运行记录</p>
+            <p>{t('timeline.empty')}</p>
           </div>
         </CardContent>
       </Card>
@@ -131,9 +141,9 @@ export function TaskTimeline() {
     <Card>
       <CardHeader className='pb-3'>
         <CardTitle className='flex items-center justify-between'>
-          <span>任务时间线</span>
+          <span>{t('timeline.title')}</span>
           <span className='text-sm font-normal text-muted-foreground'>
-            最近24小时 · {tasks.length} 个任务
+            {t('timeline.summary', { count: tasks.length })}
           </span>
         </CardTitle>
       </CardHeader>
@@ -190,10 +200,14 @@ export function TaskTimeline() {
                     <div className='bg-popover text-popover-foreground p-2 rounded-md shadow-lg text-xs whitespace-nowrap border'>
                       <div className='font-medium'>{item.task.name}</div>
                       <div className='text-muted-foreground mt-1'>
-                        工作流: {item.task.run_instance.name}
+                        {t('timeline.workflow', {
+                          name: item.task.run_instance.name,
+                        })}
                       </div>
                       <div className='text-muted-foreground'>
-                        创建者: {item.task.owner.username}
+                        {t('timeline.owner', {
+                          name: item.task.owner.username,
+                        })}
                       </div>
                     </div>
                   </div>
@@ -218,19 +232,19 @@ export function TaskTimeline() {
         <div className='flex items-center justify-center gap-6 mt-4 text-sm'>
           <div className='flex items-center gap-2'>
             <div className='size-4 bg-green-500 rounded' />
-            <span className='text-muted-foreground'>成功</span>
+            <span className='text-muted-foreground'>{t('status.success')}</span>
           </div>
           <div className='flex items-center gap-2'>
             <div className='size-4 bg-blue-500 rounded' />
-            <span className='text-muted-foreground'>运行中</span>
+            <span className='text-muted-foreground'>{t('status.running')}</span>
           </div>
           <div className='flex items-center gap-2'>
             <div className='size-4 bg-yellow-500 rounded' />
-            <span className='text-muted-foreground'>等待中</span>
+            <span className='text-muted-foreground'>{t('status.waiting')}</span>
           </div>
           <div className='flex items-center gap-2'>
             <div className='size-4 bg-red-500 rounded' />
-            <span className='text-muted-foreground'>失败</span>
+            <span className='text-muted-foreground'>{t('status.failed')}</span>
           </div>
         </div>
       </CardContent>
