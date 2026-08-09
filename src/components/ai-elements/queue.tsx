@@ -28,8 +28,10 @@ export type QueueTodo = {
   id: string;
   title: string;
   description?: string;
-  status?: "pending" | "completed";
+  status?: "pending" | "active" | "completed";
 };
+
+export type QueueItemStatus = "pending" | "active" | "completed";
 
 export type QueueItemProps = ComponentProps<"li">;
 
@@ -44,20 +46,22 @@ export const QueueItem = ({ className, ...props }: QueueItemProps) => (
 );
 
 export type QueueItemIndicatorProps = ComponentProps<"span"> & {
-  completed?: boolean;
+  status?: QueueItemStatus;
 };
 
 export const QueueItemIndicator = ({
-  completed = false,
+  status = "pending",
   className,
   ...props
 }: QueueItemIndicatorProps) => (
   <span
     className={cn(
       "mt-0.5 inline-block size-2.5 rounded-full border",
-      completed
-        ? "border-muted-foreground/20 bg-muted-foreground/10"
-        : "border-muted-foreground/50",
+      status === "completed" &&
+        "border-muted-foreground/20 bg-muted-foreground/10",
+      status === "active" &&
+        "animate-pulse border-primary bg-primary ring-2 ring-primary/20",
+      status === "pending" && "border-muted-foreground/50",
       className
     )}
     {...props}
@@ -65,20 +69,20 @@ export const QueueItemIndicator = ({
 );
 
 export type QueueItemContentProps = ComponentProps<"span"> & {
-  completed?: boolean;
+  status?: QueueItemStatus;
 };
 
 export const QueueItemContent = ({
-  completed = false,
+  status = "pending",
   className,
   ...props
 }: QueueItemContentProps) => (
   <span
     className={cn(
       "line-clamp-1 grow break-words",
-      completed
-        ? "text-muted-foreground/50 line-through"
-        : "text-muted-foreground",
+      status === "completed" && "text-muted-foreground/50 line-through",
+      status === "active" && "font-medium text-foreground",
+      status === "pending" && "text-muted-foreground",
       className
     )}
     {...props}
@@ -86,20 +90,21 @@ export const QueueItemContent = ({
 );
 
 export type QueueItemDescriptionProps = ComponentProps<"div"> & {
-  completed?: boolean;
+  status?: QueueItemStatus;
 };
 
 export const QueueItemDescription = ({
-  completed = false,
+  status = "pending",
   className,
   ...props
 }: QueueItemDescriptionProps) => (
   <div
     className={cn(
       "ml-6 text-xs",
-      completed
-        ? "text-muted-foreground/40 line-through"
-        : "text-muted-foreground",
+      status === "completed" &&
+        "text-muted-foreground/40 line-through",
+      status === "active" && "text-foreground/80",
+      status === "pending" && "text-muted-foreground",
       className
     )}
     {...props}
@@ -240,12 +245,16 @@ export const QueueSectionLabel = ({
   className,
   ...props
 }: QueueSectionLabelProps) => (
-  <span className={cn("flex items-center gap-2", className)} {...props}>
-    <ChevronDownIcon className="group-data-[state=closed]:-rotate-90 size-4 transition-transform" />
+  <span
+    className={cn("flex min-w-0 flex-1 items-center gap-2", className)}
+    {...props}
+  >
+    <ChevronDownIcon className="group-data-[state=closed]:-rotate-90 size-4 shrink-0 transition-transform" />
     {icon}
-    <span>
-      {count} {label}
-    </span>
+    <span className="min-w-0 flex-1 truncate">{label}</span>
+    {count !== undefined && (
+      <span className="shrink-0 text-xs tabular-nums">{count}</span>
+    )}
   </span>
 );
 

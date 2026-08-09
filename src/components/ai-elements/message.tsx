@@ -12,7 +12,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import type { FileUIPart, UIMessage } from "ai";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -24,7 +23,7 @@ import { createContext, memo, useContext, useEffect, useState } from "react";
 import { Streamdown } from "streamdown";
 
 export type MessageProps = HTMLAttributes<HTMLDivElement> & {
-  from: UIMessage["role"];
+  from: "user" | "assistant" | "system";
 };
 
 export const Message = ({ className, from, ...props }: MessageProps) => (
@@ -212,7 +211,7 @@ export const MessageBranchContent = ({
 };
 
 export type MessageBranchSelectorProps = HTMLAttributes<HTMLDivElement> & {
-  from: UIMessage["role"];
+  from: "user" | "assistant" | "system";
 };
 
 export const MessageBranchSelector = ({
@@ -322,7 +321,11 @@ export const MessageResponse = memo(
 MessageResponse.displayName = "MessageResponse";
 
 export type MessageAttachmentProps = HTMLAttributes<HTMLDivElement> & {
-  data: FileUIPart;
+  data: {
+    filename?: string;
+    mediaType?: string;
+    url: string;
+  };
   className?: string;
   onRemove?: () => void;
 };
