@@ -1,6 +1,112 @@
 {
   "Chat": {
+    "approve": "Approve",
+    "assistant": "AI Assistant",
+    "assistants": {
+      "sample-manager": {
+        "description": "Initialize project samples from files or directories",
+        "label": "Sample Manager"
+      },
+      "tool-generator": {
+        "description": "Create a reusable bioinformatics tool",
+        "label": "Tool Generator"
+      },
+      "workflow-builder": {
+        "description": "Create or update a project workflow",
+        "label": "Workflow Builder"
+      }
+    },
+    "cancel": "Cancel",
+    "command_placeholder": "Type / to choose a command…",
+    "command_prompt_required": "This command also requires a specific request.",
+    "command_required": "Choose an agent command with / first.",
+    "delete": "Delete",
+    "delete_active": "Unavailable while running",
+    "delete_confirm_action": "Delete conversation",
+    "delete_confirm_description": "“{title}” and all of its messages and run history will be permanently deleted. This action cannot be undone.",
+    "delete_confirm_title": "Delete this conversation?",
+    "delete_failed": "Failed to delete the conversation.",
+    "empty_description": "Choose an assistant with /, then describe what you need.",
+    "failed": "Agent run failed.",
+    "feedback_placeholder": "Optional feedback instead of approval",
+    "history": "Chat History",
+    "input_unavailable": "Create or load a conversation to start chatting",
     "new_conversation": "New Conversation",
-    "title": "Chat"
+    "no_history": "No chat history yet",
+    "placeholder": "Type / to choose an assistant…",
+    "artifact": {
+      "open_tool": "View tool details",
+      "tool_created": "Tool node created",
+      "tool_fallback": "New tool node"
+    },
+    "progress": {
+      "fallback_activity": "Working on the request",
+      "history_count": "Run history ({count})",
+      "phase": {
+        "sample_manager": {
+          "active": "Preparing project samples",
+          "complete": "Prepared project samples",
+          "reused": "Loaded existing project samples"
+        },
+        "workflow_builder": {
+          "active": "Building the workflow",
+          "complete": "Built the workflow"
+        },
+        "workflow_planner": {
+          "active": "Preparing the workflow plan",
+          "complete": "Prepared and approved the workflow plan",
+          "reused": "Loaded the existing workflow plan"
+        }
+      },
+      "running": "Agent is running",
+      "sample": {
+        "add_project_file": {
+          "active": "Registering proj:{keyword}",
+          "complete": "Registered proj:{keyword}"
+        },
+        "add_sample_file": {
+          "active": "Registering {sample}:{tag}",
+          "complete": "Registered {sample}:{tag}"
+        },
+        "add_samples": {
+          "active": "Creating {count} sample records",
+          "complete": "Created {count} sample records"
+        },
+        "ask_human": {
+          "active": "Waiting for data directory confirmation",
+          "complete": "Received data directory confirmation"
+        },
+        "list_project_samples": {
+          "active": "Checking existing project samples",
+          "complete": "Checked existing project samples"
+        },
+        "run_command": {
+          "active": "Running command",
+          "complete": "Ran command"
+        },
+        "set_base_dir": {
+          "active": "Setting the data directory",
+          "complete": "Set the data directory"
+        },
+        "write_conclusion": {
+          "active": "Writing the project sample summary",
+          "complete": "Wrote the project sample summary"
+        }
+      },
+      "todo_complete": "All planned steps are complete",
+      "todo_title": "{completed}/{total} · {current}"
+    },
+    "progress_updates": "{count, plural, one {# progress update} other {# progress updates}}",
+    "rename": "Rename",
+    "resize": "Resize chat sidebar",
+    "retry": "Retry",
+    "send": "Send",
+    "send_feedback": "Send feedback",
+    "status": {
+      "cancel_requested": "Cancelling",
+      "queued": "Queued",
+      "running": "Running"
+    },
+    "title": "AI Chat"
   }
 }

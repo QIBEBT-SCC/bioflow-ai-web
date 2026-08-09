@@ -1,16 +1,19 @@
 'use client'
 
-import { useChat } from '@ai-sdk/react'
-import { DefaultChatTransport } from 'ai'
 import {
   FlaskConicalIcon,
   Loader2Icon,
   PlusIcon,
+  RotateCcwIcon,
+  SendIcon,
+  SquareIcon,
   TestTubeDiagonalIcon,
   WrenchIcon,
 } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import type React from 'react'
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { Fragment, useMemo, useRef, useState } from 'react'
+import type { AgentScope } from '@/app/actions/agent'
 import {
   Conversation,
   ConversationContent,
@@ -19,15 +22,15 @@ import {
 } from '@/components/ai-elements/conversation'
 import { Loader } from '@/components/ai-elements/loader'
 import {
-  PromptInput,
-  PromptInputBody,
-  PromptInputFooter,
-  type PromptInputMessage,
-  PromptInputSubmit,
-  PromptInputTextarea,
-} from '@/components/ai-elements/prompt-input'
+  Message,
+  MessageContent,
+  MessageResponse,
+} from '@/components/ai-elements/message'
+import {
+  AgentRunArtifacts,
+  AgentRunProgress,
+} from '@/components/chat/agent-run-content'
 import { SidebarHistoryMenu } from '@/components/chat/chat-history-menu'
-import { ChatMessageParts } from '@/components/chat/chat-message-parts'
 import {
   type SlashCommand,
   SlashCommandItem,
@@ -38,147 +41,224 @@ import {
 } from '@/components/chat/slash-commannd'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { useChatHistory, useCreateChatSession } from '@/hooks/use-chat'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  useAgentMessages,
+  useAgentRun,
+  useAgentRunEventHistory,
+  useAgentRunEvents,
+  useAgentSession,
+  useAgentSessionRuns,
+  useCancelAgentRun,
+  useCreateAgentRun,
+  useCreateAgentSession,
+  useResumeAgentRun,
+  useRetryAgentRun,
+} from '@/hooks/use-agent'
 import { useChatSidebarStore } from '@/stores/chat-sidebar-store'
+import {
+  ACTIVE_AGENT_STATUSES,
+  type AgentMessage,
+  type AgentName,
+  type AgentRun,
+} from '@/types/agent'
 
-const CHAT_COMMANDS: SlashCommand[] = [
+type AgentSlashCommand = SlashCommand & {
+  key: AgentName
+}
+
+const CHAT_COMMANDS: Pick<AgentSlashCommand, 'key' | 'icon'>[] = [
   {
     key: 'workflow-builder',
-    label: 'Workflow Builder',
-    description: 'Create or update a project workflow',
     icon: FlaskConicalIcon,
   },
   {
     key: 'sample-manager',
-    label: 'Sample Manager',
-    description: 'Organize and inspect project samples',
     icon: TestTubeDiagonalIcon,
   },
   {
     key: 'tool-generator',
-    label: 'Tool Generator',
-    description: 'Create a reusable bioinformatics tool',
     icon: WrenchIcon,
   },
 ]
 
+function parseAgentCommand(value: string, commands: AgentSlashCommand[]) {
+  const match = /^\/([\w-]+)(?:\s+([\s\S]*))?$/.exec(value.trim())
+  if (!match) return null
+  const command = commands.find((candidate) => candidate.key === match[1])
+  if (!command) return null
+  return { command, prompt: (match[2] ?? '').trim() }
+}
+
+function ChatMessage({ message }: { message: AgentMessage }) {
+  return (
+    <Message from={message.role}>
+      <MessageContent>
+        {message.parts.map((part) => (
+          <MessageResponse key={`${part.type}-${part.text}`}>
+            {part.text}
+          </MessageResponse>
+        ))}
+      </MessageContent>
+    </Message>
+  )
+}
+
 function ChatSidebarInner({
-  pageKey,
-  projectId,
+  scope,
+  scopeKey,
   width,
   onResizeStart,
 }: {
-  pageKey: string
-  projectId?: string
+  scope: AgentScope
+  scopeKey: string
   width: number
-  onResizeStart: (e: React.MouseEvent) => void
+  onResizeStart: (event: React.MouseEvent) => void
 }) {
-  const { sessions, setSessionId } = useChatSidebarStore()
-  const sessionId = sessions[pageKey] ?? null
-  const { mutateAsync: createChatSession } = useCreateChatSession()
-  const { data: initMessages, isLoading: isHistoryLoading } = useChatHistory(
-    sessionId ?? '',
-  )
+  const t = useTranslations('Chat')
+  const { sessions, setSessionId, clearSession } = useChatSidebarStore()
+  const sessionId = sessions[scopeKey] ?? null
+  const { data: session, isLoading: isSessionLoading } =
+    useAgentSession(sessionId)
+  const { data: messages = [], isLoading: isMessagesLoading } =
+    useAgentMessages(sessionId)
+  const { data: storedRuns = [], isLoading: isRunsLoading } =
+    useAgentSessionRuns(sessionId)
+  const eventHistory = useAgentRunEventHistory(storedRuns)
+  const [localRunId, setRunId] = useState<string | null>(null)
+  const runId = localRunId ?? session?.latest_run?.uid ?? null
+  const { data: run } = useAgentRun(runId)
+  const events = useAgentRunEvents(runId, run?.status)
   const [text, setText] = useState('')
-  const [isCreating, setIsCreating] = useState(false)
+  const [feedback, setFeedback] = useState('')
+  const [localError, setLocalError] = useState<string | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const { mutateAsync: createSession, isPending: isCreating } =
+    useCreateAgentSession()
+  const { mutateAsync: createRun, isPending: isSubmitting } =
+    useCreateAgentRun()
+  const { mutateAsync: resumeRun, isPending: isResuming } = useResumeAgentRun()
+  const { mutateAsync: cancelRun, isPending: isCancelling } =
+    useCancelAgentRun()
+  const { mutateAsync: retryRun, isPending: isRetrying } = useRetryAgentRun()
 
-  const numericProjectId = projectId ? Number(projectId) : undefined
-  const transport = useMemo(
-    () =>
-      sessionId
-        ? new DefaultChatTransport({
-            api: `${process.env.NEXT_PUBLIC_API_URL}/chat/${sessionId}/completions`,
-            credentials: 'include',
-            body:
-              numericProjectId !== undefined
-                ? { project_id: numericProjectId }
-                : undefined,
-          })
-        : undefined,
-    [numericProjectId, sessionId],
-  )
-
-  const { messages, sendMessage, status, error, regenerate, stop, clearError } =
-    useChat({ transport, messages: initMessages })
-  const availableCommands = projectId
-    ? CHAT_COMMANDS
-    : CHAT_COMMANDS.filter((command) => command.key === 'tool-generator')
+  const availableCommands = useMemo(() => {
+    const commands =
+      scope.scope === 'project'
+        ? CHAT_COMMANDS
+        : CHAT_COMMANDS.filter((command) => command.key === 'tool-generator')
+    return commands.map<AgentSlashCommand>((command) => ({
+      ...command,
+      label: t(`assistants.${command.key}.label`),
+      description: t(`assistants.${command.key}.description`),
+    }))
+  }, [scope.scope, t])
   const slashCommand = useSlashCommand({
     commands: availableCommands,
     value: text,
     onValueChange: setText,
   })
-
-  const handleSubmit = useCallback(
-    async (message: PromptInputMessage) => {
-      if (!message.text?.trim() || !sessionId) return
-      clearError()
-      await sendMessage({ text: message.text })
-      setText('')
-    },
-    [clearError, sessionId, sendMessage],
+  const parsedCommand = useMemo(
+    () => parseAgentCommand(text, availableCommands),
+    [availableCommands, text],
   )
+  const canSubmit = Boolean(parsedCommand?.prompt)
+  const isBusy = Boolean(run && ACTIVE_AGENT_STATUSES.includes(run.status))
+  const inputDisabled =
+    !sessionId || isSessionLoading || isMessagesLoading || isRunsLoading
 
-  const handleResume = useCallback(
-    async (approved: boolean, feedback?: string) => {
-      clearError()
-      if (feedback) {
-        await sendMessage(
-          { text: feedback },
-          { body: { resume: true, approved: false } },
-        )
-        return
-      }
-      await sendMessage(undefined, {
-        body: { resume: true, approved },
-      })
-    },
-    [clearError, sendMessage],
-  )
-
-  const handleNewChat = useCallback(async () => {
-    setIsCreating(true)
-    try {
-      const session = await createChatSession()
-      setSessionId(pageKey, session.uid)
-    } finally {
-      setIsCreating(false)
+  const displayRuns = useMemo(() => {
+    const runs = storedRuns.map((storedRun) =>
+      storedRun.uid === run?.uid ? run : storedRun,
+    )
+    if (run && !runs.some((storedRun) => storedRun.uid === run.uid)) {
+      runs.push(run)
     }
-  }, [pageKey, createChatSession, setSessionId])
+    return runs
+  }, [run, storedRuns])
 
-  const handleSelectHistory = useCallback(
-    (uid: string) => setSessionId(pageKey, uid),
-    [pageKey, setSessionId],
+  const unmatchedMessages = useMemo(() => {
+    const runIds = new Set(displayRuns.map((storedRun) => storedRun.uid))
+    return messages.filter((message) => !runIds.has(message.run_uid))
+  }, [displayRuns, messages])
+
+  const newChat = async () => {
+    setLocalError(null)
+    try {
+      const created = await createSession(scope)
+      setSessionId(scopeKey, created.uid)
+      setRunId(null)
+      setText('')
+    } catch (error) {
+      setLocalError(error instanceof Error ? error.message : String(error))
+    }
+  }
+
+  const submit = async () => {
+    if (!sessionId || isBusy) return
+    if (!parsedCommand) {
+      setLocalError(t('command_required'))
+      return
+    }
+    if (!parsedCommand.prompt) {
+      setLocalError(t('command_prompt_required'))
+      return
+    }
+    setLocalError(null)
+    try {
+      const created = await createRun({
+        sessionId,
+        agentName: parsedCommand.command.key,
+        text: parsedCommand.prompt,
+      })
+      setRunId(created.uid)
+      slashCommand.onValueChange('')
+    } catch (error) {
+      setLocalError(error instanceof Error ? error.message : String(error))
+    }
+  }
+
+  const resume = async (approved: boolean) => {
+    if (!run) return
+    setLocalError(null)
+    try {
+      await resumeRun({
+        runId: run.uid,
+        approved,
+        feedback: approved ? undefined : feedback.trim(),
+      })
+      setFeedback('')
+    } catch (error) {
+      setLocalError(error instanceof Error ? error.message : String(error))
+    }
+  }
+
+  const progressEvents = events.filter(
+    (event) => event.event_type === 'run.progress',
   )
-
-  const isBusy = status === 'submitted' || status === 'streaming'
-  const newChatDisabled =
-    isCreating || (sessionId !== null && messages.length === 0)
-  const inputDisabled = sessionId === null || isHistoryLoading
 
   return (
     <div className='flex h-full shrink-0'>
       <button
         type='button'
-        aria-label='Resize chat sidebar'
+        aria-label={t('resize')}
         onMouseDown={onResizeStart}
-        className='w-1 shrink-0 cursor-col-resize border-l bg-background p-0 transition-colors hover:bg-primary/40'
+        className='w-1 shrink-0 cursor-col-resize border-l bg-background p-0 hover:bg-primary/40'
       />
       <div
         className='flex h-full flex-col overflow-hidden bg-background'
         style={{ width }}
       >
         <div className='flex h-12 items-center justify-between border-b px-3'>
-          <span className='text-sm font-medium'>AI Chat</span>
+          <span className='text-sm font-medium'>{t('title')}</span>
           <div className='flex items-center gap-1'>
             <Button
               variant='ghost'
               size='icon'
               className='size-7'
-              onClick={handleNewChat}
-              disabled={newChatDisabled || isBusy}
-              title='New Chat'
+              onClick={() => void newChat()}
+              disabled={isCreating}
+              title={t('new_conversation')}
             >
               {isCreating ? (
                 <Loader2Icon className='size-4 animate-spin' />
@@ -187,41 +267,125 @@ function ChatSidebarInner({
               )}
             </Button>
             <SidebarHistoryMenu
+              scope={scope}
               currentSessionId={sessionId}
-              onSelect={handleSelectHistory}
+              onSelect={(uid) => setSessionId(scopeKey, uid)}
+              onDeleteActive={() => clearSession(scopeKey)}
             />
           </div>
         </div>
 
         <Conversation className='min-h-0 flex-1'>
           <ConversationContent className='px-3'>
-            {isHistoryLoading ? (
+            {isSessionLoading || isMessagesLoading || isRunsLoading ? (
               <Loader />
-            ) : messages.length === 0 ? (
+            ) : messages.length === 0 && displayRuns.length === 0 ? (
               <ConversationEmptyState
-                title='AI Assistant'
-                description='Choose an assistant with /, then describe what you need.'
+                title={t('assistant')}
+                description={t('empty_description')}
               />
             ) : (
-              messages.map((message, index) => (
-                <ChatMessageParts
-                  key={message.id}
-                  message={message}
-                  messages={messages}
-                  messageIndex={index}
-                  status={status}
-                  onRegenerate={(messageId) => void regenerate({ messageId })}
-                  onResume={handleResume}
-                />
-              ))
+              <>
+                {displayRuns.map((displayRun: AgentRun) => {
+                  const runMessages = messages.filter(
+                    (message) => message.run_uid === displayRun.uid,
+                  )
+                  const userMessages = runMessages.filter(
+                    (message) => message.role === 'user',
+                  )
+                  const assistantMessages = runMessages.filter(
+                    (message) => message.role === 'assistant',
+                  )
+                  const runEvents =
+                    displayRun.uid === runId && events.length > 0
+                      ? events
+                      : (eventHistory[displayRun.uid] ?? [])
+
+                  return (
+                    <Fragment key={displayRun.uid}>
+                      {userMessages.map((message) => (
+                        <ChatMessage key={message.uid} message={message} />
+                      ))}
+                      <AgentRunProgress events={runEvents} run={displayRun} />
+                      {assistantMessages.map((message) => (
+                        <ChatMessage key={message.uid} message={message} />
+                      ))}
+                      <AgentRunArtifacts run={displayRun} />
+                    </Fragment>
+                  )
+                })}
+                {unmatchedMessages.map((message) => (
+                  <ChatMessage key={message.uid} message={message} />
+                ))}
+              </>
             )}
-            {status === 'submitted' && <Loader />}
-            {error && (
-              <Alert variant='destructive'>
-                <AlertDescription>
-                  {error.message ||
-                    'The chat request failed. Please try again.'}
+
+            {run &&
+              progressEvents.length === 0 &&
+              ['queued', 'running', 'cancel_requested'].includes(
+                run.status,
+              ) && (
+                <div className='flex items-center gap-2 text-muted-foreground text-sm'>
+                  <Loader />
+                  <span>{t(`status.${run.status}`)}</span>
+                </div>
+              )}
+            {run?.status === 'waiting_input' && (
+              <Alert>
+                <AlertDescription className='space-y-3'>
+                  <MessageResponse>
+                    {typeof run.interrupt_payload?.question === 'string'
+                      ? run.interrupt_payload.question
+                      : typeof run.interrupt_payload?.message === 'string'
+                        ? run.interrupt_payload.message
+                        : JSON.stringify(run.interrupt_payload, null, 2)}
+                  </MessageResponse>
+                  <Textarea
+                    value={feedback}
+                    onChange={(event) => setFeedback(event.target.value)}
+                    placeholder={t('feedback_placeholder')}
+                  />
+                  <div className='flex gap-2'>
+                    <Button
+                      size='sm'
+                      onClick={() => void resume(true)}
+                      disabled={isResuming}
+                    >
+                      {t('approve')}
+                    </Button>
+                    <Button
+                      size='sm'
+                      variant='outline'
+                      onClick={() => void resume(false)}
+                      disabled={isResuming || !feedback.trim()}
+                    >
+                      {t('send_feedback')}
+                    </Button>
+                  </div>
                 </AlertDescription>
+              </Alert>
+            )}
+            {run?.status === 'failed' && (
+              <Alert variant='destructive'>
+                <AlertDescription className='space-y-2'>
+                  <p>{run.error_message || t('failed')}</p>
+                  <Button
+                    size='sm'
+                    variant='outline'
+                    onClick={async () => {
+                      const retried = await retryRun(run.uid)
+                      setRunId(retried.uid)
+                    }}
+                    disabled={isRetrying}
+                  >
+                    <RotateCcwIcon className='size-3' /> {t('retry')}
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
+            {localError && (
+              <Alert variant='destructive'>
+                <AlertDescription>{localError}</AlertDescription>
               </Alert>
             )}
           </ConversationContent>
@@ -230,13 +394,7 @@ function ChatSidebarInner({
 
         <div className='relative mx-3 mb-3'>
           {slashCommand.open && (
-            <SlashCommandMenu
-              aria-label='Available assistants'
-              className='absolute inset-x-0 bottom-full z-20 mb-2'
-            >
-              <div className='px-2.5 pt-1.5 pb-1 font-medium text-[11px] text-muted-foreground'>
-                Assistants
-              </div>
+            <SlashCommandMenu className='absolute inset-x-0 bottom-full z-20 mb-2'>
               {slashCommand.suggestions.map((command, index) => {
                 const Icon = command.icon
                 return (
@@ -244,18 +402,15 @@ function ChatSidebarInner({
                     key={command.key}
                     active={index === slashCommand.activeIndex}
                     onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => {
+                      slashCommand.select(command)
+                      requestAnimationFrame(() => textareaRef.current?.focus())
+                    }}
                     onMouseEnter={() => slashCommand.setActiveIndex(index)}
-                    onClick={() => slashCommand.select(command)}
                   >
-                    {Icon && (
-                      <Icon
-                        aria-hidden='true'
-                        className='size-4 shrink-0 text-muted-foreground group-aria-selected:text-foreground'
-                        strokeWidth={1.75}
-                      />
-                    )}
+                    {Icon && <Icon className='size-4 shrink-0' />}
                     <SlashCommandItemLabel>
-                      {command.label}
+                      /{command.key}
                     </SlashCommandItemLabel>
                     <SlashCommandItemDescription>
                       {command.description}
@@ -263,51 +418,60 @@ function ChatSidebarInner({
                   </SlashCommandItem>
                 )
               })}
-              <div
-                className='mt-1 flex items-center gap-3 border-border/60 border-t px-2.5 pt-2 pb-1 text-[10px] text-muted-foreground'
-                aria-hidden='true'
-              >
-                <span>↑↓ Navigate</span>
-                <span>↵ Select</span>
-                <span>Esc Close</span>
-              </div>
             </SlashCommandMenu>
           )}
-          <PromptInput onSubmit={handleSubmit}>
-            <PromptInputBody>
-              <PromptInputTextarea
-                onChange={(event) =>
-                  slashCommand.onValueChange(event.target.value)
+          <div className='rounded-xl border bg-background shadow-xs'>
+            <Textarea
+              ref={textareaRef}
+              value={text}
+              onChange={(event) =>
+                slashCommand.onValueChange(event.target.value)
+              }
+              onKeyDown={(event) => {
+                slashCommand.onKeyDown(event)
+                if (event.defaultPrevented) return
+                if (event.key === 'Enter' && !event.shiftKey) {
+                  event.preventDefault()
+                  void submit()
                 }
-                onKeyDown={slashCommand.onKeyDown}
-                ref={textareaRef}
-                value={text}
-                placeholder={
-                  inputDisabled
-                    ? 'Create or load a conversation to start chatting'
-                    : 'Type / to choose an assistant…'
-                }
-                disabled={inputDisabled}
-              />
-            </PromptInputBody>
-            <PromptInputFooter>
-              <span className='truncate text-muted-foreground text-xs'>
-                {projectId ? 'Project context enabled' : 'Global chat'}
-              </span>
-              <PromptInputSubmit
-                disabled={inputDisabled || (!text.trim() && !isBusy)}
-                status={status}
-                onClick={
-                  isBusy
-                    ? (event) => {
-                        event.preventDefault()
-                        void stop()
-                      }
-                    : undefined
-                }
-              />
-            </PromptInputFooter>
-          </PromptInput>
+              }}
+              placeholder={
+                inputDisabled
+                  ? t('input_unavailable')
+                  : t('command_placeholder')
+              }
+              disabled={inputDisabled || isBusy}
+              className='min-h-20 resize-none border-0 shadow-none focus-visible:ring-0'
+            />
+            <div className='flex items-center justify-end px-2 pb-2'>
+              {isBusy && run ? (
+                <Button
+                  type='button'
+                  size='icon'
+                  variant='ghost'
+                  onClick={() => void cancelRun(run.uid)}
+                  disabled={isCancelling || run.status === 'cancel_requested'}
+                  aria-label={t('cancel')}
+                >
+                  <SquareIcon className='size-4' />
+                </Button>
+              ) : (
+                <Button
+                  type='button'
+                  size='icon'
+                  disabled={inputDisabled || !canSubmit || isSubmitting}
+                  aria-label={t('send')}
+                  onClick={() => void submit()}
+                >
+                  {isSubmitting ? (
+                    <Loader2Icon className='size-4 animate-spin' />
+                  ) : (
+                    <SendIcon className='size-4' />
+                  )}
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -315,23 +479,25 @@ function ChatSidebarInner({
 }
 
 export function ChatSidebar({
-  pageKey,
   projectId,
   width,
   onResizeStartAction,
 }: {
-  pageKey: string
   projectId?: string
   width: number
-  onResizeStartAction: (e: React.MouseEvent) => void
+  onResizeStartAction: (event: React.MouseEvent) => void
 }) {
+  const scope: AgentScope = projectId
+    ? { scope: 'project', projectId }
+    : { scope: 'global' }
+  const scopeKey = projectId ? `project:${projectId}` : 'global'
   const { sessions } = useChatSidebarStore()
-  const sessionId = sessions[pageKey] ?? null
+  const sessionId = sessions[scopeKey] ?? null
   return (
     <ChatSidebarInner
       key={sessionId || 'new'}
-      pageKey={pageKey}
-      projectId={projectId}
+      scope={scope}
+      scopeKey={scopeKey}
       width={width}
       onResizeStart={onResizeStartAction}
     />

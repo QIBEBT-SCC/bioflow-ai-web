@@ -4,130 +4,89 @@ import { formatDistanceToNow } from 'date-fns'
 import {
   CheckIcon,
   Loader2Icon,
-  MoreHorizontalIcon,
   PencilIcon,
   TrashIcon,
   XIcon,
 } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import type React from 'react'
-import { useEffect, useRef, useState } from 'react'
-
-import { Button } from '@/components/ui/button'
+import { useState } from 'react'
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { useDeleteChatSession, useUpdateChatSession } from '@/hooks/use-chat'
+import { useDeleteAgentSession, useUpdateAgentSession } from '@/hooks/use-agent'
 import { cn } from '@/lib/utils'
-import type { ChatSessionPublic } from '@/types/chat'
-
-interface ChatHistoryItemProps {
-  chat: ChatSessionPublic
-  isActive: boolean
-  onSelect: (chat: ChatSessionPublic) => void
-}
+import { ACTIVE_AGENT_STATUSES, type AgentSession } from '@/types/agent'
 
 export function ChatHistoryItem({
   chat,
   isActive,
-  onSelect,
-}: ChatHistoryItemProps) {
-  const { push } = useRouter()
+  onSelectAction,
+  onDeleteAction,
+}: {
+  chat: AgentSession
+  isActive: boolean
+  onSelectAction: (chat: AgentSession) => void
+  onDeleteAction: () => void
+}) {
+  const t = useTranslations('Chat')
   const [isEditing, setIsEditing] = useState(false)
   const [inputValue, setInputValue] = useState('')
-  const inputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    if (isEditing) {
-      inputRef.current?.focus()
-    }
-  }, [isEditing])
-
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
   const { mutateAsync: updateChat, isPending: isUpdating } =
-    useUpdateChatSession()
+    useUpdateAgentSession()
   const { mutateAsync: deleteChat, isPending: isDeleting } =
-    useDeleteChatSession()
+    useDeleteAgentSession()
 
-  const handleSave = async (e: React.MouseEvent | React.FormEvent) => {
-    e.stopPropagation()
-    if (!inputValue.trim() || inputValue === chat.description) {
+  const save = async (event: React.MouseEvent | React.FormEvent) => {
+    event.stopPropagation()
+    const title = inputValue.trim()
+    if (!title || title === chat.title) {
       setIsEditing(false)
       return
     }
-
-    try {
-      await updateChat({
-        sessionId: chat.uid,
-        description: inputValue,
-      })
-      setIsEditing(false)
-    } catch (error) {
-      console.error('Failed to update chat session', error)
-    }
-  }
-
-  const handleDelete = async (e: React.MouseEvent) => {
-    e.stopPropagation()
-    try {
-      await deleteChat(chat.uid)
-      // 如果删除的是当前正在查看的对话，重定向到 /chat
-      if (isActive) {
-        push('/chat')
-      }
-    } catch (error) {
-      console.error('Failed to delete chat session', error)
-    }
-  }
-
-  const handleCancel = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    setInputValue(chat.description)
+    await updateChat({ sessionId: chat.uid, title })
     setIsEditing(false)
   }
 
-  const handleInputClick = (e: React.MouseEvent) => {
-    e.stopPropagation()
-  }
-
-  const handleInputKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSave(e)
-    } else if (e.key === 'Escape') {
-      e.stopPropagation() // Prevent dialog closing if applicable
-      setInputValue(chat.description)
-      setIsEditing(false)
-    }
-  }
-
-  const handleItemKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault()
-      onSelect(chat)
+  const remove = async () => {
+    setDeleteError(null)
+    try {
+      await deleteChat(chat.uid)
+      setDeleteOpen(false)
+      if (isActive) onDeleteAction()
+    } catch (error) {
+      setDeleteError(
+        error instanceof Error ? error.message : t('delete_failed'),
+      )
     }
   }
 
   if (isEditing) {
     return (
-      <div className='flex items-center gap-1 p-2 rounded-md bg-muted/50'>
+      <div className='flex items-center gap-1 rounded-md bg-muted/50 p-2'>
         <Input
-          ref={inputRef}
+          autoFocus
           value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onClick={handleInputClick}
-          onKeyDown={handleInputKeyDown}
-          className='h-7 text-sm px-2 bg-background'
+          onChange={(event) => setInputValue(event.target.value)}
+          onClick={(event) => event.stopPropagation()}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') void save(event)
+            if (event.key === 'Escape') setIsEditing(false)
+          }}
+          className='h-7 bg-background px-2 text-sm'
         />
-        <Button
-          size='icon'
-          variant='ghost'
-          className='size-7 shrink-0 hover:bg-green-500/10 hover:text-green-500'
-          onClick={handleSave}
-          disabled={isUpdating}
-        >
+        <Button size='icon' variant='ghost' className='size-7' onClick={save}>
           {isUpdating ? (
             <Loader2Icon className='size-3 animate-spin' />
           ) : (
@@ -137,9 +96,11 @@ export function ChatHistoryItem({
         <Button
           size='icon'
           variant='ghost'
-          className='size-7 shrink-0 hover:bg-red-500/10 hover:text-red-500'
-          onClick={handleCancel}
-          disabled={isUpdating}
+          className='size-7'
+          onClick={(event) => {
+            event.stopPropagation()
+            setIsEditing(false)
+          }}
         >
           <XIcon className='size-3' />
         </Button>
@@ -147,65 +108,121 @@ export function ChatHistoryItem({
     )
   }
 
+  const active =
+    chat.latest_run && ACTIVE_AGENT_STATUSES.includes(chat.latest_run.status)
+
+  const title = chat.title || t('new_conversation')
+
   return (
-    // biome-ignore lint: avoiding nested buttons
-    <div
-      role='button'
-      tabIndex={0}
-      className={cn(
-        'group flex items-center justify-between gap-2 p-2 rounded-md hover:bg-muted/50 transition-colors cursor-pointer text-left w-full border-none bg-transparent outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-        isActive && 'bg-muted',
-      )}
-      onClick={() => onSelect(chat)}
-      onKeyDown={handleItemKeyDown}
-    >
-      <div className='flex flex-col gap-1 overflow-hidden pointer-events-none'>
-        <span className='font-medium text-sm truncate'>
-          {chat.description || 'New Conversation'}
-        </span>
-        <span
-          className='text-[10px] text-muted-foreground'
-          suppressHydrationWarning
+    <>
+      <div
+        className={cn(
+          'group grid w-full min-w-0 max-w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-1 overflow-hidden rounded-md p-2 text-left transition-colors hover:bg-muted/50 focus-within:ring-2 focus-within:ring-ring',
+          isActive && 'bg-muted',
+        )}
+      >
+        <button
+          type='button'
+          className='flex min-w-0 flex-1 cursor-pointer items-center gap-2 text-left outline-none'
+          onClick={() => onSelectAction(chat)}
         >
-          {formatDistanceToNow(new Date(chat.create_time), {
-            addSuffix: true,
-          })}
-        </span>
+          {active && (
+            <span className='size-2 shrink-0 rounded-full bg-blue-500' />
+          )}
+          <div className='flex min-w-0 flex-1 flex-col gap-1'>
+            <span
+              className='line-clamp-2 wrap-break-word font-medium text-sm leading-tight'
+              title={title}
+            >
+              {title}
+            </span>
+            <span
+              className='text-[10px] text-muted-foreground'
+              suppressHydrationWarning
+            >
+              {formatDistanceToNow(new Date(chat.update_time), {
+                addSuffix: true,
+              })}
+            </span>
+          </div>
+        </button>
+        <div className='flex shrink-0 items-center'>
+          <Button
+            variant='ghost'
+            size='icon'
+            className='size-6 text-muted-foreground hover:text-foreground'
+            aria-label={t('rename')}
+            title={t('rename')}
+            onClick={(event) => {
+              event.stopPropagation()
+              setInputValue(chat.title)
+              setIsEditing(true)
+            }}
+          >
+            <PencilIcon className='size-3.5' />
+          </Button>
+          <Button
+            variant='ghost'
+            size='icon'
+            className='size-6 text-muted-foreground hover:bg-destructive/10 hover:text-destructive'
+            aria-label={active ? t('delete_active') : t('delete')}
+            title={active ? t('delete_active') : t('delete')}
+            disabled={isDeleting || Boolean(active)}
+            onClick={(event) => {
+              event.stopPropagation()
+              setDeleteError(null)
+              setDeleteOpen(true)
+            }}
+          >
+            {isDeleting ? (
+              <Loader2Icon className='size-3.5 animate-spin' />
+            ) : (
+              <TrashIcon className='size-3.5' />
+            )}
+          </Button>
+        </div>
       </div>
 
-      <div className='opacity-0 group-hover:opacity-100 transition-opacity flex items-center'>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-            <Button variant='ghost' size='icon' className='size-6'>
-              <MoreHorizontalIcon className='size-3' />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align='end'>
-            <DropdownMenuItem
-              onClick={(e) => {
-                e.stopPropagation()
-                setInputValue(chat.description)
-                setIsEditing(true)
+      <AlertDialog
+        open={deleteOpen}
+        onOpenChange={(nextOpen) => {
+          if (isDeleting) return
+          setDeleteOpen(nextOpen)
+          if (!nextOpen) setDeleteError(null)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('delete_confirm_title')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('delete_confirm_description', { title })}
+            </AlertDialogDescription>
+            {deleteError && (
+              <p className='text-destructive text-sm'>{deleteError}</p>
+            )}
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>
+              {t('cancel')}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className='bg-destructive text-white hover:bg-destructive/90'
+              disabled={isDeleting}
+              onClick={(event) => {
+                event.preventDefault()
+                void remove()
               }}
             >
-              <PencilIcon className='mr-2 size-4' />
-              <span>Rename</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={handleDelete}
-              className='text-destructive focus:text-destructive'
-              disabled={isDeleting}
-            >
               {isDeleting ? (
-                <Loader2Icon className='mr-2 size-4 animate-spin' />
+                <Loader2Icon className='size-4 animate-spin' />
               ) : (
-                <TrashIcon className='mr-2 size-4' />
+                <TrashIcon className='size-4' />
               )}
-              <span>Delete</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    </div>
+              {t('delete_confirm_action')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   )
 }
