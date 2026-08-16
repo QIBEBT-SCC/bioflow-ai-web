@@ -37,6 +37,10 @@ export interface AgentMessage {
 }
 
 export interface AgentInterrupt {
+  kind?: string
+  question?: string
+  message?: string
+  plan?: string
   [key: string]: unknown
 }
 

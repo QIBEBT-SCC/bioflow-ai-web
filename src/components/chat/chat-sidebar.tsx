@@ -31,6 +31,7 @@ import {
   AgentRunProgress,
 } from '@/components/chat/agent-run-content'
 import { SidebarHistoryMenu } from '@/components/chat/chat-history-menu'
+import { PlanApproval } from '@/components/chat/plan-approval'
 import {
   type SlashCommand,
   SlashCommandItem,
@@ -236,6 +237,11 @@ function ChatSidebarInner({
   const progressEvents = events.filter(
     (event) => event.event_type === 'run.progress',
   )
+  const isPlanApproval = run?.interrupt_payload?.kind === 'plan_approval'
+  const planContent =
+    typeof run?.interrupt_payload?.plan === 'string'
+      ? run.interrupt_payload.plan
+      : ''
 
   return (
     <div className='flex h-full shrink-0'>
@@ -330,41 +336,51 @@ function ChatSidebarInner({
                   <span>{t(`status.${run.status}`)}</span>
                 </div>
               )}
-            {run?.status === 'waiting_input' && (
-              <Alert>
-                <AlertDescription className='space-y-3'>
-                  <MessageResponse>
-                    {typeof run.interrupt_payload?.question === 'string'
-                      ? run.interrupt_payload.question
-                      : typeof run.interrupt_payload?.message === 'string'
-                        ? run.interrupt_payload.message
-                        : JSON.stringify(run.interrupt_payload, null, 2)}
-                  </MessageResponse>
-                  <Textarea
-                    value={feedback}
-                    onChange={(event) => setFeedback(event.target.value)}
-                    placeholder={t('feedback_placeholder')}
-                  />
-                  <div className='flex gap-2'>
-                    <Button
-                      size='sm'
-                      onClick={() => void resume(true)}
-                      disabled={isResuming}
-                    >
-                      {t('approve')}
-                    </Button>
-                    <Button
-                      size='sm'
-                      variant='outline'
-                      onClick={() => void resume(false)}
-                      disabled={isResuming || !feedback.trim()}
-                    >
-                      {t('send_feedback')}
-                    </Button>
-                  </div>
-                </AlertDescription>
-              </Alert>
-            )}
+            {run?.status === 'waiting_input' &&
+              (isPlanApproval ? (
+                <PlanApproval
+                  plan={planContent}
+                  feedback={feedback}
+                  isPending={isResuming}
+                  onFeedbackChange={setFeedback}
+                  onApprove={() => void resume(true)}
+                  onSendFeedback={() => void resume(false)}
+                />
+              ) : (
+                <Alert>
+                  <AlertDescription className='space-y-3'>
+                    <MessageResponse>
+                      {typeof run.interrupt_payload?.question === 'string'
+                        ? run.interrupt_payload.question
+                        : typeof run.interrupt_payload?.message === 'string'
+                          ? run.interrupt_payload.message
+                          : JSON.stringify(run.interrupt_payload, null, 2)}
+                    </MessageResponse>
+                    <Textarea
+                      value={feedback}
+                      onChange={(event) => setFeedback(event.target.value)}
+                      placeholder={t('feedback_placeholder')}
+                    />
+                    <div className='flex gap-2'>
+                      <Button
+                        size='sm'
+                        onClick={() => void resume(true)}
+                        disabled={isResuming}
+                      >
+                        {t('approve')}
+                      </Button>
+                      <Button
+                        size='sm'
+                        variant='outline'
+                        onClick={() => void resume(false)}
+                        disabled={isResuming || !feedback.trim()}
+                      >
+                        {t('send_feedback')}
+                      </Button>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              ))}
             {run?.status === 'failed' && (
               <Alert variant='destructive'>
                 <AlertDescription className='space-y-2'>

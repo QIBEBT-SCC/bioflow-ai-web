@@ -34,13 +34,70 @@
     "new_conversation": "New Conversation",
     "no_history": "No chat history yet",
     "placeholder": "Type / to choose an assistant…",
+    "plan_approval_prompt": "The workflow plan is ready. Review it, then approve it or send feedback for revision.",
+    "plan_title": "Workflow plan review",
+    "plan_unavailable": "The plan content is unavailable. Please retry this run before approving it.",
+    "toggle_plan": "Show or hide workflow plan",
     "artifact": {
+      "edit_workflow": "Open in workflow editor",
       "open_tool": "View tool details",
       "tool_created": "Tool node created",
-      "tool_fallback": "New tool node"
+      "tool_fallback": "New tool node",
+      "workflow_created": "Workflow created and imported",
+      "workflow_fallback": "New workflow"
     },
     "progress": {
       "fallback_activity": "Working on the request",
+      "builder": {
+        "manager": {
+          "resource_node": "resource nodes",
+          "tool_node": "tool nodes",
+          "utility_node": "processor and code nodes",
+          "workflow": "workflow drafts"
+        },
+        "operation": {
+          "add": {
+            "active": "Adding {subject}",
+            "complete": "Added {subject}"
+          },
+          "create": {
+            "active": "Creating {subject}",
+            "complete": "Created {subject}"
+          },
+          "delete": {
+            "active": "Removing {subject}",
+            "complete": "Removed {subject}"
+          },
+          "fix": {
+            "active": "Repairing {manager}",
+            "complete": "Repaired {manager}"
+          },
+          "inspect": {
+            "active": "Inspecting {subject}",
+            "complete": "Inspected {subject}"
+          },
+          "list": {
+            "active": "Listing {manager}",
+            "complete": "Listed {manager}"
+          },
+          "save": {
+            "active": "Saving {manager}",
+            "complete": "Saved {manager}"
+          },
+          "search": {
+            "active": "Searching {manager} for {subject}",
+            "complete": "Searched {manager} for {subject}"
+          },
+          "switch": {
+            "active": "Switching to {subject}",
+            "complete": "Switched to {subject}"
+          },
+          "update": {
+            "active": "Updating {subject}",
+            "complete": "Updated {subject}"
+          }
+        }
+      },
       "history_count": "Run history ({count})",
       "phase": {
         "sample_manager": {
@@ -94,6 +151,8 @@
         }
       },
       "todo_complete": "All planned steps are complete",
+      "todo_activity_active": "Working on {index}/{total} · {task}",
+      "todo_activity_complete": "Completed {index}/{total} · {task}",
       "todo_title": "{completed}/{total} · {current}"
     },
     "progress_updates": "{count, plural, one {# progress update} other {# progress updates}}",

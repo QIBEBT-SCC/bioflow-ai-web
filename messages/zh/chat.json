@@ -34,13 +34,70 @@
     "new_conversation": "新建对话",
     "no_history": "暂无对话历史",
     "placeholder": "输入 / 选择助手…",
+    "plan_approval_prompt": "工作流计划已经生成。请检查计划后批准，或发送反馈让智能体继续修改。",
+    "plan_title": "确认工作流计划",
+    "plan_unavailable": "暂时无法读取计划内容，请重试本次任务后再批准。",
+    "toggle_plan": "展开或收起工作流计划",
     "artifact": {
+      "edit_workflow": "在工作流编辑器中打开",
       "open_tool": "查看工具详情",
       "tool_created": "已创建工具节点",
-      "tool_fallback": "新工具节点"
+      "tool_fallback": "新工具节点",
+      "workflow_created": "已创建并导入工作流",
+      "workflow_fallback": "新工作流"
     },
     "progress": {
       "fallback_activity": "正在处理请求",
+      "builder": {
+        "manager": {
+          "resource_node": "资源节点",
+          "tool_node": "工具节点",
+          "utility_node": "处理器与代码节点",
+          "workflow": "工作流草稿"
+        },
+        "operation": {
+          "add": {
+            "active": "正在添加{subject}",
+            "complete": "已添加{subject}"
+          },
+          "create": {
+            "active": "正在创建{subject}",
+            "complete": "已创建{subject}"
+          },
+          "delete": {
+            "active": "正在删除{subject}",
+            "complete": "已删除{subject}"
+          },
+          "fix": {
+            "active": "正在修复{manager}",
+            "complete": "已修复{manager}"
+          },
+          "inspect": {
+            "active": "正在查看{subject}",
+            "complete": "已查看{subject}"
+          },
+          "list": {
+            "active": "正在列出{manager}",
+            "complete": "已列出{manager}"
+          },
+          "save": {
+            "active": "正在保存{manager}",
+            "complete": "已保存{manager}"
+          },
+          "search": {
+            "active": "正在搜索{manager}：{subject}",
+            "complete": "已搜索{manager}：{subject}"
+          },
+          "switch": {
+            "active": "正在切换到{subject}",
+            "complete": "已切换到{subject}"
+          },
+          "update": {
+            "active": "正在更新{subject}",
+            "complete": "已更新{subject}"
+          }
+        }
+      },
       "history_count": "运行轨迹（{count}）",
       "phase": {
         "sample_manager": {
@@ -94,6 +151,8 @@
         }
       },
       "todo_complete": "所有计划步骤均已完成",
+      "todo_activity_active": "正在处理 {index}/{total} · {task}",
+      "todo_activity_complete": "已完成 {index}/{total} · {task}",
       "todo_title": "{completed}/{total} · {current}"
     },
     "progress_updates": "{count} 条进度更新",

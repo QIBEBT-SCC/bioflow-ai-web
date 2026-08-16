@@ -11,11 +11,12 @@ import {
   ShieldCheckIcon,
   SparklesIcon,
   TerminalIcon,
+  WaypointsIcon,
   WrenchIcon,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
-import { useMemo } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   ChainOfThought,
   ChainOfThoughtContent,
@@ -40,6 +41,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import { useTool } from '@/hooks/use-tool'
+import { useWorkflow } from '@/hooks/use-workflow'
 import type { AgentEvent, AgentRun, AgentToolArtifact } from '@/types/agent'
 import { STREAMING_AGENT_STATUSES } from '@/types/agent'
 
@@ -50,6 +52,7 @@ interface ProgressActivity {
   completed?: number
   total?: number
   current?: string
+  currentIndex?: number
   items?: TodoActivityItem[]
   count?: number
   sample?: string
@@ -58,6 +61,9 @@ interface ProgressActivity {
   path?: string
   command?: string
   phase?: string
+  manager?: string
+  operation?: string
+  subject?: string
   completeMessage?: string
   toolCallId?: string
   toolStatus?: 'running' | 'completed' | 'skipped'
@@ -133,6 +139,7 @@ function normalizeProgress(event: AgentEvent): ProgressActivity {
     completed: numberValue(source.completed),
     total: numberValue(source.total),
     current,
+    currentIndex: numberValue(source.current_index),
     items: todoItems(source.items),
     count: numberValue(source.count),
     sample: stringValue(source.sample),
@@ -141,6 +148,9 @@ function normalizeProgress(event: AgentEvent): ProgressActivity {
     path: stringValue(source.path),
     command: stringValue(source.command),
     phase: stringValue(source.phase),
+    manager: stringValue(source.manager),
+    operation: stringValue(source.operation),
+    subject: stringValue(source.subject),
     toolCallId: stringValue(source.tool_call_id),
     toolStatus: toolStatus(source.status),
   }
@@ -215,6 +225,12 @@ function activityIcon(activity: ProgressActivity): LucideIcon {
     if (activity.phase === 'workflow_planner') return ListTodoIcon
     return WrenchIcon
   }
+  if (activity.kind === 'workflow_manager_action') {
+    if (activity.manager === 'resource_node') return DatabaseIcon
+    if (activity.manager === 'workflow') return WaypointsIcon
+    if (activity.manager === 'tool_node') return WrenchIcon
+    return SparklesIcon
+  }
   if (activity.kind === 'sample_run_command') return TerminalIcon
   if (activity.kind === 'sample_set_base_dir') return SearchIcon
   if (
@@ -235,6 +251,141 @@ function queueStatus(status: TodoActivityItem['status']): QueueItemStatus {
   return status === 'in_progress' ? 'active' : status
 }
 
+function ActivityStep({
+  activity,
+  active,
+  fallbackLabel,
+}: {
+  activity: ProgressActivity
+  active: boolean
+  fallbackLabel: string
+}) {
+  const label =
+    (active ? activity.message : activity.completeMessage) ||
+    activity.message ||
+    fallbackLabel
+  const detail = detailPreview(
+    activity.kind === 'sample_set_base_dir' ? activity.path : undefined,
+  )
+
+  return (
+    <ChainOfThoughtStep
+      icon={activityIcon(activity)}
+      label={
+        activity.kind === 'sample_run_command' ? (
+          <CommandActivity
+            label={label}
+            command={activity.command}
+            active={active}
+          />
+        ) : (
+          label
+        )
+      }
+      description={
+        detail ? (
+          <code
+            className='block font-mono text-[11px] text-foreground/70'
+            title={
+              activity.kind === 'sample_run_command'
+                ? activity.command
+                : activity.path
+            }
+          >
+            {detail}
+          </code>
+        ) : undefined
+      }
+      status={active ? 'active' : 'complete'}
+    />
+  )
+}
+
+function TodoActivityGroup({
+  activities,
+  active,
+  fallbackLabel,
+  label,
+}: {
+  activities: ProgressActivity[]
+  active: boolean
+  fallbackLabel: string
+  label: string
+}) {
+  const [expanded, setExpanded] = useState(false)
+  const activityListRef = useRef<HTMLDivElement>(null)
+  const open = active || expanded
+  const latestActivityId = activities.at(-1)?.id
+
+  useEffect(() => {
+    if (!active || latestActivityId === undefined || !activityListRef.current)
+      return
+    activityListRef.current.scrollTop = activityListRef.current.scrollHeight
+  }, [active, latestActivityId])
+
+  return (
+    <Collapsible
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!active) setExpanded(nextOpen)
+      }}
+      className='ml-6'
+    >
+      <CollapsibleTrigger className='group/todo-activity flex w-[calc(100%-1.5rem)] items-center gap-2 text-left text-sm transition-colors hover:text-foreground'>
+        <ListTodoIcon className='size-4 shrink-0' />
+        <span className='min-w-0 flex-1 truncate' title={label}>
+          {label}
+        </span>
+        <span className='shrink-0 text-xs tabular-nums'>
+          {activities.length}
+        </span>
+        <ChevronDownIcon className='size-3.5 shrink-0 transition-transform group-data-[state=open]/todo-activity:rotate-180' />
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <div
+          ref={activityListRef}
+          className='mt-2 ml-2 max-h-40 space-y-3 overflow-y-auto border-l pl-4 pr-2'
+        >
+          {activities.map((activity, index) => {
+            const isActivityActive = activity.toolStatus
+              ? active && activity.toolStatus === 'running'
+              : active && index === activities.length - 1
+            return (
+              <ActivityStep
+                key={`${activity.id}-${isActivityActive ? 'active' : 'complete'}`}
+                activity={activity}
+                active={isActivityActive}
+                fallbackLabel={fallbackLabel}
+              />
+            )
+          })}
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  )
+}
+
+function groupActivitiesByTodo(activities: ProgressActivity[]) {
+  const standaloneActivities: ProgressActivity[] = []
+  const activitiesByTodo = new Map<number, ProgressActivity[]>()
+  let currentTodoIndex: number | undefined
+
+  for (const activity of activities) {
+    if (activity.kind === 'todo') {
+      currentTodoIndex = activity.currentIndex
+      continue
+    }
+    if (currentTodoIndex !== undefined && activity.kind !== 'workflow_phase') {
+      const group = activitiesByTodo.get(currentTodoIndex) ?? []
+      group.push(activity)
+      activitiesByTodo.set(currentTodoIndex, group)
+    } else {
+      standaloneActivities.push(activity)
+    }
+  }
+  return { standaloneActivities, activitiesByTodo }
+}
+
 export function AgentRunProgress({
   events,
   run,
@@ -244,9 +395,12 @@ export function AgentRunProgress({
 }) {
   const t = useTranslations('Chat.progress')
   const activities = useMemo(() => {
-    const normalized = events
-      .filter((event) => event.event_type === 'run.progress')
-      .map(normalizeProgress)
+    const normalized: ProgressActivity[] = []
+    for (const event of events) {
+      if (event.event_type === 'run.progress') {
+        normalized.push(normalizeProgress(event))
+      }
+    }
     return mergeToolProgress(normalized).map((activity) => {
       let message = activity.message
       let completeMessage: string | undefined
@@ -269,6 +423,61 @@ export function AgentRunProgress({
             completeMessage = t('phase.workflow_builder.complete')
           }
           break
+        case 'workflow_manager_action': {
+          const manager =
+            activity.manager === 'tool_node'
+              ? t('builder.manager.tool_node')
+              : activity.manager === 'resource_node'
+                ? t('builder.manager.resource_node')
+                : activity.manager === 'utility_node'
+                  ? t('builder.manager.utility_node')
+                  : t('builder.manager.workflow')
+          const operation = activity.operation ?? 'update'
+          const subject = activity.subject ?? manager
+          const values = { manager, subject }
+          switch (operation) {
+            case 'search':
+              message = t('builder.operation.search.active', values)
+              completeMessage = t('builder.operation.search.complete', values)
+              break
+            case 'inspect':
+              message = t('builder.operation.inspect.active', values)
+              completeMessage = t('builder.operation.inspect.complete', values)
+              break
+            case 'list':
+              message = t('builder.operation.list.active', values)
+              completeMessage = t('builder.operation.list.complete', values)
+              break
+            case 'add':
+              message = t('builder.operation.add.active', values)
+              completeMessage = t('builder.operation.add.complete', values)
+              break
+            case 'create':
+              message = t('builder.operation.create.active', values)
+              completeMessage = t('builder.operation.create.complete', values)
+              break
+            case 'delete':
+              message = t('builder.operation.delete.active', values)
+              completeMessage = t('builder.operation.delete.complete', values)
+              break
+            case 'switch':
+              message = t('builder.operation.switch.active', values)
+              completeMessage = t('builder.operation.switch.complete', values)
+              break
+            case 'save':
+              message = t('builder.operation.save.active', values)
+              completeMessage = t('builder.operation.save.complete', values)
+              break
+            case 'fix':
+              message = t('builder.operation.fix.active', values)
+              completeMessage = t('builder.operation.fix.complete', values)
+              break
+            default:
+              message = t('builder.operation.update.active', values)
+              completeMessage = t('builder.operation.update.complete', values)
+          }
+          break
+        }
         case 'sample_list_project_samples':
           message = t('sample.list_project_samples.active')
           completeMessage = t('sample.list_project_samples.complete')
@@ -320,10 +529,11 @@ export function AgentRunProgress({
     })
   }, [events, t])
   const current = activities.at(-1)
-  const infoActivities = activities.filter(
-    (activity) => activity.kind !== 'todo',
+  const { standaloneActivities, activitiesByTodo } = useMemo(
+    () => groupActivitiesByTodo(activities),
+    [activities],
   )
-  const currentInfo = infoActivities.at(-1)
+  const currentInfo = standaloneActivities.at(-1)
   const todo = [...activities]
     .reverse()
     .find((activity) => activity.kind === 'todo')
@@ -333,65 +543,83 @@ export function AgentRunProgress({
       ? [{ content: todo.current, status: 'in_progress' as const }]
       : [])
   const isActive = STREAMING_AGENT_STATUSES.includes(run.status)
+  const groupedTodoItems = visibleTodoItems.flatMap((item) => {
+    if (item.index === undefined) return []
+    const groupedActivities = activitiesByTodo.get(item.index) ?? []
+    return groupedActivities.length > 0
+      ? [{ item, activities: groupedActivities }]
+      : []
+  })
+  const builderPhaseActivities = standaloneActivities.filter(
+    (activity) =>
+      activity.kind === 'workflow_phase' &&
+      activity.phase === 'workflow_builder',
+  )
+  const leadingActivities = isActive
+    ? standaloneActivities
+    : standaloneActivities.filter(
+        (activity) =>
+          activity.kind !== 'workflow_phase' ||
+          activity.phase !== 'workflow_builder',
+      )
+  const trailingActivities = isActive ? [] : builderPhaseActivities
+  const historyItemCount = standaloneActivities.length + groupedTodoItems.length
 
   if (!current) return null
 
   return (
     <div className='space-y-3'>
-      {currentInfo && (
+      {(currentInfo || groupedTodoItems.length > 0) && (
         <ChainOfThought defaultOpen={isActive}>
           <ChainOfThoughtHeader aria-live='polite'>
             {isActive
               ? t('running')
-              : t('history_count', { count: infoActivities.length })}
+              : t('history_count', { count: historyItemCount })}
           </ChainOfThoughtHeader>
           <ChainOfThoughtContent>
-            {infoActivities.map((activity, index) => {
+            {leadingActivities.map((activity, index) => {
               const active = activity.toolStatus
                 ? isActive && activity.toolStatus === 'running'
-                : isActive && index === infoActivities.length - 1
-              const label =
-                (active ? activity.message : activity.completeMessage) ||
-                activity.message ||
-                t('fallback_activity')
-              const detail = detailPreview(
-                activity.kind === 'sample_set_base_dir'
-                  ? activity.path
-                  : undefined,
-              )
+                : isActive && index === leadingActivities.length - 1
               return (
-                <ChainOfThoughtStep
+                <ActivityStep
                   key={`${activity.id}-${active ? 'active' : 'complete'}`}
-                  icon={activityIcon(activity)}
-                  label={
-                    activity.kind === 'sample_run_command' ? (
-                      <CommandActivity
-                        label={label}
-                        command={activity.command}
-                        active={active}
-                      />
-                    ) : (
-                      label
-                    )
-                  }
-                  description={
-                    detail ? (
-                      <code
-                        className='block font-mono text-[11px] text-foreground/70'
-                        title={
-                          activity.kind === 'sample_run_command'
-                            ? activity.command
-                            : activity.path
-                        }
-                      >
-                        {detail}
-                      </code>
-                    ) : undefined
-                  }
-                  status={active ? 'active' : 'complete'}
+                  activity={activity}
+                  active={active}
+                  fallbackLabel={t('fallback_activity')}
                 />
               )
             })}
+            {groupedTodoItems.map(({ item, activities: todoActivities }) => {
+              const todoActive = item.status === 'in_progress' && isActive
+              const position = (item.index ?? 0) + 1
+              return (
+                <TodoActivityGroup
+                  key={`${item.index ?? 'todo'}-${item.content}`}
+                  activities={todoActivities}
+                  active={todoActive}
+                  fallbackLabel={t('fallback_activity')}
+                  label={t(
+                    todoActive
+                      ? 'todo_activity_active'
+                      : 'todo_activity_complete',
+                    {
+                      index: position,
+                      total: todo?.total ?? visibleTodoItems.length,
+                      task: item.content,
+                    },
+                  )}
+                />
+              )
+            })}
+            {trailingActivities.map((activity, index) => (
+              <ActivityStep
+                key={`${activity.id}-complete-${index}`}
+                activity={activity}
+                active={false}
+                fallbackLabel={t('fallback_activity')}
+              />
+            ))}
           </ChainOfThoughtContent>
         </ChainOfThought>
       )}
@@ -482,6 +710,55 @@ function ToolArtifactCard({ artifact }: { artifact: AgentToolArtifact }) {
   )
 }
 
+function WorkflowArtifactCard({
+  uid,
+  projectId,
+}: {
+  uid: string
+  projectId: number | null
+}) {
+  const t = useTranslations('Chat.artifact')
+  const { data: workflow } = useWorkflow(uid)
+  const href = projectId
+    ? `/editor?workflowUid=${uid}&projectId=${projectId}`
+    : `/editor?workflowUid=${uid}`
+
+  return (
+    <Link
+      href={href}
+      title={uid}
+      className='group relative block overflow-hidden rounded-xl border border-border bg-card p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:border-foreground/30 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+    >
+      <span className='absolute inset-y-0 left-0 w-1 bg-sky-500' />
+      <div className='flex items-start gap-3 pl-1'>
+        <span className='flex size-10 shrink-0 items-center justify-center rounded-lg bg-sky-600 text-white shadow-sm dark:bg-sky-500'>
+          <WaypointsIcon className='size-5' />
+        </span>
+        <div className='min-w-0 flex-1'>
+          <p className='flex items-center gap-1.5 font-semibold text-[11px] text-foreground uppercase tracking-wide'>
+            <CheckCircle2Icon className='size-3.5 text-sky-600 dark:text-sky-400' />
+            <span>{t('workflow_created')}</span>
+          </p>
+          <p className='mt-1 truncate font-semibold text-sm'>
+            {workflow?.name || t('workflow_fallback')}
+          </p>
+          {workflow?.description && (
+            <p className='mt-1.5 line-clamp-2 text-foreground/70 text-xs leading-relaxed'>
+              {workflow.description}
+            </p>
+          )}
+        </div>
+      </div>
+      <div className='mt-3 flex items-center justify-between border-t pl-1 pt-2.5'>
+        <span className='font-medium text-foreground text-xs'>
+          {t('edit_workflow')}
+        </span>
+        <ArrowUpRightIcon className='size-4 text-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5' />
+      </div>
+    </Link>
+  )
+}
+
 export function AgentRunArtifacts({ run }: { run: AgentRun }) {
   const payload = run.result_payload
   if (!payload || run.status !== 'completed') return null
@@ -501,11 +778,20 @@ export function AgentRunArtifacts({ run }: { run: AgentRun }) {
         ]
       : []
 
-  if (artifacts.length === 0) return null
+  const workflowUids = Array.isArray(payload.workflow_uids)
+    ? payload.workflow_uids.filter(
+        (workflowUid): workflowUid is string => typeof workflowUid === 'string',
+      )
+    : []
+
+  if (artifacts.length === 0 && workflowUids.length === 0) return null
   return (
     <div className='space-y-2'>
       {artifacts.map((artifact) => (
         <ToolArtifactCard key={artifact.uid} artifact={artifact} />
+      ))}
+      {workflowUids.map((uid) => (
+        <WorkflowArtifactCard key={uid} uid={uid} projectId={run.project_id} />
       ))}
     </div>
   )
