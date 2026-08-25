@@ -28,6 +28,10 @@
     "command_placeholder": "输入 / 选择命令…",
     "command_prompt_required": "该命令后还需要输入具体要求。",
     "command_required": "请先使用 / 选择一条智能体命令。",
+    "default_requests": {
+      "workflow-diagnoser": "请诊断本次工作流运行，分析错误、日志和相关输出，并给出修复建议。",
+      "workflow-fixer": "请根据最新诊断报告检查当前工作流，并完成仍有必要的修复。"
+    },
     "run_context_required": "工作流诊断和修复只能从具体运行详情页发起，请重新打开该运行后再试。",
     "delete": "删除",
     "delete_active": "运行期间不可删除",
@@ -177,6 +181,10 @@
       "cancel_requested": "正在取消",
       "queued": "排队中",
       "running": "运行中"
+    },
+    "suggestions": {
+      "diagnose": "诊断本次运行",
+      "fix": "根据诊断修复工作流"
     },
     "title": "AI 对话"
   }

@@ -28,6 +28,10 @@
     "command_placeholder": "Type / to choose a command…",
     "command_prompt_required": "This command also requires a specific request.",
     "command_required": "Choose an agent command with / first.",
+    "default_requests": {
+      "workflow-diagnoser": "Diagnose this workflow run by examining its errors, logs, and relevant outputs, then recommend a repair.",
+      "workflow-fixer": "Review the current workflow against the latest diagnosis and complete any repairs that are still necessary."
+    },
     "run_context_required": "Workflow diagnosis and repair must be started from a specific run detail page. Reopen the run and try again.",
     "delete": "Delete",
     "delete_active": "Unavailable while running",
@@ -177,6 +181,10 @@
       "cancel_requested": "Cancelling",
       "queued": "Queued",
       "running": "Running"
+    },
+    "suggestions": {
+      "diagnose": "Diagnose this run",
+      "fix": "Repair from diagnosis"
     },
     "title": "AI Chat"
   }

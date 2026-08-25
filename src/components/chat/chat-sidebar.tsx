@@ -29,6 +29,7 @@ import {
   MessageContent,
   MessageResponse,
 } from '@/components/ai-elements/message'
+import { Suggestion, Suggestions } from '@/components/ai-elements/suggestion'
 import {
   AgentRunArtifacts,
   AgentRunProgress,
@@ -158,46 +159,6 @@ function ChatSidebarInner({
     useCancelAgentRun()
   const { mutateAsync: retryRun, isPending: isRetrying } = useRetryAgentRun()
 
-  const availableCommands = useMemo(() => {
-    const hasSuccessfulDiagnosis = storedRuns.some(
-      (storedRun) =>
-        storedRun.agent_name === 'workflow-diagnoser' &&
-        storedRun.status === 'completed' &&
-        storedRun.result_payload?.source_run_uid === sourceRunUid &&
-        typeof storedRun.result_payload?.diagnosis_path === 'string',
-    )
-    const commands =
-      scope.scope === 'project'
-        ? CHAT_COMMANDS.filter((command) => {
-            if (command.key === 'workflow-diagnoser') {
-              return Boolean(sourceRunUid)
-            }
-            if (command.key === 'workflow-fixer') {
-              return Boolean(sourceRunUid) && hasSuccessfulDiagnosis
-            }
-            return true
-          })
-        : CHAT_COMMANDS.filter((command) => command.key === 'tool-generator')
-    return commands.map<AgentSlashCommand>((command) => ({
-      ...command,
-      label: t(`assistants.${command.key}.label`),
-      description: t(`assistants.${command.key}.description`),
-    }))
-  }, [scope.scope, sourceRunUid, storedRuns, t])
-  const slashCommand = useSlashCommand({
-    commands: availableCommands,
-    value: text,
-    onValueChange: setText,
-  })
-  const parsedCommand = useMemo(
-    () => parseAgentCommand(text, availableCommands),
-    [availableCommands, text],
-  )
-  const canSubmit = Boolean(parsedCommand?.prompt)
-  const isBusy = Boolean(run && ACTIVE_AGENT_STATUSES.includes(run.status))
-  const inputDisabled =
-    !sessionId || isSessionLoading || isMessagesLoading || isRunsLoading
-
   const displayRuns = useMemo(() => {
     const runs = storedRuns.map((storedRun) =>
       storedRun.uid === run?.uid ? run : storedRun,
@@ -207,6 +168,80 @@ function ChatSidebarInner({
     }
     return runs
   }, [run, storedRuns])
+
+  const latestSuccessfulDiagnosis = useMemo(
+    () =>
+      displayRuns.findLast(
+        (storedRun) =>
+          storedRun.agent_name === 'workflow-diagnoser' &&
+          storedRun.status === 'completed' &&
+          storedRun.result_payload?.source_run_uid === sourceRunUid &&
+          typeof storedRun.result_payload?.diagnosis_path === 'string',
+      ),
+    [displayRuns, sourceRunUid],
+  )
+
+  const availableCommands = useMemo(() => {
+    const commands =
+      scope.scope === 'project'
+        ? CHAT_COMMANDS.filter((command) => {
+            if (command.key === 'workflow-diagnoser') {
+              return Boolean(sourceRunUid)
+            }
+            if (command.key === 'workflow-fixer') {
+              return Boolean(sourceRunUid) && Boolean(latestSuccessfulDiagnosis)
+            }
+            return true
+          })
+        : CHAT_COMMANDS.filter((command) => command.key === 'tool-generator')
+    return commands.map<AgentSlashCommand>((command) => ({
+      ...command,
+      label: t(`assistants.${command.key}.label`),
+      description: t(`assistants.${command.key}.description`),
+    }))
+  }, [latestSuccessfulDiagnosis, scope.scope, sourceRunUid, t])
+  const slashCommand = useSlashCommand({
+    commands: availableCommands,
+    value: text,
+    onValueChange: setText,
+  })
+  const parsedCommand = useMemo(
+    () => parseAgentCommand(text, availableCommands),
+    [availableCommands, text],
+  )
+  const canSubmit = Boolean(
+    parsedCommand &&
+      (parsedCommand.prompt || parsedCommand.command.key === 'workflow-fixer'),
+  )
+  const isBusy = Boolean(run && ACTIVE_AGENT_STATUSES.includes(run.status))
+  const inputDisabled =
+    !sessionId || isSessionLoading || isMessagesLoading || isRunsLoading
+
+  const latestDiagnosisAlreadyFixed = Boolean(
+    latestSuccessfulDiagnosis &&
+      displayRuns.some(
+        (storedRun) =>
+          storedRun.agent_name === 'workflow-fixer' &&
+          storedRun.status === 'completed' &&
+          storedRun.result_payload?.diagnosis_run_uid ===
+            latestSuccessfulDiagnosis.uid,
+      ),
+  )
+  const workflowSuggestion = sourceRunUid
+    ? latestSuccessfulDiagnosis && !latestDiagnosisAlreadyFixed
+      ? {
+          agentName: 'workflow-fixer' as const,
+          label: t('suggestions.fix'),
+          prompt: t('default_requests.workflow-fixer'),
+        }
+      : !latestSuccessfulDiagnosis
+        ? {
+            agentName: 'workflow-diagnoser' as const,
+            label: t('suggestions.diagnose'),
+            prompt: t('default_requests.workflow-diagnoser'),
+          }
+        : null
+    : null
 
   const unmatchedMessages = useMemo(() => {
     const runIds = new Set(displayRuns.map((storedRun) => storedRun.uid))
@@ -225,13 +260,42 @@ function ChatSidebarInner({
     }
   }
 
+  const runWorkflowSuggestion = async () => {
+    if (!workflowSuggestion || !sourceRunUid || isBusy) return
+    setLocalError(null)
+    try {
+      let targetSessionId = sessionId
+      if (!targetSessionId) {
+        const createdSession = await createSession(scope)
+        targetSessionId = createdSession.uid
+      }
+      const createdRun = await createRun({
+        sessionId: targetSessionId,
+        agentName: workflowSuggestion.agentName,
+        text: workflowSuggestion.prompt,
+        sourceRunUid,
+      })
+      if (targetSessionId !== sessionId) {
+        setSessionId(scopeKey, targetSessionId)
+      }
+      setRunId(createdRun.uid)
+    } catch (error) {
+      setLocalError(error instanceof Error ? error.message : String(error))
+    }
+  }
+
   const submit = async () => {
     if (!sessionId || isBusy) return
     if (!parsedCommand) {
       setLocalError(t('command_required'))
       return
     }
-    if (!parsedCommand.prompt) {
+    const prompt =
+      parsedCommand.prompt ||
+      (parsedCommand.command.key === 'workflow-fixer'
+        ? t('default_requests.workflow-fixer')
+        : '')
+    if (!prompt) {
       setLocalError(t('command_prompt_required'))
       return
     }
@@ -247,7 +311,7 @@ function ChatSidebarInner({
       const created = await createRun({
         sessionId,
         agentName: parsedCommand.command.key,
-        text: parsedCommand.prompt,
+        text: prompt,
         sourceRunUid: requiresSourceRun ? sourceRunUid : undefined,
       })
       setRunId(created.uid)
@@ -470,84 +534,99 @@ function ChatSidebarInner({
           <ConversationScrollButton />
         </Conversation>
 
-        <div className='relative mx-3 mb-3'>
-          {slashCommand.open && (
-            <SlashCommandMenu className='absolute inset-x-0 bottom-full z-20 mb-2'>
-              {slashCommand.suggestions.map((command, index) => {
-                const Icon = command.icon
-                return (
-                  <SlashCommandItem
-                    key={command.key}
-                    active={index === slashCommand.activeIndex}
-                    onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => {
-                      slashCommand.select(command)
-                      requestAnimationFrame(() => textareaRef.current?.focus())
-                    }}
-                    onMouseEnter={() => slashCommand.setActiveIndex(index)}
-                  >
-                    {Icon && <Icon className='size-4 shrink-0' />}
-                    <SlashCommandItemLabel>
-                      /{command.key}
-                    </SlashCommandItemLabel>
-                    <SlashCommandItemDescription>
-                      {command.description}
-                    </SlashCommandItemDescription>
-                  </SlashCommandItem>
-                )
-              })}
-            </SlashCommandMenu>
+        <div className='mx-3 mb-3'>
+          {workflowSuggestion && !isBusy && (
+            <Suggestions className='mb-2'>
+              <Suggestion
+                suggestion={workflowSuggestion.prompt}
+                onClick={() => void runWorkflowSuggestion()}
+                disabled={isCreating || isSubmitting}
+              >
+                {workflowSuggestion.label}
+              </Suggestion>
+            </Suggestions>
           )}
-          <div className='rounded-xl border bg-background shadow-xs'>
-            <Textarea
-              ref={textareaRef}
-              value={text}
-              onChange={(event) =>
-                slashCommand.onValueChange(event.target.value)
-              }
-              onKeyDown={(event) => {
-                slashCommand.onKeyDown(event)
-                if (event.defaultPrevented) return
-                if (event.key === 'Enter' && !event.shiftKey) {
-                  event.preventDefault()
-                  void submit()
+          <div className='relative'>
+            {slashCommand.open && (
+              <SlashCommandMenu className='absolute inset-x-0 bottom-full z-20 mb-2'>
+                {slashCommand.suggestions.map((command, index) => {
+                  const Icon = command.icon
+                  return (
+                    <SlashCommandItem
+                      key={command.key}
+                      active={index === slashCommand.activeIndex}
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => {
+                        slashCommand.select(command)
+                        requestAnimationFrame(() =>
+                          textareaRef.current?.focus(),
+                        )
+                      }}
+                      onMouseEnter={() => slashCommand.setActiveIndex(index)}
+                    >
+                      {Icon && <Icon className='size-4 shrink-0' />}
+                      <SlashCommandItemLabel>
+                        /{command.key}
+                      </SlashCommandItemLabel>
+                      <SlashCommandItemDescription>
+                        {command.description}
+                      </SlashCommandItemDescription>
+                    </SlashCommandItem>
+                  )
+                })}
+              </SlashCommandMenu>
+            )}
+            <div className='rounded-xl border bg-background shadow-xs'>
+              <Textarea
+                ref={textareaRef}
+                value={text}
+                onChange={(event) =>
+                  slashCommand.onValueChange(event.target.value)
                 }
-              }}
-              placeholder={
-                inputDisabled
-                  ? t('input_unavailable')
-                  : t('command_placeholder')
-              }
-              disabled={inputDisabled || isBusy}
-              className='min-h-20 resize-none border-0 shadow-none focus-visible:ring-0'
-            />
-            <div className='flex items-center justify-end px-2 pb-2'>
-              {isBusy && run ? (
-                <Button
-                  type='button'
-                  size='icon'
-                  variant='ghost'
-                  onClick={() => void cancelRun(run.uid)}
-                  disabled={isCancelling || run.status === 'cancel_requested'}
-                  aria-label={t('cancel')}
-                >
-                  <SquareIcon className='size-4' />
-                </Button>
-              ) : (
-                <Button
-                  type='button'
-                  size='icon'
-                  disabled={inputDisabled || !canSubmit || isSubmitting}
-                  aria-label={t('send')}
-                  onClick={() => void submit()}
-                >
-                  {isSubmitting ? (
-                    <Loader2Icon className='size-4 animate-spin' />
-                  ) : (
-                    <SendIcon className='size-4' />
-                  )}
-                </Button>
-              )}
+                onKeyDown={(event) => {
+                  slashCommand.onKeyDown(event)
+                  if (event.defaultPrevented) return
+                  if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault()
+                    void submit()
+                  }
+                }}
+                placeholder={
+                  inputDisabled
+                    ? t('input_unavailable')
+                    : t('command_placeholder')
+                }
+                disabled={inputDisabled || isBusy}
+                className='min-h-20 resize-none border-0 shadow-none focus-visible:ring-0'
+              />
+              <div className='flex items-center justify-end px-2 pb-2'>
+                {isBusy && run ? (
+                  <Button
+                    type='button'
+                    size='icon'
+                    variant='ghost'
+                    onClick={() => void cancelRun(run.uid)}
+                    disabled={isCancelling || run.status === 'cancel_requested'}
+                    aria-label={t('cancel')}
+                  >
+                    <SquareIcon className='size-4' />
+                  </Button>
+                ) : (
+                  <Button
+                    type='button'
+                    size='icon'
+                    disabled={inputDisabled || !canSubmit || isSubmitting}
+                    aria-label={t('send')}
+                    onClick={() => void submit()}
+                  >
+                    {isSubmitting ? (
+                      <Loader2Icon className='size-4 animate-spin' />
+                    ) : (
+                      <SendIcon className='size-4' />
+                    )}
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         </div>
