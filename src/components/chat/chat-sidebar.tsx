@@ -98,11 +98,11 @@ const CHAT_COMMANDS: Pick<AgentSlashCommand, 'key' | 'icon'>[] = [
 ]
 
 function parseAgentCommand(value: string, commands: AgentSlashCommand[]) {
-  const match = /^\/([\w-]+)(?:\s+([\s\S]*))?$/.exec(value.trim())
+  const match = /^\/([\w-]+)(?:\s+([\s\S]*))?$/.exec(value)
   if (!match) return null
   const command = commands.find((candidate) => candidate.key === match[1])
   if (!command) return null
-  return { command, prompt: (match[2] ?? '').trim() }
+  return { command, prompt: match[2] ?? '' }
 }
 
 function ChatMessage({ message }: { message: AgentMessage }) {
@@ -211,7 +211,8 @@ function ChatSidebarInner({
   )
   const canSubmit = Boolean(
     parsedCommand &&
-      (parsedCommand.prompt || parsedCommand.command.key === 'workflow-fixer'),
+      (parsedCommand.prompt.trim() ||
+        parsedCommand.command.key === 'workflow-fixer'),
   )
   const isBusy = Boolean(run && ACTIVE_AGENT_STATUSES.includes(run.status))
   const inputDisabled =
@@ -291,7 +292,7 @@ function ChatSidebarInner({
       return
     }
     const prompt =
-      parsedCommand.prompt ||
+      parsedCommand.prompt.trim() ||
       (parsedCommand.command.key === 'workflow-fixer'
         ? t('default_requests.workflow-fixer')
         : '')
@@ -534,20 +535,21 @@ function ChatSidebarInner({
           <ConversationScrollButton />
         </Conversation>
 
-        <div className='mx-3 mb-3'>
+        <div className='border-t bg-gradient-to-t from-muted/45 via-background to-background px-3 pt-3 pb-3'>
           {workflowSuggestion && !isBusy && (
             <Suggestions className='mb-2'>
               <Suggestion
                 suggestion={workflowSuggestion.prompt}
                 onClick={() => void runWorkflowSuggestion()}
                 disabled={isCreating || isSubmitting}
+                className='border-primary/35 bg-primary/[0.04] text-primary shadow-none hover:bg-primary/[0.04] hover:text-primary dark:border-primary/40 dark:bg-primary/[0.07] dark:hover:bg-primary/[0.07]'
               >
                 {workflowSuggestion.label}
               </Suggestion>
             </Suggestions>
           )}
           <div className='relative'>
-            {slashCommand.open && (
+            {slashCommand.open && !parsedCommand && (
               <SlashCommandMenu className='absolute inset-x-0 bottom-full z-20 mb-2'>
                 {slashCommand.suggestions.map((command, index) => {
                   const Icon = command.icon
@@ -576,29 +578,45 @@ function ChatSidebarInner({
                 })}
               </SlashCommandMenu>
             )}
-            <div className='rounded-xl border bg-background shadow-xs'>
-              <Textarea
-                ref={textareaRef}
-                value={text}
-                onChange={(event) =>
-                  slashCommand.onValueChange(event.target.value)
-                }
-                onKeyDown={(event) => {
-                  slashCommand.onKeyDown(event)
-                  if (event.defaultPrevented) return
-                  if (event.key === 'Enter' && !event.shiftKey) {
-                    event.preventDefault()
-                    void submit()
+            <div className='group rounded-2xl border border-border/80 bg-card/95 shadow-[0_8px_28px_-16px_rgb(0_0_0/0.45)] ring-1 ring-black/[0.025] transition-[border-color,box-shadow] focus-within:border-primary/45 focus-within:shadow-[0_12px_36px_-18px_rgb(0_0_0/0.5)] focus-within:ring-4 focus-within:ring-primary/10 dark:bg-card/90 dark:ring-white/[0.04]'>
+              <div className='relative'>
+                {parsedCommand && (
+                  <div
+                    aria-hidden='true'
+                    className='pointer-events-none absolute inset-x-0 top-0 min-h-20 whitespace-pre-wrap break-words px-3 py-2 text-base md:text-sm'
+                  >
+                    <span className='text-blue-600 [-webkit-text-stroke:0.25px_currentColor] dark:text-blue-400'>
+                      /{parsedCommand.command.key}
+                    </span>
+                    <span className='text-foreground'>
+                      {text.slice(`/${parsedCommand.command.key}`.length)}
+                    </span>
+                  </div>
+                )}
+                <Textarea
+                  ref={textareaRef}
+                  value={text}
+                  onChange={(event) =>
+                    slashCommand.onValueChange(event.target.value)
                   }
-                }}
-                placeholder={
-                  inputDisabled
-                    ? t('input_unavailable')
-                    : t('command_placeholder')
-                }
-                disabled={inputDisabled || isBusy}
-                className='min-h-20 resize-none border-0 shadow-none focus-visible:ring-0'
-              />
+                  onKeyDown={(event) => {
+                    slashCommand.onKeyDown(event)
+                    if (event.defaultPrevented) return
+                    if (event.key === 'Enter' && !event.shiftKey) {
+                      if (event.nativeEvent.isComposing) return
+                      event.preventDefault()
+                      void submit()
+                    }
+                  }}
+                  placeholder={
+                    inputDisabled
+                      ? t('input_unavailable')
+                      : t('command_placeholder')
+                  }
+                  disabled={inputDisabled || isBusy}
+                  className={`relative min-h-20 resize-none border-0 bg-transparent px-3 shadow-none focus-visible:ring-0 dark:bg-transparent ${parsedCommand ? 'text-transparent caret-foreground selection:bg-primary/20' : ''}`}
+                />
+              </div>
               <div className='flex items-center justify-end px-2 pb-2'>
                 {isBusy && run ? (
                   <Button
