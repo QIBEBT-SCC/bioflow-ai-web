@@ -1,4 +1,9 @@
-export type AgentName = 'workflow-builder' | 'sample-manager' | 'tool-generator'
+export type AgentName =
+  | 'workflow-builder'
+  | 'workflow-diagnoser'
+  | 'workflow-fixer'
+  | 'sample-manager'
+  | 'tool-generator'
 
 export type AgentStatus =
   | 'queued'
@@ -66,6 +71,12 @@ export interface AgentResult {
   artifacts?: AgentToolArtifact[]
   tool_uid?: string
   name?: string | null
+  diagnosis_path?: string | null
+  source_run_uid?: string | null
+  workflow_uid?: string | null
+  workflow_changed?: boolean
+  diagnosis_run_uid?: string | null
+  update_path?: string | null
   [key: string]: unknown
 }
 

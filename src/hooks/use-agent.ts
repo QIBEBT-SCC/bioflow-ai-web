@@ -308,11 +308,13 @@ export function useCreateAgentRun() {
       sessionId,
       agentName,
       text,
+      sourceRunUid,
     }: {
       sessionId: string
       agentName: AgentName
       text: string
-    }) => createAgentRun(sessionId, agentName, text),
+      sourceRunUid?: string
+    }) => createAgentRun(sessionId, agentName, text, sourceRunUid),
     onSuccess: (run) => invalidate(run.session_uid, run.uid),
   })
 }

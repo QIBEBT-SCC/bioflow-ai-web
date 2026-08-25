@@ -64,10 +64,15 @@ export async function createAgentRun(
   sessionId: string,
   agentName: AgentName,
   text: string,
+  sourceRunUid?: string,
 ) {
   return await clientFetch<AgentRun>(`/agent-sessions/${sessionId}/runs`, {
     method: 'POST',
-    body: JSON.stringify({ agent_name: agentName, text }),
+    body: JSON.stringify({
+      agent_name: agentName,
+      text,
+      source_run_uid: sourceRunUid ?? null,
+    }),
   })
 }
 

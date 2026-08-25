@@ -2,14 +2,17 @@
 
 import {
   FlaskConicalIcon,
+  HammerIcon,
   Loader2Icon,
   PlusIcon,
   RotateCcwIcon,
   SendIcon,
   SquareIcon,
+  StethoscopeIcon,
   TestTubeDiagonalIcon,
   WrenchIcon,
 } from 'lucide-react'
+import { useParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import type React from 'react'
 import { Fragment, useMemo, useRef, useState } from 'react'
@@ -76,6 +79,14 @@ const CHAT_COMMANDS: Pick<AgentSlashCommand, 'key' | 'icon'>[] = [
     icon: FlaskConicalIcon,
   },
   {
+    key: 'workflow-diagnoser',
+    icon: StethoscopeIcon,
+  },
+  {
+    key: 'workflow-fixer',
+    icon: HammerIcon,
+  },
+  {
     key: 'sample-manager',
     icon: TestTubeDiagonalIcon,
   },
@@ -110,11 +121,13 @@ function ChatMessage({ message }: { message: AgentMessage }) {
 function ChatSidebarInner({
   scope,
   scopeKey,
+  sourceRunUid,
   width,
   onResizeStart,
 }: {
   scope: AgentScope
   scopeKey: string
+  sourceRunUid?: string
   width: number
   onResizeStart: (event: React.MouseEvent) => void
 }) {
@@ -146,16 +159,31 @@ function ChatSidebarInner({
   const { mutateAsync: retryRun, isPending: isRetrying } = useRetryAgentRun()
 
   const availableCommands = useMemo(() => {
+    const hasSuccessfulDiagnosis = storedRuns.some(
+      (storedRun) =>
+        storedRun.agent_name === 'workflow-diagnoser' &&
+        storedRun.status === 'completed' &&
+        storedRun.result_payload?.source_run_uid === sourceRunUid &&
+        typeof storedRun.result_payload?.diagnosis_path === 'string',
+    )
     const commands =
       scope.scope === 'project'
-        ? CHAT_COMMANDS
+        ? CHAT_COMMANDS.filter((command) => {
+            if (command.key === 'workflow-diagnoser') {
+              return Boolean(sourceRunUid)
+            }
+            if (command.key === 'workflow-fixer') {
+              return Boolean(sourceRunUid) && hasSuccessfulDiagnosis
+            }
+            return true
+          })
         : CHAT_COMMANDS.filter((command) => command.key === 'tool-generator')
     return commands.map<AgentSlashCommand>((command) => ({
       ...command,
       label: t(`assistants.${command.key}.label`),
       description: t(`assistants.${command.key}.description`),
     }))
-  }, [scope.scope, t])
+  }, [scope.scope, sourceRunUid, storedRuns, t])
   const slashCommand = useSlashCommand({
     commands: availableCommands,
     value: text,
@@ -207,12 +235,20 @@ function ChatSidebarInner({
       setLocalError(t('command_prompt_required'))
       return
     }
+    const requiresSourceRun =
+      parsedCommand.command.key === 'workflow-diagnoser' ||
+      parsedCommand.command.key === 'workflow-fixer'
+    if (requiresSourceRun && !sourceRunUid) {
+      setLocalError(t('run_context_required'))
+      return
+    }
     setLocalError(null)
     try {
       const created = await createRun({
         sessionId,
         agentName: parsedCommand.command.key,
         text: parsedCommand.prompt,
+        sourceRunUid: requiresSourceRun ? sourceRunUid : undefined,
       })
       setRunId(created.uid)
       slashCommand.onValueChange('')
@@ -522,13 +558,17 @@ function ChatSidebarInner({
 
 export function ChatSidebar({
   projectId,
+  runUid,
   width,
   onResizeStartAction,
 }: {
   projectId?: string
+  runUid?: string
   width: number
   onResizeStartAction: (event: React.MouseEvent) => void
 }) {
+  const params = useParams<{ runUid?: string }>()
+  const sourceRunUid = runUid ?? params.runUid
   const scope: AgentScope = projectId
     ? { scope: 'project', projectId }
     : { scope: 'global' }
@@ -537,9 +577,10 @@ export function ChatSidebar({
   const sessionId = sessions[scopeKey] ?? null
   return (
     <ChatSidebarInner
-      key={sessionId || 'new'}
+      key={`${sessionId || 'new'}:${sourceRunUid ?? 'no-run'}`}
       scope={scope}
       scopeKey={scopeKey}
+      sourceRunUid={sourceRunUid}
       width={width}
       onResizeStart={onResizeStartAction}
     />

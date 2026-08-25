@@ -11,6 +11,14 @@
         "description": "Create a reusable bioinformatics tool",
         "label": "Tool Generator"
       },
+      "workflow-diagnoser": {
+        "description": "Inspect the current run workflow, errors, and output files to produce a diagnosis",
+        "label": "Workflow Diagnoser"
+      },
+      "workflow-fixer": {
+        "description": "Inspect and repair the current workflow template using the latest diagnosis in this conversation",
+        "label": "Workflow Fixer"
+      },
       "workflow-builder": {
         "description": "Create or update a project workflow",
         "label": "Workflow Builder"
@@ -20,6 +28,7 @@
     "command_placeholder": "Type / to choose a command…",
     "command_prompt_required": "This command also requires a specific request.",
     "command_required": "Choose an agent command with / first.",
+    "run_context_required": "Workflow diagnosis and repair must be started from a specific run detail page. Reopen the run and try again.",
     "delete": "Delete",
     "delete_active": "Unavailable while running",
     "delete_confirm_action": "Delete conversation",

@@ -11,6 +11,14 @@
         "description": "创建可复用的生物信息学工具",
         "label": "工具生成助手"
       },
+      "workflow-diagnoser": {
+        "description": "读取当前运行的工作流、错误与输出文件并生成诊断报告",
+        "label": "工作流诊断助手"
+      },
+      "workflow-fixer": {
+        "description": "根据当前对话的最新诊断检查并修复当前工作流模板",
+        "label": "工作流修复助手"
+      },
       "workflow-builder": {
         "description": "创建或更新项目工作流",
         "label": "工作流构建助手"
@@ -20,6 +28,7 @@
     "command_placeholder": "输入 / 选择命令…",
     "command_prompt_required": "该命令后还需要输入具体要求。",
     "command_required": "请先使用 / 选择一条智能体命令。",
+    "run_context_required": "工作流诊断和修复只能从具体运行详情页发起，请重新打开该运行后再试。",
     "delete": "删除",
     "delete_active": "运行期间不可删除",
     "delete_confirm_action": "确认删除",
