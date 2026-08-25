@@ -32,6 +32,7 @@ import {
 } from '@/components/chat/agent-run-content'
 import { SidebarHistoryMenu } from '@/components/chat/chat-history-menu'
 import { PlanApproval } from '@/components/chat/plan-approval'
+import { QuestionApproval } from '@/components/chat/question-approval'
 import {
   type SlashCommand,
   SlashCommandItem,
@@ -56,6 +57,7 @@ import {
   useResumeAgentRun,
   useRetryAgentRun,
 } from '@/hooks/use-agent'
+import { parseAgentQuestionAnswers } from '@/lib/agent-questions'
 import { useChatSidebarStore } from '@/stores/chat-sidebar-store'
 import {
   ACTIVE_AGENT_STATUSES,
@@ -219,14 +221,14 @@ function ChatSidebarInner({
     }
   }
 
-  const resume = async (approved: boolean) => {
+  const resume = async (approved: boolean, response?: string) => {
     if (!run) return
     setLocalError(null)
     try {
       await resumeRun({
         runId: run.uid,
         approved,
-        feedback: approved ? undefined : feedback.trim(),
+        feedback: approved ? undefined : (response ?? feedback).trim(),
       })
       setFeedback('')
     } catch (error) {
@@ -238,6 +240,11 @@ function ChatSidebarInner({
     (event) => event.event_type === 'run.progress',
   )
   const isPlanApproval = run?.interrupt_payload?.kind === 'plan_approval'
+  const questions =
+    run?.interrupt_payload?.kind === 'questions' &&
+    Array.isArray(run.interrupt_payload.questions)
+      ? run.interrupt_payload.questions
+      : []
   const planContent =
     typeof run?.interrupt_payload?.plan === 'string'
       ? run.interrupt_payload.plan
@@ -299,6 +306,19 @@ function ChatSidebarInner({
                   const userMessages = runMessages.filter(
                     (message) => message.role === 'user',
                   )
+                  const parsedUserMessages = userMessages.map(
+                    (message, index) => ({
+                      message,
+                      questionAnswers:
+                        index > 0 && message.parts.length === 1
+                          ? parseAgentQuestionAnswers(message.parts[0].text)
+                          : undefined,
+                    }),
+                  )
+                  const visibleUserMessages = parsedUserMessages.flatMap(
+                    ({ message, questionAnswers }) =>
+                      questionAnswers ? [] : [message],
+                  )
                   const assistantMessages = runMessages.filter(
                     (message) => message.role === 'assistant',
                   )
@@ -309,7 +329,7 @@ function ChatSidebarInner({
 
                   return (
                     <Fragment key={displayRun.uid}>
-                      {userMessages.map((message) => (
+                      {visibleUserMessages.map((message) => (
                         <ChatMessage key={message.uid} message={message} />
                       ))}
                       <AgentRunProgress events={runEvents} run={displayRun} />
@@ -345,6 +365,12 @@ function ChatSidebarInner({
                   onFeedbackChange={setFeedback}
                   onApprove={() => void resume(true)}
                   onSendFeedback={() => void resume(false)}
+                />
+              ) : questions.length > 0 ? (
+                <QuestionApproval
+                  questions={questions}
+                  isPending={isResuming}
+                  onSubmit={(response) => void resume(false, response)}
                 />
               ) : (
                 <Alert>

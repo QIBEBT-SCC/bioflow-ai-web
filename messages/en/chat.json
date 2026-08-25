@@ -29,6 +29,7 @@
     "empty_description": "Choose an assistant with /, then describe what you need.",
     "failed": "Agent run failed.",
     "feedback_placeholder": "Optional feedback instead of approval",
+    "custom_answer_placeholder": "Or enter a custom answer",
     "history": "Chat History",
     "input_unavailable": "Create or load a conversation to start chatting",
     "new_conversation": "New Conversation",
@@ -47,6 +48,7 @@
       "workflow_fallback": "New workflow"
     },
     "progress": {
+      "answer": "Answer",
       "fallback_activity": "Working on the request",
       "builder": {
         "manager": {
@@ -130,8 +132,8 @@
           "complete": "Created {count} sample records"
         },
         "ask_human": {
-          "active": "Waiting for data directory confirmation",
-          "complete": "Received data directory confirmation"
+          "active": "Waiting for your answer",
+          "complete": "Answered a question"
         },
         "list_project_samples": {
           "active": "Checking existing project samples",
@@ -161,6 +163,7 @@
     "retry": "Retry",
     "send": "Send",
     "send_feedback": "Send feedback",
+    "submit_answers": "Submit answers",
     "status": {
       "cancel_requested": "Cancelling",
       "queued": "Queued",

@@ -42,7 +42,13 @@ import {
 } from '@/components/ui/collapsible'
 import { useTool } from '@/hooks/use-tool'
 import { useWorkflow } from '@/hooks/use-workflow'
-import type { AgentEvent, AgentRun, AgentToolArtifact } from '@/types/agent'
+import { parseAgentQuestionAnswers } from '@/lib/agent-questions'
+import type {
+  AgentEvent,
+  AgentQuestionAnswer,
+  AgentRun,
+  AgentToolArtifact,
+} from '@/types/agent'
 import { STREAMING_AGENT_STATUSES } from '@/types/agent'
 
 interface ProgressActivity {
@@ -67,6 +73,7 @@ interface ProgressActivity {
   completeMessage?: string
   toolCallId?: string
   toolStatus?: 'running' | 'completed' | 'skipped'
+  questionAnswers?: AgentQuestionAnswer[]
 }
 
 interface TodoActivityItem {
@@ -272,7 +279,13 @@ function ActivityStep({
     <ChainOfThoughtStep
       icon={activityIcon(activity)}
       label={
-        activity.kind === 'sample_run_command' ? (
+        activity.kind === 'sample_ask_human' &&
+        activity.questionAnswers?.length ? (
+          <QuestionAnswerActivity
+            answers={activity.questionAnswers}
+            label={label}
+          />
+        ) : activity.kind === 'sample_run_command' ? (
           <CommandActivity
             label={label}
             command={activity.command}
@@ -298,6 +311,42 @@ function ActivityStep({
       }
       status={active ? 'active' : 'complete'}
     />
+  )
+}
+
+function QuestionAnswerActivity({
+  answers,
+  label,
+}: {
+  answers: AgentQuestionAnswer[]
+  label: string
+}) {
+  const t = useTranslations('Chat.progress')
+
+  return (
+    <Collapsible>
+      <CollapsibleTrigger className='group/question-answer flex w-full items-center justify-between gap-2 text-left'>
+        <span>{label}</span>
+        <ChevronDownIcon className='size-3.5 shrink-0 transition-transform group-data-[state=open]/question-answer:rotate-180' />
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <div className='mt-2 space-y-3 rounded-lg border bg-muted/30 p-3'>
+          {answers.map((answer, index) => (
+            <div key={`${index}-${answer.question}`}>
+              <p className='whitespace-pre-wrap font-medium text-foreground text-xs leading-relaxed'>
+                {answer.question}
+              </p>
+              <p className='mt-1 whitespace-pre-wrap text-muted-foreground text-xs leading-relaxed'>
+                <span className='mr-1 font-medium text-foreground/70'>
+                  {t('answer')}:
+                </span>
+                {answer.answer}
+              </p>
+            </div>
+          ))}
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
   )
 }
 
@@ -386,22 +435,17 @@ function groupActivitiesByTodo(activities: ProgressActivity[]) {
   return { standaloneActivities, activitiesByTodo }
 }
 
-export function AgentRunProgress({
-  events,
-  run,
-}: {
-  events: AgentEvent[]
-  run: AgentRun
-}) {
+function useProgressActivities(events: AgentEvent[]) {
   const t = useTranslations('Chat.progress')
-  const activities = useMemo(() => {
+  return useMemo(() => {
     const normalized: ProgressActivity[] = []
     for (const event of events) {
       if (event.event_type === 'run.progress') {
         normalized.push(normalizeProgress(event))
       }
     }
-    return mergeToolProgress(normalized).map((activity) => {
+    const mergedActivities = mergeToolProgress(normalized)
+    const translatedActivities = mergedActivities.map((activity) => {
       let message = activity.message
       let completeMessage: string | undefined
       switch (activity.kind) {
@@ -527,7 +571,35 @@ export function AgentRunProgress({
       }
       return { ...activity, message, completeMessage }
     })
+
+    return translatedActivities.map((activity) => {
+      if (activity.kind !== 'sample_ask_human') return activity
+
+      const resumeEvent = events.find(
+        (event) =>
+          event.id > activity.id &&
+          event.event_type === 'run.queued' &&
+          event.payload.resume === true,
+      )
+      const feedback = resumeEvent?.payload.feedback
+      const questionAnswers =
+        typeof feedback === 'string'
+          ? parseAgentQuestionAnswers(feedback)
+          : undefined
+      return questionAnswers ? { ...activity, questionAnswers } : activity
+    })
   }, [events, t])
+}
+
+export function AgentRunProgress({
+  events,
+  run,
+}: {
+  events: AgentEvent[]
+  run: AgentRun
+}) {
+  const t = useTranslations('Chat.progress')
+  const activities = useProgressActivities(events)
   const current = activities.at(-1)
   const { standaloneActivities, activitiesByTodo } = useMemo(
     () => groupActivitiesByTodo(activities),

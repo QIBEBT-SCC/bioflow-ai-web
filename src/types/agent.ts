@@ -39,9 +39,20 @@ export interface AgentMessage {
 export interface AgentInterrupt {
   kind?: string
   question?: string
+  questions?: AgentQuestion[]
   message?: string
   plan?: string
   [key: string]: unknown
+}
+
+export interface AgentQuestion {
+  question: string
+  choices: string[]
+}
+
+export interface AgentQuestionAnswer {
+  question: string
+  answer: string
 }
 
 export interface AgentToolArtifact {

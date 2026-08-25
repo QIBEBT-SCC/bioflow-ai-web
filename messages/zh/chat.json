@@ -29,6 +29,7 @@
     "empty_description": "使用 / 选择助手，然后描述你的需求。",
     "failed": "智能体运行失败。",
     "feedback_placeholder": "也可以填写反馈来代替批准",
+    "custom_answer_placeholder": "或输入自定义回答",
     "history": "对话历史",
     "input_unavailable": "请先创建或载入一个对话",
     "new_conversation": "新建对话",
@@ -47,6 +48,7 @@
       "workflow_fallback": "新工作流"
     },
     "progress": {
+      "answer": "回答",
       "fallback_activity": "正在处理请求",
       "builder": {
         "manager": {
@@ -130,8 +132,8 @@
           "complete": "已创建 {count} 条样本记录"
         },
         "ask_human": {
-          "active": "正在等待确认数据目录",
-          "complete": "已收到数据目录确认"
+          "active": "正在等待回答",
+          "complete": "已回答问题"
         },
         "list_project_samples": {
           "active": "正在检查项目已有样本",
@@ -161,6 +163,7 @@
     "retry": "重试",
     "send": "发送",
     "send_feedback": "发送反馈",
+    "submit_answers": "提交回答",
     "status": {
       "cancel_requested": "正在取消",
       "queued": "排队中",
