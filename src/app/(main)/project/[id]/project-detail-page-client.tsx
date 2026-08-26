@@ -1,8 +1,14 @@
 'use client'
 
-import { FileCode, FlaskConical, TestTubeDiagonal } from 'lucide-react'
+import {
+  FileCode,
+  FilesIcon,
+  FlaskConical,
+  TestTubeDiagonal,
+} from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
+import { ProjectAgentFiles } from '@/components/agent-file/project-agent-files'
 import { ChatSidebar } from '@/components/chat/chat-sidebar'
 import { ChatSidebarToggle } from '@/components/chat/chat-sidebar-toggle'
 import { ProjectDetailCard } from '@/components/project/project-detail-card'
@@ -97,7 +103,7 @@ export default function ProjectDetailPageClient({
 
           {/* 项目内容标签页 */}
           <Tabs defaultValue='samples' className='w-full lg:min-h-0 lg:flex-1'>
-            <TabsList className='grid shrink-0 grid-cols-3 md:inline-flex md:w-auto'>
+            <TabsList className='grid shrink-0 grid-cols-2 md:inline-flex md:w-auto'>
               <TabsTrigger value='samples' className='flex items-center'>
                 <TestTubeDiagonal className='size-4 mr-2' />
                 {t('tabs.samples')}
@@ -109,6 +115,10 @@ export default function ProjectDetailPageClient({
               <TabsTrigger value='workflows' className='flex items-center'>
                 <FlaskConical className='size-4 mr-2' />
                 {t('tabs.workflows')}
+              </TabsTrigger>
+              <TabsTrigger value='agent-files' className='flex items-center'>
+                <FilesIcon className='size-4 mr-2' />
+                {t('tabs.agentFiles')}
               </TabsTrigger>
             </TabsList>
 
@@ -134,6 +144,13 @@ export default function ProjectDetailPageClient({
               className='mt-6 lg:min-h-0 lg:overflow-y-auto lg:pr-2 lg:overscroll-contain lg:[scrollbar-gutter:stable]'
             >
               <ProjectWorkflowList projectId={projectId} />
+            </TabsContent>
+
+            <TabsContent
+              value='agent-files'
+              className='mt-6 lg:min-h-0 lg:overflow-y-auto lg:pr-2 lg:overscroll-contain lg:[scrollbar-gutter:stable]'
+            >
+              <ProjectAgentFiles projectId={projectId} />
             </TabsContent>
           </Tabs>
         </div>

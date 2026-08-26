@@ -17,6 +17,7 @@ import {
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { AgentFileCard } from '@/components/agent-file/agent-file-card'
 import {
   ChainOfThought,
   ChainOfThoughtContent,
@@ -40,6 +41,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
+import { useAgentRunArtifacts } from '@/hooks/use-agent-file'
 import { useTool } from '@/hooks/use-tool'
 import { useWorkflow } from '@/hooks/use-workflow'
 import { parseAgentQuestionAnswers } from '@/lib/agent-questions'
@@ -832,8 +834,12 @@ function WorkflowArtifactCard({
 }
 
 export function AgentRunArtifacts({ run }: { run: AgentRun }) {
-  const payload = run.result_payload
-  if (!payload || run.status !== 'completed') return null
+  const { data: fileArtifacts = [] } = useAgentRunArtifacts(
+    run.uid,
+    run.status === 'completed' && run.project_id !== null,
+  )
+  const payload = run.result_payload ?? {}
+  if (run.status !== 'completed') return null
 
   const artifacts = Array.isArray(payload.artifacts)
     ? payload.artifacts.filter(
@@ -856,7 +862,12 @@ export function AgentRunArtifacts({ run }: { run: AgentRun }) {
       )
     : []
 
-  if (artifacts.length === 0 && workflowUids.length === 0) return null
+  if (
+    artifacts.length === 0 &&
+    workflowUids.length === 0 &&
+    fileArtifacts.length === 0
+  )
+    return null
   return (
     <div className='space-y-2'>
       {artifacts.map((artifact) => (
@@ -864,6 +875,9 @@ export function AgentRunArtifacts({ run }: { run: AgentRun }) {
       ))}
       {workflowUids.map((uid) => (
         <WorkflowArtifactCard key={uid} uid={uid} projectId={run.project_id} />
+      ))}
+      {fileArtifacts.map((file) => (
+        <AgentFileCard key={file.id} file={file} compact />
       ))}
     </div>
   )

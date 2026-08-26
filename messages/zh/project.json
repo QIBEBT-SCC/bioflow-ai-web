@@ -134,13 +134,67 @@
       "tabs": {
         "samples": "样本",
         "fileMappings": "全局文件",
-        "workflows": "工作流"
+        "workflows": "工作流",
+        "agentFiles": "智能体文件"
       },
       "card": {
         "favorite": "收藏",
         "sampleCount": "样本数量",
         "workflowStatus": "工作流状态",
         "lastUpdated": "最后更新"
+      }
+    },
+    "agentFiles": {
+      "documentsTitle": "项目文档",
+      "documentsDescription": "工作流智能体后续运行会读取这些项目级文档。",
+      "recordsTitle": "诊断与更新记录",
+      "recordsDescription": "按智能体运行保存的只读诊断报告和工作流更新日志。",
+      "noDocuments": "尚未生成计划或样本摘要。",
+      "noRecords": "尚未生成诊断报告或更新日志。",
+      "emptyTitle": "暂无智能体文件",
+      "emptyDescription": "运行样本管理、工作流构建、诊断或修复智能体后，相关文件会显示在这里。",
+      "loading": "正在加载文件…",
+      "retry": "重试",
+      "preview": "预览",
+      "source": "原文",
+      "download": "下载",
+      "downloadFailed": "下载失败",
+      "edit": "编辑",
+      "save": "保存",
+      "cancel": "取消",
+      "saveSuccess": "计划已保存",
+      "saveFailed": "保存计划失败",
+      "conflict": "文件已被修改或当前有智能体正在使用计划，请刷新后重试。",
+      "unsavedConfirm": "当前修改尚未保存，确定要关闭吗？",
+      "editorLabel": "编辑工作流计划",
+      "planImpact": "修改计划会影响后续智能体生成的工作流，但不会改变已经生成的工作流。",
+      "updatedAt": "更新于 {date}",
+      "kinds": {
+        "plan": "工作流计划",
+        "samples": "样本摘要",
+        "diagnosis": "诊断报告",
+        "update": "更新日志"
+      },
+      "agents": {
+        "workflow-builder": "工作流构建助手",
+        "workflow-diagnoser": "工作流诊断助手",
+        "workflow-fixer": "工作流修复助手",
+        "sample-manager": "样本管理助手",
+        "tool-generator": "工具生成助手"
+      },
+      "statuses": {
+        "queued": "排队中",
+        "running": "运行中",
+        "waiting_input": "等待输入",
+        "cancel_requested": "正在取消",
+        "cancelled": "已取消",
+        "completed": "已完成",
+        "failed": "失败"
+      },
+      "readOnlyReasons": {
+        "active_agent_run": "当前项目有智能体正在运行或等待审批。运行结束或取消后才能编辑计划。",
+        "managed_sample_summary": "样本摘要由样本数据生成。请通过样本管理界面或样本管理助手修改真实数据。",
+        "immutable_audit_record": "诊断报告和更新日志是运行审计记录，只能查看和下载。"
       }
     },
     "runDetail": {
