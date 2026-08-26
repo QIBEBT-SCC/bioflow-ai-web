@@ -45,6 +45,7 @@ import {
   useSample,
   useSamplesPage,
 } from '@/hooks/use-sample'
+import { cn } from '@/lib/utils'
 import type { Sample } from '@/types/sample'
 import { AddSampleFileDialog } from './add-sample-file-dialog'
 import { CreateSampleDialog } from './create-sample-dialog'
@@ -53,6 +54,12 @@ import { EditSampleDialog } from './edit-sample-dialog'
 interface SampleFilesSectionProps {
   projectId: string
   sampleDetails: Sample
+  onDeleteFile: (fileUid: string) => void
+}
+
+interface ExpandedSampleFilesSectionProps {
+  projectId: string
+  sampleUid: string
   onDeleteFile: (fileUid: string) => void
 }
 
@@ -105,7 +112,14 @@ function SampleFilesSection({
               key={file.uid}
               className='grid min-w-0 gap-3 rounded-lg border bg-background p-3 md:grid-cols-[minmax(0,1.6fr)_minmax(0,2fr)_auto] md:items-center'
             >
-              <div className='min-w-0 space-y-2'>
+              <div
+                className={cn(
+                  '-mx-3 -my-2 flex min-w-0 flex-col justify-center space-y-2 rounded-md border-l-2 border-transparent px-3 py-2 md:self-stretch',
+                  file.is_dynamic &&
+                    'border-blue-500 bg-blue-50/80 dark:bg-blue-950/30',
+                )}
+                title={file.is_dynamic ? t('dynamic') : undefined}
+              >
                 <div className='flex min-w-0 flex-wrap items-center gap-1'>
                   <Badge
                     variant='outline'
@@ -114,7 +128,7 @@ function SampleFilesSection({
                     {file.tag}
                   </Badge>
                   {file.is_dynamic && (
-                    <Badge variant='secondary'>{t('dynamic')}</Badge>
+                    <span className='sr-only'>{t('dynamic')}</span>
                   )}
                 </div>
                 <div className='flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground'>
@@ -159,6 +173,32 @@ function SampleFilesSection({
         </div>
       )}
     </div>
+  )
+}
+
+function ExpandedSampleFilesSection({
+  projectId,
+  sampleUid,
+  onDeleteFile,
+}: ExpandedSampleFilesSectionProps) {
+  const { data: sampleDetails, isLoading } = useSample(projectId, sampleUid)
+
+  if (isLoading) {
+    return (
+      <div className='flex items-center justify-center border-t bg-muted/20 py-8'>
+        <Loader2 className='size-5 animate-spin text-muted-foreground' />
+      </div>
+    )
+  }
+
+  if (!sampleDetails) return null
+
+  return (
+    <SampleFilesSection
+      projectId={projectId}
+      sampleDetails={sampleDetails}
+      onDeleteFile={onDeleteFile}
+    />
   )
 }
 
@@ -297,12 +337,6 @@ export function SampleList({ projectId }: SampleListProps) {
     }))
   }
 
-  // 获取展开样本的详细信息
-  const { data: expandedSampleData } = useSample(
-    projectId,
-    Object.keys(expandedSamples).find((uid) => expandedSamples[uid]) || '',
-  )
-
   // 获取正在编辑的样本的完整数据
   const { data: editingSampleData } = useSample(projectId, editingSample || '')
 
@@ -368,10 +402,6 @@ export function SampleList({ projectId }: SampleListProps) {
             <div className='divide-y border-y'>
               {samples.map((sample) => {
                 const isExpanded = expandedSamples[sample.uid]
-                const sampleDetails =
-                  isExpanded && expandedSampleData?.uid === sample.uid
-                    ? expandedSampleData
-                    : null
 
                 return (
                   <Fragment key={sample.uid}>
@@ -468,14 +498,14 @@ export function SampleList({ projectId }: SampleListProps) {
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
-                    {isExpanded && sampleDetails && (
-                      <SampleFilesSection
+                    {isExpanded && (
+                      <ExpandedSampleFilesSection
                         projectId={projectId}
-                        sampleDetails={sampleDetails}
+                        sampleUid={sample.uid}
                         onDeleteFile={(fileUid) =>
                           updateListState({
                             deletingFile: {
-                              sampleUid: sampleDetails.uid,
+                              sampleUid: sample.uid,
                               fileUid,
                             },
                           })

@@ -3,6 +3,7 @@
 import { format, parseISO } from 'date-fns'
 import {
   EditIcon,
+  InfoIcon,
   Loader2,
   MoreHorizontal,
   PlusIcon,
@@ -21,7 +22,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -37,9 +37,16 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import {
   useDeleteProjectFileMapping,
   useProjectFileMappings,
 } from '@/hooks/use-sample'
+import { cn } from '@/lib/utils'
 import type { ProjectFileMapping } from '@/types/sample'
 import { AddProjectFileMappingDialog } from './add-project-file-mapping-dialog'
 import { EditProjectFileMappingDialog } from './edit-project-file-mapping-dialog'
@@ -110,75 +117,100 @@ export function ProjectFileMappings({ projectId }: ProjectFileMappingsProps) {
               />
             </div>
           ) : (
-            <div className='divide-y border-y'>
-              <div className='hidden grid-cols-[minmax(0,0.8fr)_minmax(0,1.4fr)_minmax(0,1fr)_auto] gap-4 bg-muted/30 px-6 py-2.5 text-xs font-medium text-muted-foreground lg:grid'>
-                <span>{t('keyword')}</span>
-                <span>{t('filePath')}</span>
-                <span>{t('description')}</span>
-                <span className='pr-11 text-right'>{t('createdAt')}</span>
-              </div>
-              {mappings.map((mapping) => (
-                <div
-                  key={mapping.id}
-                  className='grid min-w-0 gap-4 px-4 py-4 transition-colors hover:bg-muted/40 sm:px-6 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.4fr)_minmax(0,1fr)_auto] lg:items-center'
-                >
-                  <div className='min-w-0'>
-                    <div className='flex min-w-0 flex-wrap items-center gap-2 font-mono font-medium'>
-                      <span className='break-all'>proj:{mapping.keyword}</span>
-                      {mapping.is_dynamic && (
-                        <Badge variant='secondary'>{t('dynamic')}</Badge>
+            <TooltipProvider>
+              <div className='grid grid-cols-1 divide-y border-y lg:grid-cols-[max-content_minmax(0,1fr)_auto]'>
+                <div className='col-span-full hidden grid-cols-subgrid gap-4 bg-muted/30 px-6 py-2.5 text-xs font-medium text-muted-foreground lg:grid'>
+                  <span>{t('keyword')}</span>
+                  <span>{t('filePath')}</span>
+                  <span className='pr-11 text-right'>{t('createdAt')}</span>
+                </div>
+                {mappings.map((mapping) => (
+                  <div
+                    key={mapping.id}
+                    className='grid min-w-0 gap-4 px-4 py-4 transition-colors hover:bg-muted/40 sm:px-6 lg:col-span-full lg:grid-cols-subgrid lg:items-center'
+                  >
+                    <div
+                      className={cn(
+                        '-mx-3 -my-2 flex min-w-0 items-center rounded-md border-l-2 border-transparent px-3 py-2 lg:self-stretch',
+                        mapping.is_dynamic &&
+                          'border-blue-500 bg-blue-50/80 dark:bg-blue-950/30',
                       )}
-                    </div>
-                  </div>
-                  <div className='min-w-0'>
-                    <p className='break-all font-mono text-xs'>
-                      {mapping.file_path}
-                    </p>
-                  </div>
-                  <div className='min-w-0'>
-                    <p className='break-words text-sm'>
-                      {mapping.description || '—'}
-                    </p>
-                  </div>
-                  <div className='flex items-center justify-between gap-3 lg:justify-end'>
-                    <div className='text-xs lg:text-right'>
-                      <p suppressHydrationWarning>
-                        {format(
-                          parseISO(mapping.create_time),
-                          'yyyy-MM-dd HH:mm:ss',
+                    >
+                      <div className='flex min-w-0 items-center gap-2 font-mono font-medium'>
+                        <span className='whitespace-nowrap'>
+                          proj:{mapping.keyword}
+                        </span>
+                        {mapping.description && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                type='button'
+                                className='shrink-0 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+                                aria-label={t('description')}
+                              >
+                                <InfoIcon className='size-4' />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent
+                              side='top'
+                              align='start'
+                              sideOffset={6}
+                              className='max-w-sm whitespace-normal text-pretty'
+                            >
+                              {mapping.description}
+                            </TooltipContent>
+                          </Tooltip>
                         )}
+                        {mapping.is_dynamic && (
+                          <span className='sr-only'>{t('dynamic')}</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className='min-w-0'>
+                      <p className='break-all font-mono text-xs'>
+                        {mapping.file_path}
                       </p>
                     </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant='ghost'
-                          size='icon'
-                          className='shrink-0'
-                        >
-                          <MoreHorizontal className='size-4' />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align='end'>
-                        <DropdownMenuItem
-                          onClick={() => setEditingMapping(mapping)}
-                        >
-                          <EditIcon className='mr-2 size-4' />
-                          {t('edit')}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className='text-destructive'
-                          onClick={() => setDeletingMapping(mapping)}
-                        >
-                          <Trash2Icon className='mr-2 size-4' />
-                          {t('delete')}
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <div className='flex items-center justify-between gap-3 lg:justify-end'>
+                      <div className='text-xs lg:text-right'>
+                        <p suppressHydrationWarning>
+                          {format(
+                            parseISO(mapping.create_time),
+                            'yyyy-MM-dd HH:mm:ss',
+                          )}
+                        </p>
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant='ghost'
+                            size='icon'
+                            className='shrink-0'
+                          >
+                            <MoreHorizontal className='size-4' />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align='end'>
+                          <DropdownMenuItem
+                            onClick={() => setEditingMapping(mapping)}
+                          >
+                            <EditIcon className='mr-2 size-4' />
+                            {t('edit')}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className='text-destructive'
+                            onClick={() => setDeletingMapping(mapping)}
+                          >
+                            <Trash2Icon className='mr-2 size-4' />
+                            {t('delete')}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </TooltipProvider>
           )}
         </CardContent>
       </Card>
