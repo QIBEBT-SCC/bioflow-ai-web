@@ -426,7 +426,6 @@
         "projectRuns": "Run Instances",
         "sampleRuns": "Sample Run Instances",
         "noSamples": "No samples in this project. Add samples in the \"Samples\" tab first.",
-        "runName": "Run Name",
         "sampleName": "Sample Name",
         "status": "Status",
         "progress": "Progress",

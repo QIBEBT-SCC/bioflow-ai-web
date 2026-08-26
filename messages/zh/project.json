@@ -426,7 +426,6 @@
         "projectRuns": "运行实例",
         "sampleRuns": "样本运行实例",
         "noSamples": "项目中暂无样本，请先在“样本”Tab 中添加样本",
-        "runName": "运行名称",
         "sampleName": "样本名称",
         "status": "状态",
         "progress": "进度",
