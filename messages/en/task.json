@@ -29,11 +29,23 @@
       "next": "Next"
     },
     "timeline": {
-      "title": "Task Timeline",
-      "empty": "No task activity in the last 24 hours",
-      "summary": "Last 24 hours · {count, plural, one {# task} other {# tasks}}",
-      "workflow": "Workflow: {name}",
-      "owner": "Owner: {name}"
+      "title": "Task Runtime Timeline",
+      "description": "See task duration, overlap, and status across the selected window",
+      "rangeLabel": "Time range",
+      "last6Hours": "Last 6h",
+      "last24Hours": "Last 24h",
+      "last3Days": "Last 3d",
+      "last7Days": "Last 7d",
+      "allStatuses": "All statuses",
+      "showing": "Showing {visible} / {total}",
+      "taskColumn": "Task / Workflow",
+      "now": "Now",
+      "empty": "No tasks match these filters",
+      "emptyHint": "Try a wider time range or choose a different task status.",
+      "openTask": "Open task {name}",
+      "startedAt": "Started",
+      "duration": "Duration",
+      "ownerLabel": "Owner"
     },
     "detail": {
       "loading": "Loading...",

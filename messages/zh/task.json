@@ -29,11 +29,23 @@
       "next": "下一页"
     },
     "timeline": {
-      "title": "任务时间线",
-      "empty": "最近24小时内暂无任务运行记录",
-      "summary": "最近24小时 · {count} 个任务",
-      "workflow": "工作流：{name}",
-      "owner": "创建者：{name}"
+      "title": "任务运行时间线",
+      "description": "查看任务在所选时间内的运行、重叠与状态分布",
+      "rangeLabel": "时间范围",
+      "last6Hours": "近 6 小时",
+      "last24Hours": "近 24 小时",
+      "last3Days": "近 3 天",
+      "last7Days": "近 7 天",
+      "allStatuses": "全部状态",
+      "showing": "显示 {visible} / {total}",
+      "taskColumn": "任务 / 工作流",
+      "now": "现在",
+      "empty": "当前筛选下没有任务记录",
+      "emptyHint": "尝试扩大时间范围，或切换到其他任务状态。",
+      "openTask": "查看任务 {name}",
+      "startedAt": "开始时间",
+      "duration": "运行时长",
+      "ownerLabel": "创建者"
     },
     "detail": {
       "loading": "加载中...",
