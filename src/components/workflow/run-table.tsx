@@ -191,9 +191,10 @@ export function RunTables({
                 const config = statusConfig[run.status]
                 const Icon = config.icon
                 const taskStats = run.task_statistics
-                const progress = taskStats
-                  ? ((taskStats.success || 0) / taskStats.total) * 100
-                  : 0
+                const progress =
+                  taskStats && taskStats.total > 0
+                    ? ((taskStats.success || 0) / taskStats.total) * 100
+                    : 0
 
                 return (
                   <TableRow

@@ -39,15 +39,19 @@ import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { Textarea } from '@/components/ui/textarea'
 import { useImage, useUpdateImage } from '@/hooks/use-tool'
-import { formatImageTag } from '@/lib/image-utils'
+import { formatImageTag, parseImageAliases } from '@/lib/image-utils'
 import type { ToolImage, ToolImagePublic } from '@/types/tool'
 
 function ImageEditForm({
   formData,
+  aliasesText,
   onChange,
+  onAliasesTextChange,
 }: {
   formData: Partial<ToolImage>
+  aliasesText: string
   onChange: (updater: (prev: Partial<ToolImage>) => Partial<ToolImage>) => void
+  onAliasesTextChange: (value: string) => void
 }) {
   const t = useTranslations('image.detail')
   return (
@@ -70,6 +74,15 @@ function ImageEditForm({
           onChange={(e) =>
             onChange((prev) => ({ ...prev, version: e.target.value }))
           }
+        />
+      </div>
+      <div className='space-y-2'>
+        <Label htmlFor='aliases'>{t('aliasesLabel')}</Label>
+        <Input
+          id='aliases'
+          value={aliasesText}
+          placeholder={t('aliasesPlaceholder')}
+          onChange={(e) => onAliasesTextChange(e.target.value)}
         />
       </div>
       <div className='space-y-2'>
@@ -160,6 +173,22 @@ function ImageViewContent({
       </div>
       <div>
         <h3 className='text-sm font-medium text-muted-foreground mb-2'>
+          {t('aliasesLabel')}
+        </h3>
+        {image.aliases.length > 0 ? (
+          <div className='flex flex-wrap gap-2'>
+            {image.aliases.map((alias) => (
+              <Badge key={alias} variant='secondary'>
+                {alias}
+              </Badge>
+            ))}
+          </div>
+        ) : (
+          <p className='text-sm text-muted-foreground'>{t('noAliases')}</p>
+        )}
+      </div>
+      <div>
+        <h3 className='text-sm font-medium text-muted-foreground mb-2'>
           {t('imageTag')}
         </h3>
         <div className='flex items-center gap-2'>
@@ -217,6 +246,7 @@ export default function ImageDetailPage() {
   const updateImageMutation = useUpdateImage()
 
   const [formData, setFormData] = useState<Partial<ToolImage>>({})
+  const [aliasesText, setAliasesText] = useState('')
   const [copied, setCopied] = useState(false)
 
   // 复制镜像标签到剪贴板
@@ -239,6 +269,7 @@ export default function ImageDetailPage() {
     if (image) {
       setFormData({
         name: image.name,
+        aliases: image.aliases,
         version: image.version,
         description: image.description,
         homepage: image.homepage,
@@ -250,6 +281,7 @@ export default function ImageDetailPage() {
           tag: image.image?.tag || '',
         },
       })
+      setAliasesText(image.aliases.join(', '))
     }
     setIsEditing(true)
   }
@@ -257,7 +289,10 @@ export default function ImageDetailPage() {
   // 保存编辑
   const handleSave = () => {
     updateImageMutation.mutate(
-      { uid, image: formData },
+      {
+        uid,
+        image: { ...formData, aliases: parseImageAliases(aliasesText) },
+      },
       {
         onSuccess: () => {
           setIsEditing(false)
@@ -270,6 +305,7 @@ export default function ImageDetailPage() {
   const handleCancel = () => {
     setIsEditing(false)
     setFormData({})
+    setAliasesText('')
   }
 
   if (isLoading) {
@@ -385,7 +421,12 @@ export default function ImageDetailPage() {
             </CardHeader>
             <CardContent className='space-y-6'>
               {isEditing ? (
-                <ImageEditForm formData={formData} onChange={setFormData} />
+                <ImageEditForm
+                  formData={formData}
+                  aliasesText={aliasesText}
+                  onChange={setFormData}
+                  onAliasesTextChange={setAliasesText}
+                />
               ) : (
                 <ImageViewContent
                   image={image}

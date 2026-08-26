@@ -535,14 +535,14 @@ function ChatSidebarInner({
           <ConversationScrollButton />
         </Conversation>
 
-        <div className='border-t bg-gradient-to-t from-muted/45 via-background to-background px-3 pt-3 pb-3'>
+        <div className='border-t bg-linear-to-t from-muted/45 via-background to-background px-3 pt-3 pb-3'>
           {workflowSuggestion && !isBusy && (
             <Suggestions className='mb-2'>
               <Suggestion
                 suggestion={workflowSuggestion.prompt}
                 onClick={() => void runWorkflowSuggestion()}
                 disabled={isCreating || isSubmitting}
-                className='border-primary/35 bg-primary/[0.04] text-primary shadow-none hover:bg-primary/[0.04] hover:text-primary dark:border-primary/40 dark:bg-primary/[0.07] dark:hover:bg-primary/[0.07]'
+                className='border-primary/35 bg-primary/4 text-primary shadow-none hover:bg-primary/4 hover:text-primary dark:border-primary/40 dark:bg-primary/[0.07] dark:hover:bg-primary/[0.07]'
               >
                 {workflowSuggestion.label}
               </Suggestion>
@@ -578,12 +578,12 @@ function ChatSidebarInner({
                 })}
               </SlashCommandMenu>
             )}
-            <div className='group rounded-2xl border border-border/80 bg-card/95 shadow-[0_8px_28px_-16px_rgb(0_0_0/0.45)] ring-1 ring-black/[0.025] transition-[border-color,box-shadow] focus-within:border-primary/45 focus-within:shadow-[0_12px_36px_-18px_rgb(0_0_0/0.5)] focus-within:ring-4 focus-within:ring-primary/10 dark:bg-card/90 dark:ring-white/[0.04]'>
+            <div className='group rounded-2xl border border-border/80 bg-card/95 shadow-[0_8px_28px_-16px_rgb(0_0_0/0.45)] ring-1 ring-black/2.5 transition-[border-color,box-shadow] focus-within:border-primary/45 focus-within:shadow-[0_12px_36px_-18px_rgb(0_0_0/0.5)] focus-within:ring-4 focus-within:ring-primary/10 dark:bg-card/90 dark:ring-white/4'>
               <div className='relative'>
                 {parsedCommand && (
                   <div
                     aria-hidden='true'
-                    className='pointer-events-none absolute inset-x-0 top-0 min-h-20 whitespace-pre-wrap break-words px-3 py-2 text-base md:text-sm'
+                    className='pointer-events-none absolute inset-x-0 top-0 min-h-20 whitespace-pre-wrap wrap-break-word px-3 py-2 text-base md:text-sm'
                   >
                     <span className='text-blue-600 [-webkit-text-stroke:0.25px_currentColor] dark:text-blue-400'>
                       /{parsedCommand.command.key}

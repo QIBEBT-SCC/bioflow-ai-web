@@ -79,9 +79,16 @@ export function TaskTable() {
 
   const { data: taskCount = 0 } = useTaskCount()
   const { data: tasks = [], isLoading } = useTasks(page * limit, limit)
-  const dateFormatter = useMemo(
-    () =>
-      new Intl.DateTimeFormat(locale, {
+  const dateFormatters = useMemo(
+    () => ({
+      compact: new Intl.DateTimeFormat(locale, {
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hourCycle: 'h23',
+      }),
+      full: new Intl.DateTimeFormat(locale, {
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',
@@ -90,6 +97,7 @@ export function TaskTable() {
         second: '2-digit',
         hourCycle: 'h23',
       }),
+    }),
     [locale],
   )
 
@@ -122,54 +130,38 @@ export function TaskTable() {
 
   return (
     <div className='space-y-4'>
-      {/* 筛选器 */}
-      <div className='flex items-center justify-between'>
-        <div className='flex items-center gap-2'>
-          <span className='text-sm text-muted-foreground'>
-            {t('table.statusFilter')}
-          </span>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className='w-[140px]'>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value='all'>{t('table.all')}</SelectItem>
-              <SelectItem value={String(Status.WAITING)}>
-                {t('status.waiting')}
-              </SelectItem>
-              <SelectItem value={String(Status.RUNNING)}>
-                {t('status.running')}
-              </SelectItem>
-              <SelectItem value={String(Status.SUCCESS)}>
-                {t('status.success')}
-              </SelectItem>
-              <SelectItem value={String(Status.ERROR)}>
-                {t('status.failed')}
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className='text-sm text-muted-foreground'>
-          {t('table.total', { count: taskCount })}
-        </div>
-      </div>
+      <TaskTableToolbar
+        statusFilter={statusFilter}
+        taskCount={taskCount}
+        onStatusChange={setStatusFilter}
+      />
 
       {/* 表格 */}
-      <div className='rounded-md border'>
-        <Table>
+      <div className='overflow-hidden rounded-xl border bg-card [&_[data-slot=table-container]]:overflow-x-hidden'>
+        <Table className='table-fixed'>
           <TableHeader>
             <TableRow className='bg-muted/50'>
-              <TableHead className='w-[200px]'>{t('table.taskName')}</TableHead>
-              <TableHead className='w-[200px]'>{t('table.workflow')}</TableHead>
-              <TableHead className='w-[100px]'>{t('table.status')}</TableHead>
-              <TableHead className='w-[100px]'>{t('table.owner')}</TableHead>
-              <TableHead className='w-[180px]'>
+              <TableHead className='w-[32%] px-3 md:w-[22%] lg:w-[20%] xl:w-[18%]'>
+                {t('table.taskName')}
+              </TableHead>
+              <TableHead className='w-[26%] px-3 md:w-[20%] lg:w-[18%] xl:w-[17%]'>
+                {t('table.workflow')}
+              </TableHead>
+              <TableHead className='w-[18%] px-3 md:w-[13%] lg:w-[11%] xl:w-[10%]'>
+                {t('table.status')}
+              </TableHead>
+              <TableHead className='hidden px-3 xl:table-cell xl:w-[10%]'>
+                {t('table.owner')}
+              </TableHead>
+              <TableHead className='hidden px-3 lg:table-cell lg:w-[17%] xl:w-[15%]'>
                 {t('table.createdAt')}
               </TableHead>
-              <TableHead className='w-[180px]'>
+              <TableHead className='hidden px-3 md:table-cell md:w-[16%] lg:w-[17%] xl:w-[15%]'>
                 {t('table.startedAt')}
               </TableHead>
-              <TableHead className='w-[100px]'>{t('table.duration')}</TableHead>
+              <TableHead className='w-[24%] px-3 md:w-[13%] lg:w-[17%] xl:w-[15%]'>
+                {t('table.duration')}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -188,26 +180,26 @@ export function TaskTable() {
                 'sk-9',
               ].map((key) => (
                 <TableRow key={key}>
-                  <TableCell>
-                    <Skeleton className='h-5 w-[160px]' />
+                  <TableCell className='overflow-hidden px-3'>
+                    <Skeleton className='h-5 w-full max-w-40' />
                   </TableCell>
-                  <TableCell>
-                    <Skeleton className='h-5 w-[160px]' />
+                  <TableCell className='overflow-hidden px-3'>
+                    <Skeleton className='h-5 w-full max-w-36' />
                   </TableCell>
-                  <TableCell>
-                    <Skeleton className='h-6 w-[80px]' />
+                  <TableCell className='overflow-hidden px-3'>
+                    <Skeleton className='h-6 w-full max-w-20' />
                   </TableCell>
-                  <TableCell>
-                    <Skeleton className='h-5 w-[60px]' />
+                  <TableCell className='hidden overflow-hidden px-3 xl:table-cell'>
+                    <Skeleton className='h-5 w-full max-w-16' />
                   </TableCell>
-                  <TableCell>
-                    <Skeleton className='h-5 w-[140px]' />
+                  <TableCell className='hidden overflow-hidden px-3 lg:table-cell'>
+                    <Skeleton className='h-5 w-full max-w-28' />
                   </TableCell>
-                  <TableCell>
-                    <Skeleton className='h-5 w-[140px]' />
+                  <TableCell className='hidden overflow-hidden px-3 md:table-cell'>
+                    <Skeleton className='h-5 w-full max-w-28' />
                   </TableCell>
-                  <TableCell>
-                    <Skeleton className='h-5 w-[60px]' />
+                  <TableCell className='overflow-hidden px-3'>
+                    <Skeleton className='h-5 w-full max-w-16' />
                   </TableCell>
                 </TableRow>
               ))
@@ -231,55 +223,95 @@ export function TaskTable() {
                     className='hover:bg-muted/50 transition-colors'
                   >
                     {/* 任务名称 */}
-                    <TableCell className='font-medium'>
+                    <TableCell className='overflow-hidden px-3 font-medium'>
                       <Link
                         href={`/task/${task.uid}`}
-                        className='hover:underline line-clamp-1'
+                        title={task.name}
+                        className='block truncate hover:underline'
                       >
                         {task.name}
                       </Link>
                     </TableCell>
 
                     {/* 所属工作流 */}
-                    <TableCell>
+                    <TableCell className='overflow-hidden px-3'>
                       <Link
                         href={`/workflow/${task.run_instance.uid}`}
-                        className='hover:underline text-sm text-muted-foreground line-clamp-1'
+                        title={task.run_instance.name}
+                        className='block truncate text-sm text-muted-foreground hover:underline'
                       >
                         {task.run_instance.name}
                       </Link>
                     </TableCell>
 
                     {/* 状态 */}
-                    <TableCell>
-                      <Badge variant={config.variant} className='gap-1'>
+                    <TableCell className='overflow-hidden px-3'>
+                      <Badge
+                        variant={config.variant}
+                        title={t(`status.${config.labelKey}`)}
+                        className='max-w-full gap-1'
+                      >
                         <Icon
                           className={`size-3 ${
                             config.icon === Loader2Icon ? 'animate-spin' : ''
                           }`}
                         />
-                        {t(`status.${config.labelKey}`)}
+                        <span className='hidden truncate sm:inline'>
+                          {t(`status.${config.labelKey}`)}
+                        </span>
                       </Badge>
                     </TableCell>
 
                     {/* 创建者 */}
-                    <TableCell className='text-sm'>
-                      {task.owner.username}
+                    <TableCell className='hidden overflow-hidden px-3 text-sm xl:table-cell'>
+                      <span
+                        className='block truncate'
+                        title={task.owner.username}
+                      >
+                        {task.owner.username}
+                      </span>
                     </TableCell>
 
                     {/* 创建时间 */}
-                    <TableCell className='text-sm'>
-                      {formatDateTime(dateFormatter, task.create_time)}
+                    <TableCell
+                      title={formatDateTime(
+                        dateFormatters.full,
+                        task.create_time,
+                      )}
+                      className='hidden overflow-hidden px-3 text-sm tabular-nums lg:table-cell'
+                    >
+                      <span className='block truncate'>
+                        {formatDateTime(
+                          dateFormatters.compact,
+                          task.create_time,
+                        )}
+                      </span>
                     </TableCell>
 
                     {/* 开始时间 */}
-                    <TableCell className='text-sm'>
-                      {formatDateTime(dateFormatter, task.start_time)}
+                    <TableCell
+                      title={formatDateTime(
+                        dateFormatters.full,
+                        task.start_time,
+                      )}
+                      className='hidden overflow-hidden px-3 text-sm tabular-nums md:table-cell'
+                    >
+                      <span className='block truncate'>
+                        {formatDateTime(
+                          dateFormatters.compact,
+                          task.start_time,
+                        )}
+                      </span>
                     </TableCell>
 
                     {/* 运行时长 */}
-                    <TableCell className='text-sm'>
-                      {formatDuration(task.start_time, task.end_time)}
+                    <TableCell className='overflow-hidden px-3 text-sm tabular-nums'>
+                      <span
+                        className='block truncate'
+                        title={formatDuration(task.start_time, task.end_time)}
+                      >
+                        {formatDuration(task.start_time, task.end_time)}
+                      </span>
                     </TableCell>
                   </TableRow>
                 )
@@ -289,34 +321,104 @@ export function TaskTable() {
         </Table>
       </div>
 
-      {/* 分页 */}
-      {!isLoading && totalPages > 1 && (
-        <div className='flex items-center justify-between'>
-          <div className='text-sm text-muted-foreground'>
-            {t('table.page', { current: page + 1, total: totalPages })}
-          </div>
-          <div className='flex gap-2'>
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={() => setPage(Math.max(0, page - 1))}
-              disabled={page === 0}
-            >
-              <ChevronLeftIcon className='size-4 mr-1' />
-              {t('table.previous')}
-            </Button>
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={() => setPage(Math.min(totalPages - 1, page + 1))}
-              disabled={page >= totalPages - 1}
-            >
-              {t('table.next')}
-              <ChevronRightIcon className='size-4 ml-1' />
-            </Button>
-          </div>
-        </div>
-      )}
+      {!isLoading && totalPages > 1 ? (
+        <TaskTablePagination
+          page={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+        />
+      ) : null}
+    </div>
+  )
+}
+
+interface TaskTableToolbarProps {
+  statusFilter: string
+  taskCount: number
+  onStatusChange: (status: string) => void
+}
+
+function TaskTableToolbar({
+  statusFilter,
+  taskCount,
+  onStatusChange,
+}: TaskTableToolbarProps) {
+  const t = useTranslations('task')
+
+  return (
+    <div className='flex items-center justify-between gap-4'>
+      <div className='flex min-w-0 items-center gap-2'>
+        <span className='hidden shrink-0 text-sm text-muted-foreground sm:inline'>
+          {t('table.statusFilter')}
+        </span>
+        <Select value={statusFilter} onValueChange={onStatusChange}>
+          <SelectTrigger className='w-32 sm:w-36'>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value='all'>{t('table.all')}</SelectItem>
+            <SelectItem value={String(Status.WAITING)}>
+              {t('status.waiting')}
+            </SelectItem>
+            <SelectItem value={String(Status.RUNNING)}>
+              {t('status.running')}
+            </SelectItem>
+            <SelectItem value={String(Status.SUCCESS)}>
+              {t('status.success')}
+            </SelectItem>
+            <SelectItem value={String(Status.ERROR)}>
+              {t('status.failed')}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className='shrink-0 text-sm text-muted-foreground'>
+        {t('table.total', { count: taskCount })}
+      </div>
+    </div>
+  )
+}
+
+interface TaskTablePaginationProps {
+  page: number
+  totalPages: number
+  onPageChange: (page: number) => void
+}
+
+function TaskTablePagination({
+  page,
+  totalPages,
+  onPageChange,
+}: TaskTablePaginationProps) {
+  const t = useTranslations('task')
+
+  return (
+    <div className='flex items-center justify-between gap-4'>
+      <div className='text-sm text-muted-foreground'>
+        {t('table.page', { current: page + 1, total: totalPages })}
+      </div>
+      <div className='flex gap-2'>
+        <Button
+          variant='outline'
+          size='sm'
+          aria-label={t('table.previous')}
+          onClick={() => onPageChange(Math.max(0, page - 1))}
+          disabled={page === 0}
+        >
+          <ChevronLeftIcon className='size-4 sm:mr-1' />
+          <span className='hidden sm:inline'>{t('table.previous')}</span>
+        </Button>
+        <Button
+          variant='outline'
+          size='sm'
+          aria-label={t('table.next')}
+          onClick={() => onPageChange(Math.min(totalPages - 1, page + 1))}
+          disabled={page >= totalPages - 1}
+        >
+          <span className='hidden sm:inline'>{t('table.next')}</span>
+          <ChevronRightIcon className='size-4 sm:ml-1' />
+        </Button>
+      </div>
     </div>
   )
 }
