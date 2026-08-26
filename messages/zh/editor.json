@@ -63,9 +63,12 @@
       "search_prompt": "搜索工具"
     },
     "auto_layout": "自动排版",
+    "clean_dirty_edges": "清理脏边",
+    "dirty_edges_removed": "已清理 {count} 条脏边",
     "exit": "退出",
     "layout_complete": "工作流排版完成",
     "node_added": "节点已添加",
+    "no_dirty_edges": "未发现脏边",
     "no_workflow_loaded": "请先加载一个workflow",
     "right_click_to_add": "右键点击画布添加节点",
     "run": "运行",

@@ -12,7 +12,13 @@ import {
   useReactFlow,
   type XYPosition,
 } from '@xyflow/react'
-import { LogOutIcon, PlayIcon, SaveIcon, WandSparklesIcon } from 'lucide-react'
+import {
+  LogOutIcon,
+  PlayIcon,
+  SaveIcon,
+  UnlinkIcon,
+  WandSparklesIcon,
+} from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import type React from 'react'
@@ -87,7 +93,8 @@ function FlowContent() {
   const workflowUidParam = searchParams.get('workflowUid')
   const isProjectMode = !!projectId
 
-  const { fitView, getNodes, screenToFlowPosition } = useReactFlow()
+  const { fitView, getInternalNode, getNodes, screenToFlowPosition } =
+    useReactFlow()
   const { data: workflowData, dataUpdatedAt: workflowDataUpdatedAt } =
     useWorkflow(currentWorkflowUid)
   const updateWorkflowMutation = useUpdateWorkflow()
@@ -293,6 +300,53 @@ function FlowContent() {
     })
   }, [edges, fitView, getNodes, setNodes, t])
 
+  const onCleanDirtyEdges = useCallback(() => {
+    const nodeIds = new Set(nodes.map((node) => node.id))
+    const seenConnections = new Set<string>()
+    const cleanEdges = edges.filter((edge) => {
+      if (!nodeIds.has(edge.source) || !nodeIds.has(edge.target)) {
+        return false
+      }
+
+      const sourceHandles = getInternalNode(edge.source)?.internals.handleBounds
+        ?.source
+      const targetHandles = getInternalNode(edge.target)?.internals.handleBounds
+        ?.target
+      const hasSourceHandle = sourceHandles?.some(
+        (handle) => handle.id === edge.sourceHandle,
+      )
+      const hasTargetHandle = targetHandles?.some(
+        (handle) => handle.id === edge.targetHandle,
+      )
+
+      if (!hasSourceHandle || !hasTargetHandle) {
+        return false
+      }
+
+      const connectionKey = JSON.stringify([
+        edge.source,
+        edge.sourceHandle,
+        edge.target,
+        edge.targetHandle,
+      ])
+      if (seenConnections.has(connectionKey)) {
+        return false
+      }
+
+      seenConnections.add(connectionKey)
+      return true
+    })
+
+    const removedCount = edges.length - cleanEdges.length
+    if (removedCount === 0) {
+      toast.info(t('no_dirty_edges'))
+      return
+    }
+
+    setEdges(cleanEdges)
+    toast.success(t('dirty_edges_removed', { count: removedCount }))
+  }, [edges, getInternalNode, nodes, setEdges, t])
+
   // 右键菜单 - 记录点击位置并打开菜单
   const onPaneContextMenu = useCallback(
     (event: MouseEvent | React.MouseEvent<Element, MouseEvent>) => {
@@ -354,6 +408,16 @@ function FlowContent() {
                     {t('auto_layout')}
                   </Button>
 
+                  <Button
+                    variant='ghost'
+                    size='sm'
+                    onClick={onCleanDirtyEdges}
+                    disabled={edges.length === 0 || !edgesReady}
+                  >
+                    <UnlinkIcon className='size-4 mr-2' />
+                    {t('clean_dirty_edges')}
+                  </Button>
+
                   <Button variant='ghost' size='sm' onClick={onExit}>
                     <LogOutIcon className='size-4 mr-2' />
                     {t('exit')}
@@ -383,6 +447,16 @@ function FlowContent() {
                   >
                     <WandSparklesIcon className='size-4 mr-2' />
                     {t('auto_layout')}
+                  </Button>
+
+                  <Button
+                    variant='ghost'
+                    size='sm'
+                    onClick={onCleanDirtyEdges}
+                    disabled={edges.length === 0 || !edgesReady}
+                  >
+                    <UnlinkIcon className='size-4 mr-2' />
+                    {t('clean_dirty_edges')}
                   </Button>
 
                   <SaveAsDialog
