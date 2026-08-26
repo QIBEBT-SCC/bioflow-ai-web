@@ -5,10 +5,13 @@ import {
   Database,
   FlaskConical,
   Loader2,
+  PencilIcon,
   Star,
 } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
+import { useState } from 'react'
+import { EditProjectDialog } from '@/components/project/edit-project-dialog'
 import { ProjectListBackLink } from '@/components/project/project-list-navigation'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -30,8 +33,10 @@ export function ProjectDetailCard({
 }) {
   const locale = useLocale()
   const t = useTranslations('Project.detail.card')
+  const tActions = useTranslations('Project.actions')
   const params = useParams()
   const projectId = params.id as string
+  const [isEditing, setIsEditing] = useState(false)
   const { data: project, isLoading } = useProject(projectId)
   const starProject = useStarProject()
   const unstarProject = useUnstarProject()
@@ -58,116 +63,137 @@ export function ProjectDetailCard({
   }
 
   return (
-    <div>
-      {/* 返回和项目标题 */}
-      <ProjectListBackLink href={projectListHref} />
-      <div className='flex flex-col sm:flex-row gap-4 justify-between items-start mb-3'>
-        <div>
-          <div className='flex items-start gap-2'>
-            <h1 className='text-2xl font-semibold'>{project.name}</h1>
-            <div className='flex flex-wrap gap-1 mt-1.5'>
-              {project.tags.map((tag) => (
-                <Badge
-                  key={tag.id}
-                  className={`${colorClassMap[tag.color]} border-0`}
+    <>
+      <div>
+        {/* 返回和项目标题 */}
+        <ProjectListBackLink href={projectListHref} />
+        <div className='mb-3 flex flex-col items-start justify-between gap-4 sm:flex-row'>
+          <div>
+            <div className='flex items-start gap-2'>
+              <h1 className='text-2xl font-semibold'>{project.name}</h1>
+              <div className='mt-1.5 flex flex-wrap gap-1'>
+                {project.tags.map((tag) => (
+                  <Badge
+                    key={tag.id}
+                    className={`${colorClassMap[tag.color]} border-0`}
+                  >
+                    {tag.name}
+                  </Badge>
+                ))}
+              </div>
+              <div className='flex shrink-0 items-center gap-1'>
+                <Button
+                  variant='ghost'
+                  size='icon'
+                  className='text-muted-foreground'
+                  onClick={() => setIsEditing(true)}
                 >
-                  {tag.name}
-                </Badge>
-              ))}
+                  <PencilIcon className='size-4' />
+                  <span className='sr-only'>{tActions('edit')}</span>
+                </Button>
+                <Button
+                  variant='ghost'
+                  size='icon'
+                  className={
+                    project.starred ? 'text-amber-400' : 'text-muted-foreground'
+                  }
+                  onClick={handleStar}
+                  disabled={isStarPending}
+                  aria-pressed={project.starred}
+                >
+                  <Star
+                    className='size-5'
+                    fill={project.starred ? 'currentColor' : 'none'}
+                  />
+                  <span className='sr-only'>{t('favorite')}</span>
+                </Button>
+              </div>
             </div>
-            <Button
-              variant='ghost'
-              size='icon'
-              className={
-                project.starred ? 'text-amber-400' : 'text-muted-foreground'
-              }
-              onClick={handleStar}
-              disabled={isStarPending}
-              aria-pressed={project.starred}
-            >
-              <Star
-                className='size-5'
-                fill={project.starred ? 'currentColor' : 'none'}
-              />
-              <span className='sr-only'>{t('favorite')}</span>
-            </Button>
+            <p className='mt-1 text-muted-foreground'>{project.description}</p>
           </div>
-          <p className='text-muted-foreground mt-1'>{project.description}</p>
+        </div>
+
+        {/* 项目信息卡片 */}
+        <div className='grid gap-3 md:grid-cols-3'>
+          <Card className='gap-2 py-4'>
+            <CardHeader className='px-5 pb-0'>
+              <CardTitle className='text-sm font-medium flex items-center'>
+                <Database className='size-4 mr-2' />
+                {t('sampleCount')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className='px-5'>
+              <p className='text-xl font-bold'>{sampleCount}</p>
+            </CardContent>
+          </Card>
+          <Card className='gap-2 py-4'>
+            <CardHeader className='px-5 pb-0'>
+              <CardTitle className='text-sm font-medium flex items-center'>
+                <FlaskConical className='size-4 mr-2' />
+                {t('workflowStatus')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className='px-5'>
+              <div className='mb-1 flex items-center justify-between'>
+                <p className='text-xl font-bold'>{`${successRuns}/${totalRuns}`}</p>
+                <div className='flex items-center justify-end gap-2 flex-wrap'>
+                  <Badge
+                    variant='outline'
+                    className='bg-green-50 text-green-600 border-green-200 flex items-center'
+                  >
+                    <CheckCircle2 className='size-3 mr-1' />
+                    {successRuns}
+                  </Badge>
+                  <Badge
+                    variant='outline'
+                    className='bg-blue-50 text-blue-600 border-blue-200 flex items-center'
+                  >
+                    <Loader2 className='size-3 mr-1 animate-spin' />
+                    {runningRuns}
+                  </Badge>
+                  <Badge
+                    variant='outline'
+                    className='bg-amber-50 text-amber-600 border-amber-200 flex items-center'
+                  >
+                    <Clock className='size-3 mr-1' />
+                    {waitingRuns}
+                  </Badge>
+                  <Badge
+                    variant='outline'
+                    className='bg-red-50 text-red-600 border-red-200 flex items-center'
+                  >
+                    <AlertCircle className='size-3 mr-1' />
+                    {errorRuns}
+                  </Badge>
+                </div>
+              </div>
+              <Progress value={successRate} className='h-1.5' />
+            </CardContent>
+          </Card>
+
+          <Card className='gap-2 py-4'>
+            <CardHeader className='px-5 pb-0'>
+              <CardTitle className='text-sm font-medium flex items-center'>
+                <Clock className='size-4 mr-2' />
+                {t('lastUpdated')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className='px-5'>
+              <p className='text-xl font-bold' suppressHydrationWarning>
+                {new Date(project.update_time).toLocaleString(locale)}
+              </p>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
-      {/* 项目信息卡片 */}
-      <div className='grid gap-3 md:grid-cols-3'>
-        <Card className='gap-2 py-4'>
-          <CardHeader className='px-5 pb-0'>
-            <CardTitle className='text-sm font-medium flex items-center'>
-              <Database className='size-4 mr-2' />
-              {t('sampleCount')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className='px-5'>
-            <p className='text-xl font-bold'>{sampleCount}</p>
-          </CardContent>
-        </Card>
-        <Card className='gap-2 py-4'>
-          <CardHeader className='px-5 pb-0'>
-            <CardTitle className='text-sm font-medium flex items-center'>
-              <FlaskConical className='size-4 mr-2' />
-              {t('workflowStatus')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className='px-5'>
-            <div className='mb-1 flex items-center justify-between'>
-              <p className='text-xl font-bold'>{`${successRuns}/${totalRuns}`}</p>
-              <div className='flex items-center justify-end gap-2 flex-wrap'>
-                <Badge
-                  variant='outline'
-                  className='bg-green-50 text-green-600 border-green-200 flex items-center'
-                >
-                  <CheckCircle2 className='size-3 mr-1' />
-                  {successRuns}
-                </Badge>
-                <Badge
-                  variant='outline'
-                  className='bg-blue-50 text-blue-600 border-blue-200 flex items-center'
-                >
-                  <Loader2 className='size-3 mr-1 animate-spin' />
-                  {runningRuns}
-                </Badge>
-                <Badge
-                  variant='outline'
-                  className='bg-amber-50 text-amber-600 border-amber-200 flex items-center'
-                >
-                  <Clock className='size-3 mr-1' />
-                  {waitingRuns}
-                </Badge>
-                <Badge
-                  variant='outline'
-                  className='bg-red-50 text-red-600 border-red-200 flex items-center'
-                >
-                  <AlertCircle className='size-3 mr-1' />
-                  {errorRuns}
-                </Badge>
-              </div>
-            </div>
-            <Progress value={successRate} className='h-1.5' />
-          </CardContent>
-        </Card>
-
-        <Card className='gap-2 py-4'>
-          <CardHeader className='px-5 pb-0'>
-            <CardTitle className='text-sm font-medium flex items-center'>
-              <Clock className='size-4 mr-2' />
-              {t('lastUpdated')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className='px-5'>
-            <p className='text-xl font-bold' suppressHydrationWarning>
-              {new Date(project.update_time).toLocaleString(locale)}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+      {isEditing && (
+        <EditProjectDialog
+          project={project}
+          open={isEditing}
+          onOpenChange={setIsEditing}
+        />
+      )}
+    </>
   )
 }
