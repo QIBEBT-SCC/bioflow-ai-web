@@ -37,14 +37,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import {
   useDeleteProjectFileMapping,
   useProjectFileMappings,
 } from '@/hooks/use-sample'
@@ -93,92 +85,100 @@ export function ProjectFileMappings({ projectId }: ProjectFileMappingsProps) {
 
   return (
     <>
-      <Card>
+      <Card className='min-w-0 gap-4 overflow-hidden'>
         <CardHeader>
-          <div className='flex items-center justify-between'>
-            <div>
+          <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+            <div className='min-w-0'>
               <CardTitle>{t('title')}</CardTitle>
               <CardDescription>{t('descriptionText')}</CardDescription>
             </div>
             <AddProjectFileMappingDialog projectId={projectId} />
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className='px-0'>
           {!mappings || mappings.length === 0 ? (
-            <div className='text-center py-12'>
-              <p className='text-muted-foreground mb-4'>{t('empty')}</p>
+            <div className='px-6 py-12 text-center'>
+              <p className='mb-4 text-muted-foreground'>{t('empty')}</p>
               <AddProjectFileMappingDialog
                 projectId={projectId}
                 trigger={
                   <Button>
-                    <PlusIcon className='size-4 mr-2' />
+                    <PlusIcon className='mr-2 size-4' />
                     {t('add')}
                   </Button>
                 }
               />
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className='w-[200px]'>{t('keyword')}</TableHead>
-                  <TableHead>{t('filePath')}</TableHead>
-                  <TableHead>{t('description')}</TableHead>
-                  <TableHead className='w-[180px]'>{t('createdAt')}</TableHead>
-                  <TableHead className='w-[80px]'>{t('actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {mappings.map((mapping) => (
-                  <TableRow key={mapping.id}>
-                    <TableCell className='font-mono font-medium'>
-                      <div className='flex items-center gap-2'>
-                        <span>proj:{mapping.keyword}</span>
-                        {mapping.is_dynamic && (
-                          <Badge variant='secondary'>{t('dynamic')}</Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className='font-mono text-xs'>
-                      {mapping.file_path}
-                    </TableCell>
-                    <TableCell className='text-sm'>
-                      {mapping.description}
-                    </TableCell>
-                    <TableCell className='text-xs' suppressHydrationWarning>
-                      {format(
-                        parseISO(mapping.create_time),
-                        'yyyy-MM-dd HH:mm:ss',
+            <div className='divide-y border-y'>
+              <div className='hidden grid-cols-[minmax(0,0.8fr)_minmax(0,1.4fr)_minmax(0,1fr)_auto] gap-4 bg-muted/30 px-6 py-2.5 text-xs font-medium text-muted-foreground lg:grid'>
+                <span>{t('keyword')}</span>
+                <span>{t('filePath')}</span>
+                <span>{t('description')}</span>
+                <span className='pr-11 text-right'>{t('createdAt')}</span>
+              </div>
+              {mappings.map((mapping) => (
+                <div
+                  key={mapping.id}
+                  className='grid min-w-0 gap-4 px-4 py-4 transition-colors hover:bg-muted/40 sm:px-6 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.4fr)_minmax(0,1fr)_auto] lg:items-center'
+                >
+                  <div className='min-w-0'>
+                    <div className='flex min-w-0 flex-wrap items-center gap-2 font-mono font-medium'>
+                      <span className='break-all'>proj:{mapping.keyword}</span>
+                      {mapping.is_dynamic && (
+                        <Badge variant='secondary'>{t('dynamic')}</Badge>
                       )}
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant='ghost' size='icon'>
-                            <MoreHorizontal className='size-4' />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align='end'>
-                          <DropdownMenuItem
-                            onClick={() => setEditingMapping(mapping)}
-                          >
-                            <EditIcon className='size-4 mr-2' />
-                            {t('edit')}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className='text-destructive'
-                            onClick={() => setDeletingMapping(mapping)}
-                          >
-                            <Trash2Icon className='size-4 mr-2' />
-                            {t('delete')}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                    </div>
+                  </div>
+                  <div className='min-w-0'>
+                    <p className='break-all font-mono text-xs'>
+                      {mapping.file_path}
+                    </p>
+                  </div>
+                  <div className='min-w-0'>
+                    <p className='break-words text-sm'>
+                      {mapping.description || '—'}
+                    </p>
+                  </div>
+                  <div className='flex items-center justify-between gap-3 lg:justify-end'>
+                    <div className='text-xs lg:text-right'>
+                      <p suppressHydrationWarning>
+                        {format(
+                          parseISO(mapping.create_time),
+                          'yyyy-MM-dd HH:mm:ss',
+                        )}
+                      </p>
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant='ghost'
+                          size='icon'
+                          className='shrink-0'
+                        >
+                          <MoreHorizontal className='size-4' />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align='end'>
+                        <DropdownMenuItem
+                          onClick={() => setEditingMapping(mapping)}
+                        >
+                          <EditIcon className='mr-2 size-4' />
+                          {t('edit')}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className='text-destructive'
+                          onClick={() => setDeletingMapping(mapping)}
+                        >
+                          <Trash2Icon className='mr-2 size-4' />
+                          {t('delete')}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </CardContent>
       </Card>
