@@ -24,11 +24,12 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useCreateImage } from '@/hooks/use-tool'
-import { parseImageUrl } from '@/lib/image-utils'
+import { parseImageAliases, parseImageUrl } from '@/lib/image-utils'
 import type { ToolImage } from '@/types/tool'
 
 type ImageFormState = {
   name: string
+  aliases: string
   version: string
   description: string
   homepage: string
@@ -51,6 +52,7 @@ type ImageFormAction =
 
 const INITIAL_IMAGE_FORM: ImageFormState = {
   name: '',
+  aliases: '',
   version: '',
   description: '',
   homepage: '',
@@ -151,6 +153,7 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
   const [
     {
       name,
+      aliases,
       version,
       description,
       homepage,
@@ -173,6 +176,7 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
 
     const newImage: ToolImage = {
       name,
+      aliases: parseImageAliases(aliases),
       version,
       description,
       homepage,
@@ -245,6 +249,22 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
                   required
                 />
               </div>
+            </div>
+
+            <div className='space-y-2'>
+              <Label htmlFor='aliases'>搜索别名</Label>
+              <Input
+                id='aliases'
+                placeholder='例如: dada2, feature-classifier（用逗号分隔）'
+                value={aliases}
+                onChange={(e) =>
+                  dispatch({
+                    type: 'SET',
+                    field: 'aliases',
+                    value: e.target.value,
+                  })
+                }
+              />
             </div>
 
             <div className='space-y-2'>

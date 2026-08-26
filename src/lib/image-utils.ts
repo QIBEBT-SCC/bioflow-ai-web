@@ -23,6 +23,18 @@ export function formatImageTag(image: {
     .replace(/\/+/g, '/') // 将多个斜杠替换为单个斜杠
 }
 
+/** Parse comma-separated image search aliases into a normalized list. */
+export function parseImageAliases(value: string): string[] {
+  return [
+    ...new Set(
+      value
+        .split(/[,，]/)
+        .map((alias) => alias.trim())
+        .filter(Boolean),
+    ),
+  ]
+}
+
 export type ParsedImageUrl = {
   registry: string
   namespace: string

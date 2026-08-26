@@ -25,6 +25,7 @@ export interface ImageConfig {
 export interface ToolImage {
   uid?: string
   name: string
+  aliases: string[]
   version: string
   description: string
   homepage: string
@@ -35,6 +36,7 @@ export interface ToolImage {
 export interface ToolImagePublic {
   uid: string
   name: string
+  aliases: string[]
   version: string
   description: string
   homepage: string

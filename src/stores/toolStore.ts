@@ -21,6 +21,7 @@ interface CreateToolStore {
 
 const initialImage: ToolImage = {
   name: '',
+  aliases: [],
   version: '',
   description: '',
   homepage: '',
