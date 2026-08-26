@@ -97,28 +97,28 @@ export function ProjectDetailCard({
       </div>
 
       {/* 项目信息卡片 */}
-      <div className='grid gap-4 md:grid-cols-3'>
-        <Card>
-          <CardHeader className='pb-2'>
+      <div className='grid gap-3 md:grid-cols-3'>
+        <Card className='gap-2 py-4'>
+          <CardHeader className='px-5 pb-0'>
             <CardTitle className='text-sm font-medium flex items-center'>
               <Database className='size-4 mr-2' />
               {t('sampleCount')}
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className='text-2xl font-bold'>{sampleCount}</p>
+          <CardContent className='px-5'>
+            <p className='text-xl font-bold'>{sampleCount}</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className='pb-0'>
+        <Card className='gap-2 py-4'>
+          <CardHeader className='px-5 pb-0'>
             <CardTitle className='text-sm font-medium flex items-center'>
               <FlaskConical className='size-4 mr-2' />
               {t('workflowStatus')}
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className='flex items-center justify-between mb-1'>
-              <p className='text-2xl font-bold'>{`${successRuns}/${totalRuns}`}</p>
+          <CardContent className='px-5'>
+            <div className='mb-1 flex items-center justify-between'>
+              <p className='text-xl font-bold'>{`${successRuns}/${totalRuns}`}</p>
               <div className='flex items-center justify-end gap-2 flex-wrap'>
                 <Badge
                   variant='outline'
@@ -150,19 +150,19 @@ export function ProjectDetailCard({
                 </Badge>
               </div>
             </div>
-            <Progress value={successRate} className='h-2' />
+            <Progress value={successRate} className='h-1.5' />
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className='pb-2'>
+        <Card className='gap-2 py-4'>
+          <CardHeader className='px-5 pb-0'>
             <CardTitle className='text-sm font-medium flex items-center'>
               <Clock className='size-4 mr-2' />
               {t('lastUpdated')}
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className='text-2xl font-bold' suppressHydrationWarning>
+          <CardContent className='px-5'>
+            <p className='text-xl font-bold' suppressHydrationWarning>
               {new Date(project.update_time).toLocaleString(locale)}
             </p>
           </CardContent>
