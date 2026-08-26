@@ -63,9 +63,12 @@
       "search_prompt": "Search Tools"
     },
     "auto_layout": "Auto Layout",
+    "clean_dirty_edges": "Clean Dirty Edges",
+    "dirty_edges_removed": "Removed {count} dirty edges",
     "exit": "Exit",
     "layout_complete": "Workflow layout complete",
     "node_added": "Node added",
+    "no_dirty_edges": "No dirty edges found",
     "no_workflow_loaded": "Please load a workflow first",
     "right_click_to_add": "Right click on canvas to add nodes",
     "run": "Run",

@@ -202,12 +202,18 @@ export function WorkflowRunInstances({
           <Table>
             <TableHeader>
               <TableRow className='bg-muted/20 hover:bg-muted/20'>
-                <TableHead>{t('runName')}</TableHead>
+                <TableHead className='w-[220px]'>{t('viewDetails')}</TableHead>
                 <TableHead className='w-[110px]'>{t('status')}</TableHead>
-                <TableHead className='w-[220px]'>{t('progress')}</TableHead>
-                <TableHead className='w-[120px]'>{t('startTime')}</TableHead>
-                <TableHead className='w-[90px]'>{t('duration')}</TableHead>
-                <TableHead className='w-[130px] text-right'>
+                <TableHead className='w-[220px] pr-8'>
+                  {t('progress')}
+                </TableHead>
+                <TableHead className='w-[140px] px-4'>
+                  {t('startTime')}
+                </TableHead>
+                <TableHead className='w-[100px] px-4'>
+                  {t('duration')}
+                </TableHead>
+                <TableHead className='w-[100px] text-right'>
                   {t('actions')}
                 </TableHead>
               </TableRow>
@@ -224,8 +230,14 @@ export function WorkflowRunInstances({
 
                 return (
                   <TableRow key={run.uid}>
-                    <TableCell className='font-medium text-sm'>
-                      {run.name}
+                    <TableCell>
+                      <Link
+                        href={`/project/${projectId}/${run.uid}`}
+                        className='inline-flex items-center gap-1 text-sm font-medium hover:underline'
+                      >
+                        <ExternalLink className='size-3' />
+                        {t('viewDetails')}
+                      </Link>
                     </TableCell>
 
                     <TableCell>
@@ -237,7 +249,7 @@ export function WorkflowRunInstances({
                       </Badge>
                     </TableCell>
 
-                    <TableCell>
+                    <TableCell className='pr-8'>
                       {taskStats ? (
                         <div className='space-y-1.5'>
                           <div className='flex items-center justify-between text-xs text-muted-foreground'>
@@ -253,27 +265,16 @@ export function WorkflowRunInstances({
                       )}
                     </TableCell>
 
-                    <TableCell className='text-sm text-muted-foreground'>
+                    <TableCell className='px-4 text-sm text-muted-foreground'>
                       {formatDateTime(dateFormatter, run.start_time)}
                     </TableCell>
 
-                    <TableCell className='text-sm text-muted-foreground'>
+                    <TableCell className='px-4 text-sm text-muted-foreground'>
                       {calculateDuration(run.start_time, run.end_time)}
                     </TableCell>
 
                     <TableCell className='text-right'>
-                      <div className='flex items-center justify-end gap-1'>
-                        <Button
-                          variant='ghost'
-                          size='sm'
-                          className='h-7 gap-1 text-xs'
-                          asChild
-                        >
-                          <Link href={`/project/${projectId}/${run.uid}`}>
-                            <ExternalLink className='size-3' />
-                            {t('viewDetails')}
-                          </Link>
-                        </Button>
+                      <div className='flex items-center justify-end'>
                         <Button
                           variant='ghost'
                           size='sm'
@@ -328,10 +329,10 @@ export function WorkflowRunInstances({
             <TableRow className='bg-muted/20 hover:bg-muted/20'>
               <TableHead className='w-[220px]'>{t('sampleName')}</TableHead>
               <TableHead className='w-[110px]'>{t('status')}</TableHead>
-              <TableHead className='w-[220px]'>{t('progress')}</TableHead>
-              <TableHead className='w-[120px]'>{t('startTime')}</TableHead>
-              <TableHead className='w-[90px]'>{t('duration')}</TableHead>
-              <TableHead className='w-[130px] text-right'>
+              <TableHead className='w-[220px] pr-8'>{t('progress')}</TableHead>
+              <TableHead className='w-[140px] px-4'>{t('startTime')}</TableHead>
+              <TableHead className='w-[100px] px-4'>{t('duration')}</TableHead>
+              <TableHead className='w-[100px] text-right'>
                 {t('actions')}
               </TableHead>
             </TableRow>
@@ -351,8 +352,20 @@ export function WorkflowRunInstances({
 
               return (
                 <TableRow key={sample.uid}>
-                  <TableCell className='font-medium text-sm'>
-                    {sample.sample_name}
+                  <TableCell>
+                    {run ? (
+                      <Link
+                        href={`/project/${projectId}/${run.uid}`}
+                        className='inline-flex items-center gap-1 text-sm font-medium hover:underline'
+                      >
+                        {sample.sample_name}
+                        <ExternalLink className='size-3' />
+                      </Link>
+                    ) : (
+                      <span className='text-sm font-medium'>
+                        {sample.sample_name}
+                      </span>
+                    )}
                   </TableCell>
 
                   <TableCell>
@@ -370,7 +383,7 @@ export function WorkflowRunInstances({
                     )}
                   </TableCell>
 
-                  <TableCell>
+                  <TableCell className='pr-8'>
                     {taskStats ? (
                       <div className='space-y-1.5'>
                         <div className='flex items-center justify-between text-xs text-muted-foreground'>
@@ -386,31 +399,18 @@ export function WorkflowRunInstances({
                     )}
                   </TableCell>
 
-                  <TableCell className='text-sm text-muted-foreground'>
+                  <TableCell className='px-4 text-sm text-muted-foreground'>
                     {formatDateTime(dateFormatter, run?.start_time)}
                   </TableCell>
 
-                  <TableCell className='text-sm text-muted-foreground'>
+                  <TableCell className='px-4 text-sm text-muted-foreground'>
                     {run
                       ? calculateDuration(run.start_time, run.end_time)
                       : '-'}
                   </TableCell>
 
                   <TableCell className='text-right'>
-                    <div className='flex items-center justify-end gap-1'>
-                      {run && (
-                        <Button
-                          variant='ghost'
-                          size='sm'
-                          className='h-7 gap-1 text-xs'
-                          asChild
-                        >
-                          <Link href={`/project/${projectId}/${run.uid}`}>
-                            <ExternalLink className='size-3' />
-                            {t('viewDetails')}
-                          </Link>
-                        </Button>
-                      )}
+                    <div className='flex items-center justify-end'>
                       <Button
                         variant='ghost'
                         size='sm'

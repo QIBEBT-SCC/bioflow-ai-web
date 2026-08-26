@@ -40,19 +40,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import {
   useDeleteSample,
   useDeleteSampleFile,
   useSample,
   useSamplesPage,
 } from '@/hooks/use-sample'
+import { cn } from '@/lib/utils'
 import type { Sample } from '@/types/sample'
 import { AddSampleFileDialog } from './add-sample-file-dialog'
 import { CreateSampleDialog } from './create-sample-dialog'
@@ -61,6 +54,12 @@ import { EditSampleDialog } from './edit-sample-dialog'
 interface SampleFilesSectionProps {
   projectId: string
   sampleDetails: Sample
+  onDeleteFile: (fileUid: string) => void
+}
+
+interface ExpandedSampleFilesSectionProps {
+  projectId: string
+  sampleUid: string
   onDeleteFile: (fileUid: string) => void
 }
 
@@ -91,8 +90,8 @@ function SampleFilesSection({
   const t = useTranslations('Project.sample.files')
 
   return (
-    <div className='p-4'>
-      <div className='flex items-center justify-between mb-2'>
+    <div className='space-y-3 border-t bg-muted/20 p-4 sm:p-5'>
+      <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
         <h4 className='text-sm font-semibold'>{t('title')}</h4>
         <AddSampleFileDialog
           projectId={projectId}
@@ -102,74 +101,104 @@ function SampleFilesSection({
       {sampleDetails.files.length === 0 ? (
         <p className='text-sm text-muted-foreground'>{t('empty')}</p>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className='w-45'>{t('tag')}</TableHead>
-              <TableHead>{t('filePath')}</TableHead>
-              <TableHead className='w-25'>{t('format')}</TableHead>
-              <TableHead className='w-25'>{t('size')}</TableHead>
-              <TableHead className='w-30'>{t('md5')}</TableHead>
-              <TableHead className='w-45'>{t('uploadedAt')}</TableHead>
-              <TableHead className='w-20'>{t('actions')}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sampleDetails.files.map((file) => (
-              <TableRow key={file.uid}>
-                <TableCell>
-                  <div className='flex items-center gap-1'>
-                    <Badge
-                      variant='outline'
-                      className='bg-blue-50 text-blue-700 border-blue-200'
-                    >
-                      {file.tag}
-                    </Badge>
-                    {file.is_dynamic && (
-                      <Badge variant='secondary'>{t('dynamic')}</Badge>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell className='font-mono text-xs'>
-                  {file.file_path}
-                </TableCell>
-                <TableCell>
+        <div className='grid gap-2'>
+          <div className='hidden grid-cols-[minmax(0,1.6fr)_minmax(0,2fr)_auto] gap-3 px-3 text-xs font-medium text-muted-foreground md:grid'>
+            <span>{t('tag')}</span>
+            <span>{t('filePath')}</span>
+            <span className='pr-11 text-right'>{t('uploadedAt')}</span>
+          </div>
+          {sampleDetails.files.map((file) => (
+            <div
+              key={file.uid}
+              className='grid min-w-0 gap-3 rounded-lg border bg-background p-3 md:grid-cols-[minmax(0,1.6fr)_minmax(0,2fr)_auto] md:items-center'
+            >
+              <div
+                className={cn(
+                  '-mx-3 -my-2 flex min-w-0 flex-col justify-center space-y-2 rounded-md border-l-2 border-transparent px-3 py-2 md:self-stretch',
+                  file.is_dynamic &&
+                    'border-blue-500 bg-blue-50/80 dark:bg-blue-950/30',
+                )}
+                title={file.is_dynamic ? t('dynamic') : undefined}
+              >
+                <div className='flex min-w-0 flex-wrap items-center gap-1'>
+                  <Badge
+                    variant='outline'
+                    className='max-w-full break-all border-blue-200 bg-blue-50 text-blue-700'
+                  >
+                    {file.tag}
+                  </Badge>
+                  {file.is_dynamic && (
+                    <span className='sr-only'>{t('dynamic')}</span>
+                  )}
+                </div>
+                <div className='flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground'>
                   <Badge variant='outline'>{file.file_format ?? '—'}</Badge>
-                </TableCell>
-                <TableCell>{formatFileSize(file.file_size)}</TableCell>
-                <TableCell>
+                  <span>{formatFileSize(file.file_size)}</span>
                   {file.md5_checksum ? (
-                    <div className='flex items-center'>
-                      <CheckIcon className='size-4 text-green-500 mr-1' />
-                      <span
-                        className='text-xs truncate w-16'
-                        title={file.md5_checksum}
-                      >
+                    <span
+                      className='flex min-w-0 items-center'
+                      title={file.md5_checksum}
+                    >
+                      <CheckIcon className='mr-1 size-4 shrink-0 text-green-500' />
+                      <span className='truncate'>
                         {file.md5_checksum.substring(0, 8)}...
                       </span>
-                    </div>
-                  ) : (
-                    '—'
-                  )}
-                </TableCell>
-                <TableCell className='text-xs' suppressHydrationWarning>
-                  {format(parseISO(file.uploaded_time), 'yyyy-MM-dd HH:mm:ss')}
-                </TableCell>
-                <TableCell>
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    onClick={() => onDeleteFile(file.uid)}
-                  >
-                    <Trash2Icon className='size-4 text-destructive' />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+              <div className='min-w-0'>
+                <p className='break-all font-mono text-xs'>{file.file_path}</p>
+              </div>
+              <div className='flex items-center justify-between gap-3 md:justify-end'>
+                <div className='text-xs md:text-right'>
+                  <p suppressHydrationWarning>
+                    {format(
+                      parseISO(file.uploaded_time),
+                      'yyyy-MM-dd HH:mm:ss',
+                    )}
+                  </p>
+                </div>
+                <Button
+                  variant='ghost'
+                  size='icon'
+                  className='shrink-0'
+                  onClick={() => onDeleteFile(file.uid)}
+                >
+                  <Trash2Icon className='size-4 text-destructive' />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
     </div>
+  )
+}
+
+function ExpandedSampleFilesSection({
+  projectId,
+  sampleUid,
+  onDeleteFile,
+}: ExpandedSampleFilesSectionProps) {
+  const { data: sampleDetails, isLoading } = useSample(projectId, sampleUid)
+
+  if (isLoading) {
+    return (
+      <div className='flex items-center justify-center border-t bg-muted/20 py-8'>
+        <Loader2 className='size-5 animate-spin text-muted-foreground' />
+      </div>
+    )
+  }
+
+  if (!sampleDetails) return null
+
+  return (
+    <SampleFilesSection
+      projectId={projectId}
+      sampleDetails={sampleDetails}
+      onDeleteFile={onDeleteFile}
+    />
   )
 }
 
@@ -308,12 +337,6 @@ export function SampleList({ projectId }: SampleListProps) {
     }))
   }
 
-  // 获取展开样本的详细信息
-  const { data: expandedSampleData } = useSample(
-    projectId,
-    Object.keys(expandedSamples).find((uid) => expandedSamples[uid]) || '',
-  )
-
   // 获取正在编辑的样本的完整数据
   const { data: editingSampleData } = useSample(projectId, editingSample || '')
 
@@ -360,158 +383,148 @@ export function SampleList({ projectId }: SampleListProps) {
 
   return (
     <>
-      <Card>
+      <Card className='min-w-0 gap-4 overflow-hidden'>
         <CardHeader className='pb-3'>
-          <div className='flex items-center justify-between'>
-            <div>
+          <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+            <div className='min-w-0'>
               <CardTitle>{t('title')}</CardTitle>
               <CardDescription>{t('description')}</CardDescription>
             </div>
             <CreateSampleDialog projectId={projectId} />
           </div>
         </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className='w-7.5'></TableHead>
-                <TableHead className='w-45'>{t('sampleName')}</TableHead>
-                <TableHead>{t('metadata')}</TableHead>
-                <TableHead className='w-45'>{t('createdAt')}</TableHead>
-                <TableHead className='w-25'>{t('fileCount')}</TableHead>
-                <TableHead className='w-25'>{t('actions')}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {samples.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={6}
-                    className='text-center py-8 text-muted-foreground'
-                  >
-                    {t('empty')}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                samples.map((sample) => {
-                  const isExpanded = expandedSamples[sample.uid]
-                  const sampleDetails =
-                    isExpanded && expandedSampleData?.uid === sample.uid
-                      ? expandedSampleData
-                      : null
+        <CardContent className='px-0'>
+          {samples.length === 0 ? (
+            <div className='px-6 py-8 text-center text-muted-foreground'>
+              {t('empty')}
+            </div>
+          ) : (
+            <div className='divide-y border-y'>
+              {samples.map((sample) => {
+                const isExpanded = expandedSamples[sample.uid]
 
-                  return (
-                    <Fragment key={sample.uid}>
-                      <TableRow className='cursor-pointer hover:bg-muted/50'>
-                        <TableCell
-                          onClick={() => toggleSampleExpand(sample.uid)}
-                        >
+                return (
+                  <Fragment key={sample.uid}>
+                    <div className='flex min-w-0 items-start gap-2 px-4 py-4 transition-colors hover:bg-muted/40 sm:items-center sm:px-6'>
+                      <button
+                        type='button'
+                        className='flex min-w-0 flex-1 items-start gap-3 text-left sm:items-center'
+                        aria-expanded={isExpanded}
+                        onClick={() => toggleSampleExpand(sample.uid)}
+                      >
+                        <span className='mt-0.5 shrink-0 sm:mt-0'>
                           {isExpanded ? (
                             <ChevronDownIcon className='size-4' />
                           ) : (
                             <ChevronRightIcon className='size-4' />
                           )}
-                        </TableCell>
-                        <TableCell
-                          className='font-medium'
-                          onClick={() => toggleSampleExpand(sample.uid)}
-                        >
-                          {sample.sample_name}
-                        </TableCell>
-                        <TableCell
-                          onClick={() => toggleSampleExpand(sample.uid)}
-                        >
-                          <div className='flex flex-wrap gap-1'>
+                        </span>
+                        <span className='grid min-w-0 flex-1 gap-3 sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1.5fr)_auto] sm:items-center'>
+                          <span className='min-w-0'>
+                            <span className='block truncate font-medium'>
+                              {sample.sample_name}
+                            </span>
+                            <span className='mt-1 block text-xs text-muted-foreground sm:hidden'>
+                              {t('fileCount')}: {sample.file_count}
+                            </span>
+                            <span
+                              className='mt-1 block text-xs text-muted-foreground sm:hidden'
+                              suppressHydrationWarning
+                            >
+                              {format(
+                                parseISO(sample.create_time),
+                                'yyyy-MM-dd HH:mm:ss',
+                              )}
+                            </span>
+                          </span>
+                          <span className='flex min-w-0 flex-wrap gap-1'>
                             {Object.entries(sample.meta_data || {}).map(
                               ([key, value]) => (
                                 <Badge
                                   key={key}
                                   variant='outline'
-                                  className='text-xs'
+                                  className='max-w-full break-all text-xs whitespace-normal'
                                 >
                                   {key}: {String(value)}
                                 </Badge>
                               ),
                             )}
-                          </div>
-                        </TableCell>
-                        <TableCell
-                          onClick={() => toggleSampleExpand(sample.uid)}
-                          suppressHydrationWarning
-                        >
-                          {format(
-                            parseISO(sample.create_time),
-                            'yyyy-MM-dd HH:mm:ss',
-                          )}
-                        </TableCell>
-                        <TableCell
-                          onClick={() => toggleSampleExpand(sample.uid)}
-                        >
-                          {sample.file_count}
-                        </TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant='ghost' size='icon'>
-                                <MoreHorizontal className='size-4' />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align='end'>
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  updateListState({
-                                    editingSample: sample.uid,
-                                  })
-                                }
-                              >
-                                <EditIcon className='size-4 mr-2' />
-                                {t('edit')}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className='text-destructive'
-                                onClick={() =>
-                                  updateListState({
-                                    deletingSample: sample.uid,
-                                  })
-                                }
-                              >
-                                <Trash2Icon className='size-4 mr-2' />
-                                {t('delete')}
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                      {isExpanded && sampleDetails && (
-                        <TableRow className='bg-muted/30'>
-                          <TableCell colSpan={6} className='p-0'>
-                            <SampleFilesSection
-                              projectId={projectId}
-                              sampleDetails={sampleDetails}
-                              onDeleteFile={(fileUid) =>
-                                updateListState({
-                                  deletingFile: {
-                                    sampleUid: sampleDetails.uid,
-                                    fileUid,
-                                  },
-                                })
-                              }
-                            />
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </Fragment>
-                  )
-                })
-              )}
-            </TableBody>
-          </Table>
+                          </span>
+                          <span className='hidden text-xs text-muted-foreground sm:block sm:text-right'>
+                            <span className='block' suppressHydrationWarning>
+                              {format(
+                                parseISO(sample.create_time),
+                                'yyyy-MM-dd HH:mm:ss',
+                              )}
+                            </span>
+                            <span className='mt-1 block'>
+                              {t('fileCount')}: {sample.file_count}
+                            </span>
+                          </span>
+                        </span>
+                      </button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant='ghost'
+                            size='icon'
+                            className='shrink-0'
+                          >
+                            <MoreHorizontal className='size-4' />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align='end'>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              updateListState({
+                                editingSample: sample.uid,
+                              })
+                            }
+                          >
+                            <EditIcon className='mr-2 size-4' />
+                            {t('edit')}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className='text-destructive'
+                            onClick={() =>
+                              updateListState({
+                                deletingSample: sample.uid,
+                              })
+                            }
+                          >
+                            <Trash2Icon className='mr-2 size-4' />
+                            {t('delete')}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                    {isExpanded && (
+                      <ExpandedSampleFilesSection
+                        projectId={projectId}
+                        sampleUid={sample.uid}
+                        onDeleteFile={(fileUid) =>
+                          updateListState({
+                            deletingFile: {
+                              sampleUid: sample.uid,
+                              fileUid,
+                            },
+                          })
+                        }
+                      />
+                    )}
+                  </Fragment>
+                )
+              })}
+            </div>
+          )}
           {totalPages > 1 && (
-            <ImagePagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={(page) => updateListState({ currentPage: page })}
-            />
+            <div className='px-6 pt-4'>
+              <ImagePagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={(page) => updateListState({ currentPage: page })}
+              />
+            </div>
           )}
         </CardContent>
       </Card>

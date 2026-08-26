@@ -25,6 +25,7 @@ import {
   streamAgentEvents,
   updateAgentSession,
 } from '@/app/actions/agent'
+import { agentFileQueryKeys } from '@/hooks/use-agent-file'
 import type {
   AgentEvent,
   AgentName,
@@ -157,9 +158,15 @@ function mergeEvents(current: AgentEvent[], incoming: AgentEvent[]) {
   return [...byId.values()].sort((a, b) => a.id - b.id)
 }
 
+function scheduleAgentReconnect(callback: () => void) {
+  const timer = setTimeout(callback, 1_500)
+  return () => clearTimeout(timer)
+}
+
 export function useAgentRunEvents(
   runId: string | null,
   status?: AgentRun['status'],
+  projectId?: number | null,
 ) {
   const queryClient = useQueryClient()
   const [events, setEvents] = useState<AgentEvent[]>([])
@@ -168,10 +175,10 @@ export function useAgentRunEvents(
   useEffect(() => {
     setEvents([])
     cursorRef.current = 0
-    if (!runId) return
+    if (!runId) return () => undefined
 
     const controller = new AbortController()
-    let reconnectTimer: ReturnType<typeof setTimeout> | undefined
+    let cancelReconnect = () => undefined
 
     const accept = (incoming: AgentEvent[]) => {
       if (incoming.length === 0) return
@@ -202,6 +209,14 @@ export function useAgentRunEvents(
         )
       ) {
         queryClient.invalidateQueries({ queryKey: agentQueryKeys.all })
+        queryClient.invalidateQueries({
+          queryKey: agentFileQueryKeys.run(runId),
+        })
+        if (projectId !== null && projectId !== undefined) {
+          queryClient.invalidateQueries({
+            queryKey: agentFileQueryKeys.project(String(projectId)),
+          })
+        }
       }
     }
 
@@ -245,23 +260,24 @@ export function useAgentRunEvents(
         !controller.signal.aborted &&
         (!status || STREAMING_AGENT_STATUSES.includes(status))
       ) {
-        reconnectTimer = setTimeout(() => void connect(), 1_500)
+        cancelReconnect()
+        cancelReconnect = scheduleAgentReconnect(() => void connect())
       }
     }
 
     void connect()
     return () => {
       controller.abort()
-      if (reconnectTimer) clearTimeout(reconnectTimer)
+      cancelReconnect()
     }
-  }, [queryClient, runId, status])
+  }, [projectId, queryClient, runId, status])
 
   return events
 }
 
 function useInvalidateAgentData() {
   const queryClient = useQueryClient()
-  return (sessionId?: string, runId?: string) => {
+  return (sessionId?: string, runId?: string, projectId?: number | null) => {
     queryClient.invalidateQueries({ queryKey: agentQueryKeys.all })
     if (sessionId) {
       queryClient.invalidateQueries({
@@ -271,8 +287,17 @@ function useInvalidateAgentData() {
         queryKey: agentQueryKeys.messages(sessionId),
       })
     }
-    if (runId)
+    if (runId) {
       queryClient.invalidateQueries({ queryKey: agentQueryKeys.run(runId) })
+      queryClient.invalidateQueries({
+        queryKey: agentFileQueryKeys.run(runId),
+      })
+    }
+    if (projectId !== null && projectId !== undefined) {
+      queryClient.invalidateQueries({
+        queryKey: agentFileQueryKeys.project(String(projectId)),
+      })
+    }
   }
 }
 
@@ -315,7 +340,7 @@ export function useCreateAgentRun() {
       text: string
       sourceRunUid?: string
     }) => createAgentRun(sessionId, agentName, text, sourceRunUid),
-    onSuccess: (run) => invalidate(run.session_uid, run.uid),
+    onSuccess: (run) => invalidate(run.session_uid, run.uid, run.project_id),
   })
 }
 
@@ -331,7 +356,7 @@ export function useResumeAgentRun() {
       approved: boolean
       feedback?: string
     }) => resumeAgentRun(runId, approved, feedback),
-    onSuccess: (run) => invalidate(run.session_uid, run.uid),
+    onSuccess: (run) => invalidate(run.session_uid, run.uid, run.project_id),
   })
 }
 
@@ -339,7 +364,7 @@ export function useCancelAgentRun() {
   const invalidate = useInvalidateAgentData()
   return useMutation({
     mutationFn: cancelAgentRun,
-    onSuccess: (run) => invalidate(run.session_uid, run.uid),
+    onSuccess: (run) => invalidate(run.session_uid, run.uid, run.project_id),
   })
 }
 
@@ -347,6 +372,6 @@ export function useRetryAgentRun() {
   const invalidate = useInvalidateAgentData()
   return useMutation({
     mutationFn: retryAgentRun,
-    onSuccess: (run) => invalidate(run.session_uid, run.uid),
+    onSuccess: (run) => invalidate(run.session_uid, run.uid, run.project_id),
   })
 }

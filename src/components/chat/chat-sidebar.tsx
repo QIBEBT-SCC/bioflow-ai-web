@@ -145,7 +145,7 @@ function ChatSidebarInner({
   const [localRunId, setRunId] = useState<string | null>(null)
   const runId = localRunId ?? session?.latest_run?.uid ?? null
   const { data: run } = useAgentRun(runId)
-  const events = useAgentRunEvents(runId, run?.status)
+  const events = useAgentRunEvents(runId, run?.status, run?.project_id)
   const [text, setText] = useState('')
   const [feedback, setFeedback] = useState('')
   const [localError, setLocalError] = useState<string | null>(null)

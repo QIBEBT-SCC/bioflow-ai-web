@@ -3,6 +3,7 @@
 import { format, parseISO } from 'date-fns'
 import {
   EditIcon,
+  InfoIcon,
   Loader2,
   MoreHorizontal,
   PlusIcon,
@@ -21,7 +22,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -37,17 +37,16 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import {
   useDeleteProjectFileMapping,
   useProjectFileMappings,
 } from '@/hooks/use-sample'
+import { cn } from '@/lib/utils'
 import type { ProjectFileMapping } from '@/types/sample'
 import { AddProjectFileMappingDialog } from './add-project-file-mapping-dialog'
 import { EditProjectFileMappingDialog } from './edit-project-file-mapping-dialog'
@@ -93,68 +92,101 @@ export function ProjectFileMappings({ projectId }: ProjectFileMappingsProps) {
 
   return (
     <>
-      <Card>
+      <Card className='min-w-0 gap-4 overflow-hidden'>
         <CardHeader>
-          <div className='flex items-center justify-between'>
-            <div>
+          <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+            <div className='min-w-0'>
               <CardTitle>{t('title')}</CardTitle>
               <CardDescription>{t('descriptionText')}</CardDescription>
             </div>
             <AddProjectFileMappingDialog projectId={projectId} />
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className='px-0'>
           {!mappings || mappings.length === 0 ? (
-            <div className='text-center py-12'>
-              <p className='text-muted-foreground mb-4'>{t('empty')}</p>
+            <div className='px-6 py-12 text-center'>
+              <p className='mb-4 text-muted-foreground'>{t('empty')}</p>
               <AddProjectFileMappingDialog
                 projectId={projectId}
                 trigger={
                   <Button>
-                    <PlusIcon className='size-4 mr-2' />
+                    <PlusIcon className='mr-2 size-4' />
                     {t('add')}
                   </Button>
                 }
               />
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className='w-[200px]'>{t('keyword')}</TableHead>
-                  <TableHead>{t('filePath')}</TableHead>
-                  <TableHead>{t('description')}</TableHead>
-                  <TableHead className='w-[180px]'>{t('createdAt')}</TableHead>
-                  <TableHead className='w-[80px]'>{t('actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <TooltipProvider>
+              <div className='grid grid-cols-1 divide-y border-y lg:grid-cols-[max-content_minmax(0,1fr)_auto]'>
+                <div className='col-span-full hidden grid-cols-subgrid gap-4 bg-muted/30 px-6 py-2.5 text-xs font-medium text-muted-foreground lg:grid'>
+                  <span>{t('keyword')}</span>
+                  <span>{t('filePath')}</span>
+                  <span className='pr-11 text-right'>{t('createdAt')}</span>
+                </div>
                 {mappings.map((mapping) => (
-                  <TableRow key={mapping.id}>
-                    <TableCell className='font-mono font-medium'>
-                      <div className='flex items-center gap-2'>
-                        <span>proj:{mapping.keyword}</span>
+                  <div
+                    key={mapping.id}
+                    className='grid min-w-0 gap-4 px-4 py-4 transition-colors hover:bg-muted/40 sm:px-6 lg:col-span-full lg:grid-cols-subgrid lg:items-center'
+                  >
+                    <div
+                      className={cn(
+                        '-mx-3 -my-2 flex min-w-0 items-center rounded-md border-l-2 border-transparent px-3 py-2 lg:self-stretch',
+                        mapping.is_dynamic &&
+                          'border-blue-500 bg-blue-50/80 dark:bg-blue-950/30',
+                      )}
+                    >
+                      <div className='flex min-w-0 items-center gap-2 font-mono font-medium'>
+                        <span className='whitespace-nowrap'>
+                          proj:{mapping.keyword}
+                        </span>
+                        {mapping.description && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                type='button'
+                                className='shrink-0 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+                                aria-label={t('description')}
+                              >
+                                <InfoIcon className='size-4' />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent
+                              side='top'
+                              align='start'
+                              sideOffset={6}
+                              className='max-w-sm whitespace-normal text-pretty'
+                            >
+                              {mapping.description}
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
                         {mapping.is_dynamic && (
-                          <Badge variant='secondary'>{t('dynamic')}</Badge>
+                          <span className='sr-only'>{t('dynamic')}</span>
                         )}
                       </div>
-                    </TableCell>
-                    <TableCell className='font-mono text-xs'>
-                      {mapping.file_path}
-                    </TableCell>
-                    <TableCell className='text-sm'>
-                      {mapping.description}
-                    </TableCell>
-                    <TableCell className='text-xs' suppressHydrationWarning>
-                      {format(
-                        parseISO(mapping.create_time),
-                        'yyyy-MM-dd HH:mm:ss',
-                      )}
-                    </TableCell>
-                    <TableCell>
+                    </div>
+                    <div className='min-w-0'>
+                      <p className='break-all font-mono text-xs'>
+                        {mapping.file_path}
+                      </p>
+                    </div>
+                    <div className='flex items-center justify-between gap-3 lg:justify-end'>
+                      <div className='text-xs lg:text-right'>
+                        <p suppressHydrationWarning>
+                          {format(
+                            parseISO(mapping.create_time),
+                            'yyyy-MM-dd HH:mm:ss',
+                          )}
+                        </p>
+                      </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant='ghost' size='icon'>
+                          <Button
+                            variant='ghost'
+                            size='icon'
+                            className='shrink-0'
+                          >
                             <MoreHorizontal className='size-4' />
                           </Button>
                         </DropdownMenuTrigger>
@@ -162,23 +194,23 @@ export function ProjectFileMappings({ projectId }: ProjectFileMappingsProps) {
                           <DropdownMenuItem
                             onClick={() => setEditingMapping(mapping)}
                           >
-                            <EditIcon className='size-4 mr-2' />
+                            <EditIcon className='mr-2 size-4' />
                             {t('edit')}
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className='text-destructive'
                             onClick={() => setDeletingMapping(mapping)}
                           >
-                            <Trash2Icon className='size-4 mr-2' />
+                            <Trash2Icon className='mr-2 size-4' />
                             {t('delete')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
+                    </div>
+                  </div>
                 ))}
-              </TableBody>
-            </Table>
+              </div>
+            </TooltipProvider>
           )}
         </CardContent>
       </Card>

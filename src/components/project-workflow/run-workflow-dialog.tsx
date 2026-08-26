@@ -122,9 +122,11 @@ export function RunWorkflowDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-w-2xl'>
-        <DialogHeader>
-          <DialogTitle>{t('title', { name: workflowName })}</DialogTitle>
+      <DialogContent className='min-w-0 sm:max-w-2xl'>
+        <DialogHeader className='min-w-0 pr-6'>
+          <DialogTitle className='break-words'>
+            {t('title', { name: workflowName })}
+          </DialogTitle>
           <DialogDescription>
             {isProjectLevel
               ? t('projectLevelDescription')
@@ -132,10 +134,10 @@ export function RunWorkflowDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className='space-y-4'>
+        <div className='min-w-0 space-y-4'>
           {/* 样本选择 - 仅样本级工作流显示 */}
           {!isProjectLevel && (
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-2'>
               <div className='flex items-center justify-between'>
                 <Label>{t('selectSamples')}</Label>
                 <Button
@@ -150,7 +152,7 @@ export function RunWorkflowDialog({
                 </Button>
               </div>
 
-              <ScrollArea className='h-62.5 rounded-md border p-4'>
+              <ScrollArea className='h-62.5 min-w-0 w-full rounded-md border p-4'>
                 {isLoading ? (
                   <div className='flex items-center justify-center py-12'>
                     <Loader2 className='size-8 animate-spin text-muted-foreground' />
@@ -164,7 +166,7 @@ export function RunWorkflowDialog({
                     {samples.map((sample) => (
                       <label
                         key={sample.uid}
-                        className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors text-left w-full ${
+                        className={`flex w-full min-w-0 cursor-pointer items-start gap-3 rounded-lg border p-3 text-left transition-colors ${
                           selectedSampleUids.has(sample.uid)
                             ? 'bg-primary/5 border-primary'
                             : 'hover:bg-muted/50'
@@ -183,7 +185,7 @@ export function RunWorkflowDialog({
                         </div>
                         <div className='flex-1 min-w-0'>
                           <div className='flex items-center gap-2'>
-                            <h4 className='font-medium text-sm'>
+                            <h4 className='min-w-0 break-words text-sm font-medium'>
                               {sample.sample_name}
                             </h4>
                             <Badge variant='outline' className='text-xs'>
@@ -191,13 +193,13 @@ export function RunWorkflowDialog({
                             </Badge>
                           </div>
                           {Object.keys(sample.meta_data || {}).length > 0 && (
-                            <div className='flex flex-wrap gap-1 mt-1'>
+                            <div className='mt-1 flex min-w-0 flex-wrap gap-1'>
                               {Object.entries(sample.meta_data || {}).map(
                                 ([key, value]) => (
                                   <Badge
                                     key={key}
                                     variant='secondary'
-                                    className='text-xs'
+                                    className='max-w-full shrink whitespace-normal break-words text-left text-xs'
                                   >
                                     {key}: {String(value)}
                                   </Badge>

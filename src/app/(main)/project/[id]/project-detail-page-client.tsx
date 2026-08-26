@@ -1,8 +1,14 @@
 'use client'
 
-import { FileCode, FlaskConical, TestTubeDiagonal } from 'lucide-react'
+import {
+  FileCode,
+  FilesIcon,
+  FlaskConical,
+  TestTubeDiagonal,
+} from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
+import { ProjectAgentFiles } from '@/components/agent-file/project-agent-files'
 import { ChatSidebar } from '@/components/chat/chat-sidebar'
 import { ChatSidebarToggle } from '@/components/chat/chat-sidebar-toggle'
 import { ProjectDetailCard } from '@/components/project/project-detail-card'
@@ -89,13 +95,15 @@ export default function ProjectDetailPageClient({
             </div>
           </div>
         </header>
-        <div className='container mx-auto min-h-0 flex-1 space-y-6 overflow-y-auto px-4 py-6'>
+        <div className='container mx-auto min-h-0 flex-1 space-y-6 overflow-y-auto px-4 py-6 lg:flex lg:flex-col lg:gap-4 lg:space-y-0 lg:overflow-hidden lg:py-4'>
           {/* 返回和项目标题 */}
-          <ProjectDetailCard projectListHref={projectListHref} />
+          <div className='shrink-0'>
+            <ProjectDetailCard projectListHref={projectListHref} />
+          </div>
 
           {/* 项目内容标签页 */}
-          <Tabs defaultValue='samples' className='w-full'>
-            <TabsList className='grid grid-cols-3 md:inline-flex md:w-auto'>
+          <Tabs defaultValue='samples' className='w-full lg:min-h-0 lg:flex-1'>
+            <TabsList className='grid shrink-0 grid-cols-2 md:inline-flex md:w-auto'>
               <TabsTrigger value='samples' className='flex items-center'>
                 <TestTubeDiagonal className='size-4 mr-2' />
                 {t('tabs.samples')}
@@ -108,21 +116,41 @@ export default function ProjectDetailPageClient({
                 <FlaskConical className='size-4 mr-2' />
                 {t('tabs.workflows')}
               </TabsTrigger>
+              <TabsTrigger value='agent-files' className='flex items-center'>
+                <FilesIcon className='size-4 mr-2' />
+                {t('tabs.agentFiles')}
+              </TabsTrigger>
             </TabsList>
 
             {/* 样本标签页内容 */}
-            <TabsContent value='samples' className='mt-6'>
+            <TabsContent
+              value='samples'
+              className='mt-6 lg:min-h-0 lg:overflow-y-auto lg:pr-2 lg:overscroll-contain lg:[scrollbar-gutter:stable]'
+            >
               <SampleList projectId={projectId} />
             </TabsContent>
 
             {/* 全局文件标签页内容 */}
-            <TabsContent value='file-mappings' className='mt-6'>
+            <TabsContent
+              value='file-mappings'
+              className='mt-6 lg:min-h-0 lg:overflow-y-auto lg:pr-2 lg:overscroll-contain lg:[scrollbar-gutter:stable]'
+            >
               <ProjectFileMappings projectId={projectId} />
             </TabsContent>
 
             {/* 工作流标签页内容 */}
-            <TabsContent value='workflows' className='mt-6'>
+            <TabsContent
+              value='workflows'
+              className='mt-6 lg:min-h-0 lg:overflow-y-auto lg:pr-2 lg:overscroll-contain lg:[scrollbar-gutter:stable]'
+            >
               <ProjectWorkflowList projectId={projectId} />
+            </TabsContent>
+
+            <TabsContent
+              value='agent-files'
+              className='mt-6 lg:min-h-0 lg:overflow-y-auto lg:pr-2 lg:overscroll-contain lg:[scrollbar-gutter:stable]'
+            >
+              <ProjectAgentFiles projectId={projectId} />
             </TabsContent>
           </Tabs>
         </div>
