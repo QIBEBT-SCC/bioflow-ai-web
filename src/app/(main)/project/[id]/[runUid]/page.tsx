@@ -386,7 +386,8 @@ function RunFlowContent({
 
         {isOpen && (
           <ChatSidebar
-            pageKey={`run-${runUid}`}
+            projectId={projectId}
+            runUid={runUid}
             width={chatSidebarWidth}
             onResizeStartAction={handleChatResizeStart}
           />

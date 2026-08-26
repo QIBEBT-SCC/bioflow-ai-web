@@ -129,7 +129,7 @@ export default function ProjectDetailPageClient({
       </div>
       {isOpen && (
         <ChatSidebar
-          pageKey={`project-${projectId}`}
+          projectId={projectId}
           width={chatSidebarWidth}
           onResizeStartAction={handleChatResizeStart}
         />

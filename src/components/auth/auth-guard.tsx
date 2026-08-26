@@ -25,7 +25,7 @@ export function AuthGuard() {
 
 /**
  * 保护仅限访客的路由（如登录页）。
- * 已登录时自动重定向到 /chat。
+ * 已登录时自动重定向到 /project。
  */
 export function GuestGuard({ children }: { children: React.ReactNode }) {
   const { push } = useRouter()

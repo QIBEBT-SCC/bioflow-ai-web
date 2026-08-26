@@ -1,36 +1,22 @@
 "use client";
 
-import type { MotionProps } from "motion/react";
-import type { CSSProperties, ElementType, JSX } from "react";
-
 import { cn } from "@/lib/utils";
-import { motion, useReducedMotion } from "motion/react";
-import { memo, useMemo } from "react";
+import { motion } from "motion/react";
+import {
+  type CSSProperties,
+  type ElementType,
+  type JSX,
+  memo,
+  useMemo,
+} from "react";
 
-type MotionHTMLProps = MotionProps & Record<string, unknown>;
-
-// Cache motion components at module level to avoid creating during render
-const motionComponentCache = new Map<
-  keyof JSX.IntrinsicElements,
-  React.ComponentType<MotionHTMLProps>
->();
-
-const getMotionComponent = (element: keyof JSX.IntrinsicElements) => {
-  let component = motionComponentCache.get(element);
-  if (!component) {
-    component = motion.create(element);
-    motionComponentCache.set(element, component);
-  }
-  return component;
-};
-
-export interface TextShimmerProps {
+export type TextShimmerProps = {
   children: string;
   as?: ElementType;
   className?: string;
   duration?: number;
   spread?: number;
-}
+};
 
 const ShimmerComponent = ({
   children,
@@ -39,11 +25,9 @@ const ShimmerComponent = ({
   duration = 2,
   spread = 2,
 }: TextShimmerProps) => {
-  const MotionComponent = getMotionComponent(
+  const MotionComponent = motion.create(
     Component as keyof JSX.IntrinsicElements
   );
-
-  const prefersReducedMotion = useReducedMotion()
 
   const dynamicSpread = useMemo(
     () => (children?.length ?? 0) * spread,
@@ -52,13 +36,13 @@ const ShimmerComponent = ({
 
   return (
     <MotionComponent
-      animate={prefersReducedMotion ? {} : { backgroundPosition: "0% center" }}
+      animate={{ backgroundPosition: "0% center" }}
       className={cn(
         "relative inline-block bg-[length:250%_100%,auto] bg-clip-text text-transparent",
         "[--bg:linear-gradient(90deg,#0000_calc(50%-var(--spread)),var(--color-background),#0000_calc(50%+var(--spread)))] [background-repeat:no-repeat,padding-box]",
         className
       )}
-      initial={prefersReducedMotion ? false : { backgroundPosition: "100% center" }}
+      initial={{ backgroundPosition: "100% center" }}
       style={
         {
           "--spread": `${dynamicSpread}px`,
@@ -66,11 +50,11 @@ const ShimmerComponent = ({
             "var(--bg), linear-gradient(var(--color-muted-foreground), var(--color-muted-foreground))",
         } as CSSProperties
       }
-      transition={
-        prefersReducedMotion
-          ? {}
-          : { duration, ease: "linear", repeat: Number.POSITIVE_INFINITY }
-      }
+      transition={{
+        repeat: Number.POSITIVE_INFINITY,
+        duration,
+        ease: "linear",
+      }}
     >
       {children}
     </MotionComponent>

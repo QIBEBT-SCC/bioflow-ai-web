@@ -1,11 +1,9 @@
 "use client";
 
-import type { CarouselApi } from "@/components/ui/carousel";
-import type { ComponentProps } from "react";
-
 import { Badge } from "@/components/ui/badge";
 import {
   Carousel,
+  type CarouselApi,
   CarouselContent,
   CarouselItem,
 } from "@/components/ui/carousel";
@@ -17,9 +15,10 @@ import {
 import { cn } from "@/lib/utils";
 import { ArrowLeftIcon, ArrowRightIcon } from "lucide-react";
 import {
+  type ComponentProps,
   createContext,
-  use,
   useCallback,
+  useContext,
   useEffect,
   useState,
 } from "react";
@@ -93,7 +92,7 @@ export const InlineCitationCardBody = ({
 const CarouselApiContext = createContext<CarouselApi | undefined>(undefined);
 
 const useCarouselApi = () => {
-  const context = use(CarouselApiContext);
+  const context = useContext(CarouselApiContext);
   return context;
 };
 
@@ -167,15 +166,9 @@ export const InlineCitationCarouselIndex = ({
     setCount(api.scrollSnapList().length);
     setCurrent(api.selectedScrollSnap() + 1);
 
-    const handleSelect = () => {
+    api.on("select", () => {
       setCurrent(api.selectedScrollSnap() + 1);
-    };
-
-    api.on("select", handleSelect);
-
-    return () => {
-      api.off("select", handleSelect);
-    };
+    });
   }, [api]);
 
   return (

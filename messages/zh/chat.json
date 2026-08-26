@@ -1,6 +1,191 @@
 {
   "Chat": {
+    "approve": "批准",
+    "assistant": "AI 助手",
+    "assistants": {
+      "sample-manager": {
+        "description": "根据文件或目录初始化当前项目样本",
+        "label": "样本管理助手"
+      },
+      "tool-generator": {
+        "description": "创建可复用的生物信息学工具",
+        "label": "工具生成助手"
+      },
+      "workflow-diagnoser": {
+        "description": "读取当前运行的工作流、错误与输出文件并生成诊断报告",
+        "label": "工作流诊断助手"
+      },
+      "workflow-fixer": {
+        "description": "根据当前对话的最新诊断检查并修复当前工作流模板",
+        "label": "工作流修复助手"
+      },
+      "workflow-builder": {
+        "description": "创建或更新项目工作流",
+        "label": "工作流构建助手"
+      }
+    },
+    "cancel": "取消",
+    "command_placeholder": "输入 / 选择命令…",
+    "command_prompt_required": "该命令后还需要输入具体要求。",
+    "command_required": "请先使用 / 选择一条智能体命令。",
+    "default_requests": {
+      "workflow-diagnoser": "请诊断本次工作流运行，分析错误、日志和相关输出，并给出修复建议。",
+      "workflow-fixer": "请根据最新诊断报告检查当前工作流，并完成仍有必要的修复。"
+    },
+    "run_context_required": "工作流诊断和修复只能从具体运行详情页发起，请重新打开该运行后再试。",
+    "delete": "删除",
+    "delete_active": "运行期间不可删除",
+    "delete_confirm_action": "确认删除",
+    "delete_confirm_description": "“{title}”及其消息和运行记录将被永久删除，此操作无法撤销。",
+    "delete_confirm_title": "删除此对话？",
+    "delete_failed": "删除对话失败。",
+    "empty_description": "使用 / 选择助手，然后描述你的需求。",
+    "failed": "智能体运行失败。",
+    "feedback_placeholder": "也可以填写反馈来代替批准",
+    "custom_answer_placeholder": "或输入自定义回答",
+    "history": "对话历史",
+    "input_unavailable": "请先创建或载入一个对话",
     "new_conversation": "新建对话",
-    "title": "对话"
+    "no_history": "暂无对话历史",
+    "placeholder": "输入 / 选择助手…",
+    "plan_approval_prompt": "工作流计划已经生成。请检查计划后批准，或发送反馈让智能体继续修改。",
+    "plan_title": "确认工作流计划",
+    "plan_unavailable": "暂时无法读取计划内容，请重试本次任务后再批准。",
+    "toggle_plan": "展开或收起工作流计划",
+    "artifact": {
+      "edit_workflow": "在工作流编辑器中打开",
+      "open_tool": "查看工具详情",
+      "tool_created": "已创建工具节点",
+      "tool_fallback": "新工具节点",
+      "workflow_created": "已创建并导入工作流",
+      "workflow_fallback": "新工作流"
+    },
+    "progress": {
+      "answer": "回答",
+      "fallback_activity": "正在处理请求",
+      "builder": {
+        "manager": {
+          "resource_node": "资源节点",
+          "tool_node": "工具节点",
+          "utility_node": "处理器与代码节点",
+          "workflow": "工作流草稿"
+        },
+        "operation": {
+          "add": {
+            "active": "正在添加{subject}",
+            "complete": "已添加{subject}"
+          },
+          "create": {
+            "active": "正在创建{subject}",
+            "complete": "已创建{subject}"
+          },
+          "delete": {
+            "active": "正在删除{subject}",
+            "complete": "已删除{subject}"
+          },
+          "fix": {
+            "active": "正在修复{manager}",
+            "complete": "已修复{manager}"
+          },
+          "inspect": {
+            "active": "正在查看{subject}",
+            "complete": "已查看{subject}"
+          },
+          "list": {
+            "active": "正在列出{manager}",
+            "complete": "已列出{manager}"
+          },
+          "save": {
+            "active": "正在保存{manager}",
+            "complete": "已保存{manager}"
+          },
+          "search": {
+            "active": "正在搜索{manager}：{subject}",
+            "complete": "已搜索{manager}：{subject}"
+          },
+          "switch": {
+            "active": "正在切换到{subject}",
+            "complete": "已切换到{subject}"
+          },
+          "update": {
+            "active": "正在更新{subject}",
+            "complete": "已更新{subject}"
+          }
+        }
+      },
+      "history_count": "运行轨迹（{count}）",
+      "phase": {
+        "sample_manager": {
+          "active": "正在准备项目样本",
+          "complete": "已完成项目样本准备",
+          "reused": "已加载现有项目样本"
+        },
+        "workflow_builder": {
+          "active": "正在构建工作流",
+          "complete": "已完成工作流构建"
+        },
+        "workflow_planner": {
+          "active": "正在制定工作流计划",
+          "complete": "已制定并确认工作流计划",
+          "reused": "已加载现有工作流计划"
+        }
+      },
+      "running": "智能体正在运行",
+      "sample": {
+        "add_project_file": {
+          "active": "正在注册 proj:{keyword}",
+          "complete": "已注册 proj:{keyword}"
+        },
+        "add_sample_file": {
+          "active": "正在注册 {sample}:{tag}",
+          "complete": "已注册 {sample}:{tag}"
+        },
+        "add_samples": {
+          "active": "正在创建 {count} 条样本记录",
+          "complete": "已创建 {count} 条样本记录"
+        },
+        "ask_human": {
+          "active": "正在等待回答",
+          "complete": "已回答问题"
+        },
+        "list_project_samples": {
+          "active": "正在检查项目已有样本",
+          "complete": "已检查项目已有样本"
+        },
+        "run_command": {
+          "active": "正在运行命令",
+          "complete": "已运行命令"
+        },
+        "set_base_dir": {
+          "active": "正在设置数据目录",
+          "complete": "已设置数据目录"
+        },
+        "write_conclusion": {
+          "active": "正在写入项目样本总结",
+          "complete": "已写入项目样本总结"
+        }
+      },
+      "todo_complete": "所有计划步骤均已完成",
+      "todo_activity_active": "正在处理 {index}/{total} · {task}",
+      "todo_activity_complete": "已完成 {index}/{total} · {task}",
+      "todo_title": "{completed}/{total} · {current}"
+    },
+    "progress_updates": "{count} 条进度更新",
+    "rename": "重命名",
+    "resize": "调整对话侧栏宽度",
+    "retry": "重试",
+    "send": "发送",
+    "send_feedback": "发送反馈",
+    "submit_answers": "提交回答",
+    "status": {
+      "cancel_requested": "正在取消",
+      "queued": "排队中",
+      "running": "运行中"
+    },
+    "suggestions": {
+      "diagnose": "诊断本次运行",
+      "fix": "根据诊断修复工作流"
+    },
+    "title": "AI 对话"
   }
 }

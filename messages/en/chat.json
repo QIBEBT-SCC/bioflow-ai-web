@@ -1,6 +1,191 @@
 {
   "Chat": {
+    "approve": "Approve",
+    "assistant": "AI Assistant",
+    "assistants": {
+      "sample-manager": {
+        "description": "Initialize project samples from files or directories",
+        "label": "Sample Manager"
+      },
+      "tool-generator": {
+        "description": "Create a reusable bioinformatics tool",
+        "label": "Tool Generator"
+      },
+      "workflow-diagnoser": {
+        "description": "Inspect the current run workflow, errors, and output files to produce a diagnosis",
+        "label": "Workflow Diagnoser"
+      },
+      "workflow-fixer": {
+        "description": "Inspect and repair the current workflow template using the latest diagnosis in this conversation",
+        "label": "Workflow Fixer"
+      },
+      "workflow-builder": {
+        "description": "Create or update a project workflow",
+        "label": "Workflow Builder"
+      }
+    },
+    "cancel": "Cancel",
+    "command_placeholder": "Type / to choose a command…",
+    "command_prompt_required": "This command also requires a specific request.",
+    "command_required": "Choose an agent command with / first.",
+    "default_requests": {
+      "workflow-diagnoser": "Diagnose this workflow run by examining its errors, logs, and relevant outputs, then recommend a repair.",
+      "workflow-fixer": "Review the current workflow against the latest diagnosis and complete any repairs that are still necessary."
+    },
+    "run_context_required": "Workflow diagnosis and repair must be started from a specific run detail page. Reopen the run and try again.",
+    "delete": "Delete",
+    "delete_active": "Unavailable while running",
+    "delete_confirm_action": "Delete conversation",
+    "delete_confirm_description": "“{title}” and all of its messages and run history will be permanently deleted. This action cannot be undone.",
+    "delete_confirm_title": "Delete this conversation?",
+    "delete_failed": "Failed to delete the conversation.",
+    "empty_description": "Choose an assistant with /, then describe what you need.",
+    "failed": "Agent run failed.",
+    "feedback_placeholder": "Optional feedback instead of approval",
+    "custom_answer_placeholder": "Or enter a custom answer",
+    "history": "Chat History",
+    "input_unavailable": "Create or load a conversation to start chatting",
     "new_conversation": "New Conversation",
-    "title": "Chat"
+    "no_history": "No chat history yet",
+    "placeholder": "Type / to choose an assistant…",
+    "plan_approval_prompt": "The workflow plan is ready. Review it, then approve it or send feedback for revision.",
+    "plan_title": "Workflow plan review",
+    "plan_unavailable": "The plan content is unavailable. Please retry this run before approving it.",
+    "toggle_plan": "Show or hide workflow plan",
+    "artifact": {
+      "edit_workflow": "Open in workflow editor",
+      "open_tool": "View tool details",
+      "tool_created": "Tool node created",
+      "tool_fallback": "New tool node",
+      "workflow_created": "Workflow created and imported",
+      "workflow_fallback": "New workflow"
+    },
+    "progress": {
+      "answer": "Answer",
+      "fallback_activity": "Working on the request",
+      "builder": {
+        "manager": {
+          "resource_node": "resource nodes",
+          "tool_node": "tool nodes",
+          "utility_node": "processor and code nodes",
+          "workflow": "workflow drafts"
+        },
+        "operation": {
+          "add": {
+            "active": "Adding {subject}",
+            "complete": "Added {subject}"
+          },
+          "create": {
+            "active": "Creating {subject}",
+            "complete": "Created {subject}"
+          },
+          "delete": {
+            "active": "Removing {subject}",
+            "complete": "Removed {subject}"
+          },
+          "fix": {
+            "active": "Repairing {manager}",
+            "complete": "Repaired {manager}"
+          },
+          "inspect": {
+            "active": "Inspecting {subject}",
+            "complete": "Inspected {subject}"
+          },
+          "list": {
+            "active": "Listing {manager}",
+            "complete": "Listed {manager}"
+          },
+          "save": {
+            "active": "Saving {manager}",
+            "complete": "Saved {manager}"
+          },
+          "search": {
+            "active": "Searching {manager} for {subject}",
+            "complete": "Searched {manager} for {subject}"
+          },
+          "switch": {
+            "active": "Switching to {subject}",
+            "complete": "Switched to {subject}"
+          },
+          "update": {
+            "active": "Updating {subject}",
+            "complete": "Updated {subject}"
+          }
+        }
+      },
+      "history_count": "Run history ({count})",
+      "phase": {
+        "sample_manager": {
+          "active": "Preparing project samples",
+          "complete": "Prepared project samples",
+          "reused": "Loaded existing project samples"
+        },
+        "workflow_builder": {
+          "active": "Building the workflow",
+          "complete": "Built the workflow"
+        },
+        "workflow_planner": {
+          "active": "Preparing the workflow plan",
+          "complete": "Prepared and approved the workflow plan",
+          "reused": "Loaded the existing workflow plan"
+        }
+      },
+      "running": "Agent is running",
+      "sample": {
+        "add_project_file": {
+          "active": "Registering proj:{keyword}",
+          "complete": "Registered proj:{keyword}"
+        },
+        "add_sample_file": {
+          "active": "Registering {sample}:{tag}",
+          "complete": "Registered {sample}:{tag}"
+        },
+        "add_samples": {
+          "active": "Creating {count} sample records",
+          "complete": "Created {count} sample records"
+        },
+        "ask_human": {
+          "active": "Waiting for your answer",
+          "complete": "Answered a question"
+        },
+        "list_project_samples": {
+          "active": "Checking existing project samples",
+          "complete": "Checked existing project samples"
+        },
+        "run_command": {
+          "active": "Running command",
+          "complete": "Ran command"
+        },
+        "set_base_dir": {
+          "active": "Setting the data directory",
+          "complete": "Set the data directory"
+        },
+        "write_conclusion": {
+          "active": "Writing the project sample summary",
+          "complete": "Wrote the project sample summary"
+        }
+      },
+      "todo_complete": "All planned steps are complete",
+      "todo_activity_active": "Working on {index}/{total} · {task}",
+      "todo_activity_complete": "Completed {index}/{total} · {task}",
+      "todo_title": "{completed}/{total} · {current}"
+    },
+    "progress_updates": "{count, plural, one {# progress update} other {# progress updates}}",
+    "rename": "Rename",
+    "resize": "Resize chat sidebar",
+    "retry": "Retry",
+    "send": "Send",
+    "send_feedback": "Send feedback",
+    "submit_answers": "Submit answers",
+    "status": {
+      "cancel_requested": "Cancelling",
+      "queued": "Queued",
+      "running": "Running"
+    },
+    "suggestions": {
+      "diagnose": "Diagnose this run",
+      "fix": "Repair from diagnosis"
+    },
+    "title": "AI Chat"
   }
 }

@@ -9,8 +9,8 @@ interface ChatSidebarState {
   toggle: () => void
   open: () => void
   close: () => void
-  setSessionId: (pageKey: string, id: string) => void
-  clearSession: (pageKey: string) => void
+  setSessionId: (scopeKey: string, id: string) => void
+  clearSession: (scopeKey: string) => void
 }
 
 export const useChatSidebarStore = create<ChatSidebarState>()(
@@ -22,18 +22,21 @@ export const useChatSidebarStore = create<ChatSidebarState>()(
         toggle: () => set((state) => ({ isOpen: !state.isOpen })),
         open: () => set({ isOpen: true }),
         close: () => set({ isOpen: false }),
-        setSessionId: (pageKey, id) =>
+        setSessionId: (scopeKey, id) =>
           set((state) => ({
-            sessions: { ...state.sessions, [pageKey]: id },
+            sessions: { ...state.sessions, [scopeKey]: id },
           })),
-        clearSession: (pageKey) =>
+        clearSession: (scopeKey) =>
           set((state) => ({
-            sessions: { ...state.sessions, [pageKey]: null },
+            sessions: { ...state.sessions, [scopeKey]: null },
           })),
       }),
       {
         name: 'chat-sidebar',
-        partialize: (state) => ({ isOpen: state.isOpen }),
+        partialize: (state) => ({
+          isOpen: state.isOpen,
+          sessions: state.sessions,
+        }),
       },
     ),
     { name: 'chat-sidebar-store' },

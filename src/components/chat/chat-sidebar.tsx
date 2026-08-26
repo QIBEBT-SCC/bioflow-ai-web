@@ -1,15 +1,22 @@
 'use client'
 
-import { useChat } from '@ai-sdk/react'
-import { DefaultChatTransport } from 'ai'
 import {
-  HistoryIcon,
+  FlaskConicalIcon,
+  HammerIcon,
   Loader2Icon,
-  MessageSquareIcon,
   PlusIcon,
+  RotateCcwIcon,
+  SendIcon,
+  SquareIcon,
+  StethoscopeIcon,
+  TestTubeDiagonalIcon,
+  WrenchIcon,
 } from 'lucide-react'
+import { useParams } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import type React from 'react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { Fragment, useMemo, useRef, useState } from 'react'
+import type { AgentScope } from '@/app/actions/agent'
 import {
   Conversation,
   ConversationContent,
@@ -18,195 +25,354 @@ import {
 } from '@/components/ai-elements/conversation'
 import { Loader } from '@/components/ai-elements/loader'
 import {
-  PromptInput,
-  PromptInputBody,
-  PromptInputFooter,
-  type PromptInputMessage,
-  PromptInputSubmit,
-  PromptInputTextarea,
-} from '@/components/ai-elements/prompt-input'
-import { ChatHistoryItem } from '@/components/chat/chat-history-item'
-import { ChatMessageParts } from '@/components/chat/chat-message-parts'
+  Message,
+  MessageContent,
+  MessageResponse,
+} from '@/components/ai-elements/message'
+import { Suggestion, Suggestions } from '@/components/ai-elements/suggestion'
+import {
+  AgentRunArtifacts,
+  AgentRunProgress,
+} from '@/components/chat/agent-run-content'
+import { SidebarHistoryMenu } from '@/components/chat/chat-history-menu'
+import { PlanApproval } from '@/components/chat/plan-approval'
+import { QuestionApproval } from '@/components/chat/question-approval'
+import {
+  type SlashCommand,
+  SlashCommandItem,
+  SlashCommandItemDescription,
+  SlashCommandItemLabel,
+  SlashCommandMenu,
+  useSlashCommand,
+} from '@/components/chat/slash-commannd'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import {
-  useChatHistory,
-  useCreateChatSession,
-  useInfiniteChats,
-} from '@/hooks/use-chat'
-import { useInView } from '@/hooks/use-in-view'
+  useAgentMessages,
+  useAgentRun,
+  useAgentRunEventHistory,
+  useAgentRunEvents,
+  useAgentSession,
+  useAgentSessionRuns,
+  useCancelAgentRun,
+  useCreateAgentRun,
+  useCreateAgentSession,
+  useResumeAgentRun,
+  useRetryAgentRun,
+} from '@/hooks/use-agent'
+import { parseAgentQuestionAnswers } from '@/lib/agent-questions'
 import { useChatSidebarStore } from '@/stores/chat-sidebar-store'
-import type { ChatSessionPublic } from '@/types/chat'
+import {
+  ACTIVE_AGENT_STATUSES,
+  type AgentMessage,
+  type AgentName,
+  type AgentRun,
+} from '@/types/agent'
 
-function SidebarHistoryMenu({
-  currentSessionId,
-  onSelect,
-}: {
-  currentSessionId: string | null
-  onSelect: (uid: string) => void
-}) {
-  const [open, setOpen] = useState(false)
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
-    useInfiniteChats()
-  const { ref, inView } = useInView()
+type AgentSlashCommand = SlashCommand & {
+  key: AgentName
+}
 
-  useEffect(() => {
-    if (inView && hasNextPage) {
-      void fetchNextPage()
-    }
-  }, [inView, hasNextPage, fetchNextPage])
+const CHAT_COMMANDS: Pick<AgentSlashCommand, 'key' | 'icon'>[] = [
+  {
+    key: 'workflow-builder',
+    icon: FlaskConicalIcon,
+  },
+  {
+    key: 'workflow-diagnoser',
+    icon: StethoscopeIcon,
+  },
+  {
+    key: 'workflow-fixer',
+    icon: HammerIcon,
+  },
+  {
+    key: 'sample-manager',
+    icon: TestTubeDiagonalIcon,
+  },
+  {
+    key: 'tool-generator',
+    icon: WrenchIcon,
+  },
+]
 
-  const flatData = data?.pages.flatMap((page) => page.data) ?? []
+function parseAgentCommand(value: string, commands: AgentSlashCommand[]) {
+  const match = /^\/([\w-]+)(?:\s+([\s\S]*))?$/.exec(value)
+  if (!match) return null
+  const command = commands.find((candidate) => candidate.key === match[1])
+  if (!command) return null
+  return { command, prompt: match[2] ?? '' }
+}
 
-  const handleSelectChat = (chat: ChatSessionPublic) => {
-    setOpen(false)
-    onSelect(chat.uid)
-  }
-
+function ChatMessage({ message }: { message: AgentMessage }) {
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button variant='ghost' size='icon' className='size-7' title='History'>
-          <HistoryIcon className='size-4' />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className='w-72 p-0' align='end'>
-        <div className='p-3 border-b'>
-          <h4 className='font-medium leading-none text-sm'>Chat History</h4>
-        </div>
-        <ScrollArea className='h-[280px]'>
-          <div className='flex flex-col p-2'>
-            {isLoading && (
-              <div className='flex justify-center p-4'>
-                <Loader2Icon className='animate-spin size-5 text-muted-foreground' />
-              </div>
-            )}
-
-            {flatData.length === 0 && !isLoading && (
-              <div className='flex flex-col items-center justify-center gap-2 text-muted-foreground py-6'>
-                <MessageSquareIcon className='size-7 opacity-50' />
-                <p className='text-sm'>No chat history yet</p>
-              </div>
-            )}
-
-            <div className='flex flex-col gap-1'>
-              {flatData.map((chat) => (
-                <ChatHistoryItem
-                  key={chat.uid}
-                  chat={chat}
-                  isActive={currentSessionId === chat.uid}
-                  onSelect={handleSelectChat}
-                />
-              ))}
-            </div>
-
-            <div
-              ref={ref}
-              className='h-4 w-full flex justify-center mt-2 shrink-0'
-            >
-              {isFetchingNextPage && (
-                <Loader2Icon className='animate-spin size-4 text-muted-foreground' />
-              )}
-            </div>
-          </div>
-        </ScrollArea>
-      </PopoverContent>
-    </Popover>
+    <Message from={message.role}>
+      <MessageContent>
+        {message.parts.map((part) => (
+          <MessageResponse key={`${part.type}-${part.text}`}>
+            {part.text}
+          </MessageResponse>
+        ))}
+      </MessageContent>
+    </Message>
   )
 }
 
 function ChatSidebarInner({
-  pageKey,
+  scope,
+  scopeKey,
+  sourceRunUid,
   width,
   onResizeStart,
 }: {
-  pageKey: string
+  scope: AgentScope
+  scopeKey: string
+  sourceRunUid?: string
   width: number
-  onResizeStart: (e: React.MouseEvent) => void
+  onResizeStart: (event: React.MouseEvent) => void
 }) {
-  const { sessions, setSessionId } = useChatSidebarStore()
-  const sessionId = sessions[pageKey] ?? null
-
-  const { mutateAsync: createChatSession } = useCreateChatSession()
-  const { data: initMessages } = useChatHistory(sessionId ?? '')
-
+  const t = useTranslations('Chat')
+  const { sessions, setSessionId, clearSession } = useChatSidebarStore()
+  const sessionId = sessions[scopeKey] ?? null
+  const { data: session, isLoading: isSessionLoading } =
+    useAgentSession(sessionId)
+  const { data: messages = [], isLoading: isMessagesLoading } =
+    useAgentMessages(sessionId)
+  const { data: storedRuns = [], isLoading: isRunsLoading } =
+    useAgentSessionRuns(sessionId)
+  const eventHistory = useAgentRunEventHistory(storedRuns)
+  const [localRunId, setRunId] = useState<string | null>(null)
+  const runId = localRunId ?? session?.latest_run?.uid ?? null
+  const { data: run } = useAgentRun(runId)
+  const events = useAgentRunEvents(runId, run?.status)
   const [text, setText] = useState('')
-  const [isCreating, setIsCreating] = useState(false)
+  const [feedback, setFeedback] = useState('')
+  const [localError, setLocalError] = useState<string | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const { mutateAsync: createSession, isPending: isCreating } =
+    useCreateAgentSession()
+  const { mutateAsync: createRun, isPending: isSubmitting } =
+    useCreateAgentRun()
+  const { mutateAsync: resumeRun, isPending: isResuming } = useResumeAgentRun()
+  const { mutateAsync: cancelRun, isPending: isCancelling } =
+    useCancelAgentRun()
+  const { mutateAsync: retryRun, isPending: isRetrying } = useRetryAgentRun()
 
-  const transport = sessionId
-    ? new DefaultChatTransport({
-        api: `${process.env.NEXT_PUBLIC_API_URL}/chat/${sessionId}/completions`,
-        credentials: 'include',
-      })
-    : undefined
-
-  const { messages, sendMessage, status } = useChat({
-    transport,
-    messages: initMessages,
-  })
-
-  const handleSubmit = useCallback(
-    async (message: PromptInputMessage) => {
-      if (!message.text?.trim() || !sessionId) return
-      await sendMessage({ text: message.text })
-      setText('')
-    },
-    [sessionId, sendMessage],
-  )
-
-  const handleNewChat = useCallback(async () => {
-    setIsCreating(true)
-    try {
-      const session = await createChatSession()
-      setSessionId(pageKey, session.uid)
-    } finally {
-      setIsCreating(false)
+  const displayRuns = useMemo(() => {
+    const runs = storedRuns.map((storedRun) =>
+      storedRun.uid === run?.uid ? run : storedRun,
+    )
+    if (run && !runs.some((storedRun) => storedRun.uid === run.uid)) {
+      runs.push(run)
     }
-  }, [pageKey, createChatSession, setSessionId])
+    return runs
+  }, [run, storedRuns])
 
-  const handleSelectHistory = useCallback(
-    (uid: string) => {
-      setSessionId(pageKey, uid)
-    },
-    [pageKey, setSessionId],
+  const latestSuccessfulDiagnosis = useMemo(
+    () =>
+      displayRuns.findLast(
+        (storedRun) =>
+          storedRun.agent_name === 'workflow-diagnoser' &&
+          storedRun.status === 'completed' &&
+          storedRun.result_payload?.source_run_uid === sourceRunUid &&
+          typeof storedRun.result_payload?.diagnosis_path === 'string',
+      ),
+    [displayRuns, sourceRunUid],
   )
 
-  // New Chat is disabled when already on an empty session (no messages yet)
-  const newChatDisabled =
-    isCreating || (sessionId !== null && messages.length === 0)
-  const inputDisabled = sessionId === null
+  const availableCommands = useMemo(() => {
+    const commands =
+      scope.scope === 'project'
+        ? CHAT_COMMANDS.filter((command) => {
+            if (command.key === 'workflow-diagnoser') {
+              return Boolean(sourceRunUid)
+            }
+            if (command.key === 'workflow-fixer') {
+              return Boolean(sourceRunUid) && Boolean(latestSuccessfulDiagnosis)
+            }
+            return true
+          })
+        : CHAT_COMMANDS.filter((command) => command.key === 'tool-generator')
+    return commands.map<AgentSlashCommand>((command) => ({
+      ...command,
+      label: t(`assistants.${command.key}.label`),
+      description: t(`assistants.${command.key}.description`),
+    }))
+  }, [latestSuccessfulDiagnosis, scope.scope, sourceRunUid, t])
+  const slashCommand = useSlashCommand({
+    commands: availableCommands,
+    value: text,
+    onValueChange: setText,
+  })
+  const parsedCommand = useMemo(
+    () => parseAgentCommand(text, availableCommands),
+    [availableCommands, text],
+  )
+  const canSubmit = Boolean(
+    parsedCommand &&
+      (parsedCommand.prompt.trim() ||
+        parsedCommand.command.key === 'workflow-fixer'),
+  )
+  const isBusy = Boolean(run && ACTIVE_AGENT_STATUSES.includes(run.status))
+  const inputDisabled =
+    !sessionId || isSessionLoading || isMessagesLoading || isRunsLoading
+
+  const latestDiagnosisAlreadyFixed = Boolean(
+    latestSuccessfulDiagnosis &&
+      displayRuns.some(
+        (storedRun) =>
+          storedRun.agent_name === 'workflow-fixer' &&
+          storedRun.status === 'completed' &&
+          storedRun.result_payload?.diagnosis_run_uid ===
+            latestSuccessfulDiagnosis.uid,
+      ),
+  )
+  const workflowSuggestion = sourceRunUid
+    ? latestSuccessfulDiagnosis && !latestDiagnosisAlreadyFixed
+      ? {
+          agentName: 'workflow-fixer' as const,
+          label: t('suggestions.fix'),
+          prompt: t('default_requests.workflow-fixer'),
+        }
+      : !latestSuccessfulDiagnosis
+        ? {
+            agentName: 'workflow-diagnoser' as const,
+            label: t('suggestions.diagnose'),
+            prompt: t('default_requests.workflow-diagnoser'),
+          }
+        : null
+    : null
+
+  const unmatchedMessages = useMemo(() => {
+    const runIds = new Set(displayRuns.map((storedRun) => storedRun.uid))
+    return messages.filter((message) => !runIds.has(message.run_uid))
+  }, [displayRuns, messages])
+
+  const newChat = async () => {
+    setLocalError(null)
+    try {
+      const created = await createSession(scope)
+      setSessionId(scopeKey, created.uid)
+      setRunId(null)
+      setText('')
+    } catch (error) {
+      setLocalError(error instanceof Error ? error.message : String(error))
+    }
+  }
+
+  const runWorkflowSuggestion = async () => {
+    if (!workflowSuggestion || !sourceRunUid || isBusy) return
+    setLocalError(null)
+    try {
+      let targetSessionId = sessionId
+      if (!targetSessionId) {
+        const createdSession = await createSession(scope)
+        targetSessionId = createdSession.uid
+      }
+      const createdRun = await createRun({
+        sessionId: targetSessionId,
+        agentName: workflowSuggestion.agentName,
+        text: workflowSuggestion.prompt,
+        sourceRunUid,
+      })
+      if (targetSessionId !== sessionId) {
+        setSessionId(scopeKey, targetSessionId)
+      }
+      setRunId(createdRun.uid)
+    } catch (error) {
+      setLocalError(error instanceof Error ? error.message : String(error))
+    }
+  }
+
+  const submit = async () => {
+    if (!sessionId || isBusy) return
+    if (!parsedCommand) {
+      setLocalError(t('command_required'))
+      return
+    }
+    const prompt =
+      parsedCommand.prompt.trim() ||
+      (parsedCommand.command.key === 'workflow-fixer'
+        ? t('default_requests.workflow-fixer')
+        : '')
+    if (!prompt) {
+      setLocalError(t('command_prompt_required'))
+      return
+    }
+    const requiresSourceRun =
+      parsedCommand.command.key === 'workflow-diagnoser' ||
+      parsedCommand.command.key === 'workflow-fixer'
+    if (requiresSourceRun && !sourceRunUid) {
+      setLocalError(t('run_context_required'))
+      return
+    }
+    setLocalError(null)
+    try {
+      const created = await createRun({
+        sessionId,
+        agentName: parsedCommand.command.key,
+        text: prompt,
+        sourceRunUid: requiresSourceRun ? sourceRunUid : undefined,
+      })
+      setRunId(created.uid)
+      slashCommand.onValueChange('')
+    } catch (error) {
+      setLocalError(error instanceof Error ? error.message : String(error))
+    }
+  }
+
+  const resume = async (approved: boolean, response?: string) => {
+    if (!run) return
+    setLocalError(null)
+    try {
+      await resumeRun({
+        runId: run.uid,
+        approved,
+        feedback: approved ? undefined : (response ?? feedback).trim(),
+      })
+      setFeedback('')
+    } catch (error) {
+      setLocalError(error instanceof Error ? error.message : String(error))
+    }
+  }
+
+  const progressEvents = events.filter(
+    (event) => event.event_type === 'run.progress',
+  )
+  const isPlanApproval = run?.interrupt_payload?.kind === 'plan_approval'
+  const questions =
+    run?.interrupt_payload?.kind === 'questions' &&
+    Array.isArray(run.interrupt_payload.questions)
+      ? run.interrupt_payload.questions
+      : []
+  const planContent =
+    typeof run?.interrupt_payload?.plan === 'string'
+      ? run.interrupt_payload.plan
+      : ''
 
   return (
-    <div className='shrink-0 flex h-full'>
-      {/* 左侧拖拽把手 */}
+    <div className='flex h-full shrink-0'>
       <button
         type='button'
-        aria-label='拖拽调整宽度'
+        aria-label={t('resize')}
         onMouseDown={onResizeStart}
-        className='w-1 shrink-0 border-l hover:bg-primary/40 transition-colors cursor-col-resize bg-background p-0'
+        className='w-1 shrink-0 cursor-col-resize border-l bg-background p-0 hover:bg-primary/40'
       />
-
       <div
-        className='flex flex-col h-full bg-background overflow-hidden'
+        className='flex h-full flex-col overflow-hidden bg-background'
         style={{ width }}
       >
-        {/* Header */}
-        <div className='flex items-center justify-between h-12 px-3 border-b'>
-          <span className='text-sm font-medium'>AI Chat</span>
+        <div className='flex h-12 items-center justify-between border-b px-3'>
+          <span className='text-sm font-medium'>{t('title')}</span>
           <div className='flex items-center gap-1'>
             <Button
               variant='ghost'
               size='icon'
               className='size-7'
-              onClick={handleNewChat}
-              disabled={newChatDisabled}
-              title='New Chat'
+              onClick={() => void newChat()}
+              disabled={isCreating}
+              title={t('new_conversation')}
             >
               {isCreating ? (
                 <Loader2Icon className='size-4 animate-spin' />
@@ -215,79 +381,303 @@ function ChatSidebarInner({
               )}
             </Button>
             <SidebarHistoryMenu
+              scope={scope}
               currentSessionId={sessionId}
-              onSelect={handleSelectHistory}
+              onSelect={(uid) => setSessionId(scopeKey, uid)}
+              onDeleteActive={() => clearSession(scopeKey)}
             />
           </div>
         </div>
 
-        {/* Conversation */}
-        <Conversation className='flex-1 min-h-0'>
+        <Conversation className='min-h-0 flex-1'>
           <ConversationContent className='px-3'>
-            {messages.length === 0 ? (
+            {isSessionLoading || isMessagesLoading || isRunsLoading ? (
+              <Loader />
+            ) : messages.length === 0 && displayRuns.length === 0 ? (
               <ConversationEmptyState
-                title='AI Assistant'
-                description='Ask anything about your project'
+                title={t('assistant')}
+                description={t('empty_description')}
               />
             ) : (
-              messages.map((message, idx) => (
-                <ChatMessageParts
-                  key={message.id}
-                  message={message}
-                  messages={messages}
-                  messageIndex={idx}
-                  status={status}
-                />
-              ))
+              <>
+                {displayRuns.map((displayRun: AgentRun) => {
+                  const runMessages = messages.filter(
+                    (message) => message.run_uid === displayRun.uid,
+                  )
+                  const userMessages = runMessages.filter(
+                    (message) => message.role === 'user',
+                  )
+                  const parsedUserMessages = userMessages.map(
+                    (message, index) => ({
+                      message,
+                      questionAnswers:
+                        index > 0 && message.parts.length === 1
+                          ? parseAgentQuestionAnswers(message.parts[0].text)
+                          : undefined,
+                    }),
+                  )
+                  const visibleUserMessages = parsedUserMessages.flatMap(
+                    ({ message, questionAnswers }) =>
+                      questionAnswers ? [] : [message],
+                  )
+                  const assistantMessages = runMessages.filter(
+                    (message) => message.role === 'assistant',
+                  )
+                  const runEvents =
+                    displayRun.uid === runId && events.length > 0
+                      ? events
+                      : (eventHistory[displayRun.uid] ?? [])
+
+                  return (
+                    <Fragment key={displayRun.uid}>
+                      {visibleUserMessages.map((message) => (
+                        <ChatMessage key={message.uid} message={message} />
+                      ))}
+                      <AgentRunProgress events={runEvents} run={displayRun} />
+                      {assistantMessages.map((message) => (
+                        <ChatMessage key={message.uid} message={message} />
+                      ))}
+                      <AgentRunArtifacts run={displayRun} />
+                    </Fragment>
+                  )
+                })}
+                {unmatchedMessages.map((message) => (
+                  <ChatMessage key={message.uid} message={message} />
+                ))}
+              </>
             )}
-            {status === 'submitted' && <Loader />}
+
+            {run &&
+              progressEvents.length === 0 &&
+              ['queued', 'running', 'cancel_requested'].includes(
+                run.status,
+              ) && (
+                <div className='flex items-center gap-2 text-muted-foreground text-sm'>
+                  <Loader />
+                  <span>{t(`status.${run.status}`)}</span>
+                </div>
+              )}
+            {run?.status === 'waiting_input' &&
+              (isPlanApproval ? (
+                <PlanApproval
+                  plan={planContent}
+                  feedback={feedback}
+                  isPending={isResuming}
+                  onFeedbackChange={setFeedback}
+                  onApprove={() => void resume(true)}
+                  onSendFeedback={() => void resume(false)}
+                />
+              ) : questions.length > 0 ? (
+                <QuestionApproval
+                  questions={questions}
+                  isPending={isResuming}
+                  onSubmit={(response) => void resume(false, response)}
+                />
+              ) : (
+                <Alert>
+                  <AlertDescription className='space-y-3'>
+                    <MessageResponse>
+                      {typeof run.interrupt_payload?.question === 'string'
+                        ? run.interrupt_payload.question
+                        : typeof run.interrupt_payload?.message === 'string'
+                          ? run.interrupt_payload.message
+                          : JSON.stringify(run.interrupt_payload, null, 2)}
+                    </MessageResponse>
+                    <Textarea
+                      value={feedback}
+                      onChange={(event) => setFeedback(event.target.value)}
+                      placeholder={t('feedback_placeholder')}
+                    />
+                    <div className='flex gap-2'>
+                      <Button
+                        size='sm'
+                        onClick={() => void resume(true)}
+                        disabled={isResuming}
+                      >
+                        {t('approve')}
+                      </Button>
+                      <Button
+                        size='sm'
+                        variant='outline'
+                        onClick={() => void resume(false)}
+                        disabled={isResuming || !feedback.trim()}
+                      >
+                        {t('send_feedback')}
+                      </Button>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              ))}
+            {run?.status === 'failed' && (
+              <Alert variant='destructive'>
+                <AlertDescription className='space-y-2'>
+                  <p>{run.error_message || t('failed')}</p>
+                  <Button
+                    size='sm'
+                    variant='outline'
+                    onClick={async () => {
+                      const retried = await retryRun(run.uid)
+                      setRunId(retried.uid)
+                    }}
+                    disabled={isRetrying}
+                  >
+                    <RotateCcwIcon className='size-3' /> {t('retry')}
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
+            {localError && (
+              <Alert variant='destructive'>
+                <AlertDescription>{localError}</AlertDescription>
+              </Alert>
+            )}
           </ConversationContent>
           <ConversationScrollButton />
         </Conversation>
 
-        {/* Input */}
-        <PromptInput onSubmit={handleSubmit} className='px-3 pb-3'>
-          <PromptInputBody>
-            <PromptInputTextarea
-              onChange={(e) => setText(e.target.value)}
-              ref={textareaRef}
-              value={text}
-              placeholder={
-                inputDisabled
-                  ? 'Create or load a conversation to start chatting'
-                  : 'Ask a question...'
-              }
-              disabled={inputDisabled}
-            />
-          </PromptInputBody>
-          <PromptInputFooter>
-            <div />
-            <PromptInputSubmit
-              disabled={inputDisabled || (!text && !status)}
-              status={status}
-            />
-          </PromptInputFooter>
-        </PromptInput>
+        <div className='border-t bg-gradient-to-t from-muted/45 via-background to-background px-3 pt-3 pb-3'>
+          {workflowSuggestion && !isBusy && (
+            <Suggestions className='mb-2'>
+              <Suggestion
+                suggestion={workflowSuggestion.prompt}
+                onClick={() => void runWorkflowSuggestion()}
+                disabled={isCreating || isSubmitting}
+                className='border-primary/35 bg-primary/[0.04] text-primary shadow-none hover:bg-primary/[0.04] hover:text-primary dark:border-primary/40 dark:bg-primary/[0.07] dark:hover:bg-primary/[0.07]'
+              >
+                {workflowSuggestion.label}
+              </Suggestion>
+            </Suggestions>
+          )}
+          <div className='relative'>
+            {slashCommand.open && !parsedCommand && (
+              <SlashCommandMenu className='absolute inset-x-0 bottom-full z-20 mb-2'>
+                {slashCommand.suggestions.map((command, index) => {
+                  const Icon = command.icon
+                  return (
+                    <SlashCommandItem
+                      key={command.key}
+                      active={index === slashCommand.activeIndex}
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => {
+                        slashCommand.select(command)
+                        requestAnimationFrame(() =>
+                          textareaRef.current?.focus(),
+                        )
+                      }}
+                      onMouseEnter={() => slashCommand.setActiveIndex(index)}
+                    >
+                      {Icon && <Icon className='size-4 shrink-0' />}
+                      <SlashCommandItemLabel>
+                        /{command.key}
+                      </SlashCommandItemLabel>
+                      <SlashCommandItemDescription>
+                        {command.description}
+                      </SlashCommandItemDescription>
+                    </SlashCommandItem>
+                  )
+                })}
+              </SlashCommandMenu>
+            )}
+            <div className='group rounded-2xl border border-border/80 bg-card/95 shadow-[0_8px_28px_-16px_rgb(0_0_0/0.45)] ring-1 ring-black/[0.025] transition-[border-color,box-shadow] focus-within:border-primary/45 focus-within:shadow-[0_12px_36px_-18px_rgb(0_0_0/0.5)] focus-within:ring-4 focus-within:ring-primary/10 dark:bg-card/90 dark:ring-white/[0.04]'>
+              <div className='relative'>
+                {parsedCommand && (
+                  <div
+                    aria-hidden='true'
+                    className='pointer-events-none absolute inset-x-0 top-0 min-h-20 whitespace-pre-wrap break-words px-3 py-2 text-base md:text-sm'
+                  >
+                    <span className='text-blue-600 [-webkit-text-stroke:0.25px_currentColor] dark:text-blue-400'>
+                      /{parsedCommand.command.key}
+                    </span>
+                    <span className='text-foreground'>
+                      {text.slice(`/${parsedCommand.command.key}`.length)}
+                    </span>
+                  </div>
+                )}
+                <Textarea
+                  ref={textareaRef}
+                  value={text}
+                  onChange={(event) =>
+                    slashCommand.onValueChange(event.target.value)
+                  }
+                  onKeyDown={(event) => {
+                    slashCommand.onKeyDown(event)
+                    if (event.defaultPrevented) return
+                    if (event.key === 'Enter' && !event.shiftKey) {
+                      if (event.nativeEvent.isComposing) return
+                      event.preventDefault()
+                      void submit()
+                    }
+                  }}
+                  placeholder={
+                    inputDisabled
+                      ? t('input_unavailable')
+                      : t('command_placeholder')
+                  }
+                  disabled={inputDisabled || isBusy}
+                  className={`relative min-h-20 resize-none border-0 bg-transparent px-3 shadow-none focus-visible:ring-0 dark:bg-transparent ${parsedCommand ? 'text-transparent caret-foreground selection:bg-primary/20' : ''}`}
+                />
+              </div>
+              <div className='flex items-center justify-end px-2 pb-2'>
+                {isBusy && run ? (
+                  <Button
+                    type='button'
+                    size='icon'
+                    variant='ghost'
+                    onClick={() => void cancelRun(run.uid)}
+                    disabled={isCancelling || run.status === 'cancel_requested'}
+                    aria-label={t('cancel')}
+                  >
+                    <SquareIcon className='size-4' />
+                  </Button>
+                ) : (
+                  <Button
+                    type='button'
+                    size='icon'
+                    disabled={inputDisabled || !canSubmit || isSubmitting}
+                    aria-label={t('send')}
+                    onClick={() => void submit()}
+                  >
+                    {isSubmitting ? (
+                      <Loader2Icon className='size-4 animate-spin' />
+                    ) : (
+                      <SendIcon className='size-4' />
+                    )}
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )
 }
 
 export function ChatSidebar({
-  pageKey,
+  projectId,
+  runUid,
   width,
   onResizeStartAction,
 }: {
-  pageKey: string
+  projectId?: string
+  runUid?: string
   width: number
-  onResizeStartAction: (e: React.MouseEvent) => void
+  onResizeStartAction: (event: React.MouseEvent) => void
 }) {
+  const params = useParams<{ runUid?: string }>()
+  const sourceRunUid = runUid ?? params.runUid
+  const scope: AgentScope = projectId
+    ? { scope: 'project', projectId }
+    : { scope: 'global' }
+  const scopeKey = projectId ? `project:${projectId}` : 'global'
   const { sessions } = useChatSidebarStore()
-  const sessionId = sessions[pageKey] ?? null
+  const sessionId = sessions[scopeKey] ?? null
   return (
     <ChatSidebarInner
-      key={sessionId || 'new'}
-      pageKey={pageKey}
+      key={`${sessionId || 'new'}:${sourceRunUid ?? 'no-run'}`}
+      scope={scope}
+      scopeKey={scopeKey}
+      sourceRunUid={sourceRunUid}
       width={width}
       onResizeStart={onResizeStartAction}
     />
