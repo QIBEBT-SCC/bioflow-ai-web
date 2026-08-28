@@ -1,15 +1,6 @@
 'use client'
 
-import {
-  ChevronDown,
-  Download,
-  Filter,
-  FolderPlus,
-  Grid,
-  List,
-  Plus,
-  Search,
-} from 'lucide-react'
+import { ChevronDown, Download, FolderPlus, Plus, Search } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
@@ -133,8 +124,6 @@ export default function ToolsPage() {
   const searchParams = useSearchParams()
   const getSearchParam = searchParams.get.bind(searchParams)
 
-  const viewMode: 'list' | 'grid' =
-    getSearchParam('view') === 'grid' ? 'grid' : 'list'
   const searchQuery = getSearchParam('q') ?? ''
   const groupParam = getSearchParam('group')
   const selectedGroupId = groupParam ? Number(groupParam) : null
@@ -161,8 +150,6 @@ export default function ToolsPage() {
     [pathname, replace, searchParams],
   )
 
-  const setViewMode = (mode: 'list' | 'grid') =>
-    updateParams({ view: mode === 'grid' ? 'grid' : null })
   const setSearchQuery = useCallback(
     (value: string) => updateParams({ q: value || null }, true),
     [updateParams],
@@ -237,40 +224,12 @@ export default function ToolsPage() {
 
             {/* 主内容区 */}
             <main className='flex-1 space-y-6'>
-              {/* 视图切换和筛选 */}
-              <div className='flex justify-between items-center'>
-                <h2 className='text-lg font-medium'>
-                  {selectedGroupId === null ? t('allTools') : t('groupTools')}
-                </h2>
-                <div className='flex items-center gap-2'>
-                  <Button variant='outline' size='sm'>
-                    <Filter className='size-4 mr-2' />
-                    {t('filter')}
-                  </Button>
-                  <div className='border rounded-md flex'>
-                    <Button
-                      variant={viewMode === 'list' ? 'secondary' : 'ghost'}
-                      size='sm'
-                      className='rounded-r-none'
-                      onClick={() => setViewMode('list')}
-                    >
-                      <List className='size-4' />
-                    </Button>
-                    <Button
-                      variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
-                      size='sm'
-                      className='rounded-l-none'
-                      onClick={() => setViewMode('grid')}
-                    >
-                      <Grid className='size-4' />
-                    </Button>
-                  </div>
-                </div>
-              </div>
+              <h2 className='text-lg font-medium'>
+                {selectedGroupId === null ? t('allTools') : t('groupTools')}
+              </h2>
 
-              {/* 工具列表 */}
+              {/* 工具卡片 */}
               <ToolList
-                viewMode={viewMode}
                 searchQuery={searchQuery}
                 selectedGroupId={selectedGroupId}
                 currentPage={currentPage}

@@ -9,8 +9,7 @@
       "createGroup": "Create Group",
       "importTool": "Import Tool",
       "allTools": "All Tools",
-      "groupTools": "Group Tools",
-      "filter": "Filter"
+      "groupTools": "Group Tools"
     },
     "Sidebar": {
       "title": "Tool Groups",
@@ -18,16 +17,9 @@
     },
     "List": {
       "loading": "Loading...",
-      "toolName": "Tool Name",
-      "dockerImage": "Docker Image",
-      "description": "Description",
-      "tags": "Tags",
-      "actions": "Actions",
       "noDescription": "No description available",
-      "moreOptions": "More options",
       "copyTool": "Copy Tool",
-      "deleteTool": "Delete Tool",
-      "showing": "Showing {start}-{end} of {total} items"
+      "deleteTool": "Delete Tool"
     },
     "DeleteDialog": {
       "title": "Confirm Delete Tool",

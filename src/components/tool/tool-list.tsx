@@ -35,14 +35,6 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination'
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import {
   useDeleteTool,
   useGroupTools,
   useSearchTools,
@@ -63,7 +55,6 @@ function getTagStyle(tagName: string) {
 }
 
 interface ToolListProps {
-  viewMode: 'list' | 'grid'
   searchQuery?: string
   selectedGroupId?: number | null
   currentPage: number
@@ -71,7 +62,6 @@ interface ToolListProps {
 }
 
 export function ToolList({
-  viewMode,
   searchQuery = '',
   selectedGroupId = null,
   currentPage,
@@ -82,7 +72,7 @@ export function ToolList({
     uid: string
     name: string
   } | null>(null)
-  const pageSize = viewMode === 'list' ? 10 : 12
+  const pageSize = 12
   const offset = (currentPage - 1) * pageSize
 
   const { push } = useRouter()
@@ -152,12 +142,6 @@ export function ToolList({
       ? Math.ceil(allGroupTools.length / pageSize)
       : Math.ceil(allToolsTotal / pageSize)
   const safeTotalPages = Math.max(1, totalPages)
-  const totalTools = isSearching
-    ? searchTotal
-    : isFiltering
-      ? allGroupTools.length
-      : allToolsTotal
-
   // 生成页码数组
   const getPageNumbers = () => {
     const pages: (number | string)[] = []
@@ -212,32 +196,16 @@ export function ToolList({
 
   return (
     <>
-      {viewMode === 'list' ? (
-        <ToolListView
-          tools={allTools}
-          offset={offset}
-          pageSize={pageSize}
-          toolCounts={totalTools}
-          currentPage={currentPage}
-          totalPages={safeTotalPages}
-          pageNumbers={getPageNumbers()}
-          onPageChange={onPageChange}
-          onCopy={handleCopyTool}
-          onDelete={(uid, name) => setDeleteConfirmTool({ uid, name })}
-          t={t}
-        />
-      ) : (
-        <ToolGridView
-          tools={allTools}
-          currentPage={currentPage}
-          totalPages={safeTotalPages}
-          pageNumbers={getPageNumbers()}
-          onPageChange={onPageChange}
-          onCopy={handleCopyTool}
-          onDelete={(uid, name) => setDeleteConfirmTool({ uid, name })}
-          t={t}
-        />
-      )}
+      <ToolGridView
+        tools={allTools}
+        currentPage={currentPage}
+        totalPages={safeTotalPages}
+        pageNumbers={getPageNumbers()}
+        onPageChange={onPageChange}
+        onCopy={handleCopyTool}
+        onDelete={(uid, name) => setDeleteConfirmTool({ uid, name })}
+        t={t}
+      />
       <DeleteToolDialog
         tool={deleteConfirmTool}
         onClose={() => setDeleteConfirmTool(null)}
@@ -256,168 +224,6 @@ interface ToolViewProps {
   onCopy: (uid: string) => void
   onDelete: (uid: string, name: string) => void
   t: ReturnType<typeof useTranslations>
-}
-
-interface ToolListViewProps extends ToolViewProps {
-  offset: number
-  pageSize: number
-  toolCounts: number
-}
-
-function ToolListView({
-  tools,
-  offset,
-  pageSize,
-  toolCounts,
-  currentPage,
-  totalPages,
-  pageNumbers,
-  onPageChange,
-  onCopy,
-  onDelete,
-  t,
-}: ToolListViewProps) {
-  return (
-    <div>
-      <Table>
-        <TableHeader className='bg-muted/50'>
-          <TableRow>
-            <TableHead className='h-12 px-4 text-left w-30'>
-              {t('toolName')}
-            </TableHead>
-            <TableHead className='h-12 px-4 text-left w-60'>
-              {t('dockerImage')}
-            </TableHead>
-            <TableHead className='h-12 px-4 text-left w-85'>
-              {t('description')}
-            </TableHead>
-            <TableHead className='h-12 px-4 text-left w-30'>
-              {t('tags')}
-            </TableHead>
-            <TableHead className='h-12 px-4 text-center w-5'>
-              {t('actions')}
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {tools.map((tool: SimpleToolInfo) => (
-            <TableRow key={tool.uid}>
-              <TableCell className='font-medium max-w-30'>
-                <Link href={`/tool/${tool.uid}`} className='hover:underline'>
-                  <div className='truncate'>{tool.name}</div>
-                </Link>
-              </TableCell>
-              <TableCell className='text-muted-foreground max-w-60'>
-                <div className='truncate'>
-                  {tool.image.image.registry}/{tool.image.image.namespace}/
-                  {tool.image.image.repository}:{tool.image.image.tag}
-                </div>
-              </TableCell>
-              <TableCell className='max-w-85'>
-                <div className='line-clamp-2 text-sm truncate'>
-                  {tool.description || t('noDescription')}
-                </div>
-              </TableCell>
-              <TableCell className='max-w-30'>
-                <div className='flex flex-row flex-wrap gap-1'>
-                  {tool.tags.slice(0, 2).map((tag) => (
-                    <Badge
-                      key={tag.id}
-                      variant='outline'
-                      className={`${getTagStyle(tag.name)} text-xs`}
-                    >
-                      {tag.name}
-                    </Badge>
-                  ))}
-                  {tool.tags.length > 2 && (
-                    <Badge variant='outline' className='text-xs'>
-                      +{tool.tags.length - 2}
-                    </Badge>
-                  )}
-                </div>
-              </TableCell>
-              <TableCell className='text-center'>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant='ghost' size='icon' className='size-8'>
-                      <MoreHorizontalIcon className='size-4' />
-                      <span className='sr-only'>{t('moreOptions')}</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align='end'>
-                    <DropdownMenuItem onClick={() => onCopy(tool.uid)}>
-                      <CopyIcon className='size-4 mr-2' />
-                      {t('copyTool')}
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      className='text-destructive'
-                      onClick={() => onDelete(tool.uid, tool.name)}
-                    >
-                      <Trash2Icon className='size-4 mr-2' />
-                      {t('deleteTool')}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-      <div className='flex items-center justify-between mt-4'>
-        <div className='text-sm text-muted-foreground'>
-          {t('showing', {
-            start: offset + 1,
-            end: Math.min(offset + pageSize, toolCounts),
-            total: toolCounts,
-          })}
-        </div>
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
-                onClick={() => onPageChange(Math.max(1, currentPage - 1))}
-                className={
-                  currentPage === 1
-                    ? 'pointer-events-none opacity-50'
-                    : 'cursor-pointer'
-                }
-              />
-            </PaginationItem>
-            {Array.from(pageNumbers.entries()).map(([pos, page]) =>
-              typeof page === 'number' ? (
-                <PaginationItem key={`page-list-${page}`}>
-                  <PaginationLink
-                    onClick={() => onPageChange(page)}
-                    isActive={currentPage === page}
-                    className='cursor-pointer'
-                  >
-                    {page}
-                  </PaginationLink>
-                </PaginationItem>
-              ) : (
-                <PaginationItem key={`ellipsis-list-${pos}`}>
-                  <PaginationEllipsis />
-                </PaginationItem>
-              ),
-            )}
-            <PaginationItem>
-              <PaginationNext
-                onClick={() =>
-                  onPageChange(Math.min(totalPages, currentPage + 1))
-                }
-                className={
-                  currentPage === totalPages
-                    ? 'pointer-events-none opacity-50'
-                    : 'cursor-pointer'
-                }
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      </div>
-    </div>
-  )
 }
 
 function ToolGridView({

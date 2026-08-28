@@ -110,7 +110,7 @@ export interface LLMStatisticSummary {
   total_input_tokens: number
   total_output_tokens: number
   total_cache_read: number
-  total_price: number // Decimal 转为 number
+  total_price: number | string // 后端 Decimal 在 JSON 中序列化为字符串
 }
 
 export interface LLMStatisticByAgent extends LLMStatisticSummary {
@@ -151,7 +151,7 @@ export interface LLMStatisticDetail {
   input_tokens: number
   output_tokens: number
   cache_read: number
-  price: number
+  price: number | string // 后端 Decimal 在 JSON 中序列化为字符串
   time: string // 后端 datetime 转 ISO 字符串
 }
 

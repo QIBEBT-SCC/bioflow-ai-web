@@ -9,8 +9,7 @@
       "createGroup": "创建分组",
       "importTool": "导入工具",
       "allTools": "所有工具",
-      "groupTools": "分组工具",
-      "filter": "筛选"
+      "groupTools": "分组工具"
     },
     "Sidebar": {
       "title": "工具分组",
@@ -18,16 +17,9 @@
     },
     "List": {
       "loading": "加载中...",
-      "toolName": "工具名称",
-      "dockerImage": "Docker镜像",
-      "description": "描述",
-      "tags": "标签",
-      "actions": "操作",
       "noDescription": "暂无描述",
-      "moreOptions": "更多选项",
       "copyTool": "复制工具",
-      "deleteTool": "删除工具",
-      "showing": "显示 {start}-{end} 共 {total} 项"
+      "deleteTool": "删除工具"
     },
     "DeleteDialog": {
       "title": "确认删除工具",

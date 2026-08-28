@@ -50,11 +50,37 @@ import {
 import { cn } from '@/lib/utils'
 import type { LLMStatisticDetail, LLMStatisticOverview } from '@/types/setting'
 
+const TOKEN_UNITS = [
+  { threshold: 1_000_000_000_000, suffix: 'T' },
+  { threshold: 1_000_000_000, suffix: 'B' },
+  { threshold: 1_000_000, suffix: 'M' },
+  { threshold: 1_000, suffix: 'K' },
+] as const
+
+function formatTokenCount(value: number) {
+  const unit = TOKEN_UNITS.find(({ threshold }) => Math.abs(value) >= threshold)
+
+  if (!unit) return value.toLocaleString()
+
+  const compactValue = value / unit.threshold
+  return `${compactValue.toLocaleString('en-US', {
+    maximumFractionDigits: 2,
+  })}${unit.suffix}`
+}
+
+function formatTotalPrice(value: number | string) {
+  const numericValue = Number(value)
+  return `$${numericValue.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`
+}
+
 interface StatsBreakdownItem {
   name: string
   secondaryName?: string
   count: number
-  total_price: number
+  total_price: number | string
   total_input_tokens: number
   total_output_tokens: number
   total_cache_read: number
@@ -62,7 +88,7 @@ interface StatsBreakdownItem {
 
 interface StatsBreakdownListProps {
   items: StatsBreakdownItem[]
-  totalPrice: number
+  totalPrice: number | string
   barColor: string
   t: ReturnType<typeof useTranslations>
 }
@@ -76,18 +102,18 @@ function StatsBreakdownList({
   return (
     <div className='space-y-4'>
       {items.map((item) => {
-        const percentage = (item.total_price / totalPrice) * 100
+        const percentage = (Number(item.total_price) / Number(totalPrice)) * 100
         return (
           <div
             key={`${item.name}-${item.secondaryName ?? ''}`}
             className='space-y-2'
           >
-            <div className='flex items-center justify-between'>
-              <div className='flex items-center gap-3'>
-                <div>
-                  <p>{item.name}</p>
+            <div className='flex min-w-0 items-center justify-between gap-4'>
+              <div className='flex min-w-0 items-center gap-3'>
+                <div className='min-w-0'>
+                  <p className='truncate'>{item.name}</p>
                   {item.secondaryName && (
-                    <p className='font-mono text-xs text-muted-foreground'>
+                    <p className='truncate font-mono text-xs text-muted-foreground'>
                       {item.secondaryName}
                     </p>
                   )}
@@ -96,8 +122,8 @@ function StatsBreakdownList({
                   {t('call_count', { count: item.count })}
                 </Badge>
               </div>
-              <div className='text-sm font-semibold'>
-                ${item.total_price.toLocaleString()}
+              <div className='shrink-0 text-sm font-semibold tabular-nums'>
+                {formatTotalPrice(item.total_price)}
               </div>
             </div>
             <div className='w-full bg-muted rounded-full h-2'>
@@ -109,20 +135,29 @@ function StatsBreakdownList({
             <div className='grid grid-cols-3 gap-4 text-xs text-muted-foreground'>
               <div>
                 <span>{t('input_label')}</span>
-                <span className='font-medium text-foreground'>
-                  {item.total_input_tokens.toLocaleString()}
+                <span
+                  className='font-medium text-foreground tabular-nums'
+                  title={item.total_input_tokens.toLocaleString()}
+                >
+                  {formatTokenCount(item.total_input_tokens)}
                 </span>
               </div>
               <div>
                 <span>{t('output_label')}</span>
-                <span className='font-medium text-foreground'>
-                  {item.total_output_tokens.toLocaleString()}
+                <span
+                  className='font-medium text-foreground tabular-nums'
+                  title={item.total_output_tokens.toLocaleString()}
+                >
+                  {formatTokenCount(item.total_output_tokens)}
                 </span>
               </div>
               <div>
                 <span>{t('cache_label')}</span>
-                <span className='font-medium text-foreground'>
-                  {item.total_cache_read.toLocaleString()}
+                <span
+                  className='font-medium text-foreground tabular-nums'
+                  title={item.total_cache_read.toLocaleString()}
+                >
+                  {formatTokenCount(item.total_cache_read)}
                 </span>
               </div>
             </div>
@@ -249,7 +284,7 @@ function DateRangeFilter({
             <Button
               variant='outline'
               className={cn(
-                'justify-start text-left font-normal min-w-[280px]',
+                'justify-start text-left font-normal min-w-70',
                 !dateRange.from && !dateRange.to && 'text-muted-foreground',
               )}
             >
@@ -499,32 +534,35 @@ export function StatisticsTab() {
       <DateRangeFilter dateRange={dateRange} onChange={setDateRange} />
 
       {/* Summary Cards */}
-      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
-        <Card className='border-border bg-card p-6'>
+      <div className='grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4'>
+        <Card className='min-w-0 border-border bg-card p-6'>
           <div className='flex items-center gap-3 mb-2'>
             <div className='p-2 bg-primary/10 rounded-lg'>
               <TrendingUpIcon className='size-5 text-primary' />
             </div>
             <p className='text-sm text-muted-foreground'>{t('total_cost')}</p>
           </div>
-          <p className='text-3xl font-bold text-primary'>
-            ${statsData.total.total_price.toLocaleString()}
+          <p className='whitespace-nowrap text-3xl font-bold text-primary tabular-nums'>
+            {formatTotalPrice(statsData.total.total_price)}
           </p>
         </Card>
 
-        <Card className='border-border bg-card p-6'>
+        <Card className='min-w-0 border-border bg-card p-6'>
           <div className='flex items-center gap-3 mb-2'>
             <div className='p-2 bg-chart-2/10 rounded-lg'>
               <BarChart3Icon className='size-5 text-chart-2' />
             </div>
             <p className='text-sm text-muted-foreground'>{t('input_tokens')}</p>
           </div>
-          <p className='text-3xl font-bold'>
-            {statsData.total.total_input_tokens.toLocaleString()}
+          <p
+            className='whitespace-nowrap text-3xl font-bold tabular-nums'
+            title={statsData.total.total_input_tokens.toLocaleString()}
+          >
+            {formatTokenCount(statsData.total.total_input_tokens)}
           </p>
         </Card>
 
-        <Card className='border-border bg-card p-6'>
+        <Card className='min-w-0 border-border bg-card p-6'>
           <div className='flex items-center gap-3 mb-2'>
             <div className='p-2 bg-chart-3/10 rounded-lg'>
               <BarChart3Icon className='size-5 text-chart-3' />
@@ -533,20 +571,26 @@ export function StatisticsTab() {
               {t('output_tokens')}
             </p>
           </div>
-          <p className='text-3xl font-bold'>
-            {statsData.total.total_output_tokens.toLocaleString()}
+          <p
+            className='whitespace-nowrap text-3xl font-bold tabular-nums'
+            title={statsData.total.total_output_tokens.toLocaleString()}
+          >
+            {formatTokenCount(statsData.total.total_output_tokens)}
           </p>
         </Card>
 
-        <Card className='border-border bg-card p-6'>
+        <Card className='min-w-0 border-border bg-card p-6'>
           <div className='flex items-center gap-3 mb-2'>
             <div className='p-2 bg-chart-4/10 rounded-lg'>
               <BarChart3Icon className='size-5 text-chart-4' />
             </div>
             <p className='text-sm text-muted-foreground'>{t('cache_read')}</p>
           </div>
-          <p className='text-3xl font-bold'>
-            {statsData.total.total_cache_read.toLocaleString()}
+          <p
+            className='whitespace-nowrap text-3xl font-bold tabular-nums'
+            title={statsData.total.total_cache_read.toLocaleString()}
+          >
+            {formatTokenCount(statsData.total.total_cache_read)}
           </p>
         </Card>
       </div>
@@ -573,7 +617,7 @@ export function StatisticsTab() {
                   setCurrentPage(1)
                 }}
               >
-                <SelectTrigger className='w-[100px]'>
+                <SelectTrigger className='w-25'>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
