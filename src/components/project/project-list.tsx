@@ -13,7 +13,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { toast } from 'sonner'
 import { ImagePagination } from '@/components/image/image-pagination'
 import { EditProjectDialog } from '@/components/project/edit-project-dialog'
@@ -74,12 +74,10 @@ function formatDateTime(dateStr: string | undefined, locale: string) {
 
 function ProjectTable({
   projects,
-  search,
   viewMode,
   projectListHref,
 }: {
   projects: ProjectPublic[]
-  search: string
   viewMode: ProjectViewMode
   projectListHref: string
 }) {
@@ -95,22 +93,6 @@ function ProjectTable({
   const [deletingProject, setDeletingProject] = useState<ProjectPublic | null>(
     null,
   )
-
-  const visibleProjects = useMemo(() => {
-    const keyword = search.trim().toLowerCase()
-    return keyword
-      ? projects.filter((project) =>
-          [
-            project.name,
-            project.description,
-            ...project.tags.map((tag) => tag.name),
-          ]
-            .join(' ')
-            .toLowerCase()
-            .includes(keyword),
-        )
-      : projects
-  }, [projects, search])
 
   const handleStar = (project: ProjectPublic) => {
     if (project.starred) {
@@ -145,14 +127,14 @@ function ProjectTable({
             : 'hidden'
         }
       >
-        {visibleProjects.length === 0 ? (
+        {projects.length === 0 ? (
           <Card className='gap-0 py-0'>
             <CardContent className='py-10 text-center text-muted-foreground'>
               {tActions('empty')}
             </CardContent>
           </Card>
         ) : (
-          visibleProjects.map((project) => (
+          projects.map((project) => (
             <Card key={project.id} className='gap-0 py-0'>
               <CardContent className='space-y-3 p-4'>
                 <div className='flex items-start gap-2'>
@@ -240,7 +222,7 @@ function ProjectTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {visibleProjects.length === 0 ? (
+            {projects.length === 0 ? (
               <TableRow>
                 <TableCell
                   colSpan={6}
@@ -250,7 +232,7 @@ function ProjectTable({
                 </TableCell>
               </TableRow>
             ) : (
-              visibleProjects.map((project) => (
+              projects.map((project) => (
                 <TableRow key={project.id}>
                   <TableCell>
                     <div className='flex items-center gap-2'>
@@ -396,6 +378,7 @@ function ProjectActions({
 function PaginatedProjectTable({
   filter,
   search = '',
+  tagId = null,
   sort = 'recent',
   viewMode = 'list',
   currentPage,
@@ -404,6 +387,7 @@ function PaginatedProjectTable({
 }: {
   filter: 'all' | 'starred' | 'my'
   search?: string
+  tagId?: number | null
   sort?: ProjectSort
   viewMode?: ProjectViewMode
   currentPage: number
@@ -417,6 +401,8 @@ function PaginatedProjectTable({
     itemsPerPage,
     filter,
     sort,
+    search,
+    tagId,
   )
   const projects = projectPage?.data ?? []
   const totalCount = projectPage?.total ?? 0
@@ -434,7 +420,6 @@ function PaginatedProjectTable({
     <div className='space-y-4'>
       <ProjectTable
         projects={projects}
-        search={search}
         viewMode={viewMode}
         projectListHref={projectListHref}
       />
@@ -449,6 +434,7 @@ function PaginatedProjectTable({
 
 export function AllProjectTable(props: {
   search?: string
+  tagId?: number | null
   sort?: ProjectSort
   viewMode?: ProjectViewMode
   currentPage: number
@@ -460,6 +446,7 @@ export function AllProjectTable(props: {
 
 export function StarredProjectTable(props: {
   search?: string
+  tagId?: number | null
   sort?: ProjectSort
   viewMode?: ProjectViewMode
   currentPage: number
@@ -471,6 +458,7 @@ export function StarredProjectTable(props: {
 
 export function MyProjectTable(props: {
   search?: string
+  tagId?: number | null
   sort?: ProjectSort
   viewMode?: ProjectViewMode
   currentPage: number
