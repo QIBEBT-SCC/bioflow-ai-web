@@ -35,6 +35,9 @@ export default async function ProjectsPage({
   const activeTab =
     tabParam === 'starred' || tabParam === 'my' ? tabParam : 'all'
   const search = getSingleParam(params.q) ?? ''
+  const tagParam = Number(getSingleParam(params.tag) ?? '')
+  const selectedTagId =
+    Number.isInteger(tagParam) && tagParam > 0 ? tagParam : null
   const pageParam = Number(getSingleParam(params.page) ?? '1')
   const currentPage =
     Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 1
@@ -42,6 +45,7 @@ export default async function ProjectsPage({
   const listParams = new URLSearchParams()
   if (activeTab !== 'all') listParams.set('tab', activeTab)
   if (search) listParams.set('q', search)
+  if (selectedTagId) listParams.set('tag', String(selectedTagId))
   if (currentPage > 1) listParams.set('page', String(currentPage))
   const query = listParams.toString()
   const projectListHref = query ? `/project?${query}` : '/project'
@@ -50,6 +54,7 @@ export default async function ProjectsPage({
     <ProjectsPageClient
       activeTab={activeTab}
       search={search}
+      selectedTagId={selectedTagId}
       currentPage={currentPage}
       projectListHref={projectListHref}
       initialSort={initialSort}

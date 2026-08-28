@@ -18,6 +18,8 @@ export async function getProjects(
   limit: number = 20,
   filter?: string,
   sort: ProjectSort = 'recent',
+  search?: string,
+  tagId?: number | null,
 ): Promise<PaginatedProjects> {
   const params: Record<string, string> = {
     offset: String(offset),
@@ -26,6 +28,12 @@ export async function getProjects(
   }
   if (filter) {
     params.filter = filter
+  }
+  if (search?.trim()) {
+    params.search = search.trim()
+  }
+  if (tagId) {
+    params.tag_id = String(tagId)
   }
   return await clientFetch<PaginatedProjects>('/projects', {
     params,

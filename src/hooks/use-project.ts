@@ -33,10 +33,12 @@ export function useProjects(
   limit: number = 20,
   filter?: string,
   sort: ProjectSort = 'recent',
+  search?: string,
+  tagId?: number | null,
 ) {
   return useQuery<PaginatedProjects>({
-    queryKey: ['projects', offset, limit, filter, sort],
-    queryFn: () => getProjects(offset, limit, filter, sort),
+    queryKey: ['projects', offset, limit, filter, sort, search, tagId],
+    queryFn: () => getProjects(offset, limit, filter, sort, search, tagId),
     staleTime: 30 * 1000,
   })
 }

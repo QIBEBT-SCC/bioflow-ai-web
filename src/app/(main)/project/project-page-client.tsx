@@ -9,7 +9,14 @@ import {
 } from 'lucide-react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { useCallback, useState } from 'react'
+import {
+  type ChangeEvent,
+  type CompositionEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
 import { NewProjectDialog } from '@/components/project/new-project-dialog'
 import {
   AllProjectTable,
@@ -41,9 +48,94 @@ import {
   PROJECT_VIEW_COOKIE,
 } from '@/lib/project-preferences'
 
+const SEARCH_DEBOUNCE_MS = 300
+
+function ProjectSearchInput({
+  initialValue,
+  placeholder,
+  onSearch,
+}: {
+  initialValue: string
+  placeholder: string
+  onSearch: (value: string) => void
+}) {
+  const [value, setValue] = useState(initialValue)
+  const isComposingRef = useRef(false)
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const previousInitialValueRef = useRef(initialValue)
+  const lastSubmittedValueRef = useRef(initialValue)
+  const onSearchRef = useRef(onSearch)
+  onSearchRef.current = onSearch
+
+  // Preserve newer drafts while navigation catches up, but honor back/forward.
+  if (initialValue !== previousInitialValueRef.current) {
+    previousInitialValueRef.current = initialValue
+    if (initialValue !== lastSubmittedValueRef.current) {
+      lastSubmittedValueRef.current = initialValue
+      setValue(initialValue)
+    }
+  }
+
+  const cancelPendingSearch = useCallback(() => {
+    if (searchTimerRef.current !== null) {
+      clearTimeout(searchTimerRef.current)
+      searchTimerRef.current = null
+    }
+  }, [])
+
+  const scheduleSearch = useCallback(
+    (nextValue: string) => {
+      cancelPendingSearch()
+      searchTimerRef.current = setTimeout(() => {
+        searchTimerRef.current = null
+        lastSubmittedValueRef.current = nextValue
+        onSearchRef.current(nextValue)
+      }, SEARCH_DEBOUNCE_MS)
+    },
+    [cancelPendingSearch],
+  )
+
+  useEffect(() => cancelPendingSearch, [cancelPendingSearch])
+
+  const updateSearchDraft = (event: ChangeEvent<HTMLInputElement>) => {
+    const nextValue = event.target.value
+    setValue(nextValue)
+    if (!isComposingRef.current) scheduleSearch(nextValue)
+  }
+
+  const handleCompositionStart = () => {
+    isComposingRef.current = true
+    cancelPendingSearch()
+  }
+
+  const handleCompositionEnd = (event: CompositionEvent<HTMLInputElement>) => {
+    const nextValue = event.currentTarget.value
+    isComposingRef.current = false
+    setValue(nextValue)
+    scheduleSearch(nextValue)
+  }
+
+  return (
+    <div className='relative sm:w-72'>
+      <SearchIcon className='absolute left-2.5 top-2.5 size-4 text-muted-foreground' />
+      <Input
+        type='search'
+        maxLength={200}
+        placeholder={placeholder}
+        value={value}
+        onChange={updateSearchDraft}
+        onCompositionStart={handleCompositionStart}
+        onCompositionEnd={handleCompositionEnd}
+        className='pl-8'
+      />
+    </div>
+  )
+}
+
 export default function ProjectsPageClient({
   activeTab,
   search,
+  selectedTagId,
   currentPage,
   projectListHref,
   initialSort,
@@ -51,6 +143,7 @@ export default function ProjectsPageClient({
 }: {
   activeTab: 'all' | 'starred' | 'my'
   search: string
+  selectedTagId: number | null
   currentPage: number
   projectListHref: string
   initialSort: ProjectSort
@@ -86,6 +179,8 @@ export default function ProjectsPageClient({
   const setActiveTab = (tab: string) =>
     updateParams({ tab: tab === 'all' ? null : tab }, true)
   const setSearch = (value: string) => updateParams({ q: value || null }, true)
+  const setSelectedTag = (tagId: number | null) =>
+    updateParams({ tag: tagId ? String(tagId) : null }, true)
   const setSort = (value: ProjectSort) => {
     setSortPreference(value)
     Cookies.set(PROJECT_SORT_COOKIE, value, {
@@ -125,7 +220,10 @@ export default function ProjectsPageClient({
         <div className='flex-1 overflow-auto'>
           <div className='container mx-auto px-4 py-6'>
             <div className='flex flex-col gap-6 md:flex-row'>
-              <TagList />
+              <TagList
+                selectedTagId={selectedTagId}
+                onTagChange={setSelectedTag}
+              />
               <main className='min-w-0 flex-1 space-y-6'>
                 <div className='flex flex-col justify-between gap-4 sm:flex-row sm:items-center'>
                   <div>
@@ -152,16 +250,11 @@ export default function ProjectsPageClient({
                     </TabsList>
 
                     <div className='flex w-full flex-col gap-2 sm:w-auto sm:flex-row'>
-                      <div className='relative sm:w-72'>
-                        <SearchIcon className='absolute left-2.5 top-2.5 size-4 text-muted-foreground' />
-                        <Input
-                          type='search'
-                          placeholder={t('searchPlaceholder')}
-                          value={search}
-                          onChange={(event) => setSearch(event.target.value)}
-                          className='pl-8'
-                        />
-                      </div>
+                      <ProjectSearchInput
+                        initialValue={search}
+                        placeholder={t('searchPlaceholder')}
+                        onSearch={setSearch}
+                      />
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant='outline'>
@@ -208,6 +301,7 @@ export default function ProjectsPageClient({
                   <TabsContent value='all' className='mt-6'>
                     <AllProjectTable
                       search={search}
+                      tagId={selectedTagId}
                       sort={sort}
                       viewMode={viewMode}
                       currentPage={currentPage}
@@ -218,6 +312,7 @@ export default function ProjectsPageClient({
                   <TabsContent value='starred' className='mt-6'>
                     <StarredProjectTable
                       search={search}
+                      tagId={selectedTagId}
                       sort={sort}
                       viewMode={viewMode}
                       currentPage={currentPage}
@@ -228,6 +323,7 @@ export default function ProjectsPageClient({
                   <TabsContent value='my' className='mt-6'>
                     <MyProjectTable
                       search={search}
+                      tagId={selectedTagId}
                       sort={sort}
                       viewMode={viewMode}
                       currentPage={currentPage}
