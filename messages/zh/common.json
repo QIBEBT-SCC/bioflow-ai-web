@@ -6,6 +6,20 @@
     "description": "生物信息学工作流平台",
     "title": "BioFlow AI"
   },
+  "AccountSecurity": {
+    "menu": "账号安全",
+    "title": "账号安全",
+    "description": "修改密码或撤销其他设备上的登录会话。",
+    "current_password": "当前密码",
+    "new_password": "新密码",
+    "confirm_password": "确认新密码",
+    "strength_hint": "密码强度仅供参考；弱密码也允许使用。",
+    "password_mismatch": "两次输入的新密码不一致",
+    "password_changed": "密码已修改",
+    "change_password": "修改密码",
+    "revoke_other_sessions": "退出其他设备",
+    "other_sessions_revoked": "其他设备已退出"
+  },
   "Sidebar": {
     "admin": "管理员",
     "chat": "对话",

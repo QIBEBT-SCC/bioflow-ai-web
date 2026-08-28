@@ -43,10 +43,12 @@ import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useAuth } from '@/hooks/use-auth-query'
 import {
   PROJECT_SORT_COOKIE,
   PROJECT_VIEW_COOKIE,
 } from '@/lib/project-preferences'
+import { UserRole } from '@/types/auth'
 
 const SEARCH_DEBOUNCE_MS = 300
 
@@ -150,6 +152,7 @@ export default function ProjectsPageClient({
   initialViewMode: ProjectViewMode
 }) {
   const t = useTranslations('Project.list')
+  const { user } = useAuth()
   const { replace } = useRouter()
   const pathname = usePathname()
   const [sort, setSortPreference] = useState(initialSort)
@@ -232,7 +235,7 @@ export default function ProjectsPageClient({
                       {t('subtitle')}
                     </p>
                   </div>
-                  <NewProjectDialog />
+                  {user && user.role >= UserRole.MEMBER && <NewProjectDialog />}
                 </div>
 
                 <Tabs

@@ -44,7 +44,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
         <SidebarLogo />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain />
+        <NavMain role={user?.role} />
         {user && user.role >= UserRole.ADMIN && <NavSecond />}
       </SidebarContent>
       <SidebarFooter>

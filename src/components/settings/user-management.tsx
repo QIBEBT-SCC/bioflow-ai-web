@@ -10,8 +10,12 @@ import {
   UsersIcon,
 } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
+import {
+  CreateUserDialog,
+  UserSecurityActions,
+} from '@/components/settings/user-security-actions'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -63,12 +67,16 @@ function toNumber(value: string) {
 function useUsdCostFormatter() {
   const locale = useLocale()
 
-  return new Intl.NumberFormat(locale, {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })
+  return useMemo(
+    () =>
+      new Intl.NumberFormat(locale, {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }),
+    [locale],
+  )
 }
 
 function StatCard({
@@ -194,7 +202,7 @@ function UserRoleAction({ user }: { user: ManagedUser }) {
           <Button
             variant='outline'
             size='sm'
-            className='h-8 w-8 p-0'
+            className='size-8 p-0'
             disabled={updateRole.isPending}
             aria-label={t('open_role_menu')}
           >
@@ -314,6 +322,7 @@ export function UserManagement() {
               })}
             </p>
           </div>
+          <CreateUserDialog />
         </div>
 
         <Table>
@@ -340,7 +349,7 @@ export function UserManagement() {
               <TableHead className='h-11 w-28 pr-8 text-right text-muted-foreground text-xs uppercase tracking-wide'>
                 {t('col_runs')}
               </TableHead>
-              <TableHead className='h-11 w-24 pl-6 text-muted-foreground text-xs uppercase tracking-wide'>
+              <TableHead className='h-11 w-40 pl-6 text-muted-foreground text-xs uppercase tracking-wide'>
                 {t('col_action')}
               </TableHead>
             </TableRow>
@@ -396,7 +405,10 @@ export function UserManagement() {
                     {user.run_count.toLocaleString()}
                   </TableCell>
                   <TableCell className='pl-6'>
-                    <UserRoleAction user={user} />
+                    <div className='flex gap-1'>
+                      <UserRoleAction user={user} />
+                      <UserSecurityActions user={user} />
+                    </div>
                   </TableCell>
                 </TableRow>
               ))

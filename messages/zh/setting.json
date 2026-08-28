@@ -266,7 +266,22 @@
       "role_update_success": "用户权限已更新",
       "role_update_failed": "权限更新失败",
       "load_failed": "用户列表加载失败，请确认当前账号拥有管理员权限",
-      "empty": "暂无用户"
+      "empty": "暂无用户",
+      "create_user": "创建用户",
+      "create_description": "管理员设置账号、密码和初始角色，用户登录后可自行修改密码。",
+      "confirm_create": "创建账号",
+      "create_success": "用户创建成功",
+      "password": "密码",
+      "new_password": "新密码",
+      "password_strength": "密码强度参考：{score}/4（弱密码也允许使用）",
+      "activate": "启用账号",
+      "deactivate": "停用账号",
+      "confirm_status_title": "确认变更账号状态",
+      "confirm_status_desc": "变更 {username} 的账号状态会立即撤销其全部登录会话。",
+      "status_update_success": "账号状态已更新",
+      "reset_password": "重置密码",
+      "reset_password_desc": "为 {username} 设置新密码并撤销其全部登录会话。",
+      "password_reset_success": "密码已重置"
     }
   }
 }

@@ -20,3 +20,18 @@ export interface UserRoleUpdateResponse {
   email: string
   role: UserRole
 }
+
+export interface ManagedUserCreate {
+  email: string
+  username: string
+  password: string
+  role: UserRole
+}
+
+export interface UserStatusUpdate {
+  is_active: boolean
+}
+
+export interface UserPasswordReset {
+  password: string
+}

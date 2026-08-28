@@ -6,6 +6,20 @@
     "description": "Bioinformatics Workflow Platform",
     "title": "BioFlow AI"
   },
+  "AccountSecurity": {
+    "menu": "Account security",
+    "title": "Account security",
+    "description": "Change your password or revoke sessions on other devices.",
+    "current_password": "Current password",
+    "new_password": "New password",
+    "confirm_password": "Confirm new password",
+    "strength_hint": "Password strength is informational; weak passwords are allowed.",
+    "password_mismatch": "The new passwords do not match",
+    "password_changed": "Password changed",
+    "change_password": "Change password",
+    "revoke_other_sessions": "Sign out other devices",
+    "other_sessions_revoked": "Other devices signed out"
+  },
   "Sidebar": {
     "admin": "Admin",
     "chat": "Chat",

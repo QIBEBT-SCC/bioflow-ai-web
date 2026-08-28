@@ -1,7 +1,6 @@
 'use client'
 
 import { useQueryClient } from '@tanstack/react-query'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import type React from 'react'
@@ -10,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { ClientApiError, clientFetch } from '@/lib/api-client'
+import { ClientApiError } from '@/lib/api-client'
 import { cn } from '@/lib/utils'
 import type { User } from '@/types/auth'
 
@@ -30,42 +29,39 @@ export function LoginForm({
     setError('')
 
     const formData = new FormData(e.currentTarget)
-    const username = formData.get('username') as string
+    const email = formData.get('email') as string
     const password = formData.get('password') as string
 
     startTransition(async () => {
       try {
-        const res = await fetch(`/api/v1/auth/token`, {
+        const res = await fetch('/api/v1/auth/login', {
           method: 'POST',
           credentials: 'include',
           headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Type': 'application/json',
           },
-          body: new URLSearchParams({
-            username,
-            password,
-          }),
+          body: JSON.stringify({ email, password }),
         })
 
         if (!res.ok) {
           if (res.status === 401) {
-            setError('用户名或密码错误')
+            setError(t('invalid_credentials'))
+            return
+          }
+          if (res.status === 429) {
+            setError(t('too_many_attempts'))
             return
           }
           const data = await res.json().catch(() => null)
           throw new ClientApiError(
-            data?.detail || `登录失败 (${res.status})`,
+            data?.detail || t('login_failed', { status: res.status }),
             res.status,
             data,
           )
         }
 
-        try {
-          const user = await clientFetch<User>('/auth/me')
-          queryClient.setQueryData(['auth', 'me'], user)
-        } catch {
-          // 即使失败，cookie 已设置，跳转后 AuthGuard 会正常处理
-        }
+        const user = (await res.json()) as User
+        queryClient.setQueryData(['auth', 'me'], user)
 
         push('/')
       } catch (err) {
@@ -73,7 +69,7 @@ export function LoginForm({
         if (err instanceof ClientApiError) {
           setError(err.message)
         } else {
-          setError('网络错误，请稍后重试')
+          setError(t('network_error'))
         }
       }
     })
@@ -90,26 +86,18 @@ export function LoginForm({
             <div className='grid gap-6'>
               <div className='grid gap-6'>
                 <div className='grid gap-2'>
-                  <Label htmlFor='username'>{t('username')}</Label>
+                  <Label htmlFor='email'>{t('email')}</Label>
                   <Input
-                    id='username'
-                    name='username'
-                    type='text'
-                    placeholder={t('username')}
+                    id='email'
+                    name='email'
+                    type='email'
+                    placeholder={t('email_placeholder')}
                     required
                     disabled={isPending}
                   />
                 </div>
                 <div className='grid gap-2'>
-                  <div className='flex items-center'>
-                    <Label htmlFor='password'>{t('password')}</Label>
-                    <Link
-                      href='/'
-                      className='ml-auto text-sm underline-offset-4 hover:underline'
-                    >
-                      {t('forgot_password')}
-                    </Link>
-                  </div>
+                  <Label htmlFor='password'>{t('password')}</Label>
                   <Input
                     id='password'
                     name='password'
@@ -124,12 +112,6 @@ export function LoginForm({
                 <Button type='submit' className='w-full' disabled={isPending}>
                   {isPending ? t('logging_in') : t('login')}
                 </Button>
-              </div>
-              <div className='text-center text-sm'>
-                {t('no_account')}{' '}
-                <Link href='/register' className='underline'>
-                  {t('signup')}
-                </Link>
               </div>
             </div>
           </form>

@@ -10,7 +10,7 @@ import { useAuth } from '@/hooks/use-auth-query'
  * 保护需要登录的路由。
  * 纯副作用组件，未登录时自动重定向到 /login，不渲染任何 UI。
  */
-export function AuthGuard() {
+export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { push } = useRouter()
   const { user, loading } = useAuth()
 
@@ -20,7 +20,16 @@ export function AuthGuard() {
     }
   }, [loading, user, push])
 
-  return null
+  if (loading) {
+    return (
+      <div className='flex h-screen items-center justify-center'>
+        <Loader2Icon className='size-8 animate-spin text-primary' />
+      </div>
+    )
+  }
+
+  if (!user) return null
+  return <>{children}</>
 }
 
 /**
