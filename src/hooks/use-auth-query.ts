@@ -51,3 +51,29 @@ export function useRefreshUser() {
     },
   })
 }
+
+export function useRevokeOtherSessions() {
+  return useMutation({
+    mutationFn: () =>
+      clientFetch('/auth/sessions/revoke-others', { method: 'POST' }),
+  })
+}
+
+export function useChangePassword() {
+  return useMutation({
+    mutationFn: ({
+      currentPassword,
+      newPassword,
+    }: {
+      currentPassword: string
+      newPassword: string
+    }) =>
+      clientFetch('/auth/password', {
+        method: 'PUT',
+        body: JSON.stringify({
+          current_password: currentPassword,
+          new_password: newPassword,
+        }),
+      }),
+  })
+}

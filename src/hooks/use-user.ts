@@ -1,7 +1,13 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { getUsers, updateUserRole } from '@/app/actions/user'
+import {
+  createUser,
+  getUsers,
+  resetUserPassword,
+  updateUserRole,
+  updateUserStatus,
+} from '@/app/actions/user'
 import type { UserRole } from '@/types/auth'
 
 export function useUsers() {
@@ -22,5 +28,31 @@ export function useUpdateUserRole() {
       queryClient.invalidateQueries({ queryKey: ['users'] })
       queryClient.invalidateQueries({ queryKey: ['auth', 'me'] })
     },
+  })
+}
+
+function useInvalidateUsers() {
+  const queryClient = useQueryClient()
+  return () => queryClient.invalidateQueries({ queryKey: ['users'] })
+}
+
+export function useCreateUser() {
+  const invalidate = useInvalidateUsers()
+  return useMutation({ mutationFn: createUser, onSuccess: invalidate })
+}
+
+export function useUpdateUserStatus() {
+  const invalidate = useInvalidateUsers()
+  return useMutation({
+    mutationFn: ({ userId, isActive }: { userId: number; isActive: boolean }) =>
+      updateUserStatus(userId, { is_active: isActive }),
+    onSuccess: invalidate,
+  })
+}
+
+export function useResetUserPassword() {
+  return useMutation({
+    mutationFn: ({ userId, password }: { userId: number; password: string }) =>
+      resetUserPassword(userId, { password }),
   })
 }

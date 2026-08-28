@@ -266,7 +266,22 @@
       "role_update_success": "User permission updated",
       "role_update_failed": "Failed to update permission",
       "load_failed": "Failed to load users. Confirm this account has admin access.",
-      "empty": "No users"
+      "empty": "No users",
+      "create_user": "Create User",
+      "create_description": "Set the account, password, and initial role. Users may change their own password after signing in.",
+      "confirm_create": "Create Account",
+      "create_success": "User created",
+      "password": "Password",
+      "new_password": "New password",
+      "password_strength": "Password strength reference: {score}/4 (weak passwords are allowed)",
+      "activate": "Activate account",
+      "deactivate": "Deactivate account",
+      "confirm_status_title": "Confirm account status change",
+      "confirm_status_desc": "Changing {username}'s account status immediately revokes all of their sessions.",
+      "status_update_success": "Account status updated",
+      "reset_password": "Reset password",
+      "reset_password_desc": "Set a new password for {username} and revoke all of their sessions.",
+      "password_reset_success": "Password reset"
     }
   }
 }

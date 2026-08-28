@@ -9,8 +9,3 @@ export interface User {
   email: string
   role: UserRole
 }
-
-export interface TokenResponse {
-  access_token: string
-  token_type: string
-}

@@ -15,12 +15,6 @@ async function proxyRequest(
   headers.delete('host')
 
   const method = request.method
-  if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
-    const csrfToken = request.cookies.get('csrf_token')?.value
-    if (csrfToken) {
-      headers.set('X-CSRF-Token', csrfToken)
-    }
-  }
 
   let body: BodyInit | null = null
   if (method !== 'GET' && method !== 'HEAD') {
@@ -38,11 +32,18 @@ async function proxyRequest(
   const responseHeaders = new Headers(response.headers)
   responseHeaders.delete('transfer-encoding')
 
-  return new NextResponse(response.body, {
+  const proxied = new NextResponse(response.body, {
     status: response.status,
     statusText: response.statusText,
     headers: responseHeaders,
   })
+  if (response.status === 401 && request.cookies.has('session_id')) {
+    proxied.cookies.delete('session_id')
+    proxied.cookies.delete('csrf_token')
+    proxied.cookies.delete('access_token')
+    proxied.cookies.delete('refresh_token')
+  }
+  return proxied
 }
 
 export async function GET(

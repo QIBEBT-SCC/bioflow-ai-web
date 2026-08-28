@@ -1,33 +1,14 @@
 {
   "Login": {
-    "forgot_password": "忘记密码？",
-    "logging_in": "登录中...",
-    "login": "登录",
-    "no_account": "没有账号？",
-    "password": "密码",
-    "signup": "注册",
-    "title": "欢迎回来",
-    "username": "用户名"
-  },
-  "Register": {
-    "title": "创建账号",
     "email": "邮箱",
     "email_placeholder": "user@example.com",
-    "username": "用户名",
-    "username_optional": "（选填）",
-    "password": "密码",
-    "confirm_password": "确认密码",
-    "password_mismatch": "两次输入的密码不一致",
-    "invalid_params": "请求参数格式错误",
-    "register_failed": "注册失败",
-    "network_error": "网络错误，请稍后重试",
-    "registering": "注册中...",
-    "register": "注册",
-    "have_account": "已有账号？",
+    "invalid_credentials": "邮箱或密码错误",
+    "logging_in": "登录中...",
     "login": "登录",
-    "strength_weak": "弱",
-    "strength_fair": "一般",
-    "strength_good": "良好",
-    "strength_strong": "强"
+    "login_failed": "登录失败 ({status})",
+    "network_error": "网络错误，请稍后重试",
+    "password": "密码",
+    "title": "欢迎回来",
+    "too_many_attempts": "登录尝试过多，请稍后再试"
   }
 }

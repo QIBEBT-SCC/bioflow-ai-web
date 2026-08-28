@@ -11,31 +11,26 @@ export class ClientApiError extends Error {
   }
 }
 
-let isRefreshing = false
-let refreshPromise: Promise<void> | null = null
-
-async function refreshToken(): Promise<void> {
-  const res = await fetch(`${FASTAPI_URL}/auth/refresh`, {
-    method: 'POST',
-    credentials: 'include',
-  })
-  if (!res.ok) throw new Error('Refresh failed')
+function getCookie(name: string): string | undefined {
+  if (typeof document === 'undefined') return undefined
+  const prefix = `${encodeURIComponent(name)}=`
+  return document.cookie
+    .split('; ')
+    .find((entry) => entry.startsWith(prefix))
+    ?.slice(prefix.length)
 }
 
 export async function clientFetch<T = unknown>(
   endpoint: string,
   options?: RequestInit & { params?: Record<string, string>; raw?: false },
-  _isRetry?: boolean,
 ): Promise<T>
 export async function clientFetch(
   endpoint: string,
   options: RequestInit & { params?: Record<string, string>; raw: true },
-  _isRetry?: boolean,
 ): Promise<Response>
 export async function clientFetch<T = unknown>(
   endpoint: string,
   options?: RequestInit & { params?: Record<string, string>; raw?: boolean },
-  _isRetry = false,
 ): Promise<T | Response> {
   let url = `${FASTAPI_URL}${endpoint}`
   if (options?.params) {
@@ -43,43 +38,28 @@ export async function clientFetch<T = unknown>(
     url = `${url}?${searchParams}`
   }
 
+  const method = (options?.method ?? 'GET').toUpperCase()
+  const headers = new Headers(options?.headers)
+  if (!headers.has('Content-Type'))
+    headers.set('Content-Type', 'application/json')
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+    const csrfToken = getCookie('csrf_token')
+    if (csrfToken) headers.set('X-CSRF-Token', decodeURIComponent(csrfToken))
+  }
+
   const res = await fetch(url, {
     ...options,
     credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
+    headers,
   })
 
-  if (res.status === 401 && !_isRetry) {
-    if (!isRefreshing) {
-      isRefreshing = true
-      refreshPromise = refreshToken().finally(() => {
-        isRefreshing = false
-        refreshPromise = null
-      })
+  if (res.status === 401) {
+    if (typeof window !== 'undefined') {
+      await fetch('/api/auth/clear', { method: 'POST' }).catch(() => {})
+      const isPublicPage = ['/', '/login'].includes(window.location.pathname)
+      if (!isPublicPage) window.location.href = '/login'
     }
-
-    try {
-      await refreshPromise
-      return clientFetch<T>(endpoint, options, true)
-    } catch {
-      if (typeof window !== 'undefined') {
-        // 公开页面（/login 等）不执行跳转：useAuth 直接返回 null 即可，
-        const isPublicPage = ['/', '/login', '/register'].some(
-          (p) =>
-            window.location.pathname === p ||
-            window.location.pathname.startsWith(`${p}/`),
-        )
-        if (!isPublicPage) {
-          // 先清除 HttpOnly cookies（JS 无法直接删除），再跳转
-          await fetch('/api/auth/clear', { method: 'POST' }).catch(() => {})
-          window.location.href = '/login'
-        }
-      }
-      throw new ClientApiError('Unauthorized', 401)
-    }
+    throw new ClientApiError('Unauthorized', 401)
   }
 
   if (!res.ok) {

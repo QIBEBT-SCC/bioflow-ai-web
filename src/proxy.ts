@@ -1,33 +1,18 @@
 import { type NextRequest, NextResponse } from 'next/server'
 
-// 无需登录即可访问，已登录用户访问时重定向到首页
-const GUEST_ONLY_PATHS = ['/login', '/register']
-
-// 无需登录即可访问，已登录/未登录均放行
-const OPEN_PATHS = ['/']
+const OPEN_PATHS = ['/', '/login']
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // 检查 access_token 或 refresh_token 任一存在
-  // 两者都检查：access_token 30分钟后后端会清除，但 refresh_token 7天内有效，
-  // clientFetch 会自动续期，不应在此阶段踢出用户
-  const hasSession =
-    request.cookies.has('access_token') || request.cookies.has('refresh_token')
+  const hasSession = request.cookies.has('session_id')
 
   if (OPEN_PATHS.some((p) => pathname === p)) {
     return NextResponse.next()
   }
 
-  const isGuestOnly = GUEST_ONLY_PATHS.some(
-    (p) => pathname === p || pathname.startsWith(`${p}/`),
-  )
-
-  if (isGuestOnly) {
-    return hasSession
-      ? NextResponse.redirect(new URL('/', request.url))
-      : NextResponse.next()
-  }
+  if (pathname === '/register' || pathname.startsWith('/register/'))
+    return NextResponse.redirect(new URL('/login', request.url))
 
   if (!hasSession) {
     return NextResponse.redirect(new URL('/login', request.url))

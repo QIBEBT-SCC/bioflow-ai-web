@@ -2,7 +2,6 @@
   "Home": {
     "lang_toggle": "切换语言",
     "login": "登录",
-    "register": "注册",
     "subtitle": "可视化节点驱动的智能生物信息分析平台",
     "desc1": "BioFlow AI 是一个面向生物信息学研究者的新一代分析平台。通过直观的<highlight>可视化节点编辑器</highlight>，将复杂的生物信息分析流程拆解为可复用的模块，支持拖拽式构建 RNA-seq、WGS、单细胞等主流分析工作流。",
     "desc2": "平台内置<highlight>AI 智能体</highlight>，能够理解自然语言指令、自动规划分析步骤、辅助参数配置与结果解读，让生物信息分析更高效、更智能。",
@@ -13,7 +12,7 @@
     "badge_ext": "开放扩展",
     "loading": "加载中...",
     "cta_start": "开始使用 →",
-    "cta_register": "免费注册",
+    "cta_login": "登录后继续",
     "footer": "© {year} BioFlow AI. Built for bioinformatics researchers."
   }
 }

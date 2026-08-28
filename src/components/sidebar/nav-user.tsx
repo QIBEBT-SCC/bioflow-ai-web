@@ -10,8 +10,10 @@ import {
   Sparkles,
 } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
+import { useState } from 'react'
 
 import { setUserLocale } from '@/app/actions/locale'
+import { AccountSecurityDialog } from '@/components/auth/account-security-dialog'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   DropdownMenu,
@@ -45,6 +47,7 @@ export function NavUser({ user }: NavUserProps) {
   const { isMobile } = useSidebar()
   const currentLocale = useLocale() as Locale
   const logout = useLogout()
+  const [securityOpen, setSecurityOpen] = useState(false)
 
   const t = useTranslations()
 
@@ -128,9 +131,9 @@ export function NavUser({ user }: NavUserProps) {
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSecurityOpen(true)}>
                   <BadgeCheck />
-                  Account
+                  {t('AccountSecurity.menu')}
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <CreditCard />
@@ -175,6 +178,10 @@ export function NavUser({ user }: NavUserProps) {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          <AccountSecurityDialog
+            open={securityOpen}
+            onOpenChange={setSecurityOpen}
+          />
         </div>
       </SidebarMenuItem>
     </SidebarMenu>
