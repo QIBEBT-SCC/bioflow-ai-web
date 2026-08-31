@@ -26,6 +26,7 @@ import {
   updateAgentSession,
 } from '@/app/actions/agent'
 import { agentFileQueryKeys } from '@/hooks/use-agent-file'
+import type { Locale } from '@/i18n/config'
 import type {
   AgentEvent,
   AgentName,
@@ -333,13 +334,15 @@ export function useCreateAgentRun() {
       sessionId,
       agentName,
       text,
+      language,
       sourceRunUid,
     }: {
       sessionId: string
       agentName: AgentName
       text: string
+      language: Locale
       sourceRunUid?: string
-    }) => createAgentRun(sessionId, agentName, text, sourceRunUid),
+    }) => createAgentRun(sessionId, agentName, text, language, sourceRunUid),
     onSuccess: (run) => invalidate(run.session_uid, run.uid, run.project_id),
   })
 }
@@ -350,12 +353,14 @@ export function useResumeAgentRun() {
     mutationFn: ({
       runId,
       approved,
+      language,
       feedback,
     }: {
       runId: string
       approved: boolean
+      language: Locale
       feedback?: string
-    }) => resumeAgentRun(runId, approved, feedback),
+    }) => resumeAgentRun(runId, approved, language, feedback),
     onSuccess: (run) => invalidate(run.session_uid, run.uid, run.project_id),
   })
 }
@@ -371,7 +376,8 @@ export function useCancelAgentRun() {
 export function useRetryAgentRun() {
   const invalidate = useInvalidateAgentData()
   return useMutation({
-    mutationFn: retryAgentRun,
+    mutationFn: ({ runId, language }: { runId: string; language: Locale }) =>
+      retryAgentRun(runId, language),
     onSuccess: (run) => invalidate(run.session_uid, run.uid, run.project_id),
   })
 }
