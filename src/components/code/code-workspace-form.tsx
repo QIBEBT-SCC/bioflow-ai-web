@@ -121,7 +121,9 @@ export function CodeWorkspaceForm(props: CodeWorkspaceFormProps) {
   )
   const { source, dependencies, name, description, metadataOpen } = workspace
   const isPython = nodeType === 'code_python'
-  const filename = isPython ? 'script.py' : 'script.sh'
+  const isR = nodeType === 'code_R'
+  const supportsDependencies = isPython || isR
+  const filename = isPython ? 'script.py' : isR ? 'script.R' : 'script.sh'
   const isSaving =
     props.mode === 'create'
       ? createMutation.isPending
@@ -146,7 +148,7 @@ export function CodeWorkspaceForm(props: CodeWorkspaceFormProps) {
       {
         node_type: nodeType,
         code: source,
-        dependencies: isPython ? dependencies : [],
+        dependencies: supportsDependencies ? dependencies : [],
       },
       {
         onSuccess: (metadata) => {
@@ -166,7 +168,7 @@ export function CodeWorkspaceForm(props: CodeWorkspaceFormProps) {
       name: name.trim(),
       description: description.trim(),
       code: source,
-      dependencies: isPython ? dependencies : [],
+      dependencies: supportsDependencies ? dependencies : [],
     }
 
     if (props.mode === 'create') {
@@ -339,7 +341,7 @@ export function CodeWorkspaceForm(props: CodeWorkspaceFormProps) {
 
             <div className='flex flex-wrap gap-x-6 gap-y-2 rounded-lg bg-muted px-4 py-3 text-xs text-muted-foreground'>
               <span>
-                {t('language')}: {isPython ? 'Python' : 'Bash'}
+                {t('language')}: {isPython ? 'Python' : isR ? 'R' : 'Bash'}
               </span>
               <span>
                 {t('lines')}: {Math.max(1, source.split('\n').length)}

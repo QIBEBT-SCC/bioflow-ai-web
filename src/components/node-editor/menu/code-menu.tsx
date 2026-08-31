@@ -108,6 +108,7 @@ export function CodeMenu({ onClose, onSelectCode }: CodeMenuProps) {
               <SelectItem value='all'>{t('all')}</SelectItem>
               <SelectItem value='code_bash'>Bash</SelectItem>
               <SelectItem value='code_python'>Python</SelectItem>
+              <SelectItem value='code_R'>R</SelectItem>
             </SelectContent>
           </Select>
         </div>

@@ -25,7 +25,9 @@ export default async function CodePage({ searchParams }: CodePageProps) {
   const query = firstParam(params.q) ?? ''
   const typeParam = firstParam(params.type)
   const nodeType: CodeNodeType | undefined =
-    typeParam === 'code_bash' || typeParam === 'code_python'
+    typeParam === 'code_bash' ||
+    typeParam === 'code_python' ||
+    typeParam === 'code_R'
       ? typeParam
       : undefined
   const parsedPage = Number(firstParam(params.page) ?? '1')

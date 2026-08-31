@@ -1,4 +1,4 @@
-export type CodeNodeType = 'code_bash' | 'code_python'
+export type CodeNodeType = 'code_bash' | 'code_python' | 'code_R'
 
 export interface SimpleCodeInfo {
   uid: string

@@ -158,7 +158,9 @@ export default function CodeDetailPageClient() {
                         <CodeBlockFilename>
                           {code.node_type === 'code_python'
                             ? 'script.py'
-                            : 'script.sh'}
+                            : code.node_type === 'code_R'
+                              ? 'script.R'
+                              : 'script.sh'}
                         </CodeBlockFilename>
                       </CodeBlockTitle>
                       <CodeBlockActions>
@@ -169,10 +171,14 @@ export default function CodeDetailPageClient() {
                 </CardContent>
               </Card>
 
-              {code.node_type === 'code_python' && (
+              {code.node_type !== 'code_bash' && (
                 <Card>
                   <CardHeader>
-                    <CardTitle>{t('dependencies')}</CardTitle>
+                    <CardTitle>
+                      {code.node_type === 'code_python'
+                        ? t('dependencies')
+                        : t('rDependencies')}
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     {code.dependencies.length ? (
@@ -189,7 +195,9 @@ export default function CodeDetailPageClient() {
                       </div>
                     ) : (
                       <p className='text-sm text-muted-foreground'>
-                        {t('noDependencies')}
+                        {code.node_type === 'code_python'
+                          ? t('noDependencies')
+                          : t('noRDependencies')}
                       </p>
                     )}
                   </CardContent>
