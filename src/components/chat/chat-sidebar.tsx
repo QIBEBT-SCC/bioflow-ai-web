@@ -13,7 +13,7 @@ import {
   WrenchIcon,
 } from 'lucide-react'
 import { useParams } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import type React from 'react'
 import { Fragment, useMemo, useRef, useState } from 'react'
 import type { AgentScope } from '@/app/actions/agent'
@@ -61,6 +61,7 @@ import {
   useResumeAgentRun,
   useRetryAgentRun,
 } from '@/hooks/use-agent'
+import type { Locale } from '@/i18n/config'
 import { parseAgentQuestionAnswers } from '@/lib/agent-questions'
 import { useChatSidebarStore } from '@/stores/chat-sidebar-store'
 import {
@@ -133,6 +134,7 @@ function ChatSidebarInner({
   onResizeStart: (event: React.MouseEvent) => void
 }) {
   const t = useTranslations('Chat')
+  const language = useLocale() as Locale
   const { sessions, setSessionId, clearSession } = useChatSidebarStore()
   const sessionId = sessions[scopeKey] ?? null
   const { data: session, isLoading: isSessionLoading } =
@@ -274,6 +276,7 @@ function ChatSidebarInner({
         sessionId: targetSessionId,
         agentName: workflowSuggestion.agentName,
         text: workflowSuggestion.prompt,
+        language,
         sourceRunUid,
       })
       if (targetSessionId !== sessionId) {
@@ -313,6 +316,7 @@ function ChatSidebarInner({
         sessionId,
         agentName: parsedCommand.command.key,
         text: prompt,
+        language,
         sourceRunUid: requiresSourceRun ? sourceRunUid : undefined,
       })
       setRunId(created.uid)
@@ -329,6 +333,7 @@ function ChatSidebarInner({
       await resumeRun({
         runId: run.uid,
         approved,
+        language,
         feedback: approved ? undefined : (response ?? feedback).trim(),
       })
       setFeedback('')
@@ -516,7 +521,10 @@ function ChatSidebarInner({
                     size='sm'
                     variant='outline'
                     onClick={async () => {
-                      const retried = await retryRun(run.uid)
+                      const retried = await retryRun({
+                        runId: run.uid,
+                        language,
+                      })
                       setRunId(retried.uid)
                     }}
                     disabled={isRetrying}

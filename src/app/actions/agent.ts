@@ -1,3 +1,4 @@
+import type { Locale } from '@/i18n/config'
 import { clientFetch } from '@/lib/api-client'
 import type {
   AgentEvent,
@@ -64,6 +65,7 @@ export async function createAgentRun(
   sessionId: string,
   agentName: AgentName,
   text: string,
+  language?: Locale,
   sourceRunUid?: string,
 ) {
   return await clientFetch<AgentRun>(`/agent-sessions/${sessionId}/runs`, {
@@ -71,6 +73,7 @@ export async function createAgentRun(
     body: JSON.stringify({
       agent_name: agentName,
       text,
+      language: language ?? null,
       source_run_uid: sourceRunUid ?? null,
     }),
   })
@@ -102,11 +105,16 @@ export async function streamAgentEvents(
 export async function resumeAgentRun(
   runId: string,
   approved: boolean,
+  language?: Locale,
   feedback?: string,
 ) {
   return await clientFetch<AgentRun>(`/agent-runs/${runId}/resume`, {
     method: 'POST',
-    body: JSON.stringify({ approved, feedback: feedback || null }),
+    body: JSON.stringify({
+      approved,
+      language: language ?? null,
+      feedback: feedback || null,
+    }),
   })
 }
 
@@ -116,8 +124,9 @@ export async function cancelAgentRun(runId: string) {
   })
 }
 
-export async function retryAgentRun(runId: string) {
+export async function retryAgentRun(runId: string, language?: Locale) {
   return await clientFetch<AgentRun>(`/agent-runs/${runId}/retry`, {
     method: 'POST',
+    body: JSON.stringify({ language: language ?? null }),
   })
 }
