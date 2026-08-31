@@ -23,7 +23,12 @@ export default function CodeAddPageClient({
 }) {
   const t = useTranslations('code.Create')
   const { push } = useRouter()
-  const title = nodeType === 'code_python' ? t('pythonTitle') : t('bashTitle')
+  const title =
+    nodeType === 'code_python'
+      ? t('pythonTitle')
+      : nodeType === 'code_R'
+        ? t('rTitle')
+        : t('bashTitle')
 
   return (
     <SidebarInset className='h-screen overflow-hidden'>

@@ -2,6 +2,7 @@
 
 import { python } from '@codemirror/lang-python'
 import { StreamLanguage } from '@codemirror/language'
+import { r } from '@codemirror/legacy-modes/mode/r'
 import { shell } from '@codemirror/legacy-modes/mode/shell'
 import CodeMirror from '@uiw/react-codemirror'
 import { PlusIcon, XIcon } from 'lucide-react'
@@ -32,9 +33,11 @@ export function CodeSourceEditor({
   const [dependencyDraft, setDependencyDraft] = useState('')
   const [cursor, setCursor] = useState({ line: 1, column: 1 })
   const isPython = nodeType === 'code_python'
+  const isR = nodeType === 'code_R'
+  const supportsDependencies = isPython || isR
   const languageExtensions = useMemo(
-    () => [isPython ? python() : StreamLanguage.define(shell)],
-    [isPython],
+    () => [isPython ? python() : StreamLanguage.define(isR ? r : shell)],
+    [isPython, isR],
   )
   const lineCount = Math.max(1, code.split('\n').length)
 
@@ -54,7 +57,7 @@ export function CodeSourceEditor({
   return (
     <div
       className={
-        isPython
+        supportsDependencies
           ? 'grid h-full min-h-0 grid-cols-[minmax(0,1fr)_18rem]'
           : 'h-full min-h-0'
       }
@@ -72,7 +75,13 @@ export function CodeSourceEditor({
             const line = update.state.doc.lineAt(head)
             setCursor({ line: line.number, column: head - line.from + 1 })
           }}
-          placeholder={isPython ? t('pythonPlaceholder') : t('bashPlaceholder')}
+          placeholder={
+            isPython
+              ? t('pythonPlaceholder')
+              : isR
+                ? t('rPlaceholder')
+                : t('bashPlaceholder')
+          }
           autoFocus
           basicSetup={{
             lineNumbers: true,
@@ -99,17 +108,19 @@ export function CodeSourceEditor({
           </div>
           <div className='flex items-center gap-4'>
             <span>UTF-8</span>
-            <span>{isPython ? 'Python 3.13' : 'Bash'}</span>
+            <span>{isPython ? 'Python 3.13' : isR ? 'R 4.4.3' : 'Bash'}</span>
           </div>
         </div>
       </section>
 
-      {isPython && (
+      {supportsDependencies && (
         <aside className='min-h-0 overflow-y-auto border-l bg-muted/20 p-4'>
           <div className='mb-5'>
-            <h3 className='font-medium'>{t('environment')}</h3>
+            <h3 className='font-medium'>
+              {isPython ? t('pythonEnvironment') : t('rEnvironment')}
+            </h3>
             <p className='mt-1 text-xs leading-5 text-muted-foreground'>
-              {t('environmentHint')}
+              {isPython ? t('pythonEnvironmentHint') : t('rEnvironmentHint')}
             </p>
           </div>
 
@@ -121,7 +132,11 @@ export function CodeSourceEditor({
                 value={dependencyDraft}
                 onChange={(event) => setDependencyDraft(event.target.value)}
                 onKeyDown={handleDependencyKeyDown}
-                placeholder={t('dependencyPlaceholder')}
+                placeholder={
+                  isPython
+                    ? t('pythonDependencyPlaceholder')
+                    : t('rDependencyPlaceholder')
+                }
                 className='bg-background font-mono text-sm'
               />
               <Button

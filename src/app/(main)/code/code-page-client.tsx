@@ -183,6 +183,7 @@ export default function CodePageClient({
                   <SelectItem value='all'>{t('allTypes')}</SelectItem>
                   <SelectItem value='code_bash'>Bash</SelectItem>
                   <SelectItem value='code_python'>Python</SelectItem>
+                  <SelectItem value='code_R'>R</SelectItem>
                 </SelectContent>
               </Select>
               <DropdownMenu>
@@ -201,6 +202,9 @@ export default function CodePageClient({
                     <Link href='/code/add?type=code_python'>
                       {t('addPython')}
                     </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href='/code/add?type=code_R'>{t('addR')}</Link>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

@@ -27,6 +27,7 @@ const CodeCard = memo(function CodeCard({ nodeType }: CodeCardProps) {
   const [dependencies, setDependencies] = useState(
     nodeData?.data.dependencies?.join('\n') ?? '',
   )
+  const supportsDependencies = nodeType !== 'code_bash'
 
   useEffect(() => {
     setCode(nodeData?.data.code ?? '')
@@ -39,14 +40,14 @@ const CodeCard = memo(function CodeCard({ nodeType }: CodeCardProps) {
   const handleCodeBlur = useCallback(() => {
     updateNodeData(nodeId, {
       code,
-      ...(nodeType === 'code_python' && {
+      ...(supportsDependencies && {
         dependencies: dependencies.split('\n').flatMap((dependency) => {
           const normalized = dependency.trim()
           return normalized ? [normalized] : []
         }),
       }),
     })
-  }, [code, dependencies, nodeId, nodeType, updateNodeData])
+  }, [code, dependencies, nodeId, supportsDependencies, updateNodeData])
 
   return (
     <div className='p-3'>
@@ -60,12 +61,16 @@ const CodeCard = memo(function CodeCard({ nodeType }: CodeCardProps) {
         spellCheck={false}
         disabled={readOnly}
       />
-      {nodeType === 'code_python' && (
+      {supportsDependencies && (
         <>
           <Label className='pt-4 pb-2 font-medium'>Dependencies:</Label>
           <Textarea
             className='h-[100px] w-full resize-y border-input font-mono text-sm'
-            placeholder={'One PEP 508 requirement per line, e.g.\npandas>=2'}
+            placeholder={
+              nodeType === 'code_python'
+                ? 'One PEP 508 requirement per line, e.g.\npandas>=2'
+                : 'One CRAN package name per line, e.g.\ndata.table'
+            }
             value={dependencies}
             onChange={(event) => setDependencies(event.target.value)}
             onBlur={handleCodeBlur}

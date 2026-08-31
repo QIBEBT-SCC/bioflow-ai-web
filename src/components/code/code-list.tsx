@@ -132,6 +132,7 @@ export function CodeList({
       <div className='grid gap-4 md:grid-cols-2 xl:grid-cols-3'>
         {data.data.map((code) => {
           const isPython = code.node_type === 'code_python'
+          const isR = code.node_type === 'code_R'
           return (
             <Card
               key={code.uid}
@@ -141,7 +142,9 @@ export function CodeList({
                 className={
                   isPython
                     ? 'h-1 bg-gradient-to-r from-blue-500 to-cyan-400'
-                    : 'h-1 bg-gradient-to-r from-amber-500 to-orange-400'
+                    : isR
+                      ? 'h-1 bg-gradient-to-r from-violet-500 to-fuchsia-400'
+                      : 'h-1 bg-gradient-to-r from-amber-500 to-orange-400'
                 }
               />
               <CardHeader className='gap-3 px-5 pt-5 pb-3'>

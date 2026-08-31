@@ -120,7 +120,7 @@ export const nodeDefaultData: Record<string, Record<string, unknown>> = {
   select_file_in_folder: { file_name: '' },
   bind_param: { parameter: '' },
   collect_mount_dirs: {},
-  code_R: { code: '' },
+  code_R: { code: '', dependencies: [] },
   code_python: { code: '', dependencies: [] },
   code_bash: { code: '' },
   downstream_summary: { prompt: '' },
