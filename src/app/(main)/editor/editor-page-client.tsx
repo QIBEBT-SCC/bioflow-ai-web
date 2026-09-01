@@ -35,6 +35,7 @@ import {
   nodeTypes,
 } from '@/components/node-editor/node-registry'
 import { SaveAsDialog } from '@/components/node-editor/save-as-dialog'
+import { WorkflowJsonActions } from '@/components/node-editor/workflow-json-actions'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -418,6 +419,8 @@ function FlowContent() {
                     {t('clean_dirty_edges')}
                   </Button>
 
+                  <WorkflowJsonActions workflowName={workflowData?.name} />
+
                   <Button variant='ghost' size='sm' onClick={onExit}>
                     <LogOutIcon className='size-4 mr-2' />
                     {t('exit')}
@@ -463,6 +466,8 @@ function FlowContent() {
                     currentWorkflowName={workflowData?.name}
                     disabled={nodes.length === 0}
                   />
+
+                  <WorkflowJsonActions workflowName={workflowData?.name} />
 
                   <Separator orientation='vertical' className='h-8! mx-2' />
 

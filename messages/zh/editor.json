@@ -77,6 +77,25 @@
     "save_as": "另存为",
     "saving": "保存中...",
     "title": "节点编辑器",
+    "workflow_json": {
+      "export_success": "工作流 JSON 已导出",
+      "import_success": "工作流已导入画布，请确认后保存",
+      "file_too_large": "JSON 文件不能超过 10 MB",
+      "confirm_title": "导入工作流 JSON",
+      "confirm_description": "将导入“{name}”（{nodes} 个节点、{edges} 条连线）并替换当前画布。导入后需要手动保存才会持久化。",
+      "unnamed": "未命名工作流",
+      "cancel": "取消",
+      "confirm_action": "确认导入",
+      "errors": {
+        "invalid_json": "文件不是有效的 JSON",
+        "invalid_structure": "JSON 中未找到有效的工作流节点和连线",
+        "invalid_node": "JSON 中包含无效的节点",
+        "invalid_edge": "JSON 中包含无效的连线",
+        "duplicate_node_id": "JSON 中存在重复的节点 ID",
+        "missing_node": "JSON 中的连线引用了不存在的节点",
+        "unsupported_version": "暂不支持此工作流 JSON 版本"
+      }
+    },
     "tool_node": {
       "immutable_params": "不可变参数:",
       "modifiable_params": "可修改参数:",
