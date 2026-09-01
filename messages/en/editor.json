@@ -77,6 +77,25 @@
     "save_as": "Save As",
     "saving": "Saving...",
     "title": "Node Editor",
+    "workflow_json": {
+      "export_success": "Workflow JSON exported",
+      "import_success": "Workflow imported to the canvas; review and save it",
+      "file_too_large": "The JSON file must be 10 MB or smaller",
+      "confirm_title": "Import workflow JSON",
+      "confirm_description": "Import “{name}” ({nodes} nodes and {edges} edges) and replace the current canvas? You must save manually to persist the import.",
+      "unnamed": "Unnamed workflow",
+      "cancel": "Cancel",
+      "confirm_action": "Import",
+      "errors": {
+        "invalid_json": "The file is not valid JSON",
+        "invalid_structure": "No valid workflow nodes and edges were found in the JSON",
+        "invalid_node": "The JSON contains an invalid node",
+        "invalid_edge": "The JSON contains an invalid edge",
+        "duplicate_node_id": "The JSON contains duplicate node IDs",
+        "missing_node": "An edge in the JSON references a missing node",
+        "unsupported_version": "This workflow JSON version is not supported"
+      }
+    },
     "tool_node": {
       "immutable_params": "Immutable Params:",
       "modifiable_params": "Modifiable Params:",
