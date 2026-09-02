@@ -6,11 +6,13 @@ import {
   ExternalLink,
   FileInput,
   FileOutput,
+  Network,
   Pencil,
   TerminalIcon,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
+import { useState } from 'react'
 import {
   Snippet,
   SnippetAddon,
@@ -23,6 +25,7 @@ import {
   TerminalHeader,
   TerminalTitle,
 } from '@/components/ai-elements/terminal'
+import { ToolUsageSheet } from '@/components/tool/tool-usage-sheet'
 import { Badge } from '@/components/ui/badge'
 import {
   Breadcrumb,
@@ -44,7 +47,7 @@ import { CopyButton } from '@/components/ui/copy-button'
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { useTool } from '@/hooks/use-tool'
+import { useTool, useToolUsage } from '@/hooks/use-tool'
 import type { FileMount, ToolInfo } from '@/types/tool'
 
 function ToolCommandCard({ command }: { command: string }) {
@@ -261,6 +264,8 @@ export default function ToolDetailPage() {
   const params = useParams()
   const toolUid = params.uid as string
   const { data: tool, isLoading } = useTool(toolUid)
+  const [usageOpen, setUsageOpen] = useState(false)
+  const { data: usage } = useToolUsage(toolUid, 0, 0, 10)
 
   const inputFiles =
     tool?.file_mounts.filter((f) => f.file_type === 'INPUT') || []
@@ -327,12 +332,27 @@ export default function ToolDetailPage() {
               </div>
               <p className='text-muted-foreground mt-1'>{tool.description}</p>
             </div>
-            <Link href={`/tool/${tool.uid}/edit`}>
-              <Button variant='outline' className='gap-2'>
-                <Pencil className='size-4' />
-                编辑工具
+            <div className='flex gap-2'>
+              <Button
+                variant='outline'
+                className='gap-2'
+                onClick={() => setUsageOpen(true)}
+              >
+                <Network className='size-4' />
+                使用情况
+                {usage && (
+                  <Badge variant='secondary' className='ml-1'>
+                    {usage.workflow_total + usage.run_total}
+                  </Badge>
+                )}
               </Button>
-            </Link>
+              <Link href={`/tool/${tool.uid}/edit`}>
+                <Button variant='outline' className='gap-2'>
+                  <Pencil className='size-4' />
+                  编辑工具
+                </Button>
+              </Link>
+            </div>
           </div>
 
           <div className='grid gap-6 lg:grid-cols-3'>
@@ -358,6 +378,11 @@ export default function ToolDetailPage() {
           </div>
         </div>
       </main>
+      <ToolUsageSheet
+        tool={{ uid: tool.uid, name: tool.name }}
+        open={usageOpen}
+        onOpenChange={setUsageOpen}
+      />
     </SidebarInset>
   )
 }

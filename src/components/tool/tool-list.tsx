@@ -1,10 +1,16 @@
 'use client'
 
-import { CopyIcon, MoreHorizontalIcon, Trash2Icon } from 'lucide-react'
+import {
+  CopyIcon,
+  MoreHorizontalIcon,
+  NetworkIcon,
+  Trash2Icon,
+} from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
+import { ToolUsageSheet } from '@/components/tool/tool-usage-sheet'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,6 +45,7 @@ import {
   useGroupTools,
   useSearchTools,
   useToolList,
+  useToolUsage,
 } from '@/hooks/use-tool'
 import type { SimpleToolInfo } from '@/types/tool'
 
@@ -61,6 +68,80 @@ interface ToolListProps {
   onPageChange: (page: number) => void
 }
 
+function getPageNumbers(totalPages: number, currentPage: number) {
+  const pages: (number | string)[] = []
+  const maxVisible = 5
+
+  if (totalPages <= maxVisible) {
+    for (let page = 1; page <= totalPages; page++) pages.push(page)
+  } else if (currentPage <= 3) {
+    pages.push(1, 2, 3, 4, '...', totalPages)
+  } else if (currentPage >= totalPages - 2) {
+    pages.push(1, '...')
+    for (let page = totalPages - 3; page <= totalPages; page++) pages.push(page)
+  } else {
+    pages.push(
+      1,
+      '...',
+      currentPage - 1,
+      currentPage,
+      currentPage + 1,
+      '...',
+      totalPages,
+    )
+  }
+
+  return pages
+}
+
+function resolveToolListView({
+  isSearching,
+  isFiltering,
+  searchResults,
+  searchTotal,
+  allGroupTools,
+  allToolsList,
+  allToolsTotal,
+  offset,
+  pageSize,
+  isSearchLoading,
+  isLoadingGroup,
+  isLoadingAll,
+}: {
+  isSearching: boolean
+  isFiltering: boolean
+  searchResults: SimpleToolInfo[]
+  searchTotal: number
+  allGroupTools: SimpleToolInfo[]
+  allToolsList: SimpleToolInfo[]
+  allToolsTotal: number
+  offset: number
+  pageSize: number
+  isSearchLoading: boolean
+  isLoadingGroup: boolean
+  isLoadingAll: boolean
+}) {
+  if (isSearching) {
+    return {
+      tools: searchResults,
+      isLoading: isSearchLoading,
+      totalPages: Math.ceil(searchTotal / pageSize),
+    }
+  }
+  if (isFiltering) {
+    return {
+      tools: allGroupTools.slice(offset, offset + pageSize),
+      isLoading: isLoadingGroup,
+      totalPages: Math.ceil(allGroupTools.length / pageSize),
+    }
+  }
+  return {
+    tools: allToolsList,
+    isLoading: isLoadingAll,
+    totalPages: Math.ceil(allToolsTotal / pageSize),
+  }
+}
+
 export function ToolList({
   searchQuery = '',
   selectedGroupId = null,
@@ -69,6 +150,10 @@ export function ToolList({
 }: ToolListProps) {
   const t = useTranslations('tool.List')
   const [deleteConfirmTool, setDeleteConfirmTool] = useState<{
+    uid: string
+    name: string
+  } | null>(null)
+  const [usageTool, setUsageTool] = useState<{
     uid: string
     name: string
   } | null>(null)
@@ -117,71 +202,21 @@ export function ToolList({
   const allToolsList = allToolsPage?.data ?? []
   const allToolsTotal = allToolsPage?.total ?? 0
 
-  // 对分组工具进行客户端分页
-  const paginatedGroupTools = isFiltering
-    ? allGroupTools.slice(offset, offset + pageSize)
-    : []
-
-  // 根据条件决定使用哪个数据源
-  const allTools = isSearching
-    ? searchResults
-    : isFiltering
-      ? paginatedGroupTools
-      : allToolsList
-
-  const isLoading = isSearching
-    ? isSearchLoading
-    : isFiltering
-      ? isLoadingGroup
-      : isLoadingAll
-
-  // 计算总页数
-  const totalPages = isSearching
-    ? Math.ceil(searchTotal / pageSize)
-    : isFiltering
-      ? Math.ceil(allGroupTools.length / pageSize)
-      : Math.ceil(allToolsTotal / pageSize)
+  const { tools, isLoading, totalPages } = resolveToolListView({
+    isSearching,
+    isFiltering,
+    searchResults,
+    searchTotal,
+    allGroupTools,
+    allToolsList,
+    allToolsTotal,
+    offset,
+    pageSize,
+    isSearchLoading,
+    isLoadingGroup,
+    isLoadingAll,
+  })
   const safeTotalPages = Math.max(1, totalPages)
-  // 生成页码数组
-  const getPageNumbers = () => {
-    const pages: (number | string)[] = []
-    const maxVisible = 5
-
-    if (safeTotalPages <= maxVisible) {
-      // 如果总页数少于最大可见数，显示所有页码
-      for (let i = 1; i <= safeTotalPages; i++) {
-        pages.push(i)
-      }
-    } else {
-      // 否则智能显示部分页码
-      if (currentPage <= 3) {
-        // 当前页在开头
-        for (let i = 1; i <= 4; i++) {
-          pages.push(i)
-        }
-        pages.push('...')
-        pages.push(totalPages)
-      } else if (currentPage >= safeTotalPages - 2) {
-        // 当前页在末尾
-        pages.push(1)
-        pages.push('...')
-        for (let i = safeTotalPages - 3; i <= safeTotalPages; i++) {
-          pages.push(i)
-        }
-      } else {
-        // 当前页在中间
-        pages.push(1)
-        pages.push('...')
-        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
-          pages.push(i)
-        }
-        pages.push('...')
-        pages.push(safeTotalPages)
-      }
-    }
-
-    return pages
-  }
 
   if (isLoading) {
     return (
@@ -197,12 +232,13 @@ export function ToolList({
   return (
     <>
       <ToolGridView
-        tools={allTools}
+        tools={tools}
         currentPage={currentPage}
         totalPages={safeTotalPages}
-        pageNumbers={getPageNumbers()}
+        pageNumbers={getPageNumbers(safeTotalPages, currentPage)}
         onPageChange={onPageChange}
         onCopy={handleCopyTool}
+        onViewUsage={(uid, name) => setUsageTool({ uid, name })}
         onDelete={(uid, name) => setDeleteConfirmTool({ uid, name })}
         t={t}
       />
@@ -210,6 +246,16 @@ export function ToolList({
         tool={deleteConfirmTool}
         onClose={() => setDeleteConfirmTool(null)}
         onConfirm={handleDeleteTool}
+        onViewUsage={(tool) => {
+          setDeleteConfirmTool(null)
+          setUsageTool(tool)
+        }}
+      />
+      <ToolUsageSheet
+        key={usageTool?.uid}
+        tool={usageTool}
+        open={!!usageTool}
+        onOpenChange={(open) => !open && setUsageTool(null)}
       />
     </>
   )
@@ -222,6 +268,7 @@ interface ToolViewProps {
   pageNumbers: (number | string)[]
   onPageChange: (page: number) => void
   onCopy: (uid: string) => void
+  onViewUsage: (uid: string, name: string) => void
   onDelete: (uid: string, name: string) => void
   t: ReturnType<typeof useTranslations>
 }
@@ -233,6 +280,7 @@ function ToolGridView({
   pageNumbers,
   onPageChange,
   onCopy,
+  onViewUsage,
   onDelete,
   t,
 }: ToolViewProps) {
@@ -256,6 +304,12 @@ function ToolGridView({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align='end'>
+                    <DropdownMenuItem
+                      onClick={() => onViewUsage(tool.uid, tool.name)}
+                    >
+                      <NetworkIcon className='size-4 mr-2' />
+                      {t('viewUsage')}
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => onCopy(tool.uid)}>
                       <CopyIcon className='size-4 mr-2' />
                       {t('copyTool')}
@@ -352,31 +406,78 @@ function DeleteToolDialog({
   tool,
   onClose,
   onConfirm,
+  onViewUsage,
 }: {
   tool: { uid: string; name: string } | null
   onClose: () => void
   onConfirm: () => void
+  onViewUsage: (tool: { uid: string; name: string }) => void
 }) {
   const t = useTranslations('tool.DeleteDialog')
+  const usageQuery = useToolUsage(tool?.uid ?? '', 0, 0, 10, !!tool)
+  const usageCount =
+    (usageQuery.data?.workflow_total ?? 0) + (usageQuery.data?.run_total ?? 0)
+  const isBlocked = usageCount > 0
+  const description = getDeleteDialogDescription({
+    isLoading: usageQuery.isLoading,
+    isError: usageQuery.isError,
+    isBlocked,
+    toolName: tool?.name ?? '',
+    workflowTotal: usageQuery.data?.workflow_total ?? 0,
+    runTotal: usageQuery.data?.run_total ?? 0,
+    t,
+  })
   return (
     <AlertDialog open={!!tool} onOpenChange={(open) => !open && onClose()}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{t('title')}</AlertDialogTitle>
-          <AlertDialogDescription>
-            {t('description', { name: tool?.name || '' })}
-          </AlertDialogDescription>
+          <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={onConfirm}
-            className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
-          >
-            {t('delete')}
-          </AlertDialogAction>
+          {isBlocked && tool ? (
+            <Button onClick={() => onViewUsage(tool)}>{t('viewUsage')}</Button>
+          ) : (
+            <AlertDialogAction
+              onClick={onConfirm}
+              disabled={usageQuery.isLoading || usageQuery.isError}
+              className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
+            >
+              {t('delete')}
+            </AlertDialogAction>
+          )}
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
   )
+}
+
+function getDeleteDialogDescription({
+  isLoading,
+  isError,
+  isBlocked,
+  toolName,
+  workflowTotal,
+  runTotal,
+  t,
+}: {
+  isLoading: boolean
+  isError: boolean
+  isBlocked: boolean
+  toolName: string
+  workflowTotal: number
+  runTotal: number
+  t: ReturnType<typeof useTranslations>
+}) {
+  if (isLoading) return t('checking')
+  if (isError) return t('checkError')
+  if (isBlocked) {
+    return t('blocked', {
+      name: toolName,
+      workflows: workflowTotal,
+      runs: runTotal,
+    })
+  }
+  return t('description', { name: toolName })
 }

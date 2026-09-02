@@ -18,14 +18,43 @@
     "List": {
       "loading": "Loading...",
       "noDescription": "No description available",
+      "viewUsage": "View Usage",
       "copyTool": "Copy Tool",
       "deleteTool": "Delete Tool"
     },
     "DeleteDialog": {
       "title": "Confirm Delete Tool",
       "description": "Are you sure you want to delete the tool \"{name}\"? This action cannot be undone.",
+      "checking": "Checking whether this tool is in use...",
+      "checkError": "The tool's usage could not be verified. Deletion is disabled to protect existing data.",
+      "blocked": "The tool \"{name}\" is used by {workflows} workflow(s) and {runs} historical run(s), so it cannot be deleted.",
+      "viewUsage": "View Usage",
       "cancel": "Cancel",
       "delete": "Delete"
+    },
+    "Usage": {
+      "title": "Usage of {name}",
+      "description": "View current workflow references and historical runs.",
+      "workflows": "Workflow References",
+      "runs": "Run History",
+      "noDescription": "No description available",
+      "nodeCount": "{count} tool node(s)",
+      "taskCount": "{count} execution task(s)",
+      "public": "Public",
+      "private": "Private",
+      "noWorkflows": "No saved workflow currently references this tool.",
+      "noRuns": "No historical run contains this tool yet.",
+      "loadError": "Failed to load tool usage.",
+      "retry": "Retry",
+      "previous": "Previous",
+      "next": "Next",
+      "page": "Page {page} of {pages}",
+      "status": {
+        "waiting": "Waiting",
+        "running": "Running",
+        "error": "Failed",
+        "success": "Success"
+      }
     },
     "AddPage": {
       "title": "Add New Tool",

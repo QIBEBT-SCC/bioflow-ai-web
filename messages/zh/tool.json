@@ -18,14 +18,43 @@
     "List": {
       "loading": "加载中...",
       "noDescription": "暂无描述",
+      "viewUsage": "查看使用情况",
       "copyTool": "复制工具",
       "deleteTool": "删除工具"
     },
     "DeleteDialog": {
       "title": "确认删除工具",
       "description": "确定要删除工具 \"{name}\" 吗？此操作无法撤销。",
+      "checking": "正在检查这个工具的使用情况……",
+      "checkError": "暂时无法确认工具是否正在使用。为避免破坏现有数据，本次不能删除。",
+      "blocked": "工具 \"{name}\" 当前被 {workflows} 个工作流和 {runs} 个历史运行实例使用，因此不能删除。",
+      "viewUsage": "查看使用情况",
       "cancel": "取消",
       "delete": "删除确认"
+    },
+    "Usage": {
+      "title": "{name} 的使用情况",
+      "description": "查看当前工作流引用和历史运行记录。",
+      "workflows": "工作流引用",
+      "runs": "运行记录",
+      "noDescription": "暂无描述",
+      "nodeCount": "{count} 个工具节点",
+      "taskCount": "{count} 个执行任务",
+      "public": "公开",
+      "private": "私有",
+      "noWorkflows": "当前没有工作流引用这个工具。",
+      "noRuns": "还没有包含这个工具的历史运行记录。",
+      "loadError": "使用情况加载失败。",
+      "retry": "重新加载",
+      "previous": "上一页",
+      "next": "下一页",
+      "page": "第 {page} / {pages} 页",
+      "status": {
+        "waiting": "等待中",
+        "running": "运行中",
+        "error": "失败",
+        "success": "成功"
+      }
     },
     "AddPage": {
       "title": "添加新工具",

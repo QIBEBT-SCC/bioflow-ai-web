@@ -1,3 +1,5 @@
+import type { Status } from '@/types/run'
+
 export enum ToolType {
   DOCKER = 0,
   COMMAND_LINE = 1,
@@ -60,6 +62,36 @@ export interface PaginatedTools {
   limit: number
   has_more: boolean
   data: SimpleToolInfo[]
+}
+
+export interface ToolWorkflowUsage {
+  uid: string
+  name: string
+  description: string
+  public: boolean
+  node_count: number
+}
+
+export interface ToolRunUsage {
+  uid: string
+  name: string
+  project_id: number | null
+  project_name: string | null
+  workflow_uid: string | null
+  workflow_name: string | null
+  status: Status
+  create_time: string | null
+  task_count: number
+}
+
+export interface ToolUsage {
+  workflow_total: number
+  run_total: number
+  workflow_offset: number
+  run_offset: number
+  limit: number
+  workflows: ToolWorkflowUsage[]
+  runs: ToolRunUsage[]
 }
 
 // 参数定义接口

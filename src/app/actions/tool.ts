@@ -8,6 +8,7 @@ import type {
   ToolGroup,
   ToolInfo,
   ToolTag,
+  ToolUsage,
 } from '@/types/tool'
 
 /**
@@ -81,6 +82,21 @@ export async function getToolList(
  */
 export async function getTool(uid: string): Promise<ToolInfo> {
   return await clientFetch<ToolInfo>(`/tools/${uid}`)
+}
+
+export async function getToolUsage(
+  uid: string,
+  workflowOffset: number = 0,
+  runOffset: number = 0,
+  limit: number = 10,
+): Promise<ToolUsage> {
+  return await clientFetch<ToolUsage>(`/tools/${uid}/usage`, {
+    params: {
+      workflow_offset: String(workflowOffset),
+      run_offset: String(runOffset),
+      limit: String(limit),
+    },
+  })
 }
 
 /**

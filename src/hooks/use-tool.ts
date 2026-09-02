@@ -20,6 +20,7 @@ import {
   getToolGroupList,
   getToolList,
   getToolTagList,
+  getToolUsage,
   markToolAIChecked,
   searchTools,
   updateTool,
@@ -36,6 +37,7 @@ import type {
   ToolImagePublic,
   ToolInfo,
   ToolTag,
+  ToolUsage,
 } from '@/types/tool'
 
 /**
@@ -122,6 +124,21 @@ export const useTool = (uid: string) => {
   })
 }
 
+export const useToolUsage = (
+  uid: string,
+  workflowOffset: number = 0,
+  runOffset: number = 0,
+  limit: number = 10,
+  enabled: boolean = true,
+) => {
+  return useQuery<ToolUsage>({
+    queryKey: ['toolUsage', uid, workflowOffset, runOffset, limit],
+    queryFn: () => getToolUsage(uid, workflowOffset, runOffset, limit),
+    enabled: enabled && !!uid,
+    staleTime: 30 * 1000,
+  })
+}
+
 /**
  * 创建工具
  */
@@ -154,6 +171,7 @@ export const useDeleteTool = () => {
       queryClient.invalidateQueries({ queryKey: ['toolList'] })
       queryClient.invalidateQueries({ queryKey: ['groupTools'] })
       queryClient.invalidateQueries({ queryKey: ['searchTools'] })
+      queryClient.invalidateQueries({ queryKey: ['toolUsage'] })
       toast.success('工具删除成功')
     },
     onError: (error: Error) => {
