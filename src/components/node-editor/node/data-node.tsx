@@ -492,6 +492,61 @@ const SelectFileInFolderNode = memo(function SelectFileInFolderNode() {
   )
 })
 
+const JOIN_PATH_HANDLES = {
+  inputs: [
+    { name: 'base_path', description: 'Base file or directory path' },
+  ] as HandleDefine[],
+  outputs: [{ name: 'path', description: 'Joined path' }] as HandleDefine[],
+}
+
+const JoinPathCard = memo(function JoinPathCard() {
+  const readOnly = useReadOnly()
+  const nodeId = useNodeId() ?? ''
+  const nodeData =
+    useNodesData<Node<{ relative_path: string }, 'join_path'>>(nodeId)
+  const { updateNodeData } = useReactFlow()
+
+  const [relativePath, setRelativePath] = useState<string>(
+    nodeData?.data.relative_path ?? '',
+  )
+
+  useEffect(() => {
+    setRelativePath(nodeData?.data.relative_path ?? '')
+  }, [nodeData?.data.relative_path])
+
+  const saveNodeData = useCallback(() => {
+    updateNodeData(nodeId, { relative_path: relativePath })
+  }, [nodeId, relativePath, updateNodeData])
+
+  return (
+    <div className='p-3'>
+      <Label className='pb-2 font-medium'>Relative Path:</Label>
+      <Input
+        className='w-full border-input focus-visible:ring-ring'
+        placeholder='e.g. results/report.tsv'
+        value={relativePath}
+        onChange={(event) => setRelativePath(event.target.value)}
+        onBlur={saveNodeData}
+        spellCheck={false}
+        disabled={readOnly}
+      />
+    </div>
+  )
+})
+
+const JoinPathNode = memo(function JoinPathNode() {
+  const nodeComponent = useMemo(() => <JoinPathCard />, [])
+  return (
+    <BaseNode
+      title='Join Path'
+      description='Append a relative path to an upstream file or directory path.'
+      handles={JOIN_PATH_HANDLES}
+      color={colorSchemes.orange}
+      nodeComponent={nodeComponent}
+    />
+  )
+})
+
 const BIND_PARAM_HANDLES = {
   inputs: [
     { name: 'file', description: 'Input file to bind parameter to' },
@@ -585,6 +640,7 @@ export {
   ProjectMarkNode,
   SampleMarkNode,
   SelectFileInFolderNode,
+  JoinPathNode,
   BindParamNode,
   CollectMountDirNode,
 }

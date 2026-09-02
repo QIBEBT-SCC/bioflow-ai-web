@@ -25,6 +25,7 @@
       "compress": "Compress",
       "decompress": "Decompress",
       "select_file_in_folder": "Select File in Folder",
+      "join_path": "Join Path",
       "project_marker": "Project Mark",
       "sample_marker": "Sample Mark",
       "sample_mark_collection": "Sample Mark Collection",
