@@ -8,6 +8,7 @@ import { colorSchemes } from '@/components/node-editor/node/color'
 import { useReadOnly } from '@/components/node-editor/read-only-context'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { cn } from '@/lib/utils'
 
 interface CodeCardProps {
   nodeType: 'code_R' | 'code_python' | 'code_bash'
@@ -53,7 +54,10 @@ const CodeCard = memo(function CodeCard({ nodeType }: CodeCardProps) {
     <div className='p-3'>
       <Label className='pb-2 font-medium'>Code:</Label>
       <Textarea
-        className='h-[200px] w-full resize-none overflow-y-auto border-input font-mono text-sm'
+        className={cn(
+          'h-[200px] w-full resize-none overflow-y-auto border-input font-mono text-sm',
+          colorSchemes.purple.focusRing,
+        )}
         placeholder={t('code_placeholder')}
         value={code ?? ''}
         onChange={(e) => setCode(e.target.value)}
@@ -65,7 +69,10 @@ const CodeCard = memo(function CodeCard({ nodeType }: CodeCardProps) {
         <>
           <Label className='pt-4 pb-2 font-medium'>Dependencies:</Label>
           <Textarea
-            className='h-[100px] w-full resize-y border-input font-mono text-sm'
+            className={cn(
+              'h-[100px] w-full resize-y border-input font-mono text-sm',
+              colorSchemes.purple.focusRing,
+            )}
             placeholder={
               nodeType === 'code_python'
                 ? 'One PEP 508 requirement per line, e.g.\npandas>=2'
@@ -175,8 +182,10 @@ const DownstreamSummaryCard = memo(function DownstreamSummaryCard() {
     <div className='p-3'>
       <Label className='pb-2 font-medium'>Prompt:</Label>
       <Textarea
-        className='h-[150px] w-full resize-none overflow-y-auto border-input text-sm
-        focus-visible:ring focus-visible:ring-purple-400 focus-visible:ring-offset-2'
+        className={cn(
+          'h-[150px] w-full resize-none overflow-y-auto border-input text-sm',
+          colorSchemes.purple.focusRing,
+        )}
         placeholder={t('prompt_placeholder')}
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}

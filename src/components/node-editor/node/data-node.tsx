@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { cn } from '@/lib/utils'
 import type { HandleDefine } from '@/types/node'
 
 const COPY2FOLDER_HANDLES = {
@@ -54,7 +55,7 @@ const Copy2FolderCard = memo(function Copy2FolderCard() {
     <div className='p-3'>
       <Label className='pb-2 font-medium'>Folder Name:</Label>
       <Input
-        className='w-full border-input focus-visible:ring-ring'
+        className={cn('w-full border-input', colorSchemes.orange.focusRing)}
         placeholder='Enter folder name...'
         value={folder_name}
         onChange={(e) => setFolderName(e.target.value)}
@@ -211,7 +212,9 @@ const CompressCard = memo(function CompressCard() {
           }
           disabled={readOnly}
         >
-          <SelectTrigger className='w-full'>
+          <SelectTrigger
+            className={cn('w-full', colorSchemes.orange.focusRing)}
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -226,7 +229,7 @@ const CompressCard = memo(function CompressCard() {
       <div>
         <Label className='pb-2 font-medium'>Compressed File Name:</Label>
         <Input
-          className='w-full border-input focus-visible:ring-ring'
+          className={cn('w-full border-input', colorSchemes.orange.focusRing)}
           placeholder={`e.g. results${compressionFormat}`}
           value={fileName}
           onChange={(event) => setFileName(event.target.value)}
@@ -312,7 +315,7 @@ const RenameFileCard = memo(function RenameFileCard() {
     <div className='p-3'>
       <Label className='pb-2 font-medium'>New File Name:</Label>
       <Input
-        className='w-full border-input focus-visible:ring-ring'
+        className={cn('w-full border-input', colorSchemes.orange.focusRing)}
         placeholder='Enter new file name...'
         value={newFileName}
         onChange={(e) => setNewFileName(e.target.value)}
@@ -385,7 +388,7 @@ const ArtifactMarkCard = memo(function ArtifactMarkCard() {
     <div className='p-3'>
       <Label className='pb-2 font-medium'>Mark Name:</Label>
       <Input
-        className='w-full border-input focus-visible:ring-ring'
+        className={cn('w-full border-input', colorSchemes.orange.focusRing)}
         placeholder='Enter arguments here...'
         value={mark_name}
         onChange={(e) => setMarkName(e.target.value)}
@@ -395,7 +398,7 @@ const ArtifactMarkCard = memo(function ArtifactMarkCard() {
       />
       <Label className='pt-4 pb-2 font-medium'>Description:</Label>
       <Input
-        className='w-full border-input focus-visible:ring-ring'
+        className={cn('w-full border-input', colorSchemes.orange.focusRing)}
         placeholder='Enter arguments here...'
         value={description}
         onChange={(e) => setDescription(e.target.value)}
@@ -467,7 +470,7 @@ const SelectFileInFolderCard = memo(function SelectFileInFolderCard() {
     <div className='p-3'>
       <Label className='pb-2 font-medium'>File Name:</Label>
       <Input
-        className='w-full border-input focus-visible:ring-ring'
+        className={cn('w-full border-input', colorSchemes.orange.focusRing)}
         placeholder='Enter file name...'
         value={file_name}
         onChange={(e) => setFileName(e.target.value)}
@@ -522,7 +525,7 @@ const JoinPathCard = memo(function JoinPathCard() {
     <div className='p-3'>
       <Label className='pb-2 font-medium'>Relative Path:</Label>
       <Input
-        className='w-full border-input focus-visible:ring-ring'
+        className={cn('w-full border-input', colorSchemes.orange.focusRing)}
         placeholder='e.g. results/report.tsv'
         value={relativePath}
         onChange={(event) => setRelativePath(event.target.value)}
@@ -579,7 +582,7 @@ const BindParamCard = memo(function BindParamCard() {
     <div className='p-3'>
       <Label className='pb-2 font-medium'>Parameter:</Label>
       <Input
-        className='w-full border-input focus-visible:ring-ring'
+        className={cn('w-full border-input', colorSchemes.orange.focusRing)}
         placeholder='Enter parameter...'
         value={parameter}
         onChange={(e) => setParameter(e.target.value)}

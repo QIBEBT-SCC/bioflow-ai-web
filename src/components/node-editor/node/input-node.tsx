@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useDB } from '@/hooks/use-resource'
+import { cn } from '@/lib/utils'
 import type { HandleDefine } from '@/types/node.tsx'
 
 const STRING_INPUT_HANDLES = {
@@ -44,7 +45,7 @@ const StringInputCard = memo(function StringInputCard() {
     <div className='p-3'>
       <Label className='pb-2 font-medium'>Value:</Label>
       <Input
-        className='w-full border-input focus-visible:ring focus-visible:ring-blue-400 focus-visible:ring-offset-2'
+        className={cn('w-full border-input', colorSchemes.blue.focusRing)}
         placeholder='Enter string value here...'
         value={args}
         onChange={(e) => setArgs(e.target.value)}
@@ -98,7 +99,7 @@ const FileInputCard = memo(() => {
     <div className='p-3'>
       <Label className='pb-2 font-medium'>File:</Label>
       <Input
-        className='w-full border-input focus-visible:ring focus-visible:ring-green-400 focus-visible:ring-offset-2'
+        className={cn('w-full border-input', colorSchemes.green.focusRing)}
         placeholder='Enter file path here...'
         value={args}
         onChange={(e) => setArgs(e.target.value)}
@@ -185,7 +186,7 @@ const SampleMarkCollectionCard = memo(function SampleMarkCollectionCard() {
         </Label>
         <Textarea
           id={`${nodeId}-mark-names`}
-          className='min-h-20'
+          className={cn('min-h-20', colorSchemes.green.focusRing)}
           placeholder={'fastqc_raw\nstar\npicard'}
           value={markNames}
           onChange={(event) => setMarkNames(event.target.value)}
@@ -263,7 +264,7 @@ const TextFileInputCard = memo(function TextFileInputCard() {
     <div className='p-3'>
       <Label className='pb-2 font-medium'>File Name:</Label>
       <Input
-        className='w-full border-input focus-visible:ring-ring'
+        className={cn('w-full border-input', colorSchemes.green.focusRing)}
         placeholder='e.g. config.txt'
         value={fileName}
         onChange={(event) => setFileName(event.target.value)}
@@ -273,7 +274,10 @@ const TextFileInputCard = memo(function TextFileInputCard() {
       />
       <Label className='pt-4 pb-2 font-medium'>Content:</Label>
       <Textarea
-        className='h-[200px] w-full resize-y border-input font-mono text-sm'
+        className={cn(
+          'h-[200px] w-full resize-y border-input font-mono text-sm',
+          colorSchemes.green.focusRing,
+        )}
         placeholder='Enter UTF-8 text content...'
         value={content}
         onChange={(event) => setContent(event.target.value)}
@@ -333,7 +337,7 @@ const SequenceInputCard = memo(function SequenceInputCard() {
     <div className='p-3'>
       <Label className='pb-2 font-medium'>R1 path:</Label>
       <Input
-        className='w-full border-input focus-visible:ring focus-visible:ring-green-400 focus-visible:ring-offset-2'
+        className={cn('w-full border-input', colorSchemes.green.focusRing)}
         placeholder='Enter arguments here...'
         value={r1}
         onChange={(e) => setR1(e.target.value)}
@@ -343,7 +347,7 @@ const SequenceInputCard = memo(function SequenceInputCard() {
       />
       <Label className='pt-4 pb-2 font-medium'>R2 path:</Label>
       <Input
-        className='w-full border-input focus-visible:ring focus-visible:ring-green-400 focus-visible:ring-offset-2'
+        className={cn('w-full border-input', colorSchemes.green.focusRing)}
         placeholder='Enter arguments here...'
         value={r2}
         onChange={(e) => setR2(e.target.value)}
