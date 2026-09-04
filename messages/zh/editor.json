@@ -22,6 +22,7 @@
       "other": "其它",
       "processor": "处理器",
       "select_file_in_folder": "从文件夹提取",
+      "read_file_content": "读取文件内容",
       "join_path": "拼接路径",
       "copy2folder": "复制到文件夹",
       "compress": "压缩",
