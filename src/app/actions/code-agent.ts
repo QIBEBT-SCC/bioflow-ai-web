@@ -5,6 +5,7 @@ import type {
   CodeAgentTurn,
   CodingAgentAvailability,
   CodingAgentLogin,
+  CodingAgentSettings,
 } from '@/types/code-agent'
 
 export async function startCodingAgentLogin(): Promise<CodingAgentLogin> {
@@ -67,5 +68,34 @@ export async function closeCodeAgentSession(
   await clientFetch(`/code-agent/sessions/${sessionId}`, {
     method: 'DELETE',
     keepalive,
+  })
+}
+
+export async function getCodingAgentSettings(): Promise<CodingAgentSettings> {
+  return await clientFetch<CodingAgentSettings>(
+    '/settings/coding-agent-account/settings',
+  )
+}
+
+export async function saveCodingAgentSettings(
+  data: CodingAgentSettings,
+): Promise<CodingAgentSettings> {
+  return await clientFetch<CodingAgentSettings>(
+    '/settings/coding-agent-account/settings',
+    {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    },
+  )
+}
+
+export async function setCodeAgentConfig(
+  sessionId: string,
+  configId: string,
+  value: string,
+): Promise<void> {
+  await clientFetch(`/code-agent/sessions/${sessionId}/config`, {
+    method: 'PUT',
+    body: JSON.stringify({ config_id: configId, value }),
   })
 }

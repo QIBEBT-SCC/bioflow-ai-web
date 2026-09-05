@@ -18,6 +18,7 @@ import {
   createCodeAgentSession,
   createCodeAgentTurn,
   decideCodeAgentProposal,
+  setCodeAgentConfig,
 } from '@/app/actions/code-agent'
 import {
   Conversation,
@@ -37,16 +38,24 @@ import {
   PlanTrigger,
 } from '@/components/ai-elements/plan'
 import {
-  CodeAgentTimeline,
   type CodeAgentTimelineItem,
   codeAgentActivityFromPayload,
   mergeCodeAgentActivity,
-} from '@/components/code/code-agent-timeline'
+} from '@/components/code/code-agent-activity'
+import { CodeAgentConfig } from '@/components/code/code-agent-config'
+import { CodeAgentTimeline } from '@/components/code/code-agent-timeline'
+import {
+  CodeAgentUsage,
+  type CodeAgentUsageData,
+} from '@/components/code/code-agent-usage'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import type { CodeNodeType } from '@/types/code'
-import type { CodeAgentProposal } from '@/types/code-agent'
+import type {
+  CodeAgentConfigOption,
+  CodeAgentProposal,
+} from '@/types/code-agent'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '/api/v1'
 
@@ -79,6 +88,14 @@ export function CodeAgentPanel({
   const [prompt, setPrompt] = useState('')
   const [timeline, setTimeline] = useState<CodeAgentTimelineItem[]>([])
   const [proposal, setProposal] = useState<CodeAgentProposal>()
+  const [configOptions, setConfigOptions] = useState<CodeAgentConfigOption[]>(
+    [],
+  )
+  const [configPending, setConfigPending] = useState(false)
+  const [sessionInfo, setSessionInfo] = useState<{
+    title?: string
+    usage?: CodeAgentUsageData
+  }>({})
   const [error, setError] = useState<string>()
   const assistantItemId = useRef<string | undefined>(undefined)
   const planItemId = useRef<string | undefined>(undefined)
@@ -97,7 +114,11 @@ export function CodeAgentPanel({
     let disposed = false
     let openedSession: string | undefined
     let eventSource: EventSource | undefined
+    let connectTimer: ReturnType<typeof setTimeout> | undefined
 
+    setSessionInfo({})
+    setConfigOptions([])
+    setConfigPending(false)
     setStatus('starting')
     setSessionId(undefined)
     setTimeline([])
@@ -117,7 +138,13 @@ export function CodeAgentPanel({
             item.type === 'terminal') &&
           item.active
             ? { ...item, active: false }
-            : item,
+            : item.type === 'activity' &&
+                ['pending', 'in_progress'].includes(item.activity.status)
+              ? {
+                  ...item,
+                  activity: { ...item.activity, status: 'stopped' as const },
+                }
+              : item,
         ),
       )
     }
@@ -133,13 +160,6 @@ export function CodeAgentPanel({
         ),
       )
       thoughtItemId.current = undefined
-    }
-
-    const appendSessionEvent = (name: string) => {
-      setTimeline((current) => [
-        ...current,
-        { id: crypto.randomUUID(), type: 'event', name },
-      ])
     }
 
     const appendThought = (delta: string, messageId?: string) => {
@@ -166,6 +186,20 @@ export function CodeAgentPanel({
       })
     }
 
+    const handleConfig = (event: Event) => {
+      const payload = JSON.parse((event as MessageEvent<string>).data) as {
+        configOptions?: CodeAgentConfigOption[]
+      }
+      setConfigOptions(payload.configOptions ?? [])
+      if (event.type === 'config.completed') setConfigPending(false)
+    }
+    const handleConfigFailed = (event: Event) => {
+      const payload = JSON.parse((event as MessageEvent<string>).data) as {
+        message?: string
+      }
+      setConfigPending(false)
+      toast.error(payload.message ?? t('failed'))
+    }
     const handleReady = () => {
       setStatus('ready')
       setError(undefined)
@@ -289,12 +323,7 @@ export function CodeAgentPanel({
       }
       terminalItemId.current = undefined
       const activity = codeAgentActivityFromPayload(payload)
-      if (!activity) {
-        appendSessionEvent(
-          typeof payload.kind === 'string' ? payload.kind : 'activity',
-        )
-        return
-      }
+      if (!activity) return
       const id = activity.callId
         ? `tool:${activity.callId}`
         : crypto.randomUUID()
@@ -315,13 +344,21 @@ export function CodeAgentPanel({
         )
       })
     }
-    const handleSessionEvent = (event: Event) => {
+    const handleSessionInfo = (event: Event) => {
       const payload = JSON.parse((event as MessageEvent<string>).data) as {
-        name?: string
+        title?: string | null
       }
-      const name = payload.name
-      if (!name) return
-      appendSessionEvent(name)
+      if ('title' in payload)
+        setSessionInfo((current) => ({
+          ...current,
+          title: payload.title || undefined,
+        }))
+    }
+    const handleUsage = (event: Event) => {
+      const payload = JSON.parse(
+        (event as MessageEvent<string>).data,
+      ) as CodeAgentUsageData
+      setSessionInfo((current) => ({ ...current, usage: payload }))
     }
     const handleProposal = (event: Event) => {
       const payload = JSON.parse(
@@ -374,13 +411,17 @@ export function CodeAgentPanel({
           { withCredentials: true },
         )
 
+        eventSource.addEventListener('config.updated', handleConfig)
+        eventSource.addEventListener('config.completed', handleConfig)
+        eventSource.addEventListener('config.failed', handleConfigFailed)
         eventSource.addEventListener('session.ready', handleReady)
         eventSource.addEventListener('turn.started', handleStarted)
         eventSource.addEventListener('message.delta', handleMessage)
         eventSource.addEventListener('thought.delta', handleThought)
         eventSource.addEventListener('plan.updated', handlePlan)
         eventSource.addEventListener('tool.updated', handleTool)
-        eventSource.addEventListener('session.event', handleSessionEvent)
+        eventSource.addEventListener('session.info', handleSessionInfo)
+        eventSource.addEventListener('session.usage', handleUsage)
         eventSource.addEventListener('proposal.ready', handleProposal)
         eventSource.addEventListener('turn.failed', handleFailed)
         eventSource.addEventListener('turn.cancelled', handleCancelled)
@@ -394,17 +435,25 @@ export function CodeAgentPanel({
       }
     }
 
-    void connect()
+    // React Strict Mode runs an extra setup/cleanup cycle in development.
+    // Deferring the request lets that synthetic cleanup cancel the duplicate
+    // session without changing the behavior of a real mounted panel.
+    connectTimer = setTimeout(() => void connect(), 0)
     return () => {
       disposed = true
+      if (connectTimer !== undefined) clearTimeout(connectTimer)
       if (eventSource) {
+        eventSource.removeEventListener('config.updated', handleConfig)
+        eventSource.removeEventListener('config.completed', handleConfig)
+        eventSource.removeEventListener('config.failed', handleConfigFailed)
         eventSource.removeEventListener('session.ready', handleReady)
         eventSource.removeEventListener('turn.started', handleStarted)
         eventSource.removeEventListener('message.delta', handleMessage)
         eventSource.removeEventListener('thought.delta', handleThought)
         eventSource.removeEventListener('plan.updated', handlePlan)
         eventSource.removeEventListener('tool.updated', handleTool)
-        eventSource.removeEventListener('session.event', handleSessionEvent)
+        eventSource.removeEventListener('session.info', handleSessionInfo)
+        eventSource.removeEventListener('session.usage', handleUsage)
         eventSource.removeEventListener('proposal.ready', handleProposal)
         eventSource.removeEventListener('turn.failed', handleFailed)
         eventSource.removeEventListener('turn.cancelled', handleCancelled)
@@ -420,7 +469,7 @@ export function CodeAgentPanel({
 
   const submit = async () => {
     const text = prompt.trim()
-    if (!sessionId || !text || status !== 'ready') return
+    if (!sessionId || !text || status !== 'ready' || configPending) return
     setPrompt('')
     setError(undefined)
     assistantItemId.current = undefined
@@ -441,6 +490,17 @@ export function CodeAgentPanel({
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : t('failed'))
       setStatus('ready')
+    }
+  }
+
+  const changeConfig = async (id: string, value: string) => {
+    if (!sessionId || status !== 'ready' || configPending) return
+    setConfigPending(true)
+    try {
+      await setCodeAgentConfig(sessionId, id, value)
+    } catch (caught) {
+      setConfigPending(false)
+      toast.error(caught instanceof Error ? caught.message : t('failed'))
     }
   }
 
@@ -479,6 +539,14 @@ export function CodeAgentPanel({
         className='flex h-full min-h-0 flex-col overflow-hidden bg-background'
         style={{ width }}
       >
+        {sessionInfo.title && (
+          <div
+            className='shrink-0 truncate border-b px-3 py-2 text-xs font-medium text-muted-foreground'
+            title={sessionInfo.title}
+          >
+            {sessionInfo.title}
+          </div>
+        )}
         <Conversation className='min-h-0 flex-1'>
           <ConversationContent className='gap-5 px-3'>
             {timeline.length === 0 &&
@@ -585,12 +653,14 @@ export function CodeAgentPanel({
               }}
               placeholder={t('placeholder')}
               className='min-h-20 resize-none border-0 bg-transparent px-3 shadow-none focus-visible:ring-0 dark:bg-transparent'
-              disabled={status !== 'ready'}
+              disabled={status !== 'ready' || configPending}
             />
-            <div className='flex items-center justify-between gap-2 px-2 pb-2'>
-              <p className='pl-1 text-[11px] text-muted-foreground'>
-                {t('enterHint')}
-              </p>
+            <div className='flex items-center justify-between gap-2 px-2 pb-2 [&>button]:ml-auto [&>button]:shrink-0'>
+              <CodeAgentConfig
+                options={configOptions}
+                disabled={status !== 'ready' || configPending}
+                onChange={(id, value) => void changeConfig(id, value)}
+              />
               {status === 'running' ? (
                 <Button
                   type='button'
@@ -606,13 +676,19 @@ export function CodeAgentPanel({
                   type='button'
                   size='icon'
                   onClick={() => void submit()}
-                  disabled={status !== 'ready' || !prompt.trim()}
+                  disabled={
+                    status !== 'ready' || configPending || !prompt.trim()
+                  }
                   aria-label={t('send')}
                 >
                   <SendIcon className='size-4' />
                 </Button>
               )}
             </div>
+          </div>
+          <div className='mt-1.5 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 px-1 text-[10px] text-muted-foreground/70'>
+            <p>{t('enterHint')}</p>
+            {sessionInfo.usage && <CodeAgentUsage usage={sessionInfo.usage} />}
           </div>
         </div>
       </aside>

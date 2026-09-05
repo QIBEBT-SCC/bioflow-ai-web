@@ -158,6 +158,8 @@
       "closed": "The temporary session has closed.",
       "plan": "Plan",
       "activity": "Activity",
+      "taskRunning": "Working · {count} steps",
+      "taskDetails": "Task details · {count} steps",
       "thinking": "Thinking and planning",
       "thought": "Thought and planned",
       "activityLabels": {
@@ -220,7 +222,11 @@
       "enterHint": "Enter to send · Shift+Enter for a new line",
       "send": "Send",
       "stop": "Stop",
-      "resize": "Resize AI coding sidebar"
+      "resize": "Resize AI coding sidebar",
+      "model": "Model",
+      "reasoning": "Reasoning",
+      "contextUsage": "Context",
+      "activityStopped": "Ended"
     },
     "Toast": {
       "createSuccess": "CODE node created",

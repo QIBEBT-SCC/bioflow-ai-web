@@ -34,3 +34,25 @@ export interface CodeAgentProposal {
 export interface CodeAgentSessionCreate {
   node_type: CodeNodeType
 }
+
+export interface CodingAgentSettings {
+  sandbox_mode: 'read-only' | 'workspace-write' | 'danger-full-access'
+  web_search: 'live' | 'cached' | 'disabled'
+  network_access: boolean
+}
+
+export interface CodeAgentConfigChoice {
+  value: string
+  name: string
+}
+
+export interface CodeAgentConfigOption {
+  id: string
+  name: string
+  category?: string
+  type: string
+  currentValue: string
+  options: Array<
+    CodeAgentConfigChoice | { name: string; options: CodeAgentConfigChoice[] }
+  >
+}

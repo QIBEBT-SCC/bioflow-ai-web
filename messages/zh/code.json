@@ -158,6 +158,8 @@
       "closed": "临时会话已关闭。",
       "plan": "计划",
       "activity": "活动",
+      "taskRunning": "正在处理 · {count} 个步骤",
+      "taskDetails": "处理过程 · {count} 个步骤",
       "thinking": "正在思考与规划",
       "thought": "已思考与规划",
       "activityLabels": {
@@ -220,7 +222,11 @@
       "enterHint": "Enter 发送 · Shift+Enter 换行",
       "send": "发送",
       "stop": "停止",
-      "resize": "调整 AI 编程侧栏宽度"
+      "resize": "调整 AI 编程侧栏宽度",
+      "model": "模型",
+      "reasoning": "思考强度",
+      "contextUsage": "上下文",
+      "activityStopped": "已结束"
     },
     "Toast": {
       "createSuccess": "CODE 节点创建成功",

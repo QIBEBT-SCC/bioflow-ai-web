@@ -1,6 +1,7 @@
 import { BotIcon } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
 import { CodingAgentAccountManagement } from '@/components/settings/coding-agent-account-management'
+import { CodingAgentSettingsPanel } from '@/components/settings/coding-agent-settings'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -35,6 +36,7 @@ export default async function CodingAgentAccountPage() {
             <p className='text-muted-foreground'>{t('description')}</p>
           </div>
           <CodingAgentAccountManagement />
+          <CodingAgentSettingsPanel />
         </div>
       </main>
     </SidebarInset>

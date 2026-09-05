@@ -7,13 +7,12 @@ import {
   FilePenLineIcon,
   FolderSearchIcon,
   GlobeIcon,
-  Loader2Icon,
   SearchIcon,
   SquareTerminalIcon,
   WrenchIcon,
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import type { ComponentType } from 'react'
+import { type ComponentType, useState } from 'react'
 import {
   ChainOfThought,
   ChainOfThoughtContent,
@@ -32,66 +31,13 @@ import {
   TerminalHeader,
   TerminalTitle,
 } from '@/components/ai-elements/terminal'
-
-type ToolKind =
-  | 'read'
-  | 'edit'
-  | 'delete'
-  | 'move'
-  | 'search'
-  | 'execute'
-  | 'think'
-  | 'fetch'
-  | 'other'
-
-type ToolStatus = 'pending' | 'in_progress' | 'completed' | 'failed'
-
-export interface CodeAgentActivity {
-  callId?: string
-  title: string
-  kind: ToolKind
-  status: ToolStatus
-  statusProvided: boolean
-  locations: string[]
-  command?: string
-  output?: string
-}
-
-export type CodeAgentTimelineItem =
-  | {
-      id: string
-      type: 'message'
-      role: 'user' | 'assistant'
-      text: string
-    }
-  | {
-      id: string
-      type: 'plan'
-      active: boolean
-      payload: Record<string, unknown>
-    }
-  | {
-      id: string
-      type: 'thought'
-      active: boolean
-      text: string
-    }
-  | {
-      id: string
-      type: 'activity'
-      activity: CodeAgentActivity
-    }
-  | {
-      id: string
-      type: 'event'
-      name: string
-    }
-  | {
-      id: string
-      type: 'terminal'
-      output: string
-      active: boolean
-    }
+import {
+  asRecord,
+  type CodeAgentActivity,
+  type CodeAgentTimelineItem,
+  stringValue,
+  type ToolKind,
+} from '@/components/code/code-agent-activity'
 
 const TOOL_ICONS: Record<ToolKind, ComponentType<{ className?: string }>> = {
   read: BookOpenIcon,
@@ -153,111 +99,6 @@ const ACTIVITY_LABEL_KEYS = {
   },
 } as const
 
-function asRecord(value: unknown): Record<string, unknown> | undefined {
-  return value && typeof value === 'object' && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : undefined
-}
-
-function stringValue(
-  record: Record<string, unknown> | undefined,
-  ...keys: string[]
-): string | undefined {
-  for (const key of keys) {
-    const value = record?.[key]
-    if (typeof value === 'string' && value.trim()) return value
-  }
-  return undefined
-}
-
-function activitySource(
-  payload: Record<string, unknown>,
-): Record<string, unknown> {
-  return asRecord(payload.detail) ?? payload
-}
-
-function normalizeKind(value: unknown): ToolKind | undefined {
-  return typeof value === 'string' && value in TOOL_ICONS
-    ? (value as ToolKind)
-    : undefined
-}
-
-function normalizeStatus(value: unknown): ToolStatus | undefined {
-  return value === 'pending' ||
-    value === 'in_progress' ||
-    value === 'completed' ||
-    value === 'failed'
-    ? value
-    : undefined
-}
-
-function extractLocations(source: Record<string, unknown>): string[] {
-  if (!Array.isArray(source.locations)) return []
-  return source.locations.flatMap((location) => {
-    const path = stringValue(asRecord(location), 'path')
-    return path ? [path] : []
-  })
-}
-
-function extractCommand(source: Record<string, unknown>): string | undefined {
-  if (typeof source.rawInput === 'string') return source.rawInput
-  const input = asRecord(source.rawInput)
-  const command = stringValue(input, 'command', 'cmd', 'input')
-  if (command) return command
-  const argv = input?.argv
-  return Array.isArray(argv) && argv.every((part) => typeof part === 'string')
-    ? argv.join(' ')
-    : undefined
-}
-
-function extractOutput(
-  payload: Record<string, unknown>,
-  source: Record<string, unknown>,
-): string | undefined {
-  const direct = stringValue(payload, 'output') ?? stringValue(source, 'output')
-  if (direct) return direct
-  if (typeof source.rawOutput === 'string') return source.rawOutput
-  return stringValue(asRecord(source.rawOutput), 'output', 'stdout', 'stderr')
-}
-
-export function codeAgentActivityFromPayload(
-  payload: Record<string, unknown>,
-): CodeAgentActivity | undefined {
-  const source = activitySource(payload)
-  const kind = normalizeKind(source.kind ?? payload.kind)
-  if (!kind) return undefined
-  const status = normalizeStatus(source.status ?? payload.status)
-  return {
-    callId: stringValue(source, 'toolCallId', 'tool_call_id', 'id'),
-    title:
-      stringValue(source, 'title', 'name') ??
-      stringValue(payload, 'title', 'name') ??
-      '',
-    kind,
-    status: status ?? 'in_progress',
-    statusProvided: Boolean(status),
-    locations: extractLocations(source),
-    command: extractCommand(source),
-    output: extractOutput(payload, source),
-  }
-}
-
-export function mergeCodeAgentActivity(
-  current: CodeAgentActivity,
-  update: CodeAgentActivity,
-): CodeAgentActivity {
-  return {
-    callId: update.callId ?? current.callId,
-    title: update.title || current.title,
-    kind: update.kind === 'other' ? current.kind : update.kind,
-    status: update.statusProvided ? update.status : current.status,
-    statusProvided: current.statusProvided || update.statusProvided,
-    locations: update.locations.length ? update.locations : current.locations,
-    command: update.command ?? current.command,
-    output: update.output ?? current.output,
-  }
-}
-
 interface PlanEntry {
   content: string
   status: 'complete' | 'active' | 'pending'
@@ -305,14 +146,13 @@ function ActivityTimelineItem({ activity }: { activity: CodeAgentActivity }) {
       : activity.status === 'failed'
         ? 'failed'
         : 'running'
-  const statusLabel = t(ACTIVITY_LABEL_KEYS[activity.kind][phase])
+  const statusLabel =
+    activity.status === 'stopped'
+      ? t('activityStopped')
+      : t(ACTIVITY_LABEL_KEYS[activity.kind][phase])
   const summary = (
     <>
-      {activity.status === 'in_progress' || activity.status === 'pending' ? (
-        <Loader2Icon className='size-3.5 shrink-0 animate-spin' />
-      ) : (
-        <Icon className='size-3.5 shrink-0' />
-      )}
+      <Icon className='size-3.5 shrink-0' />
       <span className='shrink-0'>{statusLabel}</span>
       <span className='min-w-0 truncate text-foreground/75'>
         {activityTarget(activity)}
@@ -364,52 +204,71 @@ function ActivityTimelineItem({ activity }: { activity: CodeAgentActivity }) {
   )
 }
 
-function PlanTimelineItem({
-  payload,
-  active,
-}: {
-  payload: Record<string, unknown>
-  active: boolean
-}) {
+type TaskItem = Exclude<CodeAgentTimelineItem, { type: 'message' }>
+
+function TaskStep({ item }: { item: TaskItem }) {
   const t = useTranslations('code.Agent')
-  const entries = planEntries(payload)
-  if (!entries.length) return null
+  if (item.type === 'thought') {
+    return (
+      <MessageResponse className='text-sm text-muted-foreground'>
+        {item.text}
+      </MessageResponse>
+    )
+  }
+  if (item.type === 'plan') {
+    return planEntries(item.payload).map((entry) => (
+      <ChainOfThoughtStep
+        key={entry.content}
+        label={entry.content}
+        status={entry.status}
+      />
+    ))
+  }
+  if (item.type === 'activity') {
+    return <ActivityTimelineItem activity={item.activity} />
+  }
   return (
-    <ChainOfThought defaultOpen={active}>
-      <ChainOfThoughtHeader>
-        {active ? t('thinking') : t('thought')}
-      </ChainOfThoughtHeader>
-      <ChainOfThoughtContent>
-        {entries.map((entry) => (
-          <ChainOfThoughtStep
-            key={entry.content}
-            label={entry.content}
-            status={entry.status}
-          />
-        ))}
-      </ChainOfThoughtContent>
-    </ChainOfThought>
+    <Task defaultOpen={false}>
+      <TaskTrigger title={t('terminal')}>
+        <button
+          type='button'
+          className='group flex min-w-0 items-center gap-1.5 text-left text-xs text-muted-foreground transition-colors hover:text-foreground'
+        >
+          <SquareTerminalIcon className='size-3.5' />
+          <span>{t('terminal')}</span>
+          <ChevronDownIcon className='ml-auto size-3.5 transition-transform group-data-[state=open]:rotate-180' />
+        </button>
+      </TaskTrigger>
+      <TaskContent>
+        <Terminal output={item.output} isStreaming={item.active}>
+          <TerminalHeader>
+            <TerminalTitle>{t('terminal')}</TerminalTitle>
+          </TerminalHeader>
+          <TerminalContent className='max-h-48 p-2 text-[11px]' />
+        </Terminal>
+      </TaskContent>
+    </Task>
   )
 }
 
-function ThoughtTimelineItem({
-  text,
-  active,
-}: {
-  text: string
-  active: boolean
-}) {
+function TaskGroup({ items }: { items: TaskItem[] }) {
   const t = useTranslations('code.Agent')
-  if (!text.trim()) return null
+  const active = items.some((item) =>
+    item.type === 'activity'
+      ? item.activity.status === 'pending' ||
+        item.activity.status === 'in_progress'
+      : item.active,
+  )
+  const [expanded, setExpanded] = useState<boolean | undefined>(undefined)
   return (
-    <ChainOfThought defaultOpen={active}>
+    <ChainOfThought open={expanded ?? active} onOpenChange={setExpanded}>
       <ChainOfThoughtHeader>
-        {active ? t('thinking') : t('thought')}
+        {t(active ? 'taskRunning' : 'taskDetails', { count: items.length })}
       </ChainOfThoughtHeader>
       <ChainOfThoughtContent>
-        <MessageResponse className='text-sm text-muted-foreground'>
-          {text}
-        </MessageResponse>
+        {items.map((item) => (
+          <TaskStep key={item.id} item={item} />
+        ))}
       </ChainOfThoughtContent>
     </ChainOfThought>
   )
@@ -420,74 +279,30 @@ export function CodeAgentTimeline({
 }: {
   items: CodeAgentTimelineItem[]
 }) {
-  const t = useTranslations('code.Agent')
-  return items.map((item) => {
+  const groups: (
+    | Extract<CodeAgentTimelineItem, { type: 'message' }>
+    | { id: string; type: 'task'; items: TaskItem[] }
+  )[] = []
+  for (const item of items) {
     if (item.type === 'message') {
-      return (
-        <Message key={item.id} from={item.role}>
-          <MessageContent>
-            <MessageResponse>{item.text}</MessageResponse>
-          </MessageContent>
-        </Message>
-      )
+      groups.push(item)
+      continue
     }
-    if (item.type === 'plan') {
-      return (
-        <PlanTimelineItem
-          key={item.id}
-          payload={item.payload}
-          active={item.active}
-        />
-      )
-    }
-    if (item.type === 'thought') {
-      return (
-        <ThoughtTimelineItem
-          key={item.id}
-          text={item.text}
-          active={item.active}
-        />
-      )
-    }
-    if (item.type === 'activity') {
-      return <ActivityTimelineItem key={item.id} activity={item.activity} />
-    }
-    if (item.type === 'event') {
-      return (
-        <div
-          key={item.id}
-          className='flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground'
-        >
-          <WrenchIcon className='size-3.5 shrink-0' />
-          <span className='min-w-0 truncate'>{item.name}</span>
-        </div>
-      )
-    }
-    return (
-      <Task key={item.id} defaultOpen={false}>
-        <TaskTrigger title={t('terminal')}>
-          <button
-            type='button'
-            className='group flex min-w-0 items-center gap-1.5 text-left text-xs text-muted-foreground transition-colors hover:text-foreground'
-          >
-            {item.active ? (
-              <Loader2Icon className='size-3.5 animate-spin' />
-            ) : (
-              <SquareTerminalIcon className='size-3.5' />
-            )}
-            <span>{t('terminal')}</span>
-            <ChevronDownIcon className='ml-auto size-3.5 transition-transform group-data-[state=open]:rotate-180' />
-          </button>
-        </TaskTrigger>
-        <TaskContent>
-          <Terminal output={item.output} isStreaming={item.active}>
-            <TerminalHeader>
-              <TerminalTitle>{t('terminal')}</TerminalTitle>
-            </TerminalHeader>
-            <TerminalContent className='max-h-48 p-2 text-[11px]' />
-          </Terminal>
-        </TaskContent>
-      </Task>
-    )
-  })
+    if (item.type === 'thought' && !item.text.trim()) continue
+    if (item.type === 'plan' && !planEntries(item.payload).length) continue
+    const previous = groups.at(-1)
+    if (previous?.type === 'task') previous.items.push(item)
+    else groups.push({ id: item.id, type: 'task', items: [item] })
+  }
+  return groups.map((group) =>
+    group.type === 'message' ? (
+      <Message key={group.id} from={group.role}>
+        <MessageContent>
+          <MessageResponse>{group.text}</MessageResponse>
+        </MessageContent>
+      </Message>
+    ) : (
+      <TaskGroup key={group.id} items={group.items} />
+    ),
+  )
 }
