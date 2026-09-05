@@ -12,6 +12,12 @@ vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }))
 
+vi.mock('@/components/code/code-page-header', () => ({
+  CodePageHeader: ({ children }: { children: React.ReactNode }) => (
+    <header data-testid='page-header'>{children}</header>
+  ),
+}))
+
 vi.mock('next/link', () => ({
   default: ({
     children,
@@ -141,13 +147,17 @@ describe('CodeWorkspaceForm coding agent integration', () => {
         onComplete={vi.fn()}
       />,
     )
+    const toggle = screen.getByRole('button', { name: 'aiCoding' })
+    const pageHeader = screen.getByTestId('page-header')
+    expect(pageHeader).toContainElement(toggle)
     expect(
       screen.getByRole('combobox', { name: 'agentProvider' }),
     ).toHaveTextContent('OpenCode')
-    fireEvent.click(screen.getByRole('button', { name: 'aiCoding' }))
-    expect(screen.getByTestId('agent-panel')).toHaveAttribute(
-      'data-provider',
-      'opencode',
+    fireEvent.click(toggle)
+    const agentPanel = screen.getByTestId('agent-panel')
+    expect(agentPanel).toHaveAttribute('data-provider', 'opencode')
+    expect(agentPanel.parentElement).toBe(
+      pageHeader.parentElement?.parentElement,
     )
     expect(
       screen.getByRole('combobox', { name: 'agentProvider' }),

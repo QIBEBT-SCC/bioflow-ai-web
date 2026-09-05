@@ -12,8 +12,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
-import { Separator } from '@/components/ui/separator'
-import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import type { CodeNodeType } from '@/types/code'
 
 export default function CodeAddPageClient({
@@ -30,35 +28,31 @@ export default function CodeAddPageClient({
         ? t('rTitle')
         : t('bashTitle')
 
-  return (
-    <SidebarInset className='h-screen overflow-hidden'>
-      <header className='flex h-12 shrink-0 items-center gap-2 border-b px-4'>
-        <SidebarTrigger className='-ml-1' />
-        <Separator orientation='vertical' className='mr-2! h-4!' />
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link href='/code'>{t('breadcrumb')}</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>{title}</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-      </header>
+  const pageHeaderContent = (
+    <Breadcrumb>
+      <BreadcrumbList>
+        <BreadcrumbItem>
+          <BreadcrumbLink asChild>
+            <Link href='/code'>{t('breadcrumb')}</Link>
+          </BreadcrumbLink>
+        </BreadcrumbItem>
+        <BreadcrumbSeparator />
+        <BreadcrumbItem>
+          <BreadcrumbPage>{title}</BreadcrumbPage>
+        </BreadcrumbItem>
+      </BreadcrumbList>
+    </Breadcrumb>
+  )
 
-      <div className='min-h-0 flex-1 overflow-hidden'>
-        <CodeCreateForm
-          key={nodeType}
-          nodeType={nodeType}
-          onCreated={(uid) => {
-            push(`/code/${uid}`)
-          }}
-        />
-      </div>
-    </SidebarInset>
+  return (
+    <CodeCreateForm
+      key={nodeType}
+      nodeType={nodeType}
+      onCreated={(uid) => {
+        push(`/code/${uid}`)
+      }}
+    >
+      {pageHeaderContent}
+    </CodeCreateForm>
   )
 }
