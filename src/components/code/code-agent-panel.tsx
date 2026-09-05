@@ -43,6 +43,11 @@ import {
   mergeCodeAgentActivity,
 } from '@/components/code/code-agent-activity'
 import { CodeAgentConfig } from '@/components/code/code-agent-config'
+import {
+  PREFERENCE_CATEGORIES,
+  readCodeAgentPreferences,
+  saveCodeAgentPreferences,
+} from '@/components/code/code-agent-preferences'
 import { CodeAgentTimeline } from '@/components/code/code-agent-timeline'
 import {
   CodeAgentUsage,
@@ -186,21 +191,68 @@ export function CodeAgentPanel({
       })
     }
 
+    const preferences = readCodeAgentPreferences()
+    const restoreCategories = [...PREFERENCE_CATEGORIES]
+    let sessionReady = false
+    let latestOptions: CodeAgentConfigOption[] | undefined
+    let restoring = false
+
+    const restoreNextPreference = () => {
+      if (!sessionReady || !latestOptions || !openedSession || disposed) return
+      while (restoreCategories.length) {
+        const category = restoreCategories.shift()
+        if (!category) break
+        const value = preferences[category]
+        const option = latestOptions.find(
+          (option) => option.category === category && option.type === 'select',
+        )
+        if (!option || !value || option.currentValue === value) continue
+        const choices = option.options.flatMap((choice) =>
+          'options' in choice ? choice.options : [choice],
+        )
+        if (!choices.some((choice) => choice.value === value)) continue
+        restoring = true
+        setConfigPending(true)
+        void setCodeAgentConfig(openedSession, option.id, value).catch(() => {
+          if (disposed) return
+          restoring = false
+          restoreNextPreference()
+        })
+        return
+      }
+      restoring = false
+      setConfigPending(false)
+    }
+
     const handleConfig = (event: Event) => {
       const payload = JSON.parse((event as MessageEvent<string>).data) as {
         configOptions?: CodeAgentConfigOption[]
       }
-      setConfigOptions(payload.configOptions ?? [])
-      if (event.type === 'config.completed') setConfigPending(false)
+      latestOptions = payload.configOptions ?? []
+      setConfigOptions(latestOptions)
+      if (event.type === 'config.completed') {
+        if (!restoring) saveCodeAgentPreferences(latestOptions)
+        restoring = false
+        restoreNextPreference()
+      } else if (!restoring && restoreCategories.length) {
+        restoreNextPreference()
+      }
     }
     const handleConfigFailed = (event: Event) => {
       const payload = JSON.parse((event as MessageEvent<string>).data) as {
         message?: string
       }
+      if (restoring) {
+        restoring = false
+        restoreNextPreference()
+        return
+      }
       setConfigPending(false)
       toast.error(payload.message ?? t('failed'))
     }
     const handleReady = () => {
+      sessionReady = true
+      restoreNextPreference()
       setStatus('ready')
       setError(undefined)
     }

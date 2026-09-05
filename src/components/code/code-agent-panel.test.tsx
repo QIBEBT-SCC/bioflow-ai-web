@@ -9,6 +9,10 @@ import {
 import { StrictMode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { CodeAgentPanel } from '@/components/code/code-agent-panel'
+import {
+  readCodeAgentPreferences,
+  saveCodeAgentPreferences,
+} from '@/components/code/code-agent-preferences'
 
 const actions = vi.hoisted(() => ({
   createSession: vi.fn(),
@@ -70,6 +74,7 @@ class FakeEventSource {
 describe('CodeAgentPanel', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    localStorage.clear()
     FakeEventSource.instances = []
     vi.stubGlobal('EventSource', FakeEventSource)
     actions.createSession.mockResolvedValue({
@@ -146,6 +151,10 @@ describe('CodeAgentPanel', () => {
         ],
       }),
     )
+    expect(readCodeAgentPreferences()).toEqual({
+      model: 'b',
+      thought_level: 'high',
+    })
     expect(screen.getByRole('button', { name: 'model' })).toHaveTextContent(
       'Model B',
     )
@@ -160,9 +169,84 @@ describe('CodeAgentPanel', () => {
     )
     act(() => events.emit('config.failed', { message: 'Unavailable' }))
     expect(screen.getByRole('button', { name: 'model' })).toBeEnabled()
+    expect(readCodeAgentPreferences()).toEqual({
+      model: 'b',
+      thought_level: 'high',
+    })
     expect(screen.getByRole('button', { name: 'model' })).toHaveTextContent(
       'Model B',
     )
+  })
+
+  it('restores model before reasoning using fresh ACP options', async () => {
+    const model = {
+      id: 'model',
+      category: 'model',
+      type: 'select',
+      name: 'Model',
+      currentValue: 'b',
+      options: [
+        { value: 'a', name: 'A' },
+        { value: 'b', name: 'B' },
+      ],
+    }
+    const effort = {
+      id: 'effort',
+      category: 'thought_level',
+      type: 'select',
+      name: 'Effort',
+      currentValue: 'high',
+      options: [
+        { value: 'low', name: 'Low' },
+        { value: 'high', name: 'High' },
+      ],
+    }
+    saveCodeAgentPreferences([model, effort])
+    render(
+      <CodeAgentPanel
+        nodeType='code_python'
+        source=''
+        dependencies={[]}
+        onApply={vi.fn()}
+        onLockedChange={vi.fn()}
+        onProposalChange={vi.fn()}
+        width={384}
+        onResizeStartAction={vi.fn()}
+      />,
+    )
+    await waitFor(() => expect(FakeEventSource.instances).toHaveLength(1))
+    const events = FakeEventSource.instances[0]
+    act(() =>
+      events.emit('config.updated', {
+        configOptions: [{ ...model, currentValue: 'a' }],
+      }),
+    )
+    expect(actions.setConfig).not.toHaveBeenCalled()
+    act(() => events.emit('session.ready', {}))
+    expect(actions.setConfig).toHaveBeenLastCalledWith(
+      'session-1',
+      'model',
+      'b',
+    )
+    act(() =>
+      events.emit('config.completed', {
+        configOptions: [model, { ...effort, currentValue: 'low' }],
+      }),
+    )
+    expect(actions.setConfig).toHaveBeenLastCalledWith(
+      'session-1',
+      'effort',
+      'high',
+    )
+    expect(screen.getByRole('button', { name: 'model' })).toBeDisabled()
+    act(() =>
+      events.emit('config.completed', { configOptions: [model, effort] }),
+    )
+    expect(screen.getByRole('button', { name: 'reasoning' })).toHaveTextContent(
+      'High',
+    )
+    expect(screen.getByRole('button', { name: 'model' })).toBeEnabled()
+    expect(actions.setConfig).toHaveBeenCalledTimes(2)
   })
 
   it('creates only one session in Strict Mode and closes it on unmount', async () => {
