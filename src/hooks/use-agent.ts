@@ -179,7 +179,7 @@ export function useAgentRunEvents(
     if (!runId) return () => undefined
 
     const controller = new AbortController()
-    let cancelReconnect = () => undefined
+    let cancelReconnect: () => void = () => undefined
 
     const accept = (incoming: AgentEvent[]) => {
       if (incoming.length === 0) return

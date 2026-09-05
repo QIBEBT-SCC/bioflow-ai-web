@@ -10,7 +10,9 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
-import { type FormEvent, useReducer } from 'react'
+import { type FormEvent, useCallback, useReducer, useState } from 'react'
+import { ChatSidebarToggleButton } from '@/components/chat/chat-sidebar-toggle'
+import { CodeAgentPanel } from '@/components/code/code-agent-panel'
 import { CodeSourceEditor } from '@/components/code/code-source-editor'
 import { CodeTypeBadge } from '@/components/code/code-type-badge'
 import { Button } from '@/components/ui/button'
@@ -27,12 +29,15 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
+import { useChatSidebarResize } from '@/hooks/use-chat-sidebar-resize'
 import {
   useCreateCode,
   useGenerateCodeMetadata,
   useUpdateCode,
 } from '@/hooks/use-code'
+import { useCodeAgentAvailability } from '@/hooks/use-code-agent'
 import type { CodeInfo, CodeNodeType } from '@/types/code'
+import type { CodeAgentProposal } from '@/types/code-agent'
 
 type CodeWorkspaceFormProps =
   | {
@@ -112,6 +117,14 @@ export function CodeWorkspaceForm(props: CodeWorkspaceFormProps) {
   const createMutation = useCreateCode()
   const updateMutation = useUpdateCode()
   const metadataMutation = useGenerateCodeMetadata()
+  const { data: agentAvailability } = useCodeAgentAvailability()
+  const [agentOpen, setAgentOpen] = useState(false)
+  const [agentLocked, setAgentLocked] = useState(false)
+  const [agentProposal, setAgentProposal] = useState<CodeAgentProposal>()
+  const {
+    chatSidebarWidth: agentSidebarWidth,
+    handleChatResizeStart: handleAgentResizeStart,
+  } = useChatSidebarResize(384)
   const initialCode = props.mode === 'edit' ? props.code : undefined
   const nodeType = props.mode === 'edit' ? props.code.node_type : props.nodeType
   const [workspace, dispatch] = useReducer(
@@ -191,6 +204,21 @@ export function CodeWorkspaceForm(props: CodeWorkspaceFormProps) {
   }
 
   const returnHref = props.mode === 'edit' ? `/code/${props.code.uid}` : '/code'
+  const handleAgentLockedChange = useCallback(
+    (locked: boolean) => setAgentLocked(locked),
+    [],
+  )
+  const applyAgentProposal = useCallback(
+    (nextSource: string, nextDependencies: string[]) => {
+      dispatch({ type: 'setSource', value: nextSource })
+      dispatch({ type: 'setDependencies', value: nextDependencies })
+    },
+    [],
+  )
+  const handleAgentProposalChange = useCallback(
+    (proposal: CodeAgentProposal | undefined) => setAgentProposal(proposal),
+    [],
+  )
 
   return (
     <div className='flex h-full min-h-0 flex-col bg-background'>
@@ -242,7 +270,10 @@ export function CodeWorkspaceForm(props: CodeWorkspaceFormProps) {
               saveCode()
             }}
             disabled={
-              !source.trim() || isSaving || (props.mode === 'edit' && !isDirty)
+              agentLocked ||
+              !source.trim() ||
+              isSaving ||
+              (props.mode === 'edit' && !isDirty)
             }
           >
             {isSaving ? (
@@ -252,19 +283,51 @@ export function CodeWorkspaceForm(props: CodeWorkspaceFormProps) {
             )}
             {isSaving ? t('saving') : t('saveCode')}
           </Button>
+          {agentAvailability?.available && (
+            <ChatSidebarToggleButton
+              type='button'
+              onClick={() => setAgentOpen((open) => !open)}
+              title={t('aiCoding')}
+              aria-label={t('aiCoding')}
+              aria-pressed={agentOpen}
+            />
+          )}
         </div>
       </div>
 
-      <div className='min-h-0 flex-1'>
-        <CodeSourceEditor
-          nodeType={nodeType}
-          code={source}
-          dependencies={dependencies}
-          onCodeChange={(value) => dispatch({ type: 'setSource', value })}
-          onDependenciesChange={(value) =>
-            dispatch({ type: 'setDependencies', value })
-          }
-        />
+      <div className='flex min-h-0 flex-1'>
+        <div className='min-w-0 flex-1'>
+          <CodeSourceEditor
+            nodeType={nodeType}
+            code={source}
+            dependencies={dependencies}
+            review={
+              agentProposal
+                ? {
+                    code: agentProposal.source,
+                    dependencies: agentProposal.dependencies,
+                  }
+                : undefined
+            }
+            onCodeChange={(value) => dispatch({ type: 'setSource', value })}
+            onDependenciesChange={(value) =>
+              dispatch({ type: 'setDependencies', value })
+            }
+            disabled={agentLocked}
+          />
+        </div>
+        {agentOpen && agentAvailability?.available && (
+          <CodeAgentPanel
+            nodeType={nodeType}
+            source={source}
+            dependencies={dependencies}
+            onApply={applyAgentProposal}
+            onLockedChange={handleAgentLockedChange}
+            onProposalChange={handleAgentProposalChange}
+            width={agentSidebarWidth}
+            onResizeStartAction={handleAgentResizeStart}
+          />
+        )}
       </div>
 
       <Dialog

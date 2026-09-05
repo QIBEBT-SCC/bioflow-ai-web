@@ -49,6 +49,7 @@ const projects = [
     icon: SettingsIcon,
     items: [
       { name: 'llm_management', url: '/setting/llm' },
+      { name: 'coding_agent', url: '/setting/coding-agent' },
       { name: 'skill_management', url: '/setting/skills' },
       { name: 'notification_management', url: '/setting/notifications' },
       { name: 'user_management', url: '/setting/user-management' },

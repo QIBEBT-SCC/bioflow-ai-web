@@ -4,6 +4,7 @@ import { python } from '@codemirror/lang-python'
 import { StreamLanguage } from '@codemirror/language'
 import { r } from '@codemirror/legacy-modes/mode/r'
 import { shell } from '@codemirror/legacy-modes/mode/shell'
+import { unifiedMergeView } from '@codemirror/merge'
 import CodeMirror from '@uiw/react-codemirror'
 import { PlusIcon, XIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
@@ -18,16 +19,23 @@ interface CodeSourceEditorProps {
   nodeType: CodeNodeType
   code: string
   dependencies: string[]
+  review?: {
+    code: string
+    dependencies: string[]
+  }
   onCodeChange: (code: string) => void
   onDependenciesChange: (dependencies: string[]) => void
+  disabled?: boolean
 }
 
 export function CodeSourceEditor({
   nodeType,
   code,
   dependencies,
+  review,
   onCodeChange,
   onDependenciesChange,
+  disabled = false,
 }: CodeSourceEditorProps) {
   const t = useTranslations('code.Workspace')
   const [dependencyDraft, setDependencyDraft] = useState('')
@@ -39,7 +47,53 @@ export function CodeSourceEditor({
     () => [isPython ? python() : StreamLanguage.define(isR ? r : shell)],
     [isPython, isR],
   )
-  const lineCount = Math.max(1, code.split('\n').length)
+  const editorExtensions = useMemo(
+    () =>
+      review
+        ? [
+            ...languageExtensions,
+            unifiedMergeView({
+              original: code,
+              highlightChanges: true,
+              gutter: true,
+              mergeControls: false,
+              allowInlineDiffs: true,
+              collapseUnchanged: { margin: 3, minSize: 8 },
+            }),
+          ]
+        : languageExtensions,
+    [code, languageExtensions, review],
+  )
+  const displayedCode = review?.code ?? code
+  const lineCount = Math.max(1, displayedCode.split('\n').length)
+  const displayedDependencies = useMemo(() => {
+    if (!review) {
+      return dependencies.map((dependency) => ({
+        dependency,
+        status: 'unchanged' as const,
+      }))
+    }
+
+    const current = new Set(dependencies)
+    const proposed = new Set(review.dependencies)
+    const removedDependencies = dependencies.reduce<
+      Array<{ dependency: string; status: 'removed' }>
+    >((removed, dependency) => {
+      if (!proposed.has(dependency)) {
+        removed.push({ dependency, status: 'removed' })
+      }
+      return removed
+    }, [])
+    return [
+      ...review.dependencies.map((dependency) => ({
+        dependency,
+        status: current.has(dependency)
+          ? ('unchanged' as const)
+          : ('added' as const),
+      })),
+      ...removedDependencies,
+    ]
+  }, [dependencies, review])
 
   const addDependency = () => {
     const dependency = dependencyDraft.trim()
@@ -64,11 +118,12 @@ export function CodeSourceEditor({
     >
       <section className='flex h-full min-h-0 min-w-0 flex-col bg-background'>
         <CodeMirror
-          value={code}
+          value={displayedCode}
           height='100%'
           theme='light'
-          extensions={languageExtensions}
+          extensions={editorExtensions}
           onChange={onCodeChange}
+          editable={!disabled && !review}
           onUpdate={(update) => {
             if (!update.selectionSet && !update.docChanged) return
             const head = update.state.selection.main.head
@@ -82,7 +137,7 @@ export function CodeSourceEditor({
                 ? t('rPlaceholder')
                 : t('bashPlaceholder')
           }
-          autoFocus
+          autoFocus={!review}
           basicSetup={{
             lineNumbers: true,
             highlightActiveLineGutter: true,
@@ -98,6 +153,11 @@ export function CodeSourceEditor({
 
         <div className='flex h-7 shrink-0 items-center justify-between border-t bg-muted/30 px-3 font-mono text-[11px] text-muted-foreground'>
           <div className='flex items-center gap-4'>
+            {review && (
+              <span className='font-sans font-medium text-primary'>
+                {t('reviewingChanges')}
+              </span>
+            )}
             <span>
               {t('cursorPosition', {
                 line: cursor.line,
@@ -138,13 +198,14 @@ export function CodeSourceEditor({
                     : t('rDependencyPlaceholder')
                 }
                 className='bg-background font-mono text-sm'
+                disabled={disabled}
               />
               <Button
                 type='button'
                 variant='outline'
                 size='icon'
                 onClick={addDependency}
-                disabled={!dependencyDraft.trim()}
+                disabled={disabled || !dependencyDraft.trim()}
                 aria-label={t('addDependency')}
               >
                 <PlusIcon className='size-4' />
@@ -153,26 +214,37 @@ export function CodeSourceEditor({
           </div>
 
           <div className='mt-4 flex min-h-12 flex-wrap content-start gap-2'>
-            {dependencies.length ? (
-              dependencies.map((dependency) => (
+            {displayedDependencies.length ? (
+              displayedDependencies.map(({ dependency, status }) => (
                 <Badge
-                  key={dependency}
+                  key={`${status}:${dependency}`}
                   variant='secondary'
-                  className='gap-1 border font-mono font-normal'
+                  className={
+                    status === 'added'
+                      ? 'gap-1 border-emerald-500/50 bg-emerald-500/10 font-mono font-normal text-emerald-700 dark:text-emerald-300'
+                      : status === 'removed'
+                        ? 'gap-1 border-destructive/40 bg-destructive/10 font-mono font-normal text-destructive line-through'
+                        : 'gap-1 border font-mono font-normal'
+                  }
                 >
+                  {status === 'added' && <span aria-hidden='true'>+</span>}
+                  {status === 'removed' && <span aria-hidden='true'>−</span>}
                   {dependency}
-                  <button
-                    type='button'
-                    onClick={() =>
-                      onDependenciesChange(
-                        dependencies.filter((item) => item !== dependency),
-                      )
-                    }
-                    className='rounded-sm text-muted-foreground hover:text-foreground'
-                    aria-label={t('removeDependency', { dependency })}
-                  >
-                    <XIcon className='size-3' />
-                  </button>
+                  {!review && (
+                    <button
+                      type='button'
+                      disabled={disabled}
+                      onClick={() =>
+                        onDependenciesChange(
+                          dependencies.filter((item) => item !== dependency),
+                        )
+                      }
+                      className='rounded-sm text-muted-foreground hover:text-foreground'
+                      aria-label={t('removeDependency', { dependency })}
+                    >
+                      <XIcon className='size-3' />
+                    </button>
+                  )}
                 </Badge>
               ))
             ) : (

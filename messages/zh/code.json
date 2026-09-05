@@ -112,6 +112,8 @@
       "unsaved": "未保存",
       "saved": "已保存",
       "nodeInfo": "节点信息",
+      "aiCoding": "AI 编程",
+      "reviewingChanges": "正在审查修改",
       "saveCode": "保存",
       "pythonEnvironment": "Python 运行环境",
       "pythonEnvironmentHint": "添加运行时需要从系统配置源安装的第三方 Python 包，Click 无需填写。",
@@ -145,6 +147,80 @@
       "saving": "保存中...",
       "create": "创建代码",
       "save": "保存修改"
+    },
+    "Agent": {
+      "title": "AI 编程",
+      "empty": "描述要创建或修改的代码。智能体只编辑临时工作区，不会自动保存 CODE 定义。",
+      "starting": "正在启动隔离的 Codex 会话...",
+      "connecting": "正在等待 coding-agent worker...",
+      "running": "Codex 正在处理...",
+      "failed": "本轮编程任务失败。",
+      "closed": "临时会话已关闭。",
+      "plan": "计划",
+      "activity": "活动",
+      "thinking": "正在思考与规划",
+      "thought": "已思考与规划",
+      "activityLabels": {
+        "read": {
+          "running": "正在读取",
+          "completed": "已读取",
+          "failed": "读取失败"
+        },
+        "edit": {
+          "running": "正在编辑",
+          "completed": "已编辑",
+          "failed": "编辑失败"
+        },
+        "delete": {
+          "running": "正在删除",
+          "completed": "已删除",
+          "failed": "删除失败"
+        },
+        "move": {
+          "running": "正在移动",
+          "completed": "已移动",
+          "failed": "移动失败"
+        },
+        "search": {
+          "running": "正在搜索",
+          "completed": "已搜索",
+          "failed": "搜索失败"
+        },
+        "execute": {
+          "running": "正在运行",
+          "completed": "已运行",
+          "failed": "运行失败"
+        },
+        "think": {
+          "running": "正在思考",
+          "completed": "已思考",
+          "failed": "思考失败"
+        },
+        "fetch": {
+          "running": "正在获取",
+          "completed": "已获取",
+          "failed": "获取失败"
+        },
+        "other": {
+          "running": "正在处理",
+          "completed": "已完成",
+          "failed": "处理失败"
+        }
+      },
+      "terminal": "终端输出",
+      "proposal": "审查候选修改",
+      "reviewInEditor": "候选修改已在左侧代码编辑器中以 diff 显示。",
+      "toggleProposal": "展开或收起候选修改",
+      "manualSave": "采纳只会更新当前表单，仍需点击“保存”才能写入 CODE 定义。",
+      "noChanges": "源码和依赖没有变化。",
+      "accept": "整轮采纳",
+      "reject": "整轮丢弃",
+      "applied": "修改已写入未保存的表单",
+      "placeholder": "让 Codex 编写、解释或修改当前代码...",
+      "enterHint": "Enter 发送 · Shift+Enter 换行",
+      "send": "发送",
+      "stop": "停止",
+      "resize": "调整 AI 编程侧栏宽度"
     },
     "Toast": {
       "createSuccess": "CODE 节点创建成功",

@@ -92,7 +92,7 @@ export const DbMenu: React.FC<DBMenuProps> = ({
                         </span>
                       )}
                       <span className='text-xs text-muted-foreground truncate'>
-                        {t('db_path', { path: db.path })}
+                        {t('db_path', { path: db.path ?? '' })}
                       </span>
                     </div>
                   </CommandItem>
