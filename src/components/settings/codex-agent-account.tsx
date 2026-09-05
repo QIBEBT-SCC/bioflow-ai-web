@@ -12,7 +12,7 @@ import {
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { cancelCodingAgentLogin } from '@/app/actions/code-agent'
+import { cancelCodexLogin } from '@/app/actions/code-agent'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -23,10 +23,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import {
-  useCodeAgentAvailability,
-  useStartCodingAgentLogin,
-} from '@/hooks/use-code-agent'
+import { useStartCodexLogin } from '@/hooks/use-code-agent'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '/api/v1'
 
@@ -36,16 +33,14 @@ interface DeviceCode {
   message: string
 }
 
-export function CodingAgentAccountManagement() {
+export function CodexAgentAccount({
+  available = false,
+}: {
+  available?: boolean
+}) {
   const t = useTranslations('setting.coding_agent')
   const queryClient = useQueryClient()
-  const {
-    data: availability,
-    isLoading,
-    error,
-    refetch,
-  } = useCodeAgentAvailability()
-  const loginMutation = useStartCodingAgentLogin()
+  const loginMutation = useStartCodexLogin()
   const [loginId, setLoginId] = useState<string>()
   const [deviceCode, setDeviceCode] = useState<DeviceCode>()
   const [loginError, setLoginError] = useState<string>()
@@ -54,7 +49,7 @@ export function CodingAgentAccountManagement() {
   useEffect(() => {
     if (!loginId) return
     const events = new EventSource(
-      `${API_URL}/settings/coding-agent-account/login/${loginId}/events`,
+      `${API_URL}/settings/coding-agents/providers/codex/login/${loginId}/events`,
       { withCredentials: true },
     )
     const handleCode = (event: Event) => {
@@ -74,7 +69,6 @@ export function CodingAgentAccountManagement() {
       setCompleted(true)
       setLoginError(undefined)
       events.close()
-      void refetch()
       void queryClient.invalidateQueries({
         queryKey: ['code-agent', 'availability'],
       })
@@ -85,13 +79,11 @@ export function CodingAgentAccountManagement() {
       }
       setLoginError(payload.message ?? t('loginFailed'))
       events.close()
-      void refetch()
     }
     const handleCancelled = () => {
       events.close()
       setLoginId(undefined)
       setDeviceCode(undefined)
-      void refetch()
     }
     events.addEventListener('login.code', handleCode)
     events.addEventListener('login.completed', handleCompleted)
@@ -104,7 +96,7 @@ export function CodingAgentAccountManagement() {
       events.removeEventListener('login.cancelled', handleCancelled)
       events.close()
     }
-  }, [loginId, queryClient, refetch, t])
+  }, [loginId, queryClient, t])
 
   const startLogin = async () => {
     setDeviceCode(undefined)
@@ -120,7 +112,7 @@ export function CodingAgentAccountManagement() {
 
   const closeDialog = async () => {
     if (loginId && !completed) {
-      await cancelCodingAgentLogin(loginId).catch(() => undefined)
+      await cancelCodexLogin(loginId).catch(() => undefined)
     }
     setLoginId(undefined)
     setDeviceCode(undefined)
@@ -133,9 +125,6 @@ export function CodingAgentAccountManagement() {
     await navigator.clipboard.writeText(deviceCode.userCode)
     toast.success(t('codeCopied'))
   }
-
-  if (isLoading) return <Loader2Icon className='size-5 animate-spin' />
-  if (error) return <p className='text-sm text-destructive'>{error.message}</p>
 
   return (
     <>
@@ -150,7 +139,7 @@ export function CodingAgentAccountManagement() {
               <p className='text-xs text-muted-foreground'>ACP v1</p>
             </div>
           </div>
-          {availability?.available ? (
+          {available ? (
             <div className='flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400'>
               <CheckCircle2Icon className='size-4' />
               {t('connected')}
@@ -164,13 +153,13 @@ export function CodingAgentAccountManagement() {
         <CardContent className='space-y-5'>
           <div className='rounded-lg border bg-muted/30 p-4 text-sm'>
             <p className='text-muted-foreground'>
-              {availability?.available ? t('connectedHelp') : t('accountHelp')}
+              {available ? t('connectedHelp') : t('accountHelp')}
             </p>
             <p className='mt-2 text-xs text-muted-foreground'>
               {t('credentialHelp')}
             </p>
           </div>
-          {!availability?.available && (
+          {!available && (
             <div className='flex justify-end'>
               <Button
                 type='button'

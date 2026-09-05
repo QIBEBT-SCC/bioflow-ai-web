@@ -3,22 +3,25 @@ import type {
   CodeAgentSession,
   CodeAgentSessionCreate,
   CodeAgentTurn,
+  CodexAgentSettings,
+  CodexLogin,
   CodingAgentAvailability,
-  CodingAgentLogin,
-  CodingAgentSettings,
 } from '@/types/code-agent'
 
-export async function startCodingAgentLogin(): Promise<CodingAgentLogin> {
-  return await clientFetch<CodingAgentLogin>(
-    '/settings/coding-agent-account/login',
+export async function startCodexLogin(): Promise<CodexLogin> {
+  return await clientFetch<CodexLogin>(
+    '/settings/coding-agents/providers/codex/login',
     { method: 'POST' },
   )
 }
 
-export async function cancelCodingAgentLogin(loginId: string): Promise<void> {
-  await clientFetch(`/settings/coding-agent-account/login/${loginId}/cancel`, {
-    method: 'POST',
-  })
+export async function cancelCodexLogin(loginId: string): Promise<void> {
+  await clientFetch(
+    `/settings/coding-agents/providers/codex/login/${loginId}/cancel`,
+    {
+      method: 'POST',
+    },
+  )
 }
 
 export async function getCodeAgentAvailability(): Promise<CodingAgentAvailability> {
@@ -71,17 +74,17 @@ export async function closeCodeAgentSession(
   })
 }
 
-export async function getCodingAgentSettings(): Promise<CodingAgentSettings> {
-  return await clientFetch<CodingAgentSettings>(
-    '/settings/coding-agent-account/settings',
+export async function getCodexAgentSettings(): Promise<CodexAgentSettings> {
+  return await clientFetch<CodexAgentSettings>(
+    '/settings/coding-agents/providers/codex/settings',
   )
 }
 
-export async function saveCodingAgentSettings(
-  data: CodingAgentSettings,
-): Promise<CodingAgentSettings> {
-  return await clientFetch<CodingAgentSettings>(
-    '/settings/coding-agent-account/settings',
+export async function saveCodexAgentSettings(
+  data: CodexAgentSettings,
+): Promise<CodexAgentSettings> {
+  return await clientFetch<CodexAgentSettings>(
+    '/settings/coding-agents/providers/codex/settings',
     {
       method: 'PUT',
       body: JSON.stringify(data),
@@ -97,5 +100,15 @@ export async function setCodeAgentConfig(
   await clientFetch(`/code-agent/sessions/${sessionId}/config`, {
     method: 'PUT',
     body: JSON.stringify({ config_id: configId, value }),
+  })
+}
+
+export async function saveOpenCodeCredentials(
+  apiKey: string,
+  modelProvider: string,
+): Promise<void> {
+  await clientFetch('/settings/coding-agents/providers/opencode/credentials', {
+    method: 'PUT',
+    body: JSON.stringify({ api_key: apiKey, model_provider: modelProvider }),
   })
 }

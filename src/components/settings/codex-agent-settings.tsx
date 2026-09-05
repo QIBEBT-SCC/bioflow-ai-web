@@ -7,13 +7,13 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Switch } from '@/components/ui/switch'
 import {
-  useCodingAgentSettings,
-  useSaveCodingAgentSettings,
+  useCodexAgentSettings,
+  useSaveCodexAgentSettings,
 } from '@/hooks/use-code-agent'
-import type { CodingAgentSettings } from '@/types/code-agent'
+import type { CodexAgentSettings } from '@/types/code-agent'
 
-export function CodingAgentSettingsPanel() {
-  const { data, isPending, error } = useCodingAgentSettings()
+export function CodexAgentSettingsPanel() {
+  const { data, isPending, error } = useCodexAgentSettings()
   const t = useTranslations('setting.coding_agent')
   if (isPending)
     return (
@@ -28,10 +28,10 @@ export function CodingAgentSettingsPanel() {
   return <SettingsForm key={JSON.stringify(data)} initial={data} />
 }
 
-function SettingsForm({ initial }: { initial: CodingAgentSettings }) {
+function SettingsForm({ initial }: { initial: CodexAgentSettings }) {
   const t = useTranslations('setting.coding_agent')
   const [settings, setSettings] = useState(initial)
-  const save = useSaveCodingAgentSettings()
+  const save = useSaveCodexAgentSettings()
   const selectClass =
     'h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
   return (
@@ -64,7 +64,7 @@ function SettingsForm({ initial }: { initial: CodingAgentSettings }) {
                 setSettings({
                   ...settings,
                   sandbox_mode: event.target
-                    .value as CodingAgentSettings['sandbox_mode'],
+                    .value as CodexAgentSettings['sandbox_mode'],
                 })
               }
             >
@@ -87,7 +87,7 @@ function SettingsForm({ initial }: { initial: CodingAgentSettings }) {
                 setSettings({
                   ...settings,
                   web_search: event.target
-                    .value as CodingAgentSettings['web_search'],
+                    .value as CodexAgentSettings['web_search'],
                 })
               }
             >

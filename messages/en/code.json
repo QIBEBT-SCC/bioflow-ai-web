@@ -112,6 +112,7 @@
       "unsaved": "Unsaved",
       "saved": "Saved",
       "nodeInfo": "Node info",
+      "agentProvider": "Coding agent",
       "aiCoding": "AI coding",
       "reviewingChanges": "Reviewing changes",
       "saveCode": "Save",

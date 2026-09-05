@@ -1,12 +1,21 @@
 import type { CodeNodeType } from '@/types/code'
 
+export type CodingAgentProvider = 'codex' | 'opencode'
+
+export interface CodingAgentProviderAvailability {
+  provider: CodingAgentProvider
+  name: string
+  available: boolean
+}
+
 export interface CodingAgentAvailability {
   available: boolean
   provider: 'codex'
   name: 'Codex'
+  providers?: CodingAgentProviderAvailability[]
 }
 
-export interface CodingAgentLogin {
+export interface CodexLogin {
   id: string
   status: 'starting' | 'waiting' | 'completed' | 'failed' | 'cancelled'
 }
@@ -33,9 +42,10 @@ export interface CodeAgentProposal {
 
 export interface CodeAgentSessionCreate {
   node_type: CodeNodeType
+  provider?: CodingAgentProvider
 }
 
-export interface CodingAgentSettings {
+export interface CodexAgentSettings {
   sandbox_mode: 'read-only' | 'workspace-write' | 'danger-full-access'
   web_search: 'live' | 'cached' | 'disabled'
   network_access: boolean

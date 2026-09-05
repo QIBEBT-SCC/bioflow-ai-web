@@ -1,9 +1,11 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { CodeWorkspaceForm } from '@/components/code/code-workspace-form'
+import type { CodingAgentProviderAvailability } from '@/types/code-agent'
 
 const mockState = vi.hoisted(() => ({
   available: false,
+  providers: undefined as CodingAgentProviderAvailability[] | undefined,
 }))
 
 vi.mock('next-intl', () => ({
@@ -24,6 +26,7 @@ vi.mock('@/hooks/use-code-agent', () => ({
   useCodeAgentAvailability: () => ({
     data: {
       available: mockState.available,
+      providers: mockState.providers,
       provider: 'codex',
       name: 'Codex',
     },
@@ -57,10 +60,12 @@ vi.mock('@/components/code/code-source-editor', () => ({
 
 vi.mock('@/components/code/code-agent-panel', () => ({
   CodeAgentPanel: ({
+    provider,
     onApply,
     onLockedChange,
     onProposalChange,
   }: {
+    provider?: string
     onApply: (source: string, dependencies: string[]) => void
     onLockedChange: (locked: boolean) => void
     onProposalChange: (proposal: {
@@ -72,7 +77,7 @@ vi.mock('@/components/code/code-agent-panel', () => ({
       warnings: string[]
     }) => void
   }) => (
-    <div>
+    <div data-testid='agent-panel' data-provider={provider}>
       <button
         type='button'
         onClick={() =>
@@ -106,6 +111,7 @@ describe('CodeWorkspaceForm coding agent integration', () => {
 
   beforeEach(() => {
     mockState.available = false
+    mockState.providers = undefined
   })
 
   it('keeps the existing editor layout when no provider is available', () => {
@@ -120,6 +126,32 @@ describe('CodeWorkspaceForm coding agent integration', () => {
       screen.queryByRole('button', { name: 'aiCoding' }),
     ).not.toBeInTheDocument()
     expect(screen.getByTestId('source-editor')).toBeInTheDocument()
+  })
+
+  it('opens OpenCode when Codex has no credentials and prevents switching an open session', () => {
+    mockState.available = true
+    mockState.providers = [
+      { provider: 'codex', name: 'Codex', available: false },
+      { provider: 'opencode', name: 'OpenCode', available: true },
+    ]
+    render(
+      <CodeWorkspaceForm
+        mode='create'
+        nodeType='code_python'
+        onComplete={vi.fn()}
+      />,
+    )
+    expect(
+      screen.getByRole('combobox', { name: 'agentProvider' }),
+    ).toHaveTextContent('OpenCode')
+    fireEvent.click(screen.getByRole('button', { name: 'aiCoding' }))
+    expect(screen.getByTestId('agent-panel')).toHaveAttribute(
+      'data-provider',
+      'opencode',
+    )
+    expect(
+      screen.getByRole('combobox', { name: 'agentProvider' }),
+    ).toBeDisabled()
   })
 
   it('applies an accepted proposal to the unsaved form and locks during a turn', () => {

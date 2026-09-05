@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
-import { CodingAgentSettingsPanel } from '@/components/settings/coding-agent-settings'
+import { CodexAgentSettingsPanel } from '@/components/settings/codex-agent-settings'
 
 const mocks = vi.hoisted(() => ({
   save: vi.fn(),
@@ -8,7 +8,7 @@ const mocks = vi.hoisted(() => ({
 }))
 vi.mock('next-intl', () => ({ useTranslations: () => mocks.translate }))
 vi.mock('@/hooks/use-code-agent', () => ({
-  useCodingAgentSettings: () => ({
+  useCodexAgentSettings: () => ({
     data: {
       sandbox_mode: 'workspace-write',
       web_search: 'live',
@@ -16,11 +16,11 @@ vi.mock('@/hooks/use-code-agent', () => ({
     },
     isPending: false,
   }),
-  useSaveCodingAgentSettings: () => ({ mutate: mocks.save, isPending: false }),
+  useSaveCodexAgentSettings: () => ({ mutate: mocks.save, isPending: false }),
 }))
 afterEach(cleanup)
 it('loads native defaults and saves the edited global settings', () => {
-  render(<CodingAgentSettingsPanel />)
+  render(<CodexAgentSettingsPanel />)
   expect(screen.getByRole('combobox', { name: 'sandbox' })).toHaveValue(
     'workspace-write',
   )

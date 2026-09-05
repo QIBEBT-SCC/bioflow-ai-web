@@ -8,7 +8,7 @@ import {
   waitFor,
 } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { CodingAgentAccountManagement } from '@/components/settings/coding-agent-account-management'
+import { CodexAgentAccount } from '@/components/settings/codex-agent-account'
 
 const mocks = vi.hoisted(() => ({
   translate: (key: string) => key,
@@ -32,14 +32,14 @@ vi.mock('@/hooks/use-code-agent', () => ({
     error: null,
     refetch: mocks.refetch,
   }),
-  useStartCodingAgentLogin: () => ({
+  useStartCodexLogin: () => ({
     isPending: false,
     mutateAsync: mocks.startLogin,
   }),
 }))
 
 vi.mock('@/app/actions/code-agent', () => ({
-  cancelCodingAgentLogin: mocks.cancelLogin,
+  cancelCodexLogin: mocks.cancelLogin,
 }))
 
 class FakeEventSource {
@@ -74,7 +74,7 @@ class FakeEventSource {
   close() {}
 }
 
-describe('CodingAgentAccountManagement', () => {
+describe('CodexAgentAccount', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     FakeEventSource.instances = []
@@ -95,14 +95,16 @@ describe('CodingAgentAccountManagement', () => {
     })
     render(
       <QueryClientProvider client={queryClient}>
-        <CodingAgentAccountManagement />
+        <CodexAgentAccount />
       </QueryClientProvider>,
     )
 
     fireEvent.click(screen.getByText('login'))
     await waitFor(() => expect(FakeEventSource.instances).toHaveLength(1))
     const events = FakeEventSource.instances[0]
-    expect(events.url).toContain('/coding-agent-account/login/login-1/events')
+    expect(events.url).toContain(
+      '/coding-agents/providers/codex/login/login-1/events',
+    )
 
     act(() =>
       events.emit('login.code', {
@@ -119,6 +121,5 @@ describe('CodingAgentAccountManagement', () => {
 
     act(() => events.emit('login.completed', {}))
     expect(await screen.findByText('loginSucceeded')).toBeInTheDocument()
-    expect(mocks.refetch).toHaveBeenCalled()
   })
 })

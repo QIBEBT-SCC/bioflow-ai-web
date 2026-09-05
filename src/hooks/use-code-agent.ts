@@ -3,9 +3,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   getCodeAgentAvailability,
-  getCodingAgentSettings,
-  saveCodingAgentSettings,
-  startCodingAgentLogin,
+  getCodexAgentSettings,
+  saveCodexAgentSettings,
+  startCodexLogin,
 } from '@/app/actions/code-agent'
 
 export function useCodeAgentAvailability() {
@@ -17,24 +17,24 @@ export function useCodeAgentAvailability() {
   })
 }
 
-export function useStartCodingAgentLogin() {
+export function useStartCodexLogin() {
   return useMutation({
-    mutationFn: startCodingAgentLogin,
+    mutationFn: startCodexLogin,
   })
 }
 
-export function useCodingAgentSettings() {
+export function useCodexAgentSettings() {
   return useQuery({
-    queryKey: ['code-agent', 'settings'],
-    queryFn: getCodingAgentSettings,
+    queryKey: ['code-agent', 'codex', 'settings'],
+    queryFn: getCodexAgentSettings,
   })
 }
 
-export function useSaveCodingAgentSettings() {
+export function useSaveCodexAgentSettings() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: saveCodingAgentSettings,
+    mutationFn: saveCodexAgentSettings,
     onSuccess: (data) =>
-      queryClient.setQueryData(['code-agent', 'settings'], data),
+      queryClient.setQueryData(['code-agent', 'codex', 'settings'], data),
   })
 }

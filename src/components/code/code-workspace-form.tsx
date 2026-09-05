@@ -27,6 +27,13 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
 import { useChatSidebarResize } from '@/hooks/use-chat-sidebar-resize'
@@ -37,7 +44,7 @@ import {
 } from '@/hooks/use-code'
 import { useCodeAgentAvailability } from '@/hooks/use-code-agent'
 import type { CodeInfo, CodeNodeType } from '@/types/code'
-import type { CodeAgentProposal } from '@/types/code-agent'
+import type { CodeAgentProposal, CodingAgentProvider } from '@/types/code-agent'
 
 type CodeWorkspaceFormProps =
   | {
@@ -118,6 +125,17 @@ export function CodeWorkspaceForm(props: CodeWorkspaceFormProps) {
   const updateMutation = useUpdateCode()
   const metadataMutation = useGenerateCodeMetadata()
   const { data: agentAvailability } = useCodeAgentAvailability()
+  const [selectedProvider, setSelectedProvider] =
+    useState<CodingAgentProvider>('codex')
+  const providers =
+    agentAvailability?.providers ??
+    (agentAvailability ? [agentAvailability] : [])
+  const availableProviders = providers.filter((provider) => provider.available)
+  const agentProvider =
+    availableProviders.find((item) => item.provider === selectedProvider)
+      ?.provider ??
+    availableProviders[0]?.provider ??
+    'codex'
   const [agentOpen, setAgentOpen] = useState(false)
   const [agentLocked, setAgentLocked] = useState(false)
   const [agentProposal, setAgentProposal] = useState<CodeAgentProposal>()
@@ -283,6 +301,30 @@ export function CodeWorkspaceForm(props: CodeWorkspaceFormProps) {
             )}
             {isSaving ? t('saving') : t('saveCode')}
           </Button>
+          {availableProviders.length > 0 && (
+            <Select
+              value={agentProvider}
+              disabled={agentOpen || agentLocked}
+              onValueChange={(value) =>
+                setSelectedProvider(value as CodingAgentProvider)
+              }
+            >
+              <SelectTrigger className='w-32' aria-label={t('agentProvider')}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {providers.map((item) => (
+                  <SelectItem
+                    key={item.provider}
+                    value={item.provider}
+                    disabled={!item.available}
+                  >
+                    {item.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
           {agentAvailability?.available && (
             <ChatSidebarToggleButton
               type='button'
@@ -318,6 +360,8 @@ export function CodeWorkspaceForm(props: CodeWorkspaceFormProps) {
         </div>
         {agentOpen && agentAvailability?.available && (
           <CodeAgentPanel
+            key={agentProvider}
+            provider={agentProvider}
             nodeType={nodeType}
             source={source}
             dependencies={dependencies}

@@ -60,11 +60,13 @@ import type { CodeNodeType } from '@/types/code'
 import type {
   CodeAgentConfigOption,
   CodeAgentProposal,
+  CodingAgentProvider,
 } from '@/types/code-agent'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '/api/v1'
 
 interface CodeAgentPanelProps {
+  provider?: CodingAgentProvider
   nodeType: CodeNodeType
   source: string
   dependencies: string[]
@@ -76,6 +78,7 @@ interface CodeAgentPanelProps {
 }
 
 export function CodeAgentPanel({
+  provider = 'codex',
   nodeType,
   source,
   dependencies,
@@ -191,7 +194,7 @@ export function CodeAgentPanel({
       })
     }
 
-    const preferences = readCodeAgentPreferences()
+    const preferences = readCodeAgentPreferences(provider)
     const restoreCategories = [...PREFERENCE_CATEGORIES]
     let sessionReady = false
     let latestOptions: CodeAgentConfigOption[] | undefined
@@ -231,7 +234,7 @@ export function CodeAgentPanel({
       latestOptions = payload.configOptions ?? []
       setConfigOptions(latestOptions)
       if (event.type === 'config.completed') {
-        if (!restoring) saveCodeAgentPreferences(latestOptions)
+        if (!restoring) saveCodeAgentPreferences(latestOptions, provider)
         restoring = false
         restoreNextPreference()
       } else if (!restoring && restoreCategories.length) {
@@ -451,6 +454,7 @@ export function CodeAgentPanel({
       try {
         const created = await createCodeAgentSession({
           node_type: nodeType,
+          provider,
         })
         openedSession = created.id
         if (disposed) {
@@ -517,7 +521,7 @@ export function CodeAgentPanel({
         void closeCodeAgentSession(openedSession, true).catch(() => undefined)
       onProposalChange(undefined)
     }
-  }, [nodeType, onProposalChange, t])
+  }, [nodeType, provider, onProposalChange, t])
 
   const submit = async () => {
     const text = prompt.trim()

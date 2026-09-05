@@ -1,7 +1,10 @@
 import { BotIcon } from 'lucide-react'
+import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
-import { CodingAgentAccountManagement } from '@/components/settings/coding-agent-account-management'
-import { CodingAgentSettingsPanel } from '@/components/settings/coding-agent-settings'
+import {
+  CodingAgentManagement,
+  type CodingAgentSettingsTab,
+} from '@/components/settings/coding-agent-management'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -11,8 +14,29 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 
-export default async function CodingAgentAccountPage() {
+const VALID_AGENTS: CodingAgentSettingsTab[] = ['codex', 'opencode']
+
+interface CodingAgentPageProps {
+  searchParams: Promise<{ agent?: string | string[] }>
+}
+
+export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('setting.coding_agent')
+  return { title: t('title'), description: t('description') }
+}
+
+export default async function CodingAgentPage({
+  searchParams,
+}: CodingAgentPageProps) {
+  const [{ agent }, t] = await Promise.all([
+    searchParams,
+    getTranslations('setting.coding_agent'),
+  ])
+  const initialAgent =
+    typeof agent === 'string' &&
+    VALID_AGENTS.includes(agent as CodingAgentSettingsTab)
+      ? (agent as CodingAgentSettingsTab)
+      : 'codex'
   return (
     <SidebarInset className='flex h-screen flex-col'>
       <header className='flex h-12 shrink-0 items-center border-b bg-background px-4'>
@@ -35,8 +59,10 @@ export default async function CodingAgentAccountPage() {
             </div>
             <p className='text-muted-foreground'>{t('description')}</p>
           </div>
-          <CodingAgentAccountManagement />
-          <CodingAgentSettingsPanel />
+          <CodingAgentManagement
+            key={initialAgent}
+            initialAgent={initialAgent}
+          />
         </div>
       </main>
     </SidebarInset>

@@ -112,6 +112,7 @@
       "unsaved": "未保存",
       "saved": "已保存",
       "nodeInfo": "节点信息",
+      "agentProvider": "编码智能体",
       "aiCoding": "AI 编程",
       "reviewingChanges": "正在审查修改",
       "saveCode": "保存",
