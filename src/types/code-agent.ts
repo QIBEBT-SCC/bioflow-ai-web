@@ -51,6 +51,30 @@ export interface CodexAgentSettings {
   network_access: boolean
 }
 
+export type OpenCodeModelProvider =
+  | 'opencode-go'
+  | 'opencode'
+  | 'anthropic'
+  | 'openai'
+  | 'google'
+  | 'openrouter'
+  | 'deepseek'
+  | 'custom'
+
+export interface OpenCodeAgentSettings {
+  configured: boolean
+  model_provider: OpenCodeModelProvider
+  base_url: string | null
+  model_id: string | null
+}
+
+export interface OpenCodeCredentialsInput {
+  api_key: string
+  model_provider: OpenCodeModelProvider
+  base_url?: string
+  model_id?: string
+}
+
 export interface CodeAgentConfigChoice {
   value: string
   name: string

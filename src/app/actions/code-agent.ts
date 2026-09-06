@@ -6,6 +6,8 @@ import type {
   CodexAgentSettings,
   CodexLogin,
   CodingAgentAvailability,
+  OpenCodeAgentSettings,
+  OpenCodeCredentialsInput,
 } from '@/types/code-agent'
 
 export async function startCodexLogin(): Promise<CodexLogin> {
@@ -103,12 +105,20 @@ export async function setCodeAgentConfig(
   })
 }
 
+export async function getOpenCodeAgentSettings(): Promise<OpenCodeAgentSettings> {
+  return await clientFetch<OpenCodeAgentSettings>(
+    '/settings/coding-agents/providers/opencode/settings',
+  )
+}
+
 export async function saveOpenCodeCredentials(
-  apiKey: string,
-  modelProvider: string,
-): Promise<void> {
-  await clientFetch('/settings/coding-agents/providers/opencode/credentials', {
-    method: 'PUT',
-    body: JSON.stringify({ api_key: apiKey, model_provider: modelProvider }),
-  })
+  data: OpenCodeCredentialsInput,
+): Promise<OpenCodeAgentSettings> {
+  return await clientFetch<OpenCodeAgentSettings>(
+    '/settings/coding-agents/providers/opencode/credentials',
+    {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    },
+  )
 }

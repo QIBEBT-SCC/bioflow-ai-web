@@ -11,8 +11,15 @@
     "coding_agent": {
       "credentialsSaved": "Credentials saved",
       "credentialsConfigured": "Credentials configured",
-      "apiCredentialHelp": "Save an API key for this agent. Credentials remain on the server and are never returned to the browser.",
-      "modelProvider": "Model provider ID",
+      "apiCredentialHelp": "Select a model provider and enter its API key. OpenCode manages connection details for the listed providers. Credentials remain on the server and are never returned to the browser.",
+      "modelProvider": "Model provider",
+      "customProvider": "Custom",
+      "customBaseUrl": "Base URL",
+      "customModelId": "Model ID",
+      "customProviderHelp": "Custom supports services compatible with the OpenAI Chat Completions API. Enter the Base URL and model ID supplied by the service.",
+      "configuredProvider": "Saved model provider",
+      "credentialStored": "The API key is stored securely in the server credential directory and is never returned to the browser.",
+      "updateCredentials": "Update credentials",
       "saveCredentials": "Save credentials",
       "savingCredentials": "Saving…",
 
