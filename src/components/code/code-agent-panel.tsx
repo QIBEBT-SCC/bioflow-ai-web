@@ -445,10 +445,11 @@ export function CodeAgentPanel({
     const handleClosed = () => {
       finishActiveItems()
       setStatus('failed')
-      setError(t('closed'))
+      setError((current) => current ?? t('closed'))
       eventSource?.close()
     }
-    const handleStreamError = () => setError(t('connecting'))
+    const handleStreamError = () =>
+      setError((current) => current ?? t('connecting'))
 
     const connect = async () => {
       try {

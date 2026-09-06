@@ -276,6 +276,36 @@ describe('CodeAgentPanel', () => {
     expect(actions.createSession).toHaveBeenCalledTimes(1)
   })
 
+  it('keeps the startup failure when the session then closes', async () => {
+    render(
+      <CodeAgentPanel
+        nodeType='code_python'
+        source=''
+        dependencies={[]}
+        onApply={vi.fn()}
+        onLockedChange={vi.fn()}
+        onProposalChange={vi.fn()}
+        width={384}
+        onResizeStartAction={vi.fn()}
+      />,
+    )
+
+    await waitFor(() => expect(FakeEventSource.instances).toHaveLength(1))
+    const events = FakeEventSource.instances[0]
+    act(() => {
+      events.emit('turn.failed', {
+        message: 'Unable to start the configured runner image',
+        recoverable: false,
+      })
+      events.emit('session.closed', {})
+    })
+
+    expect(
+      screen.getByText('Unable to start the configured runner image'),
+    ).toBeInTheDocument()
+    expect(screen.queryByText('closed')).not.toBeInTheDocument()
+  })
+
   it('streams a turn, supports stop, and applies the whole proposal without saving', async () => {
     const onApply = vi.fn()
     const onLockedChange = vi.fn()
