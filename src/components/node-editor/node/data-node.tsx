@@ -495,6 +495,61 @@ const SelectFileInFolderNode = memo(function SelectFileInFolderNode() {
   )
 })
 
+const READ_FILE_CONTENT_HANDLES = {
+  inputs: [
+    { name: 'folder_path', description: 'Path of the folder to read from' },
+  ] as HandleDefine[],
+  outputs: [
+    { name: 'value', description: 'File content as a string value' },
+  ] as HandleDefine[],
+}
+
+const ReadFileContentCard = memo(function ReadFileContentCard() {
+  const readOnly = useReadOnly()
+  const nodeId = useNodeId() ?? ''
+  const nodeData =
+    useNodesData<Node<{ file_name: string }, 'read_file_content'>>(nodeId)
+  const { updateNodeData } = useReactFlow()
+
+  const [fileName, setFileName] = useState(nodeData?.data.file_name ?? '')
+
+  useEffect(() => {
+    setFileName(nodeData?.data.file_name ?? '')
+  }, [nodeData?.data.file_name])
+
+  const saveNodeData = useCallback(() => {
+    updateNodeData(nodeId, { file_name: fileName })
+  }, [nodeId, fileName, updateNodeData])
+
+  return (
+    <div className='p-3'>
+      <Label className='pb-2 font-medium'>File Name or Glob:</Label>
+      <Input
+        className={cn('w-full border-input', colorSchemes.orange.focusRing)}
+        placeholder='e.g. summary*.txt'
+        value={fileName}
+        onChange={(event) => setFileName(event.target.value)}
+        onBlur={saveNodeData}
+        spellCheck={false}
+        disabled={readOnly}
+      />
+    </div>
+  )
+})
+
+const ReadFileContentNode = memo(function ReadFileContentNode() {
+  const nodeComponent = useMemo(() => <ReadFileContentCard />, [])
+  return (
+    <BaseNode
+      title='Read File Content'
+      description='Read a UTF-8 file by name or glob and output its content as a string.'
+      handles={READ_FILE_CONTENT_HANDLES}
+      color={colorSchemes.orange}
+      nodeComponent={nodeComponent}
+    />
+  )
+})
+
 const JOIN_PATH_HANDLES = {
   inputs: [
     { name: 'base_path', description: 'Base file or directory path' },
@@ -643,6 +698,7 @@ export {
   ProjectMarkNode,
   SampleMarkNode,
   SelectFileInFolderNode,
+  ReadFileContentNode,
   JoinPathNode,
   BindParamNode,
   CollectMountDirNode,

@@ -112,6 +112,9 @@
       "unsaved": "Unsaved",
       "saved": "Saved",
       "nodeInfo": "Node info",
+      "agentProvider": "Coding agent",
+      "aiCoding": "AI coding",
+      "reviewingChanges": "Reviewing changes",
       "saveCode": "Save",
       "pythonEnvironment": "Python environment",
       "pythonEnvironmentHint": "Add third-party Python packages installed at runtime from the system-configured index. Click is already provided.",
@@ -145,6 +148,86 @@
       "saving": "Saving...",
       "create": "Create code",
       "save": "Save changes"
+    },
+    "Agent": {
+      "title": "AI coding",
+      "empty": "Describe the code you want to create or change. The agent edits a temporary workspace; nothing is saved automatically.",
+      "starting": "Starting isolated Codex session...",
+      "connecting": "Waiting for the coding-agent worker...",
+      "running": "Codex is working...",
+      "failed": "The coding turn failed.",
+      "closed": "The temporary session has closed.",
+      "plan": "Plan",
+      "activity": "Activity",
+      "taskRunning": "Working · {count} steps",
+      "taskDetails": "Task details · {count} steps",
+      "thinking": "Thinking and planning",
+      "thought": "Thought and planned",
+      "activityLabels": {
+        "read": {
+          "running": "Reading",
+          "completed": "Read",
+          "failed": "Read failed"
+        },
+        "edit": {
+          "running": "Editing",
+          "completed": "Edited",
+          "failed": "Edit failed"
+        },
+        "delete": {
+          "running": "Deleting",
+          "completed": "Deleted",
+          "failed": "Delete failed"
+        },
+        "move": {
+          "running": "Moving",
+          "completed": "Moved",
+          "failed": "Move failed"
+        },
+        "search": {
+          "running": "Searching",
+          "completed": "Searched",
+          "failed": "Search failed"
+        },
+        "execute": {
+          "running": "Running",
+          "completed": "Ran",
+          "failed": "Command failed"
+        },
+        "think": {
+          "running": "Thinking",
+          "completed": "Thought",
+          "failed": "Thinking failed"
+        },
+        "fetch": {
+          "running": "Fetching",
+          "completed": "Fetched",
+          "failed": "Fetch failed"
+        },
+        "other": {
+          "running": "Working",
+          "completed": "Completed",
+          "failed": "Failed"
+        }
+      },
+      "terminal": "Terminal output",
+      "proposal": "Review proposed changes",
+      "reviewInEditor": "The proposed changes are shown as a diff in the code editor on the left.",
+      "toggleProposal": "Expand or collapse the proposed changes",
+      "manualSave": "Accepting updates this form only. Use Save to persist the CODE definition.",
+      "noChanges": "No source or dependency changes.",
+      "accept": "Accept all",
+      "reject": "Discard all",
+      "applied": "Changes applied to the unsaved form",
+      "placeholder": "Ask Codex to write, explain, or revise this code...",
+      "enterHint": "Enter to send · Shift+Enter for a new line",
+      "send": "Send",
+      "stop": "Stop",
+      "resize": "Resize AI coding sidebar",
+      "model": "Model",
+      "reasoning": "Reasoning",
+      "contextUsage": "Context",
+      "activityStopped": "Ended"
     },
     "Toast": {
       "createSuccess": "CODE node created",
