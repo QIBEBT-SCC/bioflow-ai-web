@@ -1,4 +1,5 @@
 const FASTAPI_URL = process.env.NEXT_PUBLIC_API_URL ?? '/api/v1'
+const FASTAPI_V2_URL = '/api/v2'
 
 export class ClientApiError extends Error {
   constructor(
@@ -20,19 +21,17 @@ function getCookie(name: string): string | undefined {
     ?.slice(prefix.length)
 }
 
-export async function clientFetch<T = unknown>(
+type ClientFetchOptions = RequestInit & {
+  params?: Record<string, string>
+  raw?: boolean
+}
+
+async function fetchFromApi<T = unknown>(
+  baseUrl: string,
   endpoint: string,
-  options?: RequestInit & { params?: Record<string, string>; raw?: false },
-): Promise<T>
-export async function clientFetch(
-  endpoint: string,
-  options: RequestInit & { params?: Record<string, string>; raw: true },
-): Promise<Response>
-export async function clientFetch<T = unknown>(
-  endpoint: string,
-  options?: RequestInit & { params?: Record<string, string>; raw?: boolean },
+  options?: ClientFetchOptions,
 ): Promise<T | Response> {
-  let url = `${FASTAPI_URL}${endpoint}`
+  let url = `${baseUrl}${endpoint}`
   if (options?.params) {
     const searchParams = new URLSearchParams(options.params).toString()
     url = `${url}?${searchParams}`
@@ -87,4 +86,34 @@ export async function clientFetch<T = unknown>(
   }
 
   return (await res.text()) as unknown as T
+}
+
+export async function clientFetch<T = unknown>(
+  endpoint: string,
+  options?: RequestInit & { params?: Record<string, string>; raw?: false },
+): Promise<T>
+export async function clientFetch(
+  endpoint: string,
+  options: RequestInit & { params?: Record<string, string>; raw: true },
+): Promise<Response>
+export async function clientFetch<T = unknown>(
+  endpoint: string,
+  options?: ClientFetchOptions,
+): Promise<T | Response> {
+  return fetchFromApi<T>(FASTAPI_URL, endpoint, options)
+}
+
+export async function clientFetchV2<T = unknown>(
+  endpoint: string,
+  options?: RequestInit & { params?: Record<string, string>; raw?: false },
+): Promise<T>
+export async function clientFetchV2(
+  endpoint: string,
+  options: RequestInit & { params?: Record<string, string>; raw: true },
+): Promise<Response>
+export async function clientFetchV2<T = unknown>(
+  endpoint: string,
+  options?: ClientFetchOptions,
+): Promise<T | Response> {
+  return fetchFromApi<T>(FASTAPI_V2_URL, endpoint, options)
 }

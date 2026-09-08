@@ -32,32 +32,32 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { useRuns } from '@/hooks/use-run'
-import { Status } from '@/types/run'
+import { WorkflowRunStatusV2 } from '@/types/workflow-v2'
 
 // 状态配置
 const statusConfig = {
-  [Status.WAITING]: {
+  [WorkflowRunStatusV2.PENDING]: {
     label: '等待中',
     variant: 'secondary' as const,
     icon: Clock,
     color: 'text-yellow-600',
     bgColor: 'bg-yellow-50 dark:bg-yellow-950',
   },
-  [Status.RUNNING]: {
+  [WorkflowRunStatusV2.RUNNING]: {
     label: '运行中',
     variant: 'default' as const,
     icon: Loader2,
     color: 'text-blue-600',
     bgColor: 'bg-blue-50 dark:bg-blue-950',
   },
-  [Status.ERROR]: {
+  [WorkflowRunStatusV2.FAILED]: {
     label: '失败',
     variant: 'destructive' as const,
     icon: XCircle,
     color: 'text-red-600',
     bgColor: 'bg-red-50 dark:bg-red-950',
   },
-  [Status.SUCCESS]: {
+  [WorkflowRunStatusV2.SUCCEEDED]: {
     label: '成功',
     variant: 'outline' as const,
     icon: CheckCircle2,
@@ -67,7 +67,7 @@ const statusConfig = {
 }
 
 // 格式化时间
-function formatDateTime(dateStr?: string) {
+function formatDateTime(dateStr?: string | null) {
   if (!dateStr) return '-'
   try {
     return format(new Date(dateStr), 'MM-dd HH:mm', { locale: zhCN })
@@ -77,7 +77,7 @@ function formatDateTime(dateStr?: string) {
 }
 
 // 计算运行时长
-function calculateDuration(startTime?: string, endTime?: string) {
+function calculateDuration(startTime?: string | null, endTime?: string | null) {
   if (!startTime) return '-'
   const start = new Date(startTime).getTime()
   const end = endTime ? new Date(endTime).getTime() : Date.now()
@@ -110,7 +110,7 @@ export function RunTables({
   // 过滤运行实例
   const filteredRuns = runs.filter((run) => {
     if (statusFilter === 'all') return true
-    return run.status === Number(statusFilter)
+    return run.status === statusFilter
   })
 
   const totalPages = Math.ceil(runCount / limit)
@@ -127,10 +127,16 @@ export function RunTables({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value='all'>全部</SelectItem>
-              <SelectItem value={String(Status.WAITING)}>等待中</SelectItem>
-              <SelectItem value={String(Status.RUNNING)}>运行中</SelectItem>
-              <SelectItem value={String(Status.SUCCESS)}>成功</SelectItem>
-              <SelectItem value={String(Status.ERROR)}>失败</SelectItem>
+              <SelectItem value={WorkflowRunStatusV2.PENDING}>
+                等待中
+              </SelectItem>
+              <SelectItem value={WorkflowRunStatusV2.RUNNING}>
+                运行中
+              </SelectItem>
+              <SelectItem value={WorkflowRunStatusV2.SUCCEEDED}>
+                成功
+              </SelectItem>
+              <SelectItem value={WorkflowRunStatusV2.FAILED}>失败</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -190,10 +196,14 @@ export function RunTables({
               filteredRuns.map((run) => {
                 const config = statusConfig[run.status]
                 const Icon = config.icon
-                const taskStats = run.task_statistics
+                const taskStats = run.node_statistics
                 const progress =
                   taskStats && taskStats.total > 0
-                    ? ((taskStats.success || 0) / taskStats.total) * 100
+                    ? ((taskStats.succeeded +
+                        taskStats.failed +
+                        taskStats.blocked) /
+                        taskStats.total) *
+                      100
                     : 0
 
                 return (
@@ -229,7 +239,7 @@ export function RunTables({
                         <div className='space-y-1'>
                           <div className='flex items-center justify-between text-xs text-muted-foreground'>
                             <span>
-                              {taskStats.success || 0}/{taskStats.total}
+                              {taskStats.succeeded}/{taskStats.total}
                             </span>
                             <span>{progress.toFixed(0)}%</span>
                           </div>
@@ -241,9 +251,7 @@ export function RunTables({
                     </TableCell>
 
                     {/* 创建者 */}
-                    <TableCell className='text-sm'>
-                      {run.owner.username}
-                    </TableCell>
+                    <TableCell className='text-sm'>{run.owner_id}</TableCell>
 
                     {/* 开始时间 */}
                     <TableCell className='text-sm'>

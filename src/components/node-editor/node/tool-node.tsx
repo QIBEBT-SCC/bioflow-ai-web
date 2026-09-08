@@ -21,7 +21,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useToolArg } from '@/hooks/use-tool'
 import { cn } from '@/lib/utils'
-import type { RunData } from '@/types/run'
+import type { NodeRunDataV2 } from '@/types/workflow-v2'
 
 const OUTPUT_FOLDER_HANDLE_NAME = 'workdir'
 
@@ -80,7 +80,11 @@ export const ToolNode = memo(function ToolNode() {
   const nodeData =
     useNodesData<
       Node<
-        { tool_uid: string; modifiable_params?: string; run_data?: RunData },
+        {
+          tool_uid: string
+          modifiable_params?: string
+          run_data?: NodeRunDataV2
+        },
         'tool'
       >
     >(nodeId)

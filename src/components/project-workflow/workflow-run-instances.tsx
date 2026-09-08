@@ -28,9 +28,12 @@ import {
 import { useProjectRuns, useRunWorkflow } from '@/hooks/use-project-workflow'
 import { useSamples } from '@/hooks/use-sample'
 import { ClientApiError } from '@/lib/api-client'
-import type { RunInstance } from '@/types/project-workflow'
-import { Status } from '@/types/run'
 import { ExecutionScope } from '@/types/workflow'
+import {
+  type NodeRunStatisticsV2,
+  WorkflowRunStatusV2,
+  type WorkflowRunV2,
+} from '@/types/workflow-v2'
 
 interface WorkflowRunInstancesProps {
   projectId: string
@@ -39,25 +42,25 @@ interface WorkflowRunInstancesProps {
 }
 
 const statusConfig = {
-  [Status.WAITING]: {
+  [WorkflowRunStatusV2.PENDING]: {
     labelKey: 'waiting',
     variant: 'secondary' as const,
     icon: Clock,
     animate: false,
   },
-  [Status.RUNNING]: {
+  [WorkflowRunStatusV2.RUNNING]: {
     labelKey: 'running',
     variant: 'default' as const,
     icon: Loader2,
     animate: true,
   },
-  [Status.ERROR]: {
+  [WorkflowRunStatusV2.FAILED]: {
     labelKey: 'failed',
     variant: 'destructive' as const,
     icon: XCircle,
     animate: false,
   },
-  [Status.SUCCESS]: {
+  [WorkflowRunStatusV2.SUCCEEDED]: {
     labelKey: 'success',
     variant: 'outline' as const,
     icon: CheckCircle2,
@@ -89,10 +92,10 @@ function calculateDuration(startTime?: string | null, endTime?: string | null) {
   return `${hours}h ${mins}m`
 }
 
-function calculateProgress(taskStats?: RunInstance['task_statistics']) {
+function calculateProgress(taskStats?: NodeRunStatisticsV2) {
   if (!taskStats || taskStats.total <= 0) return 0
-
-  return Math.min(100, ((taskStats.success ?? 0) / taskStats.total) * 100)
+  const terminal = taskStats.succeeded + taskStats.failed + taskStats.blocked
+  return Math.min(100, (terminal / taskStats.total) * 100)
 }
 
 export function WorkflowRunInstances({
@@ -133,7 +136,7 @@ export function WorkflowRunInstances({
   const isLoading = samplesLoading || runsLoading
 
   // 按此工作流过滤运行实例，并以 sample_uid 为 key
-  const runMap = (allRuns ?? []).reduce<Map<string | null, RunInstance>>(
+  const runMap = (allRuns ?? []).reduce<Map<string | null, WorkflowRunV2>>(
     (acc, r) => {
       if (r.workflow_uid === workflowUid) acc.set(r.sample_uid, r)
       return acc
@@ -222,7 +225,7 @@ export function WorkflowRunInstances({
               {projectRuns.map((run) => {
                 const cfg = statusConfig[run.status]
                 const Icon = cfg.icon
-                const taskStats = run.task_statistics
+                const taskStats = run.node_statistics
                 const progress = calculateProgress(taskStats)
                 const isRunning =
                   runWorkflowMutation.isPending &&
@@ -254,7 +257,7 @@ export function WorkflowRunInstances({
                         <div className='space-y-1.5'>
                           <div className='flex items-center justify-between text-xs text-muted-foreground'>
                             <span>
-                              {taskStats.success ?? 0}/{taskStats.total}
+                              {taskStats.succeeded}/{taskStats.total}
                             </span>
                             <span>{progress.toFixed(0)}%</span>
                           </div>
@@ -280,7 +283,7 @@ export function WorkflowRunInstances({
                           size='sm'
                           className='h-7 text-xs'
                           onClick={() => handleRerun()}
-                          disabled={isRunning || run.status === Status.RUNNING}
+                          disabled={isRunning || !run.settled}
                         >
                           {isRunning ? (
                             <Loader2 className='size-3 animate-spin' />
@@ -342,7 +345,7 @@ export function WorkflowRunInstances({
               const run = runMap.get(sample.uid)
               const cfg = run ? statusConfig[run.status] : null
               const Icon = cfg?.icon
-              const taskStats = run?.task_statistics
+              const taskStats = run?.node_statistics
               const progress = calculateProgress(taskStats)
               const isRunning =
                 runWorkflowMutation.isPending &&
@@ -388,7 +391,7 @@ export function WorkflowRunInstances({
                       <div className='space-y-1.5'>
                         <div className='flex items-center justify-between text-xs text-muted-foreground'>
                           <span>
-                            {taskStats.success ?? 0}/{taskStats.total}
+                            {taskStats.succeeded}/{taskStats.total}
                           </span>
                           <span>{progress.toFixed(0)}%</span>
                         </div>
@@ -416,7 +419,7 @@ export function WorkflowRunInstances({
                         size='sm'
                         className='h-7 text-xs'
                         onClick={() => handleRerun(sample.uid)}
-                        disabled={isRunning || run?.status === Status.RUNNING}
+                        disabled={isRunning || (run != null && !run.settled)}
                       >
                         {isRunning ? (
                           <Loader2 className='size-3 animate-spin' />

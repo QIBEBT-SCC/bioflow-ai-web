@@ -16,11 +16,13 @@ import {
 import type {
   AddWorkflowRequest,
   ProjectWorkflow,
-  RunInstance,
-  RunWorkflowRequest,
   WorkflowRunResult,
 } from '@/types/project-workflow'
-import type { Statistics } from '@/types/run'
+import type {
+  ProjectWorkflowRunRequestV2,
+  WorkflowRunStatisticsV2,
+  WorkflowRunV2,
+} from '@/types/workflow-v2'
 
 // ============================================
 // Query Hooks (数据查询)
@@ -45,7 +47,7 @@ export function useProjectRuns(
   limit: number = 100,
   refetchInterval?: number | false,
 ) {
-  return useQuery<RunInstance[]>({
+  return useQuery<WorkflowRunV2[]>({
     queryKey: ['projects', projectId, 'runs', offset, limit],
     queryFn: async () => {
       const page = await getProjectRuns(projectId, offset, limit)
@@ -67,7 +69,7 @@ export function useProjectRunCount(projectId: string) {
 }
 
 export function useProjectRunStats(projectId: string) {
-  return useQuery<Statistics>({
+  return useQuery<WorkflowRunStatisticsV2>({
     queryKey: ['projects', projectId, 'runs', 'stats'],
     queryFn: () => getProjectRunStats(projectId),
     enabled: !!projectId,
@@ -76,7 +78,7 @@ export function useProjectRunStats(projectId: string) {
 }
 
 export function useProjectRun(projectId: string, runUid: string) {
-  return useQuery<RunInstance>({
+  return useQuery<WorkflowRunV2>({
     queryKey: ['projects', projectId, 'runs', runUid],
     queryFn: () => getProjectRun(projectId, runUid),
     enabled: !!projectId && !!runUid,
@@ -158,7 +160,7 @@ export function useRunWorkflow() {
     {
       projectId: string
       workflowUid: string
-      data: RunWorkflowRequest
+      data: ProjectWorkflowRunRequestV2
     }
   >({
     mutationFn: ({ projectId, workflowUid, data }) =>

@@ -47,10 +47,10 @@ export function ProjectDetailCard({
   if (!project) return null
 
   const totalRuns = runStats?.total ?? 0
-  const successRuns = runStats?.success ?? 0
+  const successRuns = runStats?.succeeded ?? 0
   const runningRuns = runStats?.running ?? 0
-  const waitingRuns = runStats?.waiting ?? 0
-  const errorRuns = runStats?.error ?? 0
+  const waitingRuns = runStats?.pending ?? 0
+  const errorRuns = runStats?.failed ?? 0
   const successRate = totalRuns > 0 ? (successRuns / totalRuns) * 100 : 0
   const isStarPending = starProject.isPending || unstarProject.isPending
 

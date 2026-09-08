@@ -26,13 +26,13 @@ import {
 import { RunTerminal } from '@/components/project/run/run-terminal'
 import { SidebarInset } from '@/components/ui/sidebar'
 import { useChatSidebarResize } from '@/hooks/use-chat-sidebar-resize'
+import { useNodeRunLogStream } from '@/hooks/use-node-run-v2'
 import { useProject } from '@/hooks/use-project'
 import { useRunFiles, useRunStream } from '@/hooks/use-run'
 import { useRunFlow } from '@/hooks/use-run-flow'
-import { useTaskLogStream } from '@/hooks/use-task'
 import { cn } from '@/lib/utils'
 import { useChatSidebarStore } from '@/stores/chat-sidebar-store'
-import { type RunData, Status } from '@/types/run'
+import { type NodeRunDataV2, NodeRunStatusV2 } from '@/types/workflow-v2'
 
 type PanelState = {
   leftPanelOpen: boolean
@@ -219,39 +219,49 @@ function RunFlowContent({
     dispatchPanel({ type: 'TOGGLE_LEFT_PANEL' })
   }, [])
 
-  const [selectedToolNodeId, setSelectedToolNodeId] = useState<
-    string | undefined
-  >(undefined)
+  const [selectedNodeId, setSelectedNodeId] = useState<string | undefined>()
 
   const activeTaskUid = useMemo<string | undefined>(() => {
-    if (selectedToolNodeId) return selectedToolNodeId
+    if (selectedNodeId) {
+      const selectedNode = flowNodes.find((node) => node.id === selectedNodeId)
+      return (selectedNode?.data?.run_data as NodeRunDataV2 | undefined)?.uid
+    }
     const runningNode = flowNodes.find(
       (n) =>
-        n.type === 'tool' &&
-        (n.data?.run_data as RunData | undefined)?.status === Status.RUNNING,
+        (n.data?.run_data as NodeRunDataV2 | undefined)?.status ===
+        NodeRunStatusV2.RUNNING,
     )
-    return runningNode?.id
-  }, [selectedToolNodeId, flowNodes])
+    return (runningNode?.data?.run_data as NodeRunDataV2 | undefined)?.uid
+  }, [selectedNodeId, flowNodes])
 
   const isActiveNodeRunning = useMemo(() => {
     if (!activeTaskUid) return false
-    const node = flowNodes.find((n) => n.id === activeTaskUid)
+    const node = flowNodes.find(
+      (candidate) =>
+        (candidate.data?.run_data as NodeRunDataV2 | undefined)?.uid ===
+        activeTaskUid,
+    )
     return (
-      (node?.data?.run_data as RunData | undefined)?.status === Status.RUNNING
+      (node?.data?.run_data as NodeRunDataV2 | undefined)?.status ===
+      NodeRunStatusV2.RUNNING
     )
   }, [activeTaskUid, flowNodes])
 
-  const logContent = useTaskLogStream(activeTaskUid ?? '', isActiveNodeRunning)
+  const logContent = useNodeRunLogStream(
+    activeTaskUid ?? '',
+    isActiveNodeRunning,
+  )
 
   const handleNodeClick = useCallback(
     (_event: React.MouseEvent, node: FlowNode) => {
-      if (node.type === 'tool') setSelectedToolNodeId(node.id)
+      if ((node.data?.run_data as NodeRunDataV2 | undefined)?.uid)
+        setSelectedNodeId(node.id)
     },
     [],
   )
 
   const handlePaneClick = useCallback(() => {
-    setSelectedToolNodeId(undefined)
+    setSelectedNodeId(undefined)
   }, [])
 
   const handleSelectFile = useCallback(

@@ -152,7 +152,7 @@ export default function WorkflowPage() {
               </CardHeader>
               <CardContent>
                 <div className='text-2xl font-bold text-yellow-600'>
-                  {runStats?.waiting ?? 0}
+                  {runStats?.pending ?? 0}
                 </div>
                 <p className='text-xs text-muted-foreground mt-1'>等待执行</p>
               </CardContent>
@@ -178,7 +178,7 @@ export default function WorkflowPage() {
               </CardHeader>
               <CardContent>
                 <div className='text-2xl font-bold text-green-600'>
-                  {runStats?.success ?? 0}
+                  {runStats?.succeeded ?? 0}
                 </div>
                 <p className='text-xs text-muted-foreground mt-1'>成功完成</p>
               </CardContent>
@@ -191,7 +191,7 @@ export default function WorkflowPage() {
               </CardHeader>
               <CardContent>
                 <div className='text-2xl font-bold text-red-600'>
-                  {runStats?.error ?? 0}
+                  {runStats?.failed ?? 0}
                 </div>
                 <p className='text-xs text-muted-foreground mt-1'>执行失败</p>
               </CardContent>
