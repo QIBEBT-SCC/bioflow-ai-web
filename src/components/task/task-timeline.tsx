@@ -165,11 +165,19 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max)
 }
 
-export function TaskTimeline() {
+export function TaskTimeline({
+  refetchInterval,
+}: {
+  refetchInterval?: number | false
+}) {
   const [rangeHours, setRangeHours] = useState<RangeHours>(24)
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [now, setNow] = useState(() => Date.now())
-  const { data: tasks = [], isFetching, isLoading } = useRecentTasks(rangeHours)
+  const {
+    data: tasks = [],
+    isFetching,
+    isLoading,
+  } = useRecentTasks(rangeHours, refetchInterval)
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 30_000)

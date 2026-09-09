@@ -115,11 +115,3 @@ export interface NodeRunV2 extends NodeRunRecordV2 {
   queued_at: string | null
   heartbeat_at: string | null
 }
-
-export interface PaginatedNodeRunsV2 {
-  total: number
-  offset: number
-  limit: number
-  has_more: boolean
-  data: NodeRunRecordV2[]
-}

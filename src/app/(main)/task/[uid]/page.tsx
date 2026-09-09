@@ -109,6 +109,7 @@ export default function TaskDetailPage() {
   const params = useParams()
   const locale = useLocale()
   const t = useTranslations('task')
+  const workflowT = useTranslations('workflowMonitor')
   const taskUid = params.uid as string
   const { data: task, isLoading } = useTask(taskUid)
   const [activeView, setActiveView] = useState<'result' | 'log' | 'monitor'>(
@@ -188,7 +189,9 @@ export default function TaskDetailPage() {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem>
-                  <BreadcrumbLink href='/task'>{t('title')}</BreadcrumbLink>
+                  <BreadcrumbLink href='/workflow'>
+                    {workflowT('title')}
+                  </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>

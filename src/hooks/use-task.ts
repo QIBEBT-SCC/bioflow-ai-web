@@ -3,17 +3,16 @@
 import { useQuery } from '@tanstack/react-query'
 import {
   getRecentTasks,
+  getRunTasks,
   getTask,
   getTaskLog,
   getTaskMonitor,
-  getTasks,
 } from '@/app/actions/task'
 import type { MonitorPublic } from '@/types/task'
 import {
   type NodeRunRecordV2,
   NodeRunStatusV2,
   type NodeRunV2,
-  type PaginatedNodeRunsV2,
 } from '@/types/workflow-v2'
 
 const TERMINAL_NODE_RUN_STATUSES = new Set<NodeRunStatusV2>([
@@ -27,29 +26,34 @@ const TERMINAL_NODE_RUN_STATUSES = new Set<NodeRunStatusV2>([
 // ============================================
 
 /**
- * 获取任务列表（分页）
- */
-export const useTasks = (
-  offset: number = 0,
-  limit: number = 20,
-  status?: NodeRunStatusV2,
-) => {
-  return useQuery<PaginatedNodeRunsV2>({
-    queryKey: ['node-runs', offset, limit, status],
-    queryFn: () => getTasks(offset, limit, status),
-    staleTime: 30 * 1000, // 30秒缓存
-  })
-}
-
-/**
  * 获取最近N小时的任务
  */
-export const useRecentTasks = (hours: number) => {
+export const useRecentTasks = (
+  hours: number,
+  refetchInterval: number | false = 30 * 1000,
+) => {
   return useQuery<NodeRunRecordV2[]>({
     queryKey: ['node-runs', 'recent', hours],
     queryFn: () => getRecentTasks(hours),
     staleTime: 30 * 1000,
-    refetchInterval: 30 * 1000, // 每30秒自动刷新
+    refetchInterval,
+  })
+}
+
+/**
+ * 获取一个工作流运行当前代的任务
+ */
+export const useRunTasks = (
+  runUid: string,
+  enabled: boolean,
+  refetchInterval?: number | false,
+) => {
+  return useQuery<NodeRunRecordV2[]>({
+    queryKey: ['node-runs', 'run', runUid],
+    queryFn: () => getRunTasks(runUid),
+    enabled: enabled && !!runUid,
+    staleTime: 30 * 1000,
+    refetchInterval,
   })
 }
 
