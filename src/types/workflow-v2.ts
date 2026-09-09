@@ -77,15 +77,30 @@ export interface ProjectWorkflowRunRequestV2 {
   run_name_prefix?: string
 }
 
-export interface NodeRunV2 {
+export interface NodeRunRecordV2 {
   uid: string
   run_uid: string
+  run_name: string
   generation: number
   definition_node_id: string
   node_type: string
   name: string
-  track_progress: boolean
   status: NodeRunStatusV2
+  owner_id: number
+  owner_username: string
+  project_id: number | null
+  workflow_uid: string | null
+  sample_uid: string | null
+  create_time: string | null
+  start_time: string | null
+  end_time: string | null
+}
+
+export interface NodeRunV2 extends NodeRunRecordV2 {
+  track_progress: boolean
+  tool_uid: string | null
+  tool_name: string | null
+  tool_description: string | null
   base_dir: string | null
   commands: string | null
   error_message: string | null
@@ -97,9 +112,14 @@ export interface NodeRunV2 {
   system: string | null
   hostname: string | null
   worker_id: string | null
-  create_time: string | null
   queued_at: string | null
-  start_time: string | null
   heartbeat_at: string | null
-  end_time: string | null
+}
+
+export interface PaginatedNodeRunsV2 {
+  total: number
+  offset: number
+  limit: number
+  has_more: boolean
+  data: NodeRunRecordV2[]
 }

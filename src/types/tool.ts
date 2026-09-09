@@ -1,4 +1,4 @@
-import type { Status } from '@/types/run'
+import type { WorkflowRunStatusV2 } from '@/types/workflow-v2'
 
 export enum ToolType {
   DOCKER = 0,
@@ -79,7 +79,7 @@ export interface ToolRunUsage {
   project_name: string | null
   workflow_uid: string | null
   workflow_name: string | null
-  status: Status
+  status: WorkflowRunStatusV2
   create_time: string | null
   task_count: number
 }

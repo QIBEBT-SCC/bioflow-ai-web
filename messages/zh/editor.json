@@ -157,9 +157,6 @@
       "scope_label": "执行范围",
       "scope_sample": "样本级: 为每个样本独立运行",
       "scope_project": "项目级: 整个项目运行一次",
-      "auto_summary": "自动总结",
-      "summary_prompt_label": "总结提示词",
-      "summary_prompt_placeholder": "输入总结提示词...",
       "cancel": "取消",
       "confirm": "确认保存",
       "copy_suffix": "副本"
