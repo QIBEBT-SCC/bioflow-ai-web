@@ -157,9 +157,6 @@
       "scope_label": "Execution Scope",
       "scope_sample": "Sample-level: Run independently for each sample",
       "scope_project": "Project-level: Run once for the entire project",
-      "auto_summary": "Auto Summary",
-      "summary_prompt_label": "Summary Prompt",
-      "summary_prompt_placeholder": "Enter summary prompt...",
       "cancel": "Cancel",
       "confirm": "Confirm Save",
       "copy_suffix": "Copy"

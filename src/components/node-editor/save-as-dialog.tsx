@@ -107,8 +107,6 @@ export function SaveAsDialog({
       public: isPublic,
       wf_type: workflowType,
       execution_scope: executionScope,
-      auto_summary: false,
-      summary_prompt: null,
     }
 
     saveWorkflowMutation.mutate(workflow, {

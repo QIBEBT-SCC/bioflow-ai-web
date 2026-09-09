@@ -8,11 +8,16 @@ import { useTaskLog } from '@/hooks/use-task'
 
 interface TaskLogProps {
   taskUid: string
+  isRunning?: boolean
 }
 
-export function TaskLog({ taskUid }: TaskLogProps) {
+export function TaskLog({ taskUid, isRunning = false }: TaskLogProps) {
   const t = useTranslations('task.log')
-  const { data: logData, isLoading, error } = useTaskLog(taskUid)
+  const {
+    data: logData,
+    isLoading,
+    error,
+  } = useTaskLog(taskUid, isRunning ? 2_000 : false)
 
   if (isLoading) {
     return (

@@ -1,9 +1,12 @@
 'use client'
 
 import {
+  BanIcon,
   CalendarRangeIcon,
   CheckCircle2Icon,
+  CircleDotIcon,
   Clock3Icon,
+  ListOrderedIcon,
   Loader2Icon,
   XCircleIcon,
 } from 'lucide-react'
@@ -28,8 +31,7 @@ import {
 } from '@/components/ui/tooltip'
 import { useRecentTasks } from '@/hooks/use-task'
 import { cn } from '@/lib/utils'
-import { Status } from '@/types/run'
-import type { SimpleTaskPublic } from '@/types/task'
+import { type NodeRunRecordV2, NodeRunStatusV2 } from '@/types/workflow-v2'
 
 const RANGE_OPTIONS = [
   { hours: 6, labelKey: 'last6Hours' },
@@ -40,78 +42,118 @@ const RANGE_OPTIONS = [
 
 const STATUS_OPTIONS = [
   {
-    value: Status.RUNNING,
+    value: NodeRunStatusV2.RUNNING,
     labelKey: 'running',
     dotClassName: 'bg-sky-500',
   },
   {
-    value: Status.WAITING,
-    labelKey: 'waiting',
+    value: NodeRunStatusV2.QUEUED,
+    labelKey: 'queued',
+    dotClassName: 'bg-violet-500',
+  },
+  {
+    value: NodeRunStatusV2.READY,
+    labelKey: 'ready',
     dotClassName: 'bg-amber-500',
   },
   {
-    value: Status.SUCCESS,
-    labelKey: 'success',
+    value: NodeRunStatusV2.PENDING,
+    labelKey: 'pending',
+    dotClassName: 'bg-slate-400',
+  },
+  {
+    value: NodeRunStatusV2.SUCCEEDED,
+    labelKey: 'succeeded',
     dotClassName: 'bg-emerald-500',
   },
   {
-    value: Status.ERROR,
+    value: NodeRunStatusV2.FAILED,
     labelKey: 'failed',
     dotClassName: 'bg-rose-500',
+  },
+  {
+    value: NodeRunStatusV2.BLOCKED,
+    labelKey: 'blocked',
+    dotClassName: 'bg-zinc-500',
   },
 ] as const
 
 const STATUS_APPEARANCE = {
-  [Status.WAITING]: {
+  [NodeRunStatusV2.PENDING]: {
     icon: Clock3Icon,
+    barClassName:
+      'border-slate-400/50 bg-slate-500/15 text-slate-800 dark:text-slate-200',
+    iconClassName: 'text-slate-600 dark:text-slate-400',
+  },
+  [NodeRunStatusV2.READY]: {
+    icon: CircleDotIcon,
     barClassName:
       'border-amber-400/50 bg-amber-500/15 text-amber-800 dark:text-amber-200',
     iconClassName: 'text-amber-600 dark:text-amber-400',
   },
-  [Status.RUNNING]: {
+  [NodeRunStatusV2.QUEUED]: {
+    icon: ListOrderedIcon,
+    barClassName:
+      'border-violet-400/50 bg-violet-500/15 text-violet-800 dark:text-violet-200',
+    iconClassName: 'text-violet-600 dark:text-violet-400',
+  },
+  [NodeRunStatusV2.RUNNING]: {
     icon: Loader2Icon,
     barClassName:
       'border-sky-400/60 bg-sky-500/20 text-sky-800 dark:text-sky-100',
     iconClassName: 'text-sky-600 dark:text-sky-400',
   },
-  [Status.ERROR]: {
+  [NodeRunStatusV2.FAILED]: {
     icon: XCircleIcon,
     barClassName:
       'border-rose-400/50 bg-rose-500/15 text-rose-800 dark:text-rose-200',
     iconClassName: 'text-rose-600 dark:text-rose-400',
   },
-  [Status.SUCCESS]: {
+  [NodeRunStatusV2.SUCCEEDED]: {
     icon: CheckCircle2Icon,
     barClassName:
       'border-emerald-400/50 bg-emerald-500/15 text-emerald-800 dark:text-emerald-200',
     iconClassName: 'text-emerald-600 dark:text-emerald-400',
   },
+  [NodeRunStatusV2.BLOCKED]: {
+    icon: BanIcon,
+    barClassName:
+      'border-zinc-400/50 bg-zinc-500/15 text-zinc-800 dark:text-zinc-200',
+    iconClassName: 'text-zinc-600 dark:text-zinc-400',
+  },
 } as const
 
+const ACTIVE_NODE_RUN_STATUSES = new Set<NodeRunStatusV2>([
+  NodeRunStatusV2.PENDING,
+  NodeRunStatusV2.READY,
+  NodeRunStatusV2.QUEUED,
+  NodeRunStatusV2.RUNNING,
+])
+
 type RangeHours = (typeof RANGE_OPTIONS)[number]['hours']
-type StatusFilter = Status | 'all'
+type StatusFilter = NodeRunStatusV2 | 'all'
 
 interface TimelineItem {
-  task: SimpleTaskPublic
+  task: NodeRunRecordV2
   startTime: number
   endTime: number
   startPercent: number
   widthPercent: number
 }
 
-function parseTime(value?: string) {
+function parseTime(value?: string | null) {
   if (!value) return null
   const time = new Date(value).getTime()
   return Number.isNaN(time) ? null : time
 }
 
-function getTaskInterval(task: SimpleTaskPublic, now: number) {
+function getTaskInterval(task: NodeRunRecordV2, now: number) {
   const startTime = parseTime(task.start_time) ?? parseTime(task.create_time)
   if (startTime === null) return null
 
   const recordedEndTime = parseTime(task.end_time)
-  const endTime =
-    recordedEndTime ?? (task.status === Status.RUNNING ? now : startTime)
+  const isActive = ACTIVE_NODE_RUN_STATUSES.has(task.status)
+  const endTime = recordedEndTime ?? (isActive ? now : startTime)
 
   return {
     startTime,
@@ -174,10 +216,13 @@ export function TaskTimeline() {
   const counts = useMemo(() => {
     const result = {
       all: timeline.items.length,
-      [Status.WAITING]: 0,
-      [Status.RUNNING]: 0,
-      [Status.ERROR]: 0,
-      [Status.SUCCESS]: 0,
+      [NodeRunStatusV2.PENDING]: 0,
+      [NodeRunStatusV2.READY]: 0,
+      [NodeRunStatusV2.QUEUED]: 0,
+      [NodeRunStatusV2.RUNNING]: 0,
+      [NodeRunStatusV2.SUCCEEDED]: 0,
+      [NodeRunStatusV2.FAILED]: 0,
+      [NodeRunStatusV2.BLOCKED]: 0,
     }
 
     for (const item of timeline.items) result[item.task.status]++
@@ -279,7 +324,7 @@ function TimelineHeader({
 }
 
 interface TimelineStatusFiltersProps {
-  counts: Record<Status | 'all', number>
+  counts: Record<NodeRunStatusV2 | 'all', number>
   statusFilter: StatusFilter
   visibleCount: number
   onStatusChange: (status: StatusFilter) => void
@@ -468,7 +513,7 @@ function TimelineRow({ item, ticks }: TimelineRowProps) {
           className={cn(
             'size-4 shrink-0',
             appearance.iconClassName,
-            item.task.status === Status.RUNNING &&
+            item.task.status === NodeRunStatusV2.RUNNING &&
               'animate-spin motion-reduce:animate-none',
           )}
         />
@@ -480,7 +525,7 @@ function TimelineRow({ item, ticks }: TimelineRowProps) {
             {item.task.name}
           </Link>
           <p className='mt-0.5 truncate text-xs text-muted-foreground'>
-            {item.task.run_instance.name}
+            {item.task.run_name}
           </p>
         </div>
       </div>
@@ -509,7 +554,7 @@ function TimelineRow({ item, ticks }: TimelineRowProps) {
                 maxWidth: `${Math.max(0.5, 100 - item.startPercent)}%`,
               }}
             >
-              {item.task.status === Status.RUNNING ? (
+              {item.task.status === NodeRunStatusV2.RUNNING ? (
                 <span className='absolute inset-0 animate-pulse bg-sky-500/10 motion-reduce:animate-none' />
               ) : null}
               <span className='relative truncate'>{duration}</span>
@@ -528,7 +573,7 @@ function TimelineRow({ item, ticks }: TimelineRowProps) {
                 </span>
               </div>
               <p className='truncate text-muted-foreground'>
-                {item.task.run_instance.name}
+                {item.task.run_name}
               </p>
               <dl className='grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 border-t pt-2 text-[11px]'>
                 <dt className='text-muted-foreground'>
@@ -543,7 +588,7 @@ function TimelineRow({ item, ticks }: TimelineRowProps) {
                   {t('timeline.ownerLabel')}
                 </dt>
                 <dd className='truncate text-right'>
-                  {item.task.owner.username}
+                  {item.task.owner_username}
                 </dd>
               </dl>
             </div>

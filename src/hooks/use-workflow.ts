@@ -83,8 +83,6 @@ export const useUpdateWorkflow = () => {
         name?: string
         workflow?: WorkflowDefinition
         execution_scope?: ExecutionScope
-        auto_summary?: boolean
-        summary_prompt?: string | null
       }
     }) => updateWorkflow(uid, data),
     onSuccess: (_, { uid }) => {

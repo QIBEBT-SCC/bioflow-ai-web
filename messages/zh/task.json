@@ -2,10 +2,13 @@
   "task": {
     "title": "任务监控",
     "status": {
-      "waiting": "等待中",
+      "pending": "等待依赖",
+      "ready": "已就绪",
+      "queued": "已入队",
       "running": "运行中",
       "failed": "失败",
-      "success": "成功"
+      "succeeded": "成功",
+      "blocked": "已阻塞"
     },
     "duration": {
       "seconds": "{seconds}秒",
@@ -17,7 +20,7 @@
       "all": "全部",
       "total": "共 {count} 个任务",
       "taskName": "任务名称",
-      "workflow": "所属工作流",
+      "workflow": "所属运行",
       "status": "状态",
       "owner": "创建者",
       "createdAt": "创建时间",
@@ -38,7 +41,7 @@
       "last7Days": "近 7 天",
       "allStatuses": "全部状态",
       "showing": "显示 {visible} / {total}",
-      "taskColumn": "任务 / 工作流",
+      "taskColumn": "任务 / 运行",
       "now": "现在",
       "empty": "当前筛选下没有任务记录",
       "emptyHint": "尝试扩大时间范围，或切换到其他任务状态。",
@@ -51,7 +54,7 @@
       "loading": "加载中...",
       "notFound": "任务不存在",
       "taskId": "任务 ID：",
-      "workflow": "所属工作流：",
+      "workflow": "所属运行：",
       "duration": "运行时长：",
       "result": "运行结果",
       "log": "任务日志",
@@ -59,15 +62,18 @@
       "noResult": "暂无输出结果",
       "command": "执行命令",
       "basicInfo": "基本信息",
-      "tool": "工具",
+      "nodeType": "节点类型",
+      "definitionNodeId": "定义节点 ID",
       "owner": "创建者",
       "timeInfo": "时间信息",
       "createdAt": "创建时间",
+      "queuedAt": "入队时间",
       "startedAt": "开始时间",
       "endedAt": "结束时间",
       "systemInfo": "系统信息",
       "host": "主机",
-      "system": "系统"
+      "system": "系统",
+      "worker": "Worker"
     },
     "log": {
       "unavailable": "日志文件不存在或无法读取",

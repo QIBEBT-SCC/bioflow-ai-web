@@ -26,30 +26,30 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useToolUsage } from '@/hooks/use-tool'
-import { Status } from '@/types/run'
 import type { ToolRunUsage, ToolWorkflowUsage } from '@/types/tool'
+import { WorkflowRunStatusV2 } from '@/types/workflow-v2'
 
 const PAGE_SIZE = 10
 const SKELETON_KEYS = ['first', 'second', 'third', 'fourth']
 
 const statusConfig = {
-  [Status.WAITING]: {
-    key: 'waiting',
+  [WorkflowRunStatusV2.PENDING]: {
+    key: 'pending',
     icon: Clock,
     variant: 'secondary' as const,
   },
-  [Status.RUNNING]: {
+  [WorkflowRunStatusV2.RUNNING]: {
     key: 'running',
     icon: Loader2,
     variant: 'default' as const,
   },
-  [Status.ERROR]: {
-    key: 'error',
+  [WorkflowRunStatusV2.FAILED]: {
+    key: 'failed',
     icon: XCircle,
     variant: 'destructive' as const,
   },
-  [Status.SUCCESS]: {
-    key: 'success',
+  [WorkflowRunStatusV2.SUCCEEDED]: {
+    key: 'succeeded',
     icon: CheckCircle2,
     variant: 'outline' as const,
   },
@@ -163,7 +163,8 @@ function RunUsageItem({
   dateFormatter: Intl.DateTimeFormat
   t: ReturnType<typeof useTranslations>
 }) {
-  const status = statusConfig[usage.status] ?? statusConfig[Status.WAITING]
+  const status =
+    statusConfig[usage.status] ?? statusConfig[WorkflowRunStatusV2.PENDING]
   const StatusIcon = status.icon
   const href = usage.project_id
     ? `/project/${usage.project_id}/${usage.uid}`
@@ -190,7 +191,7 @@ function RunUsageItem({
           <div className='flex gap-2'>
             <Badge variant={status.variant}>
               <StatusIcon
-                className={`mr-1 size-3 ${usage.status === Status.RUNNING ? 'animate-spin' : ''}`}
+                className={`mr-1 size-3 ${usage.status === WorkflowRunStatusV2.RUNNING ? 'animate-spin' : ''}`}
               />
               {t(`status.${status.key}`)}
             </Badge>

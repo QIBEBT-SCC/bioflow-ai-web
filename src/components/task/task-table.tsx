@@ -1,10 +1,13 @@
 'use client'
 
 import {
+  BanIcon,
   CheckCircle2Icon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  CircleDotIcon,
   ClockIcon,
+  ListOrderedIcon,
   Loader2Icon,
   XCircleIcon,
 } from 'lucide-react'
@@ -29,39 +32,60 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { useTaskCount, useTasks } from '@/hooks/use-task'
-import { Status } from '@/types/run'
+import { useTasks } from '@/hooks/use-task'
+import { NodeRunStatusV2 } from '@/types/workflow-v2'
 
 // 状态配置
 const statusConfig = {
-  [Status.WAITING]: {
-    labelKey: 'waiting',
+  [NodeRunStatusV2.PENDING]: {
+    labelKey: 'pending',
     variant: 'secondary' as const,
     icon: ClockIcon,
-    color: 'text-yellow-600',
+    color: 'text-slate-600',
   },
-  [Status.RUNNING]: {
+  [NodeRunStatusV2.READY]: {
+    labelKey: 'ready',
+    variant: 'secondary' as const,
+    icon: CircleDotIcon,
+    color: 'text-amber-600',
+  },
+  [NodeRunStatusV2.QUEUED]: {
+    labelKey: 'queued',
+    variant: 'secondary' as const,
+    icon: ListOrderedIcon,
+    color: 'text-violet-600',
+  },
+  [NodeRunStatusV2.RUNNING]: {
     labelKey: 'running',
     variant: 'default' as const,
     icon: Loader2Icon,
     color: 'text-blue-600',
   },
-  [Status.ERROR]: {
+  [NodeRunStatusV2.FAILED]: {
     labelKey: 'failed',
     variant: 'destructive' as const,
     icon: XCircleIcon,
     color: 'text-red-600',
   },
-  [Status.SUCCESS]: {
-    labelKey: 'success',
+  [NodeRunStatusV2.SUCCEEDED]: {
+    labelKey: 'succeeded',
     variant: 'outline' as const,
     icon: CheckCircle2Icon,
     color: 'text-green-600',
   },
+  [NodeRunStatusV2.BLOCKED]: {
+    labelKey: 'blocked',
+    variant: 'outline' as const,
+    icon: BanIcon,
+    color: 'text-zinc-600',
+  },
 }
 
 // 格式化时间
-function formatDateTime(dateFormatter: Intl.DateTimeFormat, dateStr?: string) {
+function formatDateTime(
+  dateFormatter: Intl.DateTimeFormat,
+  dateStr?: string | null,
+) {
   if (!dateStr) return '-'
   try {
     return dateFormatter.format(new Date(dateStr))
@@ -74,11 +98,18 @@ export function TaskTable() {
   const locale = useLocale()
   const t = useTranslations('task')
   const [page, setPage] = useState(0)
-  const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [statusFilter, setStatusFilter] = useState<NodeRunStatusV2 | 'all'>(
+    'all',
+  )
   const limit = 20
 
-  const { data: taskCount = 0 } = useTaskCount()
-  const { data: tasks = [], isLoading } = useTasks(page * limit, limit)
+  const { data: taskPage, isLoading } = useTasks(
+    page * limit,
+    limit,
+    statusFilter === 'all' ? undefined : statusFilter,
+  )
+  const tasks = taskPage?.data ?? []
+  const taskCount = taskPage?.total ?? 0
   const dateFormatters = useMemo(
     () => ({
       compact: new Intl.DateTimeFormat(locale, {
@@ -101,7 +132,10 @@ export function TaskTable() {
     [locale],
   )
 
-  const formatDuration = (startTime?: string, endTime?: string) => {
+  const formatDuration = (
+    startTime?: string | null,
+    endTime?: string | null,
+  ) => {
     if (!startTime) return '-'
     const start = new Date(startTime).getTime()
     const end = endTime ? new Date(endTime).getTime() : Date.now()
@@ -120,12 +154,6 @@ export function TaskTable() {
     })
   }
 
-  // 过滤任务
-  const filteredTasks = tasks.filter((task) => {
-    if (statusFilter === 'all') return true
-    return task.status === Number(statusFilter)
-  })
-
   const totalPages = Math.ceil(taskCount / limit)
 
   return (
@@ -133,7 +161,10 @@ export function TaskTable() {
       <TaskTableToolbar
         statusFilter={statusFilter}
         taskCount={taskCount}
-        onStatusChange={setStatusFilter}
+        onStatusChange={(status) => {
+          setStatusFilter(status)
+          setPage(0)
+        }}
       />
 
       {/* 表格 */}
@@ -203,7 +234,7 @@ export function TaskTable() {
                   </TableCell>
                 </TableRow>
               ))
-            ) : filteredTasks.length === 0 ? (
+            ) : tasks.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className='h-32 text-center'>
                   <div className='flex flex-col items-center justify-center text-muted-foreground'>
@@ -213,7 +244,7 @@ export function TaskTable() {
                 </TableCell>
               </TableRow>
             ) : (
-              filteredTasks.map((task) => {
+              tasks.map((task) => {
                 const config = statusConfig[task.status]
                 const Icon = config.icon
 
@@ -236,11 +267,15 @@ export function TaskTable() {
                     {/* 所属工作流 */}
                     <TableCell className='overflow-hidden px-3'>
                       <Link
-                        href={`/workflow/${task.run_instance.uid}`}
-                        title={task.run_instance.name}
+                        href={
+                          task.project_id
+                            ? `/project/${task.project_id}/${task.run_uid}`
+                            : `/workflow/${task.run_uid}`
+                        }
+                        title={task.run_name}
                         className='block truncate text-sm text-muted-foreground hover:underline'
                       >
-                        {task.run_instance.name}
+                        {task.run_name}
                       </Link>
                     </TableCell>
 
@@ -253,7 +288,9 @@ export function TaskTable() {
                       >
                         <Icon
                           className={`size-3 ${
-                            config.icon === Loader2Icon ? 'animate-spin' : ''
+                            task.status === NodeRunStatusV2.RUNNING
+                              ? 'animate-spin'
+                              : ''
                           }`}
                         />
                         <span className='hidden truncate sm:inline'>
@@ -266,9 +303,9 @@ export function TaskTable() {
                     <TableCell className='hidden overflow-hidden px-3 text-sm xl:table-cell'>
                       <span
                         className='block truncate'
-                        title={task.owner.username}
+                        title={task.owner_username}
                       >
-                        {task.owner.username}
+                        {task.owner_username}
                       </span>
                     </TableCell>
 
@@ -333,9 +370,9 @@ export function TaskTable() {
 }
 
 interface TaskTableToolbarProps {
-  statusFilter: string
+  statusFilter: NodeRunStatusV2 | 'all'
   taskCount: number
-  onStatusChange: (status: string) => void
+  onStatusChange: (status: NodeRunStatusV2 | 'all') => void
 }
 
 function TaskTableToolbar({
@@ -351,23 +388,37 @@ function TaskTableToolbar({
         <span className='hidden shrink-0 text-sm text-muted-foreground sm:inline'>
           {t('table.statusFilter')}
         </span>
-        <Select value={statusFilter} onValueChange={onStatusChange}>
+        <Select
+          value={statusFilter}
+          onValueChange={(value) =>
+            onStatusChange(value as NodeRunStatusV2 | 'all')
+          }
+        >
           <SelectTrigger className='w-32 sm:w-36'>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value='all'>{t('table.all')}</SelectItem>
-            <SelectItem value={String(Status.WAITING)}>
-              {t('status.waiting')}
+            <SelectItem value={NodeRunStatusV2.PENDING}>
+              {t('status.pending')}
             </SelectItem>
-            <SelectItem value={String(Status.RUNNING)}>
+            <SelectItem value={NodeRunStatusV2.READY}>
+              {t('status.ready')}
+            </SelectItem>
+            <SelectItem value={NodeRunStatusV2.QUEUED}>
+              {t('status.queued')}
+            </SelectItem>
+            <SelectItem value={NodeRunStatusV2.RUNNING}>
               {t('status.running')}
             </SelectItem>
-            <SelectItem value={String(Status.SUCCESS)}>
-              {t('status.success')}
+            <SelectItem value={NodeRunStatusV2.SUCCEEDED}>
+              {t('status.succeeded')}
             </SelectItem>
-            <SelectItem value={String(Status.ERROR)}>
+            <SelectItem value={NodeRunStatusV2.FAILED}>
               {t('status.failed')}
+            </SelectItem>
+            <SelectItem value={NodeRunStatusV2.BLOCKED}>
+              {t('status.blocked')}
             </SelectItem>
           </SelectContent>
         </Select>
