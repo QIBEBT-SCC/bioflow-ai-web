@@ -9,7 +9,7 @@ import {
   Position,
   useInternalNode,
 } from '@xyflow/react'
-import { Status } from '@/types/run'
+import { type NodeRunDataV2, NodeRunStatusV2 } from '@/types/workflow-v2'
 
 const getHandleCoords = (
   node: InternalNode<Node>,
@@ -59,11 +59,10 @@ export const StatusEdge = ({
     targetPosition: Position.Left,
   })
 
-  // biome-ignore lint/suspicious/noExplicitAny: node data is dynamic
-  const runData = (sourceNode.data as any)?.run_data
-  const status: Status | undefined = runData?.status
+  const runData = sourceNode.data?.run_data as NodeRunDataV2 | undefined
+  const status = runData?.status
 
-  if (status === Status.SUCCESS) {
+  if (status === NodeRunStatusV2.SUCCEEDED) {
     return (
       <BaseEdge
         id={id}
@@ -74,7 +73,7 @@ export const StatusEdge = ({
     )
   }
 
-  if (status === Status.ERROR) {
+  if (status === NodeRunStatusV2.FAILED) {
     return (
       <BaseEdge
         id={id}
@@ -85,7 +84,7 @@ export const StatusEdge = ({
     )
   }
 
-  if (status === Status.RUNNING) {
+  if (status === NodeRunStatusV2.RUNNING) {
     return (
       <>
         <BaseEdge
@@ -101,7 +100,40 @@ export const StatusEdge = ({
     )
   }
 
-  // WAITING or no run_data — dashed
+  if (status === NodeRunStatusV2.BLOCKED) {
+    return (
+      <BaseEdge
+        id={id}
+        path={edgePath}
+        markerEnd={markerEnd}
+        style={{ strokeDasharray: '3,4', stroke: '#64748b', strokeWidth: 1.5 }}
+      />
+    )
+  }
+
+  if (status === NodeRunStatusV2.QUEUED) {
+    return (
+      <BaseEdge
+        id={id}
+        path={edgePath}
+        markerEnd={markerEnd}
+        style={{ strokeDasharray: '5,4', stroke: '#8b5cf6', strokeWidth: 1.5 }}
+      />
+    )
+  }
+
+  if (status === NodeRunStatusV2.READY) {
+    return (
+      <BaseEdge
+        id={id}
+        path={edgePath}
+        markerEnd={markerEnd}
+        style={{ strokeDasharray: '5,4', stroke: '#f59e0b', strokeWidth: 1.5 }}
+      />
+    )
+  }
+
+  // PENDING or no run_data — dashed
   return (
     <BaseEdge
       id={id}

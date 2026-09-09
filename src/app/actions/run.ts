@@ -1,11 +1,11 @@
-import { clientFetch } from '@/lib/api-client'
-import type {
-  PaginatedRuns,
-  RunFileNode,
-  RunPublic,
-  Statistics,
-} from '@/types/run'
+import { clientFetchV2 } from '@/lib/api-client'
+import type { RunFileNode } from '@/types/run'
 import type { WorkflowDefinition } from '@/types/workflow'
+import type {
+  PaginatedWorkflowRunsV2,
+  WorkflowRunStatisticsV2,
+  WorkflowRunV2,
+} from '@/types/workflow-v2'
 
 /**
  * 创建新的运行实例
@@ -13,12 +13,12 @@ import type { WorkflowDefinition } from '@/types/workflow'
 export async function newRunInstance(
   workflow: WorkflowDefinition,
   template_name?: string,
-): Promise<string> {
+): Promise<WorkflowRunV2> {
   const endpoint = template_name
     ? `/workflows/run?template_name=${encodeURIComponent(template_name)}`
     : '/workflows/run'
 
-  return await clientFetch<string>(endpoint, {
+  return await clientFetchV2<WorkflowRunV2>(endpoint, {
     method: 'POST',
     body: JSON.stringify(workflow),
   })
@@ -30,8 +30,8 @@ export async function newRunInstance(
 export async function getRuns(
   offset: number = 0,
   limit: number = 20,
-): Promise<PaginatedRuns> {
-  return await clientFetch<PaginatedRuns>('/runs', {
+): Promise<PaginatedWorkflowRunsV2> {
+  return await clientFetchV2<PaginatedWorkflowRunsV2>('/runs', {
     params: {
       offset: String(offset),
       limit: String(limit),
@@ -43,28 +43,28 @@ export async function getRuns(
  * 获取运行实例总数
  */
 export async function getRunCount(): Promise<number> {
-  return await clientFetch<number>('/runs/count')
+  return (await getRunStats()).total
 }
 
 /**
  * 获取运行实例统计信息
  */
-export async function getRunStats(): Promise<Statistics> {
-  return await clientFetch<Statistics>('/runs/statistics')
+export async function getRunStats(): Promise<WorkflowRunStatisticsV2> {
+  return await clientFetchV2<WorkflowRunStatisticsV2>('/runs/statistics')
 }
 
 /**
  * 获取单个运行实例详情
  */
-export async function getRun(uid: string): Promise<RunPublic> {
-  return await clientFetch<RunPublic>(`/runs/${uid}`)
+export async function getRun(uid: string): Promise<WorkflowRunV2> {
+  return await clientFetchV2<WorkflowRunV2>(`/runs/${uid}`)
 }
 
 /**
  * 获取运行实例输出文件树
  */
 export async function getRunFiles(runUid: string): Promise<RunFileNode[]> {
-  return await clientFetch<RunFileNode[]>(`/runs/${runUid}/files`)
+  return await clientFetchV2<RunFileNode[]>(`/runs/${runUid}/files`)
 }
 
 /**
@@ -75,7 +75,7 @@ export async function getRunFileContent(
   runUid: string,
   path: string,
 ): Promise<string> {
-  const result = await clientFetch<unknown>(`/runs/${runUid}/files/content`, {
+  const result = await clientFetchV2<unknown>(`/runs/${runUid}/files/content`, {
     method: 'POST',
     body: JSON.stringify({ path }),
   })
@@ -91,14 +91,12 @@ export async function getRunFileBlobUrl(
   runUid: string,
   path: string,
 ): Promise<string> {
-  const FASTAPI_URL = process.env.NEXT_PUBLIC_API_URL ?? '/api/v1'
-  const res = await fetch(`${FASTAPI_URL}/runs/${runUid}/files/content`, {
+  const res = await clientFetchV2(`/runs/${runUid}/files/content`, {
     method: 'POST',
-    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ path }),
+    raw: true,
   })
-  if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`)
   const blob = await res.blob()
   return URL.createObjectURL(blob)
 }

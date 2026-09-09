@@ -1,32 +1,18 @@
 {
   "task": {
-    "title": "Task Monitor",
     "status": {
-      "waiting": "Waiting",
+      "pending": "Pending",
+      "ready": "Ready",
+      "queued": "Queued",
       "running": "Running",
       "failed": "Failed",
-      "success": "Success"
+      "succeeded": "Succeeded",
+      "blocked": "Blocked"
     },
     "duration": {
       "seconds": "{seconds}s",
       "minutesSeconds": "{minutes}m {seconds}s",
       "hoursMinutes": "{hours}h {minutes}m"
-    },
-    "table": {
-      "statusFilter": "Status:",
-      "all": "All",
-      "total": "Total: {count}",
-      "taskName": "Task Name",
-      "workflow": "Workflow",
-      "status": "Status",
-      "owner": "Owner",
-      "createdAt": "Created At",
-      "startedAt": "Started At",
-      "duration": "Duration",
-      "empty": "No tasks found",
-      "page": "Page {current} of {total}",
-      "previous": "Previous",
-      "next": "Next"
     },
     "timeline": {
       "title": "Task Runtime Timeline",
@@ -38,7 +24,7 @@
       "last7Days": "Last 7d",
       "allStatuses": "All statuses",
       "showing": "Showing {visible} / {total}",
-      "taskColumn": "Task / Workflow",
+      "taskColumn": "Task / Run",
       "now": "Now",
       "empty": "No tasks match these filters",
       "emptyHint": "Try a wider time range or choose a different task status.",
@@ -51,7 +37,7 @@
       "loading": "Loading...",
       "notFound": "Task not found",
       "taskId": "Task ID:",
-      "workflow": "Workflow:",
+      "workflow": "Run:",
       "duration": "Duration:",
       "result": "Result",
       "log": "Task Log",
@@ -59,15 +45,18 @@
       "noResult": "No output available",
       "command": "Command",
       "basicInfo": "Basic Information",
-      "tool": "Tool",
+      "nodeType": "Node Type",
+      "definitionNodeId": "Definition Node ID",
       "owner": "Owner",
       "timeInfo": "Time Information",
       "createdAt": "Created At",
+      "queuedAt": "Queued At",
       "startedAt": "Started At",
       "endedAt": "Ended At",
       "systemInfo": "System Information",
       "host": "Host",
-      "system": "System"
+      "system": "System",
+      "worker": "Worker"
     },
     "log": {
       "unavailable": "The log file does not exist or cannot be read",
@@ -95,6 +84,77 @@
       "ioTrend": "I/O Read/Write Trend",
       "ioInput": "I/O Input",
       "ioOutput": "I/O Output"
+    }
+  },
+  "workflowMonitor": {
+    "title": "Workflow Run Monitor",
+    "description": "See workflow status, task timing, and node execution details in one place",
+    "refresh": {
+      "label": "Auto refresh",
+      "updatedAt": "Updated at {time}",
+      "off": "Off",
+      "seconds10": "Every 10 seconds",
+      "seconds30": "Every 30 seconds",
+      "minute1": "Every minute",
+      "minutes5": "Every 5 minutes",
+      "manual": "Refresh now"
+    },
+    "status": {
+      "pending": "Pending",
+      "running": "Running",
+      "succeeded": "Succeeded",
+      "failed": "Failed"
+    },
+    "stats": {
+      "title": "Run Statistics",
+      "total": {
+        "label": "Total Runs"
+      },
+      "pending": {
+        "label": "Pending"
+      },
+      "running": {
+        "label": "Running"
+      },
+      "succeeded": {
+        "label": "Succeeded"
+      },
+      "failed": {
+        "label": "Failed"
+      }
+    },
+    "table": {
+      "title": "Workflow Runs",
+      "description": "Expand a run to inspect every task in its current generation, or select its name to open the run details.",
+      "statusFilter": "Status:",
+      "all": "All",
+      "total": "{count, plural, one {# run} other {# runs}}",
+      "name": "Run Name",
+      "status": "Status",
+      "progress": "Task Progress",
+      "owner": "Owner",
+      "startedAt": "Started At",
+      "duration": "Duration",
+      "empty": "No workflow runs found",
+      "page": "Page {current} of {total}",
+      "previous": "Previous",
+      "next": "Next",
+      "expand": "Expand tasks for {name}",
+      "collapse": "Collapse tasks for {name}",
+      "unsettled": "Tasks still active",
+      "completed": "{completed}/{total} finished",
+      "ownerValue": "User #{id}"
+    },
+    "tasks": {
+      "name": "Task Name",
+      "status": "Status",
+      "startedAt": "Started At",
+      "duration": "Duration",
+      "loadError": "Failed to load tasks.",
+      "retry": "Retry",
+      "empty": "This run has no executable tasks.",
+      "open": "Open task {name}",
+      "count": "{count, plural, one {# task} other {# tasks}}; about six are visible at once, with the rest available by scrolling."
     }
   }
 }

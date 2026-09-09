@@ -24,25 +24,26 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
-import { type RunFileNode, type RunPublic, Status } from '@/types/run'
+import type { RunFileNode } from '@/types/run'
+import { WorkflowRunStatusV2, type WorkflowRunV2 } from '@/types/workflow-v2'
 
 const statusConfig = {
-  [Status.WAITING]: {
+  [WorkflowRunStatusV2.PENDING]: {
     labelKey: 'waiting',
     variant: 'secondary' as const,
     icon: ClockIcon,
   },
-  [Status.RUNNING]: {
+  [WorkflowRunStatusV2.RUNNING]: {
     labelKey: 'running',
     variant: 'default' as const,
     icon: Loader2Icon,
   },
-  [Status.ERROR]: {
+  [WorkflowRunStatusV2.FAILED]: {
     labelKey: 'failed',
     variant: 'destructive' as const,
     icon: XCircleIcon,
   },
-  [Status.SUCCESS]: {
+  [WorkflowRunStatusV2.SUCCEEDED]: {
     labelKey: 'success',
     variant: 'outline' as const,
     icon: CheckCircle2Icon,
@@ -86,7 +87,7 @@ function renderOutputNode(node: RunFileNode) {
 }
 
 interface RunLeftPanelProps {
-  run: RunPublic | null
+  run: WorkflowRunV2 | null
   runFiles?: RunFileNode[]
   selectedFile?: string
   onSelectFile: (path: string) => void
@@ -111,7 +112,7 @@ export function RunLeftPanel({
   const [statsOpen, setStatsOpen] = useState(true)
   const filePaths = collectFilePaths(runFiles ?? [])
 
-  const Icon = statusConfig[run?.status ?? Status.WAITING].icon
+  const Icon = statusConfig[run?.status ?? WorkflowRunStatusV2.PENDING].icon
 
   return (
     <div className='flex shrink-0'>
@@ -138,7 +139,7 @@ export function RunLeftPanel({
                 {run ? (
                   <Badge variant={statusConfig[run.status].variant}>
                     <Icon
-                      className={`size-3 ${run.status === Status.RUNNING ? 'animate-spin' : ''}`}
+                      className={`size-3 ${run.status === WorkflowRunStatusV2.RUNNING ? 'animate-spin' : ''}`}
                     />
                     {tStatus(statusConfig[run.status].labelKey)}
                   </Badge>
@@ -149,15 +150,25 @@ export function RunLeftPanel({
               {[
                 {
                   label: t('totalTasks'),
-                  value: run?.task_statistics?.total ?? '--',
+                  value: run?.node_statistics.total ?? '--',
                 },
                 {
                   label: t('successTasks'),
-                  value: run?.task_statistics?.success ?? '--',
+                  value: run?.node_statistics.succeeded ?? '--',
                 },
                 {
                   label: t('failedTasks'),
-                  value: run?.task_statistics?.error ?? '--',
+                  value: run?.node_statistics.failed ?? '--',
+                },
+                {
+                  label: '已阻断',
+                  value: run?.node_statistics.blocked ?? '--',
+                },
+                {
+                  label: '就绪 / 队列',
+                  value: run
+                    ? `${run.node_statistics.ready} / ${run.node_statistics.queued}`
+                    : '--',
                 },
               ].map(({ label, value }) => (
                 <div key={label} className='flex justify-between text-sm'>

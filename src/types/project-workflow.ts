@@ -1,5 +1,3 @@
-import type { User } from '@/types/auth'
-import type { Statistics, Status } from '@/types/run'
 import type { ExecutionScope } from '@/types/workflow'
 
 /**
@@ -11,7 +9,6 @@ export interface ProjectWorkflow {
   import_time: string
   enabled: boolean
   execution_scope?: ExecutionScope
-  auto_summary?: boolean
 }
 
 /**
@@ -22,43 +19,9 @@ export interface AddWorkflowRequest {
 }
 
 /**
- * 运行工作流请求
- */
-export interface RunWorkflowRequest {
-  sample_uids?: string[]
-  run_name_prefix?: string
-  auto_summary?: boolean
-}
-
-/**
  * 工作流运行结果
  */
 export interface WorkflowRunResult {
   run_uids: string[]
   count: number
-}
-
-/**
- * 运行实例信息(项目模式)
- */
-export interface RunInstance {
-  uid: string
-  name: string
-  owner: User
-  project_id: number | null
-  workflow_uid: string | null
-  sample_uid: string | null
-  status: Status
-  task_statistics: Statistics | null
-  create_time: string
-  start_time: string | null
-  end_time: string | null
-}
-
-export interface PaginatedProjectRuns {
-  total: number
-  offset: number
-  limit: number
-  has_more: boolean
-  data: RunInstance[]
 }

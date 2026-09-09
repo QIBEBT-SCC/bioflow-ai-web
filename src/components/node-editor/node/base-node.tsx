@@ -1,10 +1,20 @@
 'use client'
 
-import { Handle, Position, useNodeConnections, useNodeId } from '@xyflow/react'
 import {
+  type Node as FlowNode,
+  Handle,
+  Position,
+  useNodeConnections,
+  useNodeId,
+  useNodesData,
+} from '@xyflow/react'
+import {
+  BanIcon,
   CheckCircle2Icon,
+  CircleDashedIcon,
   ClockIcon,
   InfoIcon,
+  ListTodoIcon,
   Loader2Icon,
   XCircleIcon,
 } from 'lucide-react'
@@ -21,8 +31,7 @@ import {
 } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
 import type { HandleDefine } from '@/types/node'
-import type { RunData } from '@/types/run'
-import { Status } from '@/types/run'
+import { type NodeRunDataV2, NodeRunStatusV2 } from '@/types/workflow-v2'
 
 // 纯函数定义 - 避免在组件内部重复创建
 const calculateMaxRows = (
@@ -52,7 +61,7 @@ interface BaseNodeProps {
     indicatorColors: string[]
   }
   nodeComponent: React.ReactNode
-  runData?: RunData
+  runData?: NodeRunDataV2
 }
 
 const BaseNode = memo(function BaseNode({
@@ -67,6 +76,10 @@ const BaseNode = memo(function BaseNode({
 }: BaseNodeProps) {
   const nodeId = useNodeId()
   const connections = useNodeConnections()
+  const nodeData = useNodesData<FlowNode<{ run_data?: NodeRunDataV2 }, string>>(
+    nodeId ?? '',
+  )
+  const effectiveRunData = runData ?? nodeData?.data.run_data
 
   const maxRows = useMemo(
     () => calculateMaxRows(handles.inputs, handles.outputs),
@@ -212,7 +225,7 @@ const BaseNode = memo(function BaseNode({
         {nodeComponent}
       </NodeCardContent>
       {/* 调整 footer 位置和样式 */}
-      {runData && <RunStatusBar runData={runData} />}
+      {effectiveRunData && <RunStatusBar runData={effectiveRunData} />}
     </NodeCard>
   )
 })
@@ -274,29 +287,44 @@ const NodeCardContent = memo(function NodeCardContent({
 })
 
 const statusConfig = {
-  [Status.WAITING]: {
-    labelKey: 'waiting' as const,
-    icon: ClockIcon,
-    className: 'bg-yellow-50 text-yellow-700 border-yellow-200',
+  [NodeRunStatusV2.PENDING]: {
+    labelKey: 'pending' as const,
+    icon: CircleDashedIcon,
+    className: 'bg-slate-50 text-slate-700 border-slate-200',
   },
-  [Status.RUNNING]: {
+  [NodeRunStatusV2.READY]: {
+    labelKey: 'ready' as const,
+    icon: ClockIcon,
+    className: 'bg-amber-50 text-amber-700 border-amber-200',
+  },
+  [NodeRunStatusV2.QUEUED]: {
+    labelKey: 'queued' as const,
+    icon: ListTodoIcon,
+    className: 'bg-violet-50 text-violet-700 border-violet-200',
+  },
+  [NodeRunStatusV2.RUNNING]: {
     labelKey: 'running' as const,
     icon: Loader2Icon,
     className: 'bg-blue-50 text-blue-700 border-blue-200',
   },
-  [Status.SUCCESS]: {
-    labelKey: 'success' as const,
+  [NodeRunStatusV2.SUCCEEDED]: {
+    labelKey: 'succeeded' as const,
     icon: CheckCircle2Icon,
     className: 'bg-green-50 text-green-700 border-green-200',
   },
-  [Status.ERROR]: {
-    labelKey: 'error' as const,
+  [NodeRunStatusV2.FAILED]: {
+    labelKey: 'failed' as const,
     icon: XCircleIcon,
     className: 'bg-red-50 text-red-700 border-red-200',
   },
+  [NodeRunStatusV2.BLOCKED]: {
+    labelKey: 'blocked' as const,
+    icon: BanIcon,
+    className: 'bg-gray-100 text-gray-600 border-gray-300',
+  },
 }
 
-function formatTime(dateStr?: string) {
+function formatTime(dateStr?: string | null) {
   if (!dateStr) return null
   try {
     const d = new Date(dateStr)
@@ -306,7 +334,7 @@ function formatTime(dateStr?: string) {
   }
 }
 
-function calcDuration(start?: string, end?: string) {
+function calcDuration(start?: string | null, end?: string | null) {
   if (!start) return null
   const s = new Date(start).getTime()
   const e = end ? new Date(end).getTime() : Date.now()
@@ -318,7 +346,7 @@ function calcDuration(start?: string, end?: string) {
 const RunStatusBar = memo(function RunStatusBar({
   runData,
 }: {
-  runData: RunData
+  runData: NodeRunDataV2
 }) {
   const t = useTranslations('editor.node_status')
   if (runData.status === undefined) return null
@@ -338,7 +366,7 @@ const RunStatusBar = memo(function RunStatusBar({
         <Icon
           className={cn(
             'size-3',
-            runData.status === Status.RUNNING && 'animate-spin',
+            runData.status === NodeRunStatusV2.RUNNING && 'animate-spin',
           )}
         />
         {t(cfg.labelKey)}

@@ -1,11 +1,7 @@
 'use client'
 
-import {
-  EditIcon,
-  FolderOpenIcon,
-  NetworkIcon,
-  TvMinimalIcon,
-} from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
+import { ChartNoAxesGanttIcon, EditIcon, FolderOpenIcon } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
@@ -20,7 +16,15 @@ import {
 import { useSidebarStore } from '@/stores/sidebar-store'
 import { UserRole } from '@/types/auth'
 
-const projects = [
+interface NavigationItem {
+  name: string
+  url: string
+  icon: LucideIcon
+  matchPrefixes?: string[]
+  minimumRole: UserRole
+}
+
+const projects: NavigationItem[] = [
   {
     name: 'projects',
     url: '/project',
@@ -36,14 +40,8 @@ const projects = [
   {
     name: 'workflows',
     url: '/workflow',
-    icon: NetworkIcon,
-    icon_rotate: true,
-    minimumRole: UserRole.MEMBER,
-  },
-  {
-    name: 'tasks',
-    url: '/task',
-    icon: TvMinimalIcon,
+    icon: ChartNoAxesGanttIcon,
+    matchPrefixes: ['/workflow', '/task'],
     minimumRole: UserRole.MEMBER,
   },
 ]
@@ -56,7 +54,11 @@ export function NavMain({ role }: { role?: UserRole }) {
 
   useEffect(() => {
     if (pathname) {
-      const currentPage = projects.find((p) => pathname.startsWith(p.url))
+      const currentPage = projects.find((item) =>
+        (item.matchPrefixes ?? [item.url]).some((prefix) =>
+          pathname.startsWith(prefix),
+        ),
+      )
       if (currentPage) {
         setActivePage(currentPage.name)
       }
@@ -78,11 +80,7 @@ export function NavMain({ role }: { role?: UserRole }) {
                 tooltip={item.name}
               >
                 <Link href={item.url}>
-                  {item.icon_rotate ? (
-                    <item.icon className='-rotate-90' />
-                  ) : (
-                    <item.icon />
-                  )}
+                  <item.icon />
                   <span>{t(item.name)}</span>
                 </Link>
               </SidebarMenuButton>

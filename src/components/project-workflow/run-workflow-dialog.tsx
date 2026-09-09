@@ -6,7 +6,6 @@ import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
 import {
   Dialog,
   DialogContent,
@@ -44,7 +43,6 @@ export function RunWorkflowDialog({
     null,
   )
   const [runNamePrefix, setRunNamePrefix] = useState('')
-  const [autoSummary, setAutoSummary] = useState(false)
 
   const isProjectLevel = executionScope === ExecutionScope.PROJECT_LEVEL
 
@@ -94,7 +92,6 @@ export function RunWorkflowDialog({
             ? undefined
             : Array.from(selectedSampleUids),
           run_name_prefix: runNamePrefix || undefined,
-          auto_summary: autoSummary,
         },
       })
 
@@ -107,7 +104,6 @@ export function RunWorkflowDialog({
       // 重置状态
       setSelectedSamples(null)
       setRunNamePrefix('')
-      setAutoSummary(false)
       onOpenChange(false)
     } catch (error) {
       if (error instanceof Error && error.message.includes('409')) {
@@ -231,20 +227,6 @@ export function RunWorkflowDialog({
             <p className='text-xs text-muted-foreground'>
               {t('runNamePrefixDescription')}
             </p>
-          </div>
-
-          <div className='flex items-center gap-3 rounded-lg border p-3'>
-            <Checkbox
-              id='auto-summary'
-              checked={autoSummary}
-              onCheckedChange={(checked) => setAutoSummary(checked === true)}
-            />
-            <Label
-              htmlFor='auto-summary'
-              className='cursor-pointer text-sm font-medium'
-            >
-              {t('autoSummary')}
-            </Label>
           </div>
 
           {/* 运行实例数量提示 */}

@@ -1,8 +1,11 @@
 'use client'
 
 import {
+  BanIcon,
   CheckCircle2Icon,
+  CircleDotIcon,
   ClockIcon,
+  ListOrderedIcon,
   Loader2Icon,
   TerminalIcon,
   XCircleIcon,
@@ -34,43 +37,66 @@ import { CopyButton } from '@/components/ui/copy-button'
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { useTask } from '@/hooks/use-task'
-import { Status } from '@/types/run'
-import type { TaskPublic } from '@/types/task'
+import { NodeRunStatusV2, type NodeRunV2 } from '@/types/workflow-v2'
 
 // 状态配置
 const statusConfig = {
-  [Status.WAITING]: {
-    labelKey: 'waiting',
+  [NodeRunStatusV2.PENDING]: {
+    labelKey: 'pending',
     variant: 'secondary' as const,
     icon: ClockIcon,
-    color: 'text-yellow-600',
-    bgColor: 'bg-yellow-50 dark:bg-yellow-950',
+    color: 'text-slate-600',
+    bgColor: 'bg-slate-50 dark:bg-slate-950',
   },
-  [Status.RUNNING]: {
+  [NodeRunStatusV2.READY]: {
+    labelKey: 'ready',
+    variant: 'secondary' as const,
+    icon: CircleDotIcon,
+    color: 'text-amber-600',
+    bgColor: 'bg-amber-50 dark:bg-amber-950',
+  },
+  [NodeRunStatusV2.QUEUED]: {
+    labelKey: 'queued',
+    variant: 'secondary' as const,
+    icon: ListOrderedIcon,
+    color: 'text-violet-600',
+    bgColor: 'bg-violet-50 dark:bg-violet-950',
+  },
+  [NodeRunStatusV2.RUNNING]: {
     labelKey: 'running',
     variant: 'default' as const,
     icon: Loader2Icon,
     color: 'text-blue-600',
     bgColor: 'bg-blue-50 dark:bg-blue-950',
   },
-  [Status.ERROR]: {
+  [NodeRunStatusV2.FAILED]: {
     labelKey: 'failed',
     variant: 'destructive' as const,
     icon: XCircleIcon,
     color: 'text-red-600',
     bgColor: 'bg-red-50 dark:bg-red-950',
   },
-  [Status.SUCCESS]: {
-    labelKey: 'success',
+  [NodeRunStatusV2.SUCCEEDED]: {
+    labelKey: 'succeeded',
     variant: 'outline' as const,
     icon: CheckCircle2Icon,
     color: 'text-green-600',
     bgColor: 'bg-green-50 dark:bg-green-950',
   },
+  [NodeRunStatusV2.BLOCKED]: {
+    labelKey: 'blocked',
+    variant: 'outline' as const,
+    icon: BanIcon,
+    color: 'text-zinc-600',
+    bgColor: 'bg-zinc-50 dark:bg-zinc-950',
+  },
 }
 
 // 格式化时间
-function formatDateTime(dateFormatter: Intl.DateTimeFormat, dateStr?: string) {
+function formatDateTime(
+  dateFormatter: Intl.DateTimeFormat,
+  dateStr?: string | null,
+) {
   if (!dateStr) return '-'
   try {
     return dateFormatter.format(new Date(dateStr))
@@ -83,6 +109,7 @@ export default function TaskDetailPage() {
   const params = useParams()
   const locale = useLocale()
   const t = useTranslations('task')
+  const workflowT = useTranslations('workflowMonitor')
   const taskUid = params.uid as string
   const { data: task, isLoading } = useTask(taskUid)
   const [activeView, setActiveView] = useState<'result' | 'log' | 'monitor'>(
@@ -102,7 +129,10 @@ export default function TaskDetailPage() {
     [locale],
   )
 
-  const formatDuration = (startTime?: string, endTime?: string) => {
+  const formatDuration = (
+    startTime?: string | null,
+    endTime?: string | null,
+  ) => {
     if (!startTime) return '-'
     const start = new Date(startTime).getTime()
     const end = endTime ? new Date(endTime).getTime() : Date.now()
@@ -145,6 +175,9 @@ export default function TaskDetailPage() {
 
   const config = statusConfig[task.status]
   const StatusIcon = config.icon
+  const runHref = task.project_id
+    ? `/project/${task.project_id}/${task.run_uid}`
+    : `/workflow/${task.run_uid}`
 
   return (
     <SidebarInset className='h-screen flex flex-col'>
@@ -156,7 +189,9 @@ export default function TaskDetailPage() {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem>
-                  <BreadcrumbLink href='/task'>{t('title')}</BreadcrumbLink>
+                  <BreadcrumbLink href='/workflow'>
+                    {workflowT('title')}
+                  </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
@@ -187,7 +222,7 @@ export default function TaskDetailPage() {
                     </Badge>
                   </div>
                   <p className='text-sm text-muted-foreground'>
-                    {task.tool.description}
+                    {task.tool_description ?? task.node_type}
                   </p>
                   <div className='flex items-center gap-6 text-sm text-muted-foreground'>
                     <div>
@@ -200,10 +235,10 @@ export default function TaskDetailPage() {
                         {t('detail.workflow')}
                       </span>{' '}
                       <Link
-                        href={`/workflow/${task.run_instance.uid}`}
+                        href={runHref}
                         className='text-primary hover:underline'
                       >
-                        {task.run_instance.name}
+                        {task.run_name}
                       </Link>
                     </div>
                     <Separator orientation='vertical' className='h-4' />
@@ -277,7 +312,7 @@ export default function TaskDetailPage() {
   )
 }
 
-function TaskResultView({ task }: { task: TaskPublic }) {
+function TaskResultView({ task }: { task: NodeRunV2 }) {
   const t = useTranslations('task.detail')
 
   return (
@@ -286,6 +321,11 @@ function TaskResultView({ task }: { task: TaskPublic }) {
         <CardTitle>{t('result')}</CardTitle>
       </CardHeader>
       <CardContent>
+        {task.error_message ? (
+          <div className='mb-4 rounded-md border border-destructive/40 bg-destructive/5 p-3 font-mono text-sm text-destructive'>
+            {task.error_message}
+          </div>
+        ) : null}
         {task.tool_output?.result ? (
           <div className='space-y-2'>
             {Object.entries(task.tool_output.result).map(([key, value]) => (
@@ -313,7 +353,7 @@ function TaskResultView({ task }: { task: TaskPublic }) {
   )
 }
 
-function TaskLogView({ task, taskUid }: { task: TaskPublic; taskUid: string }) {
+function TaskLogView({ task, taskUid }: { task: NodeRunV2; taskUid: string }) {
   const t = useTranslations('task.detail')
 
   return (
@@ -344,7 +384,10 @@ function TaskLogView({ task, taskUid }: { task: TaskPublic; taskUid: string }) {
           <CardTitle>{t('log')}</CardTitle>
         </CardHeader>
         <CardContent>
-          <TaskLog taskUid={taskUid} />
+          <TaskLog
+            taskUid={taskUid}
+            isRunning={task.status === NodeRunStatusV2.RUNNING}
+          />
         </CardContent>
       </Card>
     </div>
@@ -355,7 +398,7 @@ function TaskSidebar({
   task,
   dateFormatter,
 }: {
-  task: TaskPublic
+  task: NodeRunV2
   dateFormatter: Intl.DateTimeFormat
 }) {
   const t = useTranslations('task.detail')
@@ -368,13 +411,24 @@ function TaskSidebar({
         </CardHeader>
         <CardContent className='space-y-3 text-sm'>
           <div>
-            <p className='text-xs text-muted-foreground mb-1'>{t('tool')}</p>
-            <p className='font-medium'>{task.tool.name}</p>
+            <p className='text-xs text-muted-foreground mb-1'>
+              {t('nodeType')}
+            </p>
+            <p className='font-medium'>{task.tool_name ?? task.node_type}</p>
           </div>
           <Separator />
           <div>
             <p className='text-xs text-muted-foreground mb-1'>{t('owner')}</p>
-            <p className='font-medium'>{task.owner.username}</p>
+            <p className='font-medium'>{task.owner_username}</p>
+          </div>
+          <Separator />
+          <div>
+            <p className='text-xs text-muted-foreground mb-1'>
+              {t('definitionNodeId')}
+            </p>
+            <p className='break-all font-mono text-xs'>
+              {task.definition_node_id}
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -390,6 +444,15 @@ function TaskSidebar({
             </p>
             <p className='font-mono text-xs'>
               {formatDateTime(dateFormatter, task.create_time)}
+            </p>
+          </div>
+          <Separator />
+          <div>
+            <p className='text-xs text-muted-foreground mb-1'>
+              {t('queuedAt')}
+            </p>
+            <p className='font-mono text-xs'>
+              {formatDateTime(dateFormatter, task.queued_at)}
             </p>
           </div>
           <Separator />
@@ -411,7 +474,7 @@ function TaskSidebar({
         </CardContent>
       </Card>
 
-      {(task.system || task.hostname) && (
+      {(task.system || task.hostname || task.worker_id) && (
         <Card>
           <CardHeader className='pb-3'>
             <CardTitle className='text-sm'>{t('systemInfo')}</CardTitle>
@@ -435,6 +498,19 @@ function TaskSidebar({
                 </p>
                 <p className='font-mono text-xs break-all'>{task.system}</p>
               </div>
+            )}
+            {task.worker_id && (
+              <>
+                {(task.hostname || task.system) && <Separator />}
+                <div>
+                  <p className='text-xs text-muted-foreground mb-1'>
+                    {t('worker')}
+                  </p>
+                  <p className='font-mono text-xs break-all'>
+                    {task.worker_id}
+                  </p>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>

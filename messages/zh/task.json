@@ -1,32 +1,18 @@
 {
   "task": {
-    "title": "任务监控",
     "status": {
-      "waiting": "等待中",
+      "pending": "等待依赖",
+      "ready": "已就绪",
+      "queued": "已入队",
       "running": "运行中",
       "failed": "失败",
-      "success": "成功"
+      "succeeded": "成功",
+      "blocked": "已阻塞"
     },
     "duration": {
       "seconds": "{seconds}秒",
       "minutesSeconds": "{minutes}分 {seconds}秒",
       "hoursMinutes": "{hours}小时 {minutes}分"
-    },
-    "table": {
-      "statusFilter": "状态筛选：",
-      "all": "全部",
-      "total": "共 {count} 个任务",
-      "taskName": "任务名称",
-      "workflow": "所属工作流",
-      "status": "状态",
-      "owner": "创建者",
-      "createdAt": "创建时间",
-      "startedAt": "开始时间",
-      "duration": "运行时长",
-      "empty": "暂无任务记录",
-      "page": "第 {current} / {total} 页",
-      "previous": "上一页",
-      "next": "下一页"
     },
     "timeline": {
       "title": "任务运行时间线",
@@ -38,7 +24,7 @@
       "last7Days": "近 7 天",
       "allStatuses": "全部状态",
       "showing": "显示 {visible} / {total}",
-      "taskColumn": "任务 / 工作流",
+      "taskColumn": "任务 / 运行",
       "now": "现在",
       "empty": "当前筛选下没有任务记录",
       "emptyHint": "尝试扩大时间范围，或切换到其他任务状态。",
@@ -51,7 +37,7 @@
       "loading": "加载中...",
       "notFound": "任务不存在",
       "taskId": "任务 ID：",
-      "workflow": "所属工作流：",
+      "workflow": "所属运行：",
       "duration": "运行时长：",
       "result": "运行结果",
       "log": "任务日志",
@@ -59,15 +45,18 @@
       "noResult": "暂无输出结果",
       "command": "执行命令",
       "basicInfo": "基本信息",
-      "tool": "工具",
+      "nodeType": "节点类型",
+      "definitionNodeId": "定义节点 ID",
       "owner": "创建者",
       "timeInfo": "时间信息",
       "createdAt": "创建时间",
+      "queuedAt": "入队时间",
       "startedAt": "开始时间",
       "endedAt": "结束时间",
       "systemInfo": "系统信息",
       "host": "主机",
-      "system": "系统"
+      "system": "系统",
+      "worker": "Worker"
     },
     "log": {
       "unavailable": "日志文件不存在或无法读取",
@@ -95,6 +84,77 @@
       "ioTrend": "IO 读写趋势",
       "ioInput": "IO 输入",
       "ioOutput": "IO 输出"
+    }
+  },
+  "workflowMonitor": {
+    "title": "工作流运行监控",
+    "description": "在同一处查看工作流运行状态、任务时序与节点执行详情",
+    "refresh": {
+      "label": "自动刷新",
+      "updatedAt": "更新于 {time}",
+      "off": "不刷新",
+      "seconds10": "每 10 秒",
+      "seconds30": "每 30 秒",
+      "minute1": "每 1 分钟",
+      "minutes5": "每 5 分钟",
+      "manual": "手动刷新"
+    },
+    "status": {
+      "pending": "等待中",
+      "running": "运行中",
+      "succeeded": "成功",
+      "failed": "失败"
+    },
+    "stats": {
+      "title": "运行统计",
+      "total": {
+        "label": "总运行数"
+      },
+      "pending": {
+        "label": "等待中"
+      },
+      "running": {
+        "label": "运行中"
+      },
+      "succeeded": {
+        "label": "已成功"
+      },
+      "failed": {
+        "label": "失败"
+      }
+    },
+    "table": {
+      "title": "工作流运行实例",
+      "description": "展开运行实例可查看其当前代的全部任务，点击名称进入运行详情。",
+      "statusFilter": "状态筛选：",
+      "all": "全部",
+      "total": "共 {count} 个运行实例",
+      "name": "运行名称",
+      "status": "状态",
+      "progress": "任务进度",
+      "owner": "创建者",
+      "startedAt": "开始时间",
+      "duration": "运行时长",
+      "empty": "暂无工作流运行实例",
+      "page": "第 {current} / {total} 页",
+      "previous": "上一页",
+      "next": "下一页",
+      "expand": "展开 {name} 的任务",
+      "collapse": "收起 {name} 的任务",
+      "unsettled": "仍有任务活动",
+      "completed": "{completed}/{total} 已结束",
+      "ownerValue": "用户 #{id}"
+    },
+    "tasks": {
+      "name": "任务名称",
+      "status": "状态",
+      "startedAt": "开始时间",
+      "duration": "运行时长",
+      "loadError": "任务列表加载失败。",
+      "retry": "重新加载",
+      "empty": "这个运行实例没有可执行任务。",
+      "open": "查看任务 {name}",
+      "count": "共 {count} 个任务；列表最多显示约 6 个，滚动可查看其余任务。"
     }
   }
 }

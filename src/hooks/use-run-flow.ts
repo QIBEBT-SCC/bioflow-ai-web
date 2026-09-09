@@ -7,11 +7,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { getToolArg } from '@/app/actions/tool'
 import { useInitialWorkflowLayout } from '@/hooks/use-initial-workflow-layout'
 import { prepareWorkflowNodes } from '@/lib/workflow-layout'
-import type { RunData, RunPublic } from '@/types/run'
-import { Status } from '@/types/run'
 import type { WorkflowNode } from '@/types/workflow'
+import {
+  type NodeRunDataV2,
+  NodeRunStatusV2,
+  type WorkflowRunV2,
+} from '@/types/workflow-v2'
 
-function getTopologyKey(run: RunPublic): string {
+function getTopologyKey(run: WorkflowRunV2): string {
   return [
     run.uid,
     ...run.nodes.map((node) => `${node.id}:${node.type}`),
@@ -41,7 +44,7 @@ function mergeRunNodes(
   })
 }
 
-export function useRunFlow(run: RunPublic | null) {
+export function useRunFlow(run: WorkflowRunV2 | null) {
   const [flowNodes, setFlowNodes, onNodesChange] = useNodesState<FlowNode>([])
   const topologyKeyRef = useRef<string | null>(null)
   const [initialLayoutKey, setInitialLayoutKey] = useState<string | null>(null)
@@ -126,10 +129,16 @@ export function useRunFlow(run: RunPublic | null) {
   const edges = useMemo<Edge[]>(() => {
     if (!run?.edges || !run?.nodes || !edgesReady) return []
     const nodeMap = new Map(run.nodes.map((n) => [n.id, n]))
-    const withAnimate = [Status.RUNNING, Status.WAITING, undefined]
+    const withAnimate = [
+      NodeRunStatusV2.PENDING,
+      NodeRunStatusV2.READY,
+      NodeRunStatusV2.QUEUED,
+      NodeRunStatusV2.RUNNING,
+      undefined,
+    ]
     return run.edges.map((e) => {
       const sourceNode = nodeMap.get(e.source)
-      const runData = sourceNode?.data?.run_data as RunData | undefined
+      const runData = sourceNode?.data?.run_data as NodeRunDataV2 | undefined
       const status = runData?.status
       return { ...e, animated: withAnimate.includes(status) }
     })

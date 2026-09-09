@@ -32,27 +32,27 @@ import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { StatusEdge } from '@/components/workflow/status-edge'
 import { useRun } from '@/hooks/use-run'
 import { useRunFlow } from '@/hooks/use-run-flow'
-import { Status } from '@/types/run'
+import { WorkflowRunStatusV2 } from '@/types/workflow-v2'
 
 const edgeTypes = { default: StatusEdge }
 
 const statusConfig = {
-  [Status.WAITING]: {
+  [WorkflowRunStatusV2.PENDING]: {
     label: '等待中',
     variant: 'secondary' as const,
     icon: ClockIcon,
   },
-  [Status.RUNNING]: {
+  [WorkflowRunStatusV2.RUNNING]: {
     label: '运行中',
     variant: 'default' as const,
     icon: Loader2Icon,
   },
-  [Status.ERROR]: {
+  [WorkflowRunStatusV2.FAILED]: {
     label: '失败',
     variant: 'destructive' as const,
     icon: XCircleIcon,
   },
-  [Status.SUCCESS]: {
+  [WorkflowRunStatusV2.SUCCEEDED]: {
     label: '成功',
     variant: 'outline' as const,
     icon: CheckCircle2Icon,
@@ -63,10 +63,12 @@ function RunFlowContent({ uid }: { uid: string }) {
   const { data: run } = useRun(uid, 5000)
   const { flowNodes, edges, handleNodesChange } = useRunFlow(run ?? null)
 
-  const taskStats = run?.task_statistics
+  const taskStats = run?.node_statistics
   const progress =
     taskStats && taskStats.total > 0
-      ? ((taskStats.success ?? 0) / taskStats.total) * 100
+      ? ((taskStats.succeeded + taskStats.failed + taskStats.blocked) /
+          taskStats.total) *
+        100
       : 0
 
   const cfg = run ? statusConfig[run.status] : null
@@ -99,15 +101,17 @@ function RunFlowContent({ uid }: { uid: string }) {
             {cfg && Icon ? (
               <Badge variant={cfg.variant} className='gap-1'>
                 <Icon
-                  className={`size-3 ${run?.status === Status.RUNNING ? 'animate-spin' : ''}`}
+                  className={`size-3 ${run?.status === WorkflowRunStatusV2.RUNNING ? 'animate-spin' : ''}`}
                 />
-                {cfg.label}
+                {run?.status === WorkflowRunStatusV2.FAILED && !run.settled
+                  ? '失败（独立分支仍在运行）'
+                  : cfg.label}
               </Badge>
             ) : null}
             {taskStats ? (
               <div className='flex items-center gap-2 text-sm text-muted-foreground'>
                 <span>
-                  {taskStats.success ?? 0}/{taskStats.total}
+                  {taskStats.succeeded}/{taskStats.total}
                 </span>
                 <Progress value={progress} className='w-24 h-1.5' />
               </div>

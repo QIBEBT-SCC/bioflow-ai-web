@@ -36,10 +36,9 @@
     "resource": "Resource Management",
     "setting": "Settings",
     "skill_management": "Skill Management",
-    "tasks": "Task",
     "tool_config": "Tool Config",
     "tools": "Tool",
     "user_management": "User Management",
-    "workflows": "Workflow"
+    "workflows": "Run Monitor"
   }
 }

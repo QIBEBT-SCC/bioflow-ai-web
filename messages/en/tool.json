@@ -50,10 +50,10 @@
       "next": "Next",
       "page": "Page {page} of {pages}",
       "status": {
-        "waiting": "Waiting",
+        "pending": "Pending",
         "running": "Running",
-        "error": "Failed",
-        "success": "Success"
+        "failed": "Failed",
+        "succeeded": "Succeeded"
       }
     },
     "AddPage": {

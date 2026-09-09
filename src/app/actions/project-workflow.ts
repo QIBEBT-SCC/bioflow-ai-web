@@ -1,13 +1,15 @@
-import { clientFetch } from '@/lib/api-client'
+import { clientFetch, clientFetchV2 } from '@/lib/api-client'
 import type {
   AddWorkflowRequest,
-  PaginatedProjectRuns,
   ProjectWorkflow,
-  RunInstance,
-  RunWorkflowRequest,
   WorkflowRunResult,
 } from '@/types/project-workflow'
-import type { Statistics } from '@/types/run'
+import type {
+  PaginatedWorkflowRunsV2,
+  ProjectWorkflowRunRequestV2,
+  WorkflowRunStatisticsV2,
+  WorkflowRunV2,
+} from '@/types/workflow-v2'
 
 /**
  * 添加工作流到项目
@@ -65,9 +67,9 @@ export async function removeWorkflowFromProject(
 export async function runWorkflow(
   projectId: string,
   workflowUid: string,
-  data: RunWorkflowRequest,
+  data: ProjectWorkflowRunRequestV2,
 ): Promise<WorkflowRunResult> {
-  return await clientFetch<WorkflowRunResult>(
+  return await clientFetchV2<WorkflowRunResult>(
     `/projects/${projectId}/workflows/${workflowUid}/run`,
     {
       method: 'POST',
@@ -83,8 +85,8 @@ export async function getProjectRuns(
   projectId: string,
   offset: number = 0,
   limit: number = 20,
-): Promise<PaginatedProjectRuns> {
-  return await clientFetch<PaginatedProjectRuns>(
+): Promise<PaginatedWorkflowRunsV2> {
+  return await clientFetchV2<PaginatedWorkflowRunsV2>(
     `/projects/${projectId}/runs`,
     {
       params: {
@@ -99,7 +101,7 @@ export async function getProjectRuns(
  * 获取项目运行实例数量
  */
 export async function getProjectRunCount(projectId: string): Promise<number> {
-  return await clientFetch<number>(`/projects/${projectId}/runs/count`)
+  return (await getProjectRunStats(projectId)).total
 }
 
 /**
@@ -107,8 +109,10 @@ export async function getProjectRunCount(projectId: string): Promise<number> {
  */
 export async function getProjectRunStats(
   projectId: string,
-): Promise<Statistics> {
-  return await clientFetch<Statistics>(`/projects/${projectId}/runs/stats`)
+): Promise<WorkflowRunStatisticsV2> {
+  return await clientFetchV2<WorkflowRunStatisticsV2>(
+    `/projects/${projectId}/runs/stats`,
+  )
 }
 
 /**
@@ -118,15 +122,10 @@ export async function downloadWorkflowPackage(
   projectId: string,
   workflowUid: string,
 ): Promise<{ blob: Blob; filename: string }> {
-  const FASTAPI_URL = process.env.NEXT_PUBLIC_API_URL ?? '/api/v1'
-  const res = await fetch(
-    `${FASTAPI_URL}/projects/${projectId}/workflows/${workflowUid}/package`,
-    {
-      method: 'GET',
-      credentials: 'include',
-    },
+  const res = await clientFetchV2(
+    `/projects/${projectId}/workflows/${workflowUid}/package`,
+    { raw: true },
   )
-  if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`)
 
   const blob = await res.blob()
   const disposition = res.headers.get('content-disposition') ?? ''
@@ -139,8 +138,8 @@ export async function downloadWorkflowPackage(
  * 获取运行实例详情
  */
 export async function getProjectRun(
-  projectId: string,
+  _projectId: string,
   runUid: string,
-): Promise<RunInstance> {
-  return await clientFetch<RunInstance>(`/projects/${projectId}/runs/${runUid}`)
+): Promise<WorkflowRunV2> {
+  return await clientFetchV2<WorkflowRunV2>(`/runs/${runUid}`)
 }

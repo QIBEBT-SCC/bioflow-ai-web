@@ -14,16 +14,15 @@ import {
   getRuns,
   newRunInstance,
 } from '@/app/actions/run'
-import type {
-  PaginatedRuns,
-  RunFileNode,
-  RunPublic,
-  Statistics,
-} from '@/types/run'
-import { Status } from '@/types/run'
+import type { RunFileNode } from '@/types/run'
 import type { WorkflowDefinition } from '@/types/workflow'
+import type {
+  PaginatedWorkflowRunsV2,
+  WorkflowRunStatisticsV2,
+  WorkflowRunV2,
+} from '@/types/workflow-v2'
 
-const FASTAPI_URL = process.env.NEXT_PUBLIC_API_URL ?? '/api/v1'
+const V2_API_URL = '/api/v2'
 
 // ============================================
 // Run Instance Query Hooks (运行实例查询)
@@ -65,9 +64,9 @@ export const useRuns = (
   refetchInterval?:
     | number
     | false
-    | ((query: Query<PaginatedRuns>) => number | false | undefined),
+    | ((query: Query<PaginatedWorkflowRunsV2>) => number | false | undefined),
 ) => {
-  return useQuery<PaginatedRuns>({
+  return useQuery<PaginatedWorkflowRunsV2>({
     queryKey: ['runs', offset, limit],
     queryFn: () => getRuns(offset, limit),
     staleTime: 30 * 1000, // 30秒缓存，运行状态变化较快
@@ -99,9 +98,9 @@ export const useRunStats = (
   refetchInterval?:
     | number
     | false
-    | ((query: Query<Statistics>) => number | false | undefined),
+    | ((query: Query<WorkflowRunStatisticsV2>) => number | false | undefined),
 ) => {
-  return useQuery<Statistics>({
+  return useQuery<WorkflowRunStatisticsV2>({
     queryKey: ['runStats'],
     queryFn: () => getRunStats(),
     staleTime: 30 * 1000,
@@ -117,9 +116,9 @@ export const useRun = (
   refetchInterval?:
     | number
     | false
-    | ((query: Query<RunPublic>) => number | false | undefined),
+    | ((query: Query<WorkflowRunV2>) => number | false | undefined),
 ) => {
-  return useQuery<RunPublic>({
+  return useQuery<WorkflowRunV2>({
     queryKey: ['run', uid],
     queryFn: () => getRun(uid),
     enabled: !!uid,
@@ -130,64 +129,33 @@ export const useRun = (
 
 /**
  * 获取单个运行实例详情（SSE 实时推送版）
- * - 终态（SUCCESS/ERROR）：仅发一次 GET 请求
- * - 运行中/等待中：GET 获取初始状态后建立 SSE 连接，后端推送更新直至终态
+ * - settled=true：仅发一次 GET 请求
+ * - settled=false：GET 获取初始状态后建立 SSE，FAILED 时也继续到全部独立分支收敛
  */
 export const useRunStream = (uid: string) => {
-  const [run, setRun] = useState<RunPublic | null>(null)
+  const { data: initialRun } = useRun(uid)
+  const [streamed, setStreamed] = useState<{
+    uid: string
+    run: WorkflowRunV2
+  } | null>(null)
 
   useEffect(() => {
-    if (!uid) return
+    if (!uid || !initialRun || initialRun.settled) return
 
-    let controller: AbortController
-
-    async function init() {
-      const initial = await getRun(uid)
-      setRun(initial)
-
-      if (
-        initial.status !== Status.WAITING &&
-        initial.status !== Status.RUNNING
-      )
-        return
-
-      controller = new AbortController()
-      const res = await fetch(`${FASTAPI_URL}/runs/${uid}/stream`, {
-        credentials: 'include',
-        signal: controller.signal,
-      })
-
-      if (!res.ok || !res.body) return
-
-      const reader = res.body.getReader()
-      const decoder = new TextDecoder()
-      let buffer = ''
-
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        buffer += decoder.decode(value, { stream: true })
-
-        const lines = buffer.split('\n')
-        buffer = lines.pop() ?? ''
-
-        for (const line of lines) {
-          if (line.startsWith('data:')) {
-            const json = line.slice(5).trim()
-            if (!json) continue
-            try {
-              setRun(JSON.parse(json) as RunPublic)
-            } catch {}
-          }
-        }
-      }
+    const source = new EventSource(`${V2_API_URL}/runs/${uid}/stream`, {
+      withCredentials: true,
+    })
+    source.onmessage = (event) => {
+      try {
+        const run = JSON.parse(event.data) as WorkflowRunV2
+        setStreamed({ uid, run })
+        if (run.settled) source.close()
+      } catch {}
     }
+    return () => source.close()
+  }, [uid, initialRun])
 
-    init().catch(() => {})
-    return () => controller?.abort()
-  }, [uid])
-
-  return run
+  return streamed?.uid === uid ? streamed.run : (initialRun ?? null)
 }
 
 /**
