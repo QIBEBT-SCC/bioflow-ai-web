@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { ToolConfigValues } from '@/components/tool/tool-config-form'
+import { updateFileMountValue } from '@/lib/tool-file-mount'
 import type {
   FileMount,
   ParamDefine,
@@ -118,7 +119,7 @@ export function useToolFormState(
             file_type: 'OUTPUT',
             is_report: false,
             is_log: false,
-            mount_path: '',
+            mount_path: '/data/output',
           },
         ],
       }
@@ -135,7 +136,7 @@ export function useToolFormState(
       return {
         ...prev,
         file_mounts: prev.file_mounts.map((file, idx) =>
-          idx === index ? { ...file, [field]: value } : file,
+          idx === index ? updateFileMountValue(file, field, value) : file,
         ),
       }
     })

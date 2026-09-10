@@ -31,6 +31,7 @@ import {
   useToolGroupList,
   useToolTagList,
 } from '@/hooks/use-tool'
+import { updateFileMountValue } from '@/lib/tool-file-mount'
 import { useCreateToolStore } from '@/stores/toolStore'
 import type {
   DockerToolCreate,
@@ -225,7 +226,11 @@ function useToolConfigFormActions(
     value: string | boolean,
   ) => {
     const updatedFiles = [...toolConfig.file_mounts]
-    updatedFiles[index] = { ...updatedFiles[index], [field]: value }
+    updatedFiles[index] = updateFileMountValue(
+      updatedFiles[index],
+      field,
+      value,
+    )
     setToolConfig({ ...toolConfig, file_mounts: updatedFiles })
   }
 
@@ -475,7 +480,6 @@ function AddToolPageContent() {
                       : undefined
                   }
                   showTabBadges
-                  showAIGeneratePlaceholder
                 />
               </div>
             )}
