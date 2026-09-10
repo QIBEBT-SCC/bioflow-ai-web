@@ -94,8 +94,7 @@ function calculateDuration(startTime?: string | null, endTime?: string | null) {
 
 function calculateProgress(taskStats?: NodeRunStatisticsV2) {
   if (!taskStats || taskStats.total <= 0) return 0
-  const terminal = taskStats.succeeded + taskStats.failed + taskStats.blocked
-  return Math.min(100, (terminal / taskStats.total) * 100)
+  return Math.min(100, (taskStats.succeeded / taskStats.total) * 100)
 }
 
 export function WorkflowRunInstances({

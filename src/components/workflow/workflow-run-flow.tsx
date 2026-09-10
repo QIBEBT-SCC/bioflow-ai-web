@@ -66,9 +66,7 @@ function RunFlowContent({ uid }: { uid: string }) {
   const taskStats = run?.node_statistics
   const progress =
     taskStats && taskStats.total > 0
-      ? ((taskStats.succeeded + taskStats.failed + taskStats.blocked) /
-          taskStats.total) *
-        100
+      ? (taskStats.succeeded / taskStats.total) * 100
       : 0
 
   const cfg = run ? statusConfig[run.status] : null
