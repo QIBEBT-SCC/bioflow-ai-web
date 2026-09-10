@@ -4,6 +4,10 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { GripVertical, HelpCircle, Trash2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import {
+  TemplateVariableField,
+  type ToolTemplateVariable,
+} from '@/components/tool/template-variable-field'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -31,6 +35,7 @@ export function ToolParamCard({
   index,
   onRemoveAction,
   onUpdateAction,
+  templateVariables,
 }: {
   id: string
   param: ParamDefine
@@ -41,6 +46,7 @@ export function ToolParamCard({
     field: keyof ParamDefine,
     value: string | number | boolean,
   ) => void
+  templateVariables: ToolTemplateVariable[]
 }) {
   const t = useTranslations('tool.Cards')
   const {
@@ -137,18 +143,19 @@ export function ToolParamCard({
                   <HelpCircle className='size-4 inline-block ml-1 text-muted-foreground' />
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p className='max-w-xs'>
-                    {t('commandFormatTooltip', { value: '{value}' })}
-                  </p>
+                  <p className='max-w-xs'>{t('commandFormatTooltip')}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           </Label>
-          <Input
+          <TemplateVariableField
             id={`param-command-${index}`}
             value={param.command}
-            onChange={(e) => onUpdateAction(index, 'command', e.target.value)}
-            placeholder={t('commandFormatPlaceholder', { value: '{value}' })}
+            onChange={(command) => onUpdateAction(index, 'command', command)}
+            variables={templateVariables}
+            placeholder={t('commandFormatPlaceholder', {
+              variable: '{result_file}',
+            })}
             required
           />
         </div>
@@ -261,7 +268,11 @@ export function ToolFileCard({
               id={`file-name-${index}`}
               value={file.name}
               onChange={(e) => onUpdateAction(index, 'name', e.target.value)}
-              placeholder={t('fileNamePlaceholder')}
+              placeholder={
+                file.file_type === 'INPUT'
+                  ? t('inputFileNamePlaceholder')
+                  : t('outputFileNamePlaceholder')
+              }
               required
             />
           </div>
@@ -311,7 +322,16 @@ export function ToolFileCard({
               onChange={(e) =>
                 onUpdateAction(index, 'file_path', e.target.value)
               }
-              placeholder={t('filePathPlaceholder')}
+              placeholder={
+                file.file_type === 'INPUT'
+                  ? t('inputFilePathPlaceholder', {
+                      variable: `{${file.name || 'input_file'}}`,
+                    })
+                  : t('outputFilePathPlaceholder', {
+                      outputDir: '{output_dir}',
+                      sampleName: '{sample_name}',
+                    })
+              }
               required
             />
           </div>
@@ -325,7 +345,11 @@ export function ToolFileCard({
               onChange={(e) =>
                 onUpdateAction(index, 'mount_path', e.target.value)
               }
-              placeholder={t('mountPathPlaceholder')}
+              placeholder={
+                file.file_type === 'INPUT'
+                  ? t('inputMountPathPlaceholder')
+                  : t('outputMountPathPlaceholder')
+              }
               required
             />
           </div>

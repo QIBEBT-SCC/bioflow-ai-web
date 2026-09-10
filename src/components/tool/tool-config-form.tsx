@@ -23,6 +23,10 @@ import {
   TerminalHeader,
   TerminalTitle,
 } from '@/components/ai-elements/terminal'
+import {
+  TemplateVariableField,
+  type ToolTemplateVariable,
+} from '@/components/tool/template-variable-field'
 import { ToolFileCard, ToolParamCard } from '@/components/tool/tool-cards'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -129,6 +133,20 @@ export function ToolConfigForm({
   const [showHelpResult, setShowHelpResult] = useState(false)
   const [helpCommandResult, setHelpCommandResult] = useState('')
   const { mutate: runInImage, isPending: isRunning } = useRunInImage()
+
+  const runtimeVariables: ToolTemplateVariable[] = [
+    { name: 'output_dir', kind: 'outputDir' },
+    { name: 'sample_name', kind: 'sampleName' },
+    ...value.file_mounts.map((file) => ({
+      name: file.name,
+      kind: 'fileMount' as const,
+    })),
+  ]
+  const commandTemplateVariables: ToolTemplateVariable[] = [
+    ...runtimeVariables,
+    { name: 'optional_params', kind: 'optionalParams' },
+    { name: 'position_params', kind: 'positionParams' },
+  ]
 
   const paramIds = useRef<string[]>([])
   const fileIds = useRef<string[]>([])
@@ -260,6 +278,7 @@ export function ToolConfigForm({
         <TabsContent value='basic'>
           <BasicConfigTab
             value={value}
+            templateVariables={commandTemplateVariables}
             toolGroups={toolGroups}
             availableTags={availableTags}
             imageUid={imageUid}
@@ -274,6 +293,7 @@ export function ToolConfigForm({
         <TabsContent value='params'>
           <ParamsConfigTab
             value={value}
+            templateVariables={runtimeVariables}
             paramIds={paramIds.current}
             sensors={sensors}
             onAdd={onAddDynamicParam}
@@ -317,6 +337,7 @@ export function ToolConfigForm({
 
 interface BasicConfigTabProps {
   value: ToolConfigValues
+  templateVariables: ToolTemplateVariable[]
   toolGroups: ToolGroup[]
   availableTags: ToolTag[]
   imageUid?: string
@@ -329,6 +350,7 @@ interface BasicConfigTabProps {
 
 function BasicConfigTab({
   value,
+  templateVariables,
   toolGroups,
   availableTags,
   imageUid,
@@ -373,11 +395,17 @@ function BasicConfigTab({
           <Label htmlFor='tool-command'>
             {t('commandTemplate')} <span className='text-red-500'>*</span>
           </Label>
-          <Input
+          <TemplateVariableField
             id='tool-command'
             value={value.command_template}
-            onChange={(e) => onFieldChange('command_template', e.target.value)}
-            placeholder='tool {dynamic_params} {static_params}'
+            onChange={(commandTemplate) =>
+              onFieldChange('command_template', commandTemplate)
+            }
+            variables={templateVariables}
+            placeholder={t('commandTemplatePlaceholder', {
+              optionalParams: '{optional_params}',
+              positionParams: '{position_params}',
+            })}
             required
           />
         </div>
@@ -494,6 +522,7 @@ function BasicConfigTab({
 
 interface ParamsConfigTabProps {
   value: ToolConfigValues
+  templateVariables: ToolTemplateVariable[]
   paramIds: string[]
   sensors: ReturnType<typeof useSensors>
   onAdd: () => void
@@ -509,6 +538,7 @@ interface ParamsConfigTabProps {
 
 function ParamsConfigTab({
   value,
+  templateVariables,
   paramIds,
   sensors,
   onAdd,
@@ -546,6 +576,7 @@ function ParamsConfigTab({
                       index={index}
                       onRemoveAction={onRemove}
                       onUpdateAction={onUpdate}
+                      templateVariables={templateVariables}
                     />
                   ))}
                 </div>
@@ -570,13 +601,18 @@ function ParamsConfigTab({
                 {t('immutableStaticParamsHint')}
               </span>
             </Label>
-            <Textarea
+            <TemplateVariableField
               id='tool-immutable-static'
               value={value.immutable_static_params || ''}
-              onChange={(e) =>
-                onFieldChange('immutable_static_params', e.target.value || null)
+              onChange={(immutableStaticParams) =>
+                onFieldChange(
+                  'immutable_static_params',
+                  immutableStaticParams || null,
+                )
               }
+              variables={templateVariables}
               placeholder={t('immutableStaticParamsPlaceholder')}
+              multiline
               rows={3}
             />
           </div>
@@ -587,16 +623,20 @@ function ParamsConfigTab({
                 {t('modifiableStaticParamsHint')}
               </span>
             </Label>
-            <Textarea
+            <TemplateVariableField
               id='tool-modifiable-static'
               value={value.modifiable_static_params || ''}
-              onChange={(e) =>
+              onChange={(modifiableStaticParams) =>
                 onFieldChange(
                   'modifiable_static_params',
-                  e.target.value || null,
+                  modifiableStaticParams || null,
                 )
               }
-              placeholder={t('modifiableStaticParamsPlaceholder')}
+              variables={templateVariables}
+              placeholder={t('modifiableStaticParamsPlaceholder', {
+                sampleName: '{sample_name}',
+              })}
+              multiline
               rows={3}
             />
           </div>
