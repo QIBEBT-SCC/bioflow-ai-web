@@ -13,7 +13,7 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
-import { Loader2Icon, PlayIcon, SparklesIcon } from 'lucide-react'
+import { Loader2Icon, PlayIcon } from 'lucide-react'
 import { nanoid } from 'nanoid'
 import { useTranslations } from 'next-intl'
 import { useRef, useState } from 'react'
@@ -106,7 +106,6 @@ interface ToolConfigFormProps {
   }
   imageUid?: string
   showTabBadges?: boolean
-  showAIGeneratePlaceholder?: boolean
   initialTab?: 'basic' | 'params' | 'files'
 }
 
@@ -126,7 +125,6 @@ export function ToolConfigForm({
   imageSummary,
   imageUid,
   showTabBadges = false,
-  showAIGeneratePlaceholder = false,
   initialTab = 'basic',
 }: ToolConfigFormProps) {
   const t = useTranslations('tool.ConfigForm')
@@ -283,7 +281,6 @@ export function ToolConfigForm({
             availableTags={availableTags}
             imageUid={imageUid}
             isRunning={isRunning}
-            showAIGeneratePlaceholder={showAIGeneratePlaceholder}
             onFieldChange={onFieldChange}
             onGroupChange={handleGroupChange}
             onTestHelpCommand={handleTestHelpCommand}
@@ -342,7 +339,6 @@ interface BasicConfigTabProps {
   availableTags: ToolTag[]
   imageUid?: string
   isRunning: boolean
-  showAIGeneratePlaceholder: boolean
   onFieldChange: ToolConfigFormProps['onFieldChange']
   onGroupChange: (groupId: number) => void
   onTestHelpCommand: () => void
@@ -355,7 +351,6 @@ function BasicConfigTab({
   availableTags,
   imageUid,
   isRunning,
-  showAIGeneratePlaceholder,
   onFieldChange,
   onGroupChange,
   onTestHelpCommand,
@@ -501,18 +496,6 @@ function BasicConfigTab({
                 )
               })}
             </div>
-          </div>
-        )}
-
-        {showAIGeneratePlaceholder && (
-          <div className='flex justify-end pt-4 border-t'>
-            <Button variant='outline' disabled>
-              <SparklesIcon className='size-4 mr-2' />
-              {t('aiGenerate')}
-              <Badge variant='secondary' className='ml-2'>
-                {t('comingSoon')}
-              </Badge>
-            </Button>
           </div>
         )}
       </CardContent>

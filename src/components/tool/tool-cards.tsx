@@ -332,6 +332,12 @@ export function ToolFileCard({
                       sampleName: '{sample_name}',
                     })
               }
+              readOnly={file.file_type === 'INPUT'}
+              className={
+                file.file_type === 'INPUT'
+                  ? 'cursor-not-allowed bg-muted/50 text-muted-foreground'
+                  : undefined
+              }
               required
             />
           </div>
