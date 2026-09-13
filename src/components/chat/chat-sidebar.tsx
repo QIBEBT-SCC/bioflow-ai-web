@@ -171,27 +171,15 @@ function ChatSidebarInner({
     return runs
   }, [run, storedRuns])
 
-  const latestSuccessfulDiagnosis = useMemo(
-    () =>
-      displayRuns.findLast(
-        (storedRun) =>
-          storedRun.agent_name === 'workflow-diagnoser' &&
-          storedRun.status === 'completed' &&
-          storedRun.result_payload?.source_run_uid === sourceRunUid &&
-          typeof storedRun.result_payload?.diagnosis_path === 'string',
-      ),
-    [displayRuns, sourceRunUid],
-  )
-
   const availableCommands = useMemo(() => {
     const commands =
       scope.scope === 'project'
         ? CHAT_COMMANDS.filter((command) => {
-            if (command.key === 'workflow-diagnoser') {
+            if (
+              command.key === 'workflow-diagnoser' ||
+              command.key === 'workflow-fixer'
+            ) {
               return Boolean(sourceRunUid)
-            }
-            if (command.key === 'workflow-fixer') {
-              return Boolean(sourceRunUid) && Boolean(latestSuccessfulDiagnosis)
             }
             return true
           })
@@ -201,7 +189,7 @@ function ChatSidebarInner({
       label: t(`assistants.${command.key}.label`),
       description: t(`assistants.${command.key}.description`),
     }))
-  }, [latestSuccessfulDiagnosis, scope.scope, sourceRunUid, t])
+  }, [scope.scope, sourceRunUid, t])
   const slashCommand = useSlashCommand({
     commands: availableCommands,
     value: text,
@@ -211,40 +199,25 @@ function ChatSidebarInner({
     () => parseAgentCommand(text, availableCommands),
     [availableCommands, text],
   )
-  const canSubmit = Boolean(
-    parsedCommand &&
-      (parsedCommand.prompt.trim() ||
-        parsedCommand.command.key === 'workflow-fixer'),
-  )
+  const canSubmit = Boolean(parsedCommand?.prompt.trim())
   const isBusy = Boolean(run && ACTIVE_AGENT_STATUSES.includes(run.status))
   const inputDisabled =
     !sessionId || isSessionLoading || isMessagesLoading || isRunsLoading
 
-  const latestDiagnosisAlreadyFixed = Boolean(
-    latestSuccessfulDiagnosis &&
-      displayRuns.some(
-        (storedRun) =>
-          storedRun.agent_name === 'workflow-fixer' &&
-          storedRun.status === 'completed' &&
-          storedRun.result_payload?.diagnosis_run_uid ===
-            latestSuccessfulDiagnosis.uid,
-      ),
-  )
-  const workflowSuggestion = sourceRunUid
-    ? latestSuccessfulDiagnosis && !latestDiagnosisAlreadyFixed
-      ? {
+  const workflowSuggestions = sourceRunUid
+    ? [
+        {
+          agentName: 'workflow-diagnoser' as const,
+          label: t('suggestions.diagnose'),
+          prompt: t('default_requests.workflow-diagnoser'),
+        },
+        {
           agentName: 'workflow-fixer' as const,
           label: t('suggestions.fix'),
           prompt: t('default_requests.workflow-fixer'),
-        }
-      : !latestSuccessfulDiagnosis
-        ? {
-            agentName: 'workflow-diagnoser' as const,
-            label: t('suggestions.diagnose'),
-            prompt: t('default_requests.workflow-diagnoser'),
-          }
-        : null
-    : null
+        },
+      ]
+    : []
 
   const unmatchedMessages = useMemo(() => {
     const runIds = new Set(displayRuns.map((storedRun) => storedRun.uid))
@@ -263,8 +236,10 @@ function ChatSidebarInner({
     }
   }
 
-  const runWorkflowSuggestion = async () => {
-    if (!workflowSuggestion || !sourceRunUid || isBusy) return
+  const runWorkflowSuggestion = async (
+    suggestion: (typeof workflowSuggestions)[number],
+  ) => {
+    if (!sourceRunUid || isBusy) return
     setLocalError(null)
     try {
       let targetSessionId = sessionId
@@ -274,8 +249,8 @@ function ChatSidebarInner({
       }
       const createdRun = await createRun({
         sessionId: targetSessionId,
-        agentName: workflowSuggestion.agentName,
-        text: workflowSuggestion.prompt,
+        agentName: suggestion.agentName,
+        text: suggestion.prompt,
         language,
         sourceRunUid,
       })
@@ -294,11 +269,7 @@ function ChatSidebarInner({
       setLocalError(t('command_required'))
       return
     }
-    const prompt =
-      parsedCommand.prompt.trim() ||
-      (parsedCommand.command.key === 'workflow-fixer'
-        ? t('default_requests.workflow-fixer')
-        : '')
+    const prompt = parsedCommand.prompt.trim()
     if (!prompt) {
       setLocalError(t('command_prompt_required'))
       return
@@ -544,16 +515,19 @@ function ChatSidebarInner({
         </Conversation>
 
         <div className='border-t bg-linear-to-t from-muted/45 via-background to-background px-3 pt-3 pb-3'>
-          {workflowSuggestion && !isBusy && (
+          {workflowSuggestions.length > 0 && !isBusy && (
             <Suggestions className='mb-2'>
-              <Suggestion
-                suggestion={workflowSuggestion.prompt}
-                onClick={() => void runWorkflowSuggestion()}
-                disabled={isCreating || isSubmitting}
-                className='border-primary/35 bg-primary/4 text-primary shadow-none hover:bg-primary/4 hover:text-primary dark:border-primary/40 dark:bg-primary/[0.07] dark:hover:bg-primary/[0.07]'
-              >
-                {workflowSuggestion.label}
-              </Suggestion>
+              {workflowSuggestions.map((suggestion) => (
+                <Suggestion
+                  key={suggestion.agentName}
+                  suggestion={suggestion.prompt}
+                  onClick={() => void runWorkflowSuggestion(suggestion)}
+                  disabled={isCreating || isSubmitting}
+                  className='border-primary/35 bg-primary/4 text-primary shadow-none hover:bg-primary/4 hover:text-primary dark:border-primary/40 dark:bg-primary/[0.07] dark:hover:bg-primary/[0.07]'
+                >
+                  {suggestion.label}
+                </Suggestion>
+              ))}
             </Suggestions>
           )}
           <div className='relative'>
