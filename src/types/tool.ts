@@ -26,6 +26,7 @@ export interface ImageConfig {
 
 export interface ToolImage {
   uid?: string
+  readonly ref?: string
   name: string
   aliases: string[]
   version: string
@@ -37,6 +38,7 @@ export interface ToolImage {
 
 export interface ToolImagePublic {
   uid: string
+  readonly ref: string
   name: string
   aliases: string[]
   version: string
