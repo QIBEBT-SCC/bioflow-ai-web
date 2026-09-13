@@ -16,7 +16,7 @@
         "label": "Workflow Diagnoser"
       },
       "workflow-fixer": {
-        "description": "Inspect and repair the current workflow template using the latest diagnosis in this conversation",
+        "description": "Repair the current workflow template from your request and any available diagnosis",
         "label": "Workflow Fixer"
       },
       "workflow-builder": {
@@ -30,7 +30,7 @@
     "command_required": "Choose an agent command with / first.",
     "default_requests": {
       "workflow-diagnoser": "Diagnose this workflow run by examining its errors, logs, and relevant outputs, then recommend a repair.",
-      "workflow-fixer": "Review the current workflow against the latest diagnosis and complete any repairs that are still necessary."
+      "workflow-fixer": "Inspect the current workflow linked to this run and repair issues you can confirm. If there is not enough information, explain which error details are needed."
     },
     "run_context_required": "Workflow diagnosis and repair must be started from a specific run detail page. Reopen the run and try again.",
     "delete": "Delete",
@@ -184,7 +184,7 @@
     },
     "suggestions": {
       "diagnose": "Diagnose this run",
-      "fix": "Repair from diagnosis"
+      "fix": "Repair current workflow"
     },
     "title": "AI Chat"
   }
