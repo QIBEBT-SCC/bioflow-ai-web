@@ -1,5 +1,5 @@
 import { clientFetchV2 } from '@/lib/api-client'
-import type { RunFileNode } from '@/types/run'
+import type { PreviewMeta, PreviewRegion, RunFileNode } from '@/types/run'
 import type { WorkflowDefinition } from '@/types/workflow'
 import type {
   PaginatedWorkflowRunsV2,
@@ -99,4 +99,34 @@ export async function getRunFileBlobUrl(
   })
   const blob = await res.blob()
   return URL.createObjectURL(blob)
+}
+
+/** Fetch only metadata; native parsing is bounded and isolated on the server. */
+export async function getRunFilePreviewMeta(
+  runUid: string,
+  generation: number,
+  path: string,
+  query: string,
+  signal: AbortSignal,
+): Promise<PreviewMeta> {
+  return clientFetchV2<PreviewMeta>(`/runs/${runUid}/files/preview/meta`, {
+    method: 'POST',
+    body: JSON.stringify({ path, generation, query }),
+    signal,
+  })
+}
+
+/** Request at most 512 signal bins or 300 interval features. */
+export async function getRunFilePreviewRegion(
+  runUid: string,
+  generation: number,
+  path: string,
+  region: { chrom: string; start: number; end: number },
+  signal: AbortSignal,
+): Promise<PreviewRegion> {
+  return clientFetchV2<PreviewRegion>(`/runs/${runUid}/files/preview/region`, {
+    method: 'POST',
+    body: JSON.stringify({ path, generation, ...region, bins: 512 }),
+    signal,
+  })
 }

@@ -205,7 +205,8 @@
           "previous": "上一页",
           "next": "下一页"
         },
-        "empty": "无内容"
+        "empty": "无内容",
+        "unsupported": "暂不支持预览这种文件格式。"
       },
       "leftPanel": {
         "statistics": "运行统计",
@@ -215,7 +216,8 @@
         "failedTasks": "失败任务",
         "outputFiles": "输出文件",
         "resizeOrCollapse": "拖拽调整宽度 / 点击收起",
-        "expandPanel": "展开面板"
+        "expandPanel": "展开面板",
+        "refreshFiles": "刷新文件树"
       },
       "view": {
         "list": "列表视图",
@@ -229,6 +231,24 @@
         "resizeHeight": "拖拽调整终端高度",
         "collapse": "收起终端",
         "expand": "展开终端"
+      },
+      "preview": {
+        "unsupported": "无法预览此文件。",
+        "searchChrom": "搜索染色体",
+        "chromosome": "染色体",
+        "locus": "基因组区间",
+        "show": "显示",
+        "zoomIn": "放大",
+        "zoomOut": "缩小",
+        "coordinates": "输入 chr1:1-1000；输入使用 1 起始闭区间，服务端使用 0 起始左闭右开。",
+        "timeout": "预览超过 2.5 秒，请缩小区间后重试。",
+        "invalidLocus": "区间格式无效或超出该轨道的视窗上限。",
+        "loading": "正在读取当前区间…",
+        "emptyFile": "文件中没有可显示的染色体。",
+        "emptyRegion": "该区间没有可显示的数据。",
+        "track": "基因组轨道",
+        "searchHint": "染色体较多，请输入名称搜索。",
+        "featureCount": "本区间显示 {count} 个特征。"
       }
     },
     "fileMapping": {

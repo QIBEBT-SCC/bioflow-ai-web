@@ -4,7 +4,16 @@ import { cn } from '@/lib/utils'
 
 export const CANVAS_TAB_ID = '__canvas__'
 
-export type FileType = 'text' | 'json' | 'html' | 'image' | 'pdf' | 'unknown'
+export type FileType =
+  | 'text'
+  | 'json'
+  | 'html'
+  | 'image'
+  | 'pdf'
+  | 'bigwig'
+  | 'bigbed'
+  | 'bed'
+  | 'unknown'
 
 export interface FileTab {
   id: string

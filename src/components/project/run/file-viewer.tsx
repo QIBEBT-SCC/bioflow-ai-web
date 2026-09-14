@@ -1,13 +1,18 @@
 import { AlertCircle, Loader2 } from 'lucide-react'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
-import type { FileType } from '@/components/project/run//run-tab-bar'
+import { GenomePreview } from '@/components/project/run/genome-preview'
 import { JsonViewer } from '@/components/project/run/json-viewer'
+import type { FileType } from '@/components/project/run/run-tab-bar'
 import { ScrollArea } from '@/components/ui/scroll-area'
 
 interface FileViewerProps {
   fileName: string
   fileType: FileType
+  path: string
+  runUid: string
+  generation: number
+  active: boolean
   content?: string // text / html
   blobUrl?: string // image / pdf
   loading?: boolean
@@ -17,6 +22,10 @@ interface FileViewerProps {
 export function FileViewer({
   fileName,
   fileType,
+  path,
+  runUid,
+  generation,
+  active,
   content,
   blobUrl,
   loading,
@@ -42,6 +51,28 @@ export function FileViewer({
           {error}
         </p>
       </div>
+    )
+  }
+
+  if (fileType === 'unknown') {
+    return (
+      <div
+        role='alert'
+        className='flex h-full items-center justify-center p-4 text-muted-foreground'
+      >
+        {t('unsupported')}
+      </div>
+    )
+  }
+
+  if (fileType === 'bigwig' || fileType === 'bigbed' || fileType === 'bed') {
+    return (
+      <GenomePreview
+        runUid={runUid}
+        generation={generation}
+        path={path}
+        active={active}
+      />
     )
   }
 
