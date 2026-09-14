@@ -1,5 +1,10 @@
 import { clientFetchV2 } from '@/lib/api-client'
-import type { PreviewMeta, PreviewRegion, RunFileNode } from '@/types/run'
+import type {
+  ContactRegion,
+  PreviewMeta,
+  PreviewRegion,
+  RunFileNode,
+} from '@/types/run'
 import type { WorkflowDefinition } from '@/types/workflow'
 import type {
   PaginatedWorkflowRunsV2,
@@ -84,7 +89,7 @@ export async function getRunFileContent(
 }
 
 /**
- * 获取运行实例输出文件的 Blob Object URL（用于图片、PDF 等二进制文件）
+ * 获取运行实例输出图片的 Blob Object URL
  * 调用方负责在不再使用时调用 URL.revokeObjectURL() 释放内存
  */
 export async function getRunFileBlobUrl(
@@ -127,6 +132,31 @@ export async function getRunFilePreviewRegion(
   return clientFetchV2<PreviewRegion>(`/runs/${runUid}/files/preview/region`, {
     method: 'POST',
     body: JSON.stringify({ path, generation, ...region, bins: 512 }),
+    signal,
+  })
+}
+
+/** Request at most a 64 × 64 Hi-C contact grid. */
+export async function getRunContactPreviewRegion(
+  runUid: string,
+  generation: number,
+  path: string,
+  first: { chrom: string; start: number; end: number },
+  second: { chrom: string; start: number; end: number },
+  resolution: number | null,
+  signal: AbortSignal,
+): Promise<ContactRegion> {
+  return clientFetchV2<ContactRegion>(`/runs/${runUid}/files/preview/region`, {
+    method: 'POST',
+    body: JSON.stringify({
+      path,
+      generation,
+      ...first,
+      chrom2: second.chrom,
+      start2: second.start,
+      end2: second.end,
+      resolution,
+    }),
     signal,
   })
 }

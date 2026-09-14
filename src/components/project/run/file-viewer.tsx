@@ -1,6 +1,8 @@
 import { AlertCircle, Loader2 } from 'lucide-react'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
+import { ContactPreview } from '@/components/project/run/contact-preview'
+import { getRunFileViewUrl } from '@/components/project/run/file-view-url'
 import { GenomePreview } from '@/components/project/run/genome-preview'
 import { JsonViewer } from '@/components/project/run/json-viewer'
 import type { FileType } from '@/components/project/run/run-tab-bar'
@@ -13,8 +15,8 @@ interface FileViewerProps {
   runUid: string
   generation: number
   active: boolean
-  content?: string // text / html
-  blobUrl?: string // image / pdf
+  content?: string // text / json
+  blobUrl?: string // image
   loading?: boolean
   error?: string
 }
@@ -76,6 +78,17 @@ export function FileViewer({
     )
   }
 
+  if (fileType === 'hic' || fileType === 'cool' || fileType === 'mcool') {
+    return (
+      <ContactPreview
+        runUid={runUid}
+        generation={generation}
+        path={path}
+        active={active}
+      />
+    )
+  }
+
   if (fileType === 'image' && blobUrl) {
     return (
       <div className='relative flex size-full items-center justify-center overflow-auto p-4'>
@@ -91,14 +104,19 @@ export function FileViewer({
     )
   }
 
-  if (fileType === 'pdf' && blobUrl) {
+  if (fileType === 'pdf') {
+    const url = getRunFileViewUrl(runUid, generation, path)
     return (
-      <iframe
-        src={blobUrl}
-        title={fileName}
-        className='size-full border-0'
-        sandbox='allow-same-origin'
-      />
+      <object
+        data={url}
+        type='application/pdf'
+        aria-label={fileName}
+        className='size-full'
+      >
+        <a href={url} target='_blank' rel='noopener noreferrer'>
+          {fileName}
+        </a>
+      </object>
     )
   }
 
@@ -106,13 +124,14 @@ export function FileViewer({
     return <JsonViewer content={content} />
   }
 
-  if (fileType === 'html' && content !== undefined) {
+  if (fileType === 'html') {
+    const url = getRunFileViewUrl(runUid, generation, path)
     return (
       <iframe
-        srcDoc={content}
+        src={url}
         title={fileName}
         className='size-full border-0'
-        sandbox='allow-scripts'
+        sandbox='allow-scripts allow-same-origin'
       />
     )
   }
