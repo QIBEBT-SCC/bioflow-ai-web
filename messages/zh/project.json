@@ -249,6 +249,24 @@
         "track": "基因组轨道",
         "searchHint": "染色体较多，请输入名称搜索。",
         "featureCount": "本区间显示 {count} 个特征。"
+      },
+      "contactPreview": {
+        "unsupported": "无法预览此 Hi-C 文件。",
+        "firstLocus": "横轴区间",
+        "secondLocus": "纵轴区间",
+        "resolution": "分辨率",
+        "autoResolution": "自动选择",
+        "show": "显示",
+        "zoomIn": "放大",
+        "zoomOut": "缩小",
+        "coordinates": "输入 chr1:1-100000；输入使用 1 起始闭区间。每轴最多 10 Mb、64 个 bin。颜色按 log(1 + 接触数) 映射。",
+        "timeout": "预览超过 2.5 秒，请缩小区间后重试。",
+        "invalidLocus": "区间格式无效或超过每轴 10 Mb。",
+        "loading": "正在读取接触矩阵…",
+        "emptyFile": "文件中没有可显示的染色体。",
+        "emptyRegion": "该区间没有接触记录。",
+        "heatmap": "Hi-C 接触矩阵热图",
+        "details": "分辨率 {resolution} bp · 非零单元 {count} 个 · 最大接触数 {max}"
       }
     },
     "fileMapping": {

@@ -13,6 +13,9 @@ export type FileType =
   | 'bigwig'
   | 'bigbed'
   | 'bed'
+  | 'hic'
+  | 'cool'
+  | 'mcool'
   | 'unknown'
 
 export interface FileTab {
@@ -20,8 +23,8 @@ export interface FileTab {
   path: string
   name: string
   fileType: FileType
-  content?: string // text / html
-  blobUrl?: string // image / pdf
+  content?: string // text / json
+  blobUrl?: string // image
   loading?: boolean
   error?: string
 }

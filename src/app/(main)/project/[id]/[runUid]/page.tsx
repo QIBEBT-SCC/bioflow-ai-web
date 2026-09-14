@@ -279,6 +279,7 @@ function RunFlowContent({
       }
       const requestGeneration = run?.generation
       const fileType = getRunFileType(name)
+      const isDirectPreview = fileType === 'pdf' || fileType === 'html'
       dispatchTabs({
         type: 'OPEN_TAB',
         tab: {
@@ -286,12 +287,28 @@ function RunFlowContent({
           path,
           name,
           fileType,
-          loading: !['bigwig', 'bigbed', 'bed', 'unknown'].includes(fileType),
+          loading:
+            !isDirectPreview &&
+            ![
+              'bigwig',
+              'bigbed',
+              'bed',
+              'hic',
+              'cool',
+              'mcool',
+              'unknown',
+            ].includes(fileType),
         },
       })
-      if (['bigwig', 'bigbed', 'bed', 'unknown'].includes(fileType)) return
+      if (
+        isDirectPreview ||
+        ['bigwig', 'bigbed', 'bed', 'hic', 'cool', 'mcool', 'unknown'].includes(
+          fileType,
+        )
+      )
+        return
       try {
-        if (fileType === 'image' || fileType === 'pdf') {
+        if (fileType === 'image') {
           const blobUrl = await getRunFileBlobUrl(runUid, path)
           if (activeGenerationRef.current !== requestGeneration) {
             URL.revokeObjectURL(blobUrl)

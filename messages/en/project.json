@@ -249,6 +249,24 @@
         "track": "Genomic track",
         "searchHint": "Search by name to find more chromosomes.",
         "featureCount": "{count} features in this region."
+      },
+      "contactPreview": {
+        "unsupported": "This Hi-C file cannot be previewed.",
+        "firstLocus": "Horizontal locus",
+        "secondLocus": "Vertical locus",
+        "resolution": "Resolution",
+        "autoResolution": "Auto",
+        "show": "Show",
+        "zoomIn": "Zoom in",
+        "zoomOut": "Zoom out",
+        "coordinates": "Enter chr1:1-100000 using 1-based inclusive coordinates. Each axis is limited to 10 Mb and 64 bins. Color uses log(1 + contact count).",
+        "timeout": "Preview exceeded 2.5 seconds. Try a smaller region.",
+        "invalidLocus": "Invalid locus or wider than 10 Mb per axis.",
+        "loading": "Reading contact matrix…",
+        "emptyFile": "No chromosomes are available in this file.",
+        "emptyRegion": "No contacts in this region.",
+        "heatmap": "Hi-C contact matrix heatmap",
+        "details": "Resolution {resolution} bp · {count} nonzero cells · maximum count {max}"
       }
     },
     "fileMapping": {
