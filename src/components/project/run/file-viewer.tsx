@@ -1,15 +1,27 @@
 import { AlertCircle, Loader2 } from 'lucide-react'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
-import type { FileType } from '@/components/project/run//run-tab-bar'
+import { ContactPreview } from '@/components/project/run/contact-preview'
+import { getRunFileViewUrl } from '@/components/project/run/file-view-url'
+import { GenomePreview } from '@/components/project/run/genome-preview'
+import { GfaPreview } from '@/components/project/run/gfa-preview'
 import { JsonViewer } from '@/components/project/run/json-viewer'
+import { MsaPreview } from '@/components/project/run/msa-preview'
+import { NewickPreview } from '@/components/project/run/newick-preview'
+import type { FileType } from '@/components/project/run/run-tab-bar'
+import { TablePreview } from '@/components/project/run/table-preview'
+import { VcfPreview } from '@/components/project/run/vcf-preview'
 import { ScrollArea } from '@/components/ui/scroll-area'
 
 interface FileViewerProps {
   fileName: string
   fileType: FileType
-  content?: string // text / html
-  blobUrl?: string // image / pdf
+  path: string
+  runUid: string
+  generation: number
+  active: boolean
+  content?: string // text / json
+  blobUrl?: string // image
   loading?: boolean
   error?: string
 }
@@ -17,6 +29,10 @@ interface FileViewerProps {
 export function FileViewer({
   fileName,
   fileType,
+  path,
+  runUid,
+  generation,
+  active,
   content,
   blobUrl,
   loading,
@@ -45,6 +61,69 @@ export function FileViewer({
     )
   }
 
+  if (fileType === 'unknown') {
+    return (
+      <div
+        role='alert'
+        className='flex h-full items-center justify-center p-4 text-muted-foreground'
+      >
+        {t('unsupported')}
+      </div>
+    )
+  }
+
+  if (
+    fileType === 'bigwig' ||
+    fileType === 'bedgraph' ||
+    fileType === 'wig' ||
+    fileType === 'bigbed' ||
+    fileType === 'bed' ||
+    fileType === 'gff' ||
+    fileType === 'gtf'
+  ) {
+    return (
+      <GenomePreview
+        runUid={runUid}
+        generation={generation}
+        path={path}
+        active={active}
+      />
+    )
+  }
+
+  if (fileType === 'hic' || fileType === 'cool' || fileType === 'mcool') {
+    return (
+      <ContactPreview
+        runUid={runUid}
+        generation={generation}
+        path={path}
+        active={active}
+      />
+    )
+  }
+
+  if (fileType === 'table') {
+    return (
+      <TablePreview
+        runUid={runUid}
+        generation={generation}
+        path={path}
+        active={active}
+      />
+    )
+  }
+
+  if (fileType === 'vcf') {
+    return (
+      <VcfPreview
+        runUid={runUid}
+        generation={generation}
+        path={path}
+        active={active}
+      />
+    )
+  }
+
   if (fileType === 'image' && blobUrl) {
     return (
       <div className='relative flex size-full items-center justify-center overflow-auto p-4'>
@@ -60,14 +139,19 @@ export function FileViewer({
     )
   }
 
-  if (fileType === 'pdf' && blobUrl) {
+  if (fileType === 'pdf') {
+    const url = getRunFileViewUrl(runUid, generation, path)
     return (
-      <iframe
-        src={blobUrl}
-        title={fileName}
-        className='size-full border-0'
-        sandbox='allow-same-origin'
-      />
+      <object
+        data={url}
+        type='application/pdf'
+        aria-label={fileName}
+        className='size-full'
+      >
+        <a href={url} target='_blank' rel='noopener noreferrer'>
+          {fileName}
+        </a>
+      </object>
     )
   }
 
@@ -75,13 +159,26 @@ export function FileViewer({
     return <JsonViewer content={content} />
   }
 
-  if (fileType === 'html' && content !== undefined) {
+  if (fileType === 'newick' && content !== undefined) {
+    return <NewickPreview content={content} fileName={fileName} />
+  }
+
+  if (fileType === 'msa' && content !== undefined) {
+    return <MsaPreview content={content} />
+  }
+
+  if (fileType === 'gfa' && content !== undefined) {
+    return <GfaPreview content={content} />
+  }
+
+  if (fileType === 'html') {
+    const url = getRunFileViewUrl(runUid, generation, path)
     return (
       <iframe
-        srcDoc={content}
+        src={url}
         title={fileName}
         className='size-full border-0'
-        sandbox='allow-scripts'
+        sandbox='allow-scripts allow-same-origin'
       />
     )
   }
@@ -89,7 +186,7 @@ export function FileViewer({
   if (content !== undefined) {
     return (
       <ScrollArea className='size-full'>
-        <pre className='p-4 font-mono text-sm leading-relaxed whitespace-pre-wrap break-words'>
+        <pre className='p-4 font-mono text-sm leading-relaxed whitespace-pre-wrap wrap-break-word'>
           {content}
         </pre>
       </ScrollArea>

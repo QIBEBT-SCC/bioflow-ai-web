@@ -4,15 +4,36 @@ import { cn } from '@/lib/utils'
 
 export const CANVAS_TAB_ID = '__canvas__'
 
-export type FileType = 'text' | 'json' | 'html' | 'image' | 'pdf' | 'unknown'
+export type FileType =
+  | 'text'
+  | 'json'
+  | 'newick'
+  | 'msa'
+  | 'gfa'
+  | 'table'
+  | 'vcf'
+  | 'html'
+  | 'image'
+  | 'pdf'
+  | 'bigwig'
+  | 'bedgraph'
+  | 'wig'
+  | 'bigbed'
+  | 'bed'
+  | 'gff'
+  | 'gtf'
+  | 'hic'
+  | 'cool'
+  | 'mcool'
+  | 'unknown'
 
 export interface FileTab {
   id: string
   path: string
   name: string
   fileType: FileType
-  content?: string // text / html
-  blobUrl?: string // image / pdf
+  content?: string // text / json
+  blobUrl?: string // image
   loading?: boolean
   error?: string
 }
@@ -34,7 +55,7 @@ export function RunTabBar({
   const isCanvasActive = activeTabId === CANVAS_TAB_ID
 
   return (
-    <div className='flex h-9 shrink-0 items-end overflow-x-auto border-b bg-muted/30 px-2 gap-0.5 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]'>
+    <div className='flex h-9 shrink-0 items-end overflow-x-auto border-b bg-muted/30 px-2 gap-0.5 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-none]'>
       {/* 工作流 tab（不可关闭） */}
       <button
         type='button'
@@ -57,7 +78,7 @@ export function RunTabBar({
           <div
             key={tab.id}
             className={cn(
-              'group flex h-8 items-center gap-1 rounded-t-md px-2.5 text-xs transition-colors shrink-0 max-w-[180px]',
+              'group flex h-8 items-center gap-1 rounded-t-md px-2.5 text-xs transition-colors shrink-0 max-w-45',
               isActive
                 ? 'border border-b-background bg-background -mb-px'
                 : 'text-muted-foreground hover:bg-muted/60',
@@ -69,7 +90,7 @@ export function RunTabBar({
               className='flex min-w-0 items-center gap-1.5'
             >
               <FileText className='size-3.5 shrink-0' />
-              <span className='max-w-[120px] truncate'>{tab.name}</span>
+              <span className='max-w-30 truncate'>{tab.name}</span>
             </button>
             <button
               type='button'

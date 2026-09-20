@@ -161,11 +161,11 @@ export const useRunStream = (uid: string) => {
 /**
  * 获取运行实例输出文件树
  */
-export const useRunFiles = (runUid: string) => {
+export const useRunFiles = (runUid: string, generation?: number) => {
   return useQuery<RunFileNode[]>({
-    queryKey: ['runFiles', runUid],
+    queryKey: ['runFiles', runUid, generation],
     queryFn: () => getRunFiles(runUid),
-    enabled: !!runUid,
+    enabled: !!runUid && generation !== undefined,
     staleTime: 60 * 1000,
   })
 }

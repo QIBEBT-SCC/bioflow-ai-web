@@ -13,6 +13,7 @@ import {
 } from 'react'
 import { getRunFileBlobUrl, getRunFileContent } from '@/app/actions/run'
 import { ChatSidebar } from '@/components/chat/chat-sidebar'
+import { getRunFileType } from '@/components/project/run/file-type'
 import { FileViewer } from '@/components/project/run/file-viewer'
 import { RunFlowCanvas } from '@/components/project/run/run-flow-canvas'
 import { RunLeftPanel } from '@/components/project/run/run-left-panel'
@@ -20,7 +21,6 @@ import { RunPageHeader } from '@/components/project/run/run-page-header'
 import {
   CANVAS_TAB_ID,
   type FileTab,
-  type FileType,
   RunTabBar,
 } from '@/components/project/run/run-tab-bar'
 import { RunTerminal } from '@/components/project/run/run-terminal'
@@ -68,6 +68,7 @@ type TabAction =
   | { type: 'UPDATE_TAB'; id: string; updates: Partial<FileTab> }
   | { type: 'CLOSE_TAB'; id: string }
   | { type: 'SET_ACTIVE'; id: string }
+  | { type: 'RESET' }
 
 function tabReducer(state: TabState, action: TabAction): TabState {
   switch (action.type) {
@@ -96,30 +97,9 @@ function tabReducer(state: TabState, action: TabAction): TabState {
     }
     case 'SET_ACTIVE':
       return { ...state, activeTabId: action.id }
+    case 'RESET':
+      return { openTabs: [], activeTabId: CANVAS_TAB_ID }
   }
-}
-
-const IMAGE_EXTS = new Set([
-  'png',
-  'jpg',
-  'jpeg',
-  'gif',
-  'svg',
-  'webp',
-  'bmp',
-  'tif',
-  'tiff',
-])
-const HTML_EXTS = new Set(['html', 'htm'])
-const PDF_EXTS = new Set(['pdf'])
-
-function getFileType(name: string): FileType {
-  const ext = name.split('.').pop()?.toLowerCase() ?? ''
-  if (IMAGE_EXTS.has(ext)) return 'image'
-  if (PDF_EXTS.has(ext)) return 'pdf'
-  if (HTML_EXTS.has(ext)) return 'html'
-  if (ext === 'json') return 'json'
-  return 'text'
 }
 
 function RunFlowContent({
@@ -131,7 +111,18 @@ function RunFlowContent({
 }) {
   const { data: project } = useProject(projectId)
   const run = useRunStream(runUid)
-  const { data: runFiles } = useRunFiles(runUid)
+  const {
+    data: runFiles,
+    refetch: refreshFiles,
+    isFetching: filesRefreshing,
+  } = useRunFiles(runUid, run?.generation)
+  const lastSettledGeneration = useRef<number | null>(null)
+  useEffect(() => {
+    if (run?.settled && lastSettledGeneration.current !== run.generation) {
+      lastSettledGeneration.current = run.generation
+      void refreshFiles()
+    }
+  }, [run?.settled, run?.generation, refreshFiles])
   const isOpen = useChatSidebarStore((s) => s.isOpen)
   const { flowNodes, edges, handleNodesChange } = useRunFlow(run)
   const [panel, dispatchPanel] = useReducer(panelReducer, {
@@ -156,6 +147,21 @@ function RunFlowContent({
     activeTabId: CANVAS_TAB_ID,
   })
   const { openTabs, activeTabId } = tabs
+  const activeGenerationRef = useRef(run?.generation)
+  activeGenerationRef.current = run?.generation
+  const tabGeneration = useRef<number | null>(null)
+  useEffect(() => {
+    if (run?.generation === undefined) return
+    if (
+      tabGeneration.current !== null &&
+      tabGeneration.current !== run.generation
+    ) {
+      for (const tab of openTabs)
+        if (tab.blobUrl) URL.revokeObjectURL(tab.blobUrl)
+      dispatchTabs({ type: 'RESET' })
+    }
+    tabGeneration.current = run.generation
+  }, [run?.generation, openTabs])
 
   const handleResizeStart = useCallback(
     (e: React.MouseEvent) => {
@@ -271,14 +277,61 @@ function RunFlowContent({
         dispatchTabs({ type: 'SET_ACTIVE', id: path })
         return
       }
-      const fileType = getFileType(name)
+      const requestGeneration = run?.generation
+      const fileType = getRunFileType(name)
+      const isDirectPreview = fileType === 'pdf' || fileType === 'html'
       dispatchTabs({
         type: 'OPEN_TAB',
-        tab: { id: path, path, name, fileType, loading: true },
+        tab: {
+          id: path,
+          path,
+          name,
+          fileType,
+          loading:
+            !isDirectPreview &&
+            ![
+              'bigwig',
+              'bedgraph',
+              'wig',
+              'bigbed',
+              'bed',
+              'gff',
+              'gtf',
+              'hic',
+              'cool',
+              'mcool',
+              'table',
+              'vcf',
+              'unknown',
+            ].includes(fileType),
+        },
       })
+      if (
+        isDirectPreview ||
+        [
+          'bigwig',
+          'bedgraph',
+          'wig',
+          'bigbed',
+          'bed',
+          'gff',
+          'gtf',
+          'hic',
+          'cool',
+          'mcool',
+          'table',
+          'vcf',
+          'unknown',
+        ].includes(fileType)
+      )
+        return
       try {
-        if (fileType === 'image' || fileType === 'pdf') {
+        if (fileType === 'image') {
           const blobUrl = await getRunFileBlobUrl(runUid, path)
+          if (activeGenerationRef.current !== requestGeneration) {
+            URL.revokeObjectURL(blobUrl)
+            return
+          }
           dispatchTabs({
             type: 'UPDATE_TAB',
             id: path,
@@ -286,6 +339,7 @@ function RunFlowContent({
           })
         } else {
           const content = await getRunFileContent(runUid, path)
+          if (activeGenerationRef.current !== requestGeneration) return
           dispatchTabs({
             type: 'UPDATE_TAB',
             id: path,
@@ -293,6 +347,7 @@ function RunFlowContent({
           })
         }
       } catch (err) {
+        if (activeGenerationRef.current !== requestGeneration) return
         dispatchTabs({
           type: 'UPDATE_TAB',
           id: path,
@@ -300,7 +355,7 @@ function RunFlowContent({
         })
       }
     },
-    [openTabs, runUid],
+    [openTabs, runUid, run?.generation],
   )
 
   const handleCloseTab = useCallback((tabId: string) => {
@@ -333,6 +388,8 @@ function RunFlowContent({
           runFiles={runFiles}
           selectedFile={activeTabId !== CANVAS_TAB_ID ? activeTabId : undefined}
           onSelectFile={handleSelectFile}
+          onRefreshFiles={() => void refreshFiles()}
+          filesRefreshing={filesRefreshing}
           isOpen={leftPanelOpen}
           width={leftPanelWidth}
           onToggle={handleLeftPanelToggle}
@@ -376,7 +433,7 @@ function RunFlowContent({
           {/* 文件查看器选项卡内容 */}
           {openTabs.map((tab) => (
             <div
-              key={tab.id}
+              key={`${tab.id}:${run?.generation ?? 0}`}
               className={cn(
                 'flex-1 overflow-hidden',
                 activeTabId !== tab.id && 'hidden',
@@ -385,6 +442,10 @@ function RunFlowContent({
               <FileViewer
                 fileName={tab.name}
                 fileType={tab.fileType}
+                path={tab.path}
+                runUid={runUid}
+                generation={run?.generation ?? 0}
+                active={activeTabId === tab.id}
                 content={tab.content}
                 blobUrl={tab.blobUrl}
                 loading={tab.loading}

@@ -1,5 +1,20 @@
 import { clientFetchV2 } from '@/lib/api-client'
-import type { RunFileNode } from '@/types/run'
+import type {
+  ContactRegion,
+  PreviewMeta,
+  PreviewRegion,
+  RunFileNode,
+  TablePreviewFilter,
+  TablePreviewMeta,
+  TablePreviewPage,
+  TablePreviewProfile,
+  TablePreviewSort,
+  VcfFilterStatus,
+  VcfPreviewDetail,
+  VcfPreviewMeta,
+  VcfPreviewPage,
+  VcfVariantType,
+} from '@/types/run'
 import type { WorkflowDefinition } from '@/types/workflow'
 import type {
   PaginatedWorkflowRunsV2,
@@ -84,7 +99,7 @@ export async function getRunFileContent(
 }
 
 /**
- * 获取运行实例输出文件的 Blob Object URL（用于图片、PDF 等二进制文件）
+ * 获取运行实例输出图片的 Blob Object URL
  * 调用方负责在不再使用时调用 URL.revokeObjectURL() 释放内存
  */
 export async function getRunFileBlobUrl(
@@ -99,4 +114,180 @@ export async function getRunFileBlobUrl(
   })
   const blob = await res.blob()
   return URL.createObjectURL(blob)
+}
+
+/** Fetch only metadata; native parsing is bounded and isolated on the server. */
+export async function getRunFilePreviewMeta(
+  runUid: string,
+  generation: number,
+  path: string,
+  query: string,
+  signal: AbortSignal,
+): Promise<PreviewMeta> {
+  return clientFetchV2<PreviewMeta>(`/runs/${runUid}/files/preview/meta`, {
+    method: 'POST',
+    body: JSON.stringify({ path, generation, query }),
+    signal,
+  })
+}
+
+/** Request at most 512 signal bins or 300 interval features. */
+export async function getRunFilePreviewRegion(
+  runUid: string,
+  generation: number,
+  path: string,
+  region: { chrom: string; start: number; end: number },
+  signal: AbortSignal,
+): Promise<PreviewRegion> {
+  return clientFetchV2<PreviewRegion>(`/runs/${runUid}/files/preview/region`, {
+    method: 'POST',
+    body: JSON.stringify({ path, generation, ...region, bins: 512 }),
+    signal,
+  })
+}
+
+/** Request at most a 64 × 64 Hi-C contact grid. */
+export async function getRunContactPreviewRegion(
+  runUid: string,
+  generation: number,
+  path: string,
+  first: { chrom: string; start: number; end: number },
+  second: { chrom: string; start: number; end: number },
+  resolution: number | null,
+  signal: AbortSignal,
+): Promise<ContactRegion> {
+  return clientFetchV2<ContactRegion>(`/runs/${runUid}/files/preview/region`, {
+    method: 'POST',
+    body: JSON.stringify({
+      path,
+      generation,
+      ...first,
+      chrom2: second.chrom,
+      start2: second.start,
+      end2: second.end,
+      resolution,
+    }),
+    signal,
+  })
+}
+
+/** Read only the inferred schema for a CSV or TSV file. */
+export async function getRunTablePreviewMeta(
+  runUid: string,
+  generation: number,
+  path: string,
+  signal: AbortSignal,
+): Promise<TablePreviewMeta> {
+  return clientFetchV2<TablePreviewMeta>(
+    `/runs/${runUid}/files/preview/table/meta`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ path, generation }),
+      signal,
+    },
+  )
+}
+
+/** Read one projected table page after server-side sorting and filtering. */
+export async function getRunTablePreviewPage(
+  runUid: string,
+  generation: number,
+  path: string,
+  query: {
+    offset: number
+    limit: number
+    columns: string[]
+    sort: TablePreviewSort | null
+    filters: TablePreviewFilter[]
+  },
+  signal: AbortSignal,
+): Promise<TablePreviewPage> {
+  return clientFetchV2<TablePreviewPage>(
+    `/runs/${runUid}/files/preview/table/query`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ path, generation, ...query }),
+      signal,
+    },
+  )
+}
+
+/** Summarize one column on demand using the active filters. */
+export async function getRunTablePreviewProfile(
+  runUid: string,
+  generation: number,
+  path: string,
+  column: string,
+  filters: TablePreviewFilter[],
+  signal: AbortSignal,
+): Promise<TablePreviewProfile> {
+  return clientFetchV2<TablePreviewProfile>(
+    `/runs/${runUid}/files/preview/table/profile`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ path, generation, column, filters }),
+      signal,
+    },
+  )
+}
+
+/** Read VCF header metadata and whole-file variant summaries. */
+export async function getRunVcfPreviewMeta(
+  runUid: string,
+  generation: number,
+  path: string,
+  signal: AbortSignal,
+): Promise<VcfPreviewMeta> {
+  return clientFetchV2<VcfPreviewMeta>(
+    `/runs/${runUid}/files/preview/vcf/meta`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ path, generation }),
+      signal,
+    },
+  )
+}
+
+/** Read one filtered page of VCF records in file order. */
+export async function getRunVcfPreviewPage(
+  runUid: string,
+  generation: number,
+  path: string,
+  query: {
+    offset: number
+    limit: number
+    contig: string | null
+    variant_type: VcfVariantType | 'all'
+    filter_status: VcfFilterStatus | 'all'
+    search: string
+    min_qual: number | null
+  },
+  signal: AbortSignal,
+): Promise<VcfPreviewPage> {
+  return clientFetchV2<VcfPreviewPage>(
+    `/runs/${runUid}/files/preview/vcf/query`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ path, generation, ...query }),
+      signal,
+    },
+  )
+}
+
+/** Read INFO and per-sample FORMAT values for a selected VCF record. */
+export async function getRunVcfPreviewDetail(
+  runUid: string,
+  generation: number,
+  path: string,
+  recordIndex: number,
+  signal: AbortSignal,
+): Promise<VcfPreviewDetail> {
+  return clientFetchV2<VcfPreviewDetail>(
+    `/runs/${runUid}/files/preview/vcf/detail`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ path, generation, record_index: recordIndex }),
+      signal,
+    },
+  )
 }

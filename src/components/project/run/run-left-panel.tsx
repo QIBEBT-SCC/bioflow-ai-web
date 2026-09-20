@@ -8,6 +8,7 @@ import {
   FileJsonIcon,
   FileTextIcon,
   Loader2Icon,
+  RefreshCwIcon,
   XCircleIcon,
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
@@ -91,6 +92,8 @@ interface RunLeftPanelProps {
   runFiles?: RunFileNode[]
   selectedFile?: string
   onSelectFile: (path: string) => void
+  onRefreshFiles: () => void
+  filesRefreshing: boolean
   isOpen: boolean
   width: number
   onToggle: () => void
@@ -102,6 +105,8 @@ export function RunLeftPanel({
   runFiles,
   selectedFile,
   onSelectFile,
+  onRefreshFiles,
+  filesRefreshing,
   isOpen,
   width,
   onToggle,
@@ -185,6 +190,18 @@ export function RunLeftPanel({
           <div className='px-4 py-3 text-sm font-medium border-b flex items-center gap-2 sticky top-0 bg-background'>
             <FileTextIcon className='size-4 text-muted-foreground' />
             {t('outputFiles')}
+            <button
+              type='button'
+              onClick={onRefreshFiles}
+              disabled={filesRefreshing}
+              aria-label={t('refreshFiles')}
+              title={t('refreshFiles')}
+              className='ml-auto rounded p-1 hover:bg-muted disabled:opacity-50'
+            >
+              <RefreshCwIcon
+                className={`size-4 ${filesRefreshing ? 'animate-spin' : ''}`}
+              />
+            </button>
           </div>
           <div className='p-2'>
             <FileTree
