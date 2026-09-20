@@ -24,6 +24,17 @@ const NEWICK_EXTS = new Set([
   'treefile',
   'trees',
 ])
+const MSA_EXTS = new Set([
+  'afa',
+  'aln',
+  'clustal',
+  'clw',
+  'msa',
+  'phy',
+  'phylip',
+  'sto',
+  'stockholm',
+])
 const TEXT_EXTS = new Set([
   'txt',
   'log',
@@ -56,6 +67,7 @@ export function getRunFileType(name: string): FileType {
   if (HTML_EXTS.has(ext)) return 'html'
   if (ext === 'json') return 'json'
   if (NEWICK_EXTS.has(ext)) return 'newick'
+  if (MSA_EXTS.has(ext)) return 'msa'
   if (ext === 'bw' || ext === 'bigwig') return 'bigwig'
   if (ext === 'bb' || ext === 'bigbed') return 'bigbed'
   if (ext === 'bed') return 'bed'

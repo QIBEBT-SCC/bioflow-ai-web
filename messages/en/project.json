@@ -295,6 +295,41 @@
           "unterminatedComment": "A Newick comment is not closed",
           "unterminatedQuote": "A quoted node label is not closed"
         }
+      },
+      "msaPreview": {
+        "search": "Search sequence names",
+        "sequence": "Sequence",
+        "consensus": "Consensus",
+        "zoomIn": "Widen columns",
+        "zoomOut": "Narrow columns",
+        "summary": "{sequences} sequences · {columns} columns · {format} · {alphabet}",
+        "matches": "{count} matching sequences",
+        "noMatches": "No sequence names match this search.",
+        "graphic": "Multiple sequence alignment",
+        "hint": "Scroll to inspect the alignment. Consensus symbols: * fully conserved, : at least 80%, . at least 50% among non-gap residues.",
+        "formats": {
+          "fasta": "aligned FASTA",
+          "clustal": "Clustal",
+          "stockholm": "Stockholm",
+          "phylip": "PHYLIP"
+        },
+        "alphabets": {
+          "nucleotide": "nucleotide",
+          "protein": "protein"
+        },
+        "errors": {
+          "duplicateName": "The alignment contains duplicate sequence names",
+          "empty": "The alignment file is empty",
+          "inconsistentLength": "Aligned sequences do not all have the same length",
+          "invalidPhylip": "The file is not valid PHYLIP",
+          "invalidSequence": "The alignment contains an invalid name or residue",
+          "phylipCount": "The PHYLIP sequence count does not match its header",
+          "tooFewSequences": "An alignment must contain at least two sequences",
+          "tooManyCells": "The alignment contains more than 5,000,000 cells",
+          "tooManyColumns": "The alignment contains more than 100,000 columns",
+          "tooManySequences": "The alignment contains more than 2,000 sequences",
+          "unsupportedFormat": "Expected aligned FASTA, Clustal, Stockholm, or PHYLIP content"
+        }
       }
     },
     "fileMapping": {

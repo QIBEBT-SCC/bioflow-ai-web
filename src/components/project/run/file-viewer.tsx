@@ -5,6 +5,7 @@ import { ContactPreview } from '@/components/project/run/contact-preview'
 import { getRunFileViewUrl } from '@/components/project/run/file-view-url'
 import { GenomePreview } from '@/components/project/run/genome-preview'
 import { JsonViewer } from '@/components/project/run/json-viewer'
+import { MsaPreview } from '@/components/project/run/msa-preview'
 import { NewickPreview } from '@/components/project/run/newick-preview'
 import type { FileType } from '@/components/project/run/run-tab-bar'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -127,6 +128,10 @@ export function FileViewer({
 
   if (fileType === 'newick' && content !== undefined) {
     return <NewickPreview content={content} fileName={fileName} />
+  }
+
+  if (fileType === 'msa' && content !== undefined) {
+    return <MsaPreview content={content} />
   }
 
   if (fileType === 'html') {

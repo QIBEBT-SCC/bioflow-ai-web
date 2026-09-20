@@ -295,6 +295,41 @@
           "unterminatedComment": "Newick 注释没有闭合",
           "unterminatedQuote": "带引号的节点标签没有闭合"
         }
+      },
+      "msaPreview": {
+        "search": "搜索序列名称",
+        "sequence": "序列",
+        "consensus": "一致性",
+        "zoomIn": "加宽列",
+        "zoomOut": "缩窄列",
+        "summary": "{sequences} 条序列 · {columns} 列 · {format} · {alphabet}",
+        "matches": "匹配 {count} 条序列",
+        "noMatches": "没有匹配该搜索条件的序列名称。",
+        "graphic": "多序列比对",
+        "hint": "滚动查看完整比对。一致性符号：* 表示完全保守，: 表示非缺口残基中至少 80% 一致，. 表示至少 50% 一致。",
+        "formats": {
+          "fasta": "对齐 FASTA",
+          "clustal": "Clustal",
+          "stockholm": "Stockholm",
+          "phylip": "PHYLIP"
+        },
+        "alphabets": {
+          "nucleotide": "核酸",
+          "protein": "蛋白质"
+        },
+        "errors": {
+          "duplicateName": "比对中存在重复的序列名称",
+          "empty": "比对文件为空",
+          "inconsistentLength": "比对后的序列长度不一致",
+          "invalidPhylip": "文件不是有效的 PHYLIP 格式",
+          "invalidSequence": "比对中包含无效的名称或残基字符",
+          "phylipCount": "PHYLIP 中的序列数量与文件头不一致",
+          "tooFewSequences": "比对至少需要包含两条序列",
+          "tooManyCells": "比对包含超过 5,000,000 个单元格",
+          "tooManyColumns": "比对包含超过 100,000 列",
+          "tooManySequences": "比对包含超过 2,000 条序列",
+          "unsupportedFormat": "文件内容应为对齐 FASTA、Clustal、Stockholm 或 PHYLIP 格式"
+        }
       }
     },
     "fileMapping": {
