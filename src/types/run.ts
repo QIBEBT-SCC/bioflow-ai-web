@@ -42,3 +42,71 @@ export type ContactRegion = {
   height: number
   values: number[]
 }
+
+export type TableDataKind =
+  | 'integer'
+  | 'number'
+  | 'boolean'
+  | 'temporal'
+  | 'text'
+  | 'null'
+
+export type TablePreviewColumn = {
+  name: string
+  dtype: string
+  kind: TableDataKind
+}
+
+export type TablePreviewMeta = {
+  kind: 'csv' | 'tsv'
+  supported: true
+  file_size: number
+  row_count: number
+  delimiter: ',' | '\t'
+  columns: TablePreviewColumn[]
+}
+
+export type TablePreviewSort = {
+  column: string
+  direction: 'asc' | 'desc'
+}
+
+export type TableFilterOperator =
+  | 'contains'
+  | 'equals'
+  | 'not_equals'
+  | 'gt'
+  | 'gte'
+  | 'lt'
+  | 'lte'
+  | 'is_null'
+  | 'is_not_null'
+
+export type TablePreviewFilter = {
+  column: string
+  operator: TableFilterOperator
+  value?: string
+}
+
+export type TablePreviewCell = string | number | boolean | null
+
+export type TablePreviewPage = {
+  columns: string[]
+  rows: TablePreviewCell[][]
+  offset: number
+  limit: number
+  total: number
+  has_more: boolean
+}
+
+export type TablePreviewProfile = {
+  column: string
+  dtype: string
+  kind: TableDataKind
+  count: number
+  null_count: number
+  unique_count: number
+  minimum?: TablePreviewCell
+  maximum?: TablePreviewCell
+  mean?: number | null
+}

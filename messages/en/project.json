@@ -367,6 +367,44 @@
           "tooManySegments": "The graph contains more than 1,000 segments",
           "unsupportedVersion": "Only GFA1 files are supported"
         }
+      },
+      "tablePreview": {
+        "loading": "Reading the table schema…",
+        "empty": "The table has no data to display.",
+        "noMatches": "No rows match the active filter.",
+        "rowCount": "{count} rows",
+        "columnCount": "{count} columns",
+        "commaDelimiter": "comma-delimited",
+        "tabDelimiter": "tab-delimited",
+        "filterActive": "Filter active",
+        "filterColumn": "Filter column",
+        "filterValue": "Filter value",
+        "apply": "Apply",
+        "clear": "Clear",
+        "visibleColumns": "Columns {visible}/{total}",
+        "chooseColumns": "Choose visible columns",
+        "sortColumn": "Sort by {column}",
+        "count": "{count} rows",
+        "nullCount": "{count} null",
+        "uniqueCount": "{count} unique",
+        "minimum": "min {value}",
+        "maximum": "max {value}",
+        "mean": "mean {value}",
+        "rowRange": "Rows {start}–{end} of {total}",
+        "page": "Page {page} of {total}",
+        "previous": "Previous page",
+        "next": "Next page",
+        "operators": {
+          "contains": "contains",
+          "equals": "equals",
+          "not_equals": "does not equal",
+          "gt": "greater than",
+          "gte": "greater than or equal",
+          "lt": "less than",
+          "lte": "less than or equal",
+          "is_null": "is null",
+          "is_not_null": "is not null"
+        }
       }
     },
     "fileMapping": {

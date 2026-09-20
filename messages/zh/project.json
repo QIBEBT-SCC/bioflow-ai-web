@@ -367,6 +367,44 @@
           "tooManySegments": "图中包含超过 1,000 个片段",
           "unsupportedVersion": "目前仅支持 GFA1 文件"
         }
+      },
+      "tablePreview": {
+        "loading": "正在读取表结构…",
+        "empty": "表格中没有可显示的数据。",
+        "noMatches": "没有数据满足当前筛选条件。",
+        "rowCount": "{count} 行",
+        "columnCount": "{count} 列",
+        "commaDelimiter": "逗号分隔",
+        "tabDelimiter": "制表符分隔",
+        "filterActive": "筛选已应用",
+        "filterColumn": "筛选列",
+        "filterValue": "筛选值",
+        "apply": "应用",
+        "clear": "清除",
+        "visibleColumns": "列 {visible}/{total}",
+        "chooseColumns": "选择显示列",
+        "sortColumn": "按 {column} 排序",
+        "count": "{count} 行",
+        "nullCount": "{count} 个空值",
+        "uniqueCount": "{count} 个唯一值",
+        "minimum": "最小值 {value}",
+        "maximum": "最大值 {value}",
+        "mean": "均值 {value}",
+        "rowRange": "显示第 {start}–{end} 行，共 {total} 行",
+        "page": "第 {page} / {total} 页",
+        "previous": "上一页",
+        "next": "下一页",
+        "operators": {
+          "contains": "包含",
+          "equals": "等于",
+          "not_equals": "不等于",
+          "gt": "大于",
+          "gte": "大于等于",
+          "lt": "小于",
+          "lte": "小于等于",
+          "is_null": "为空",
+          "is_not_null": "不为空"
+        }
       }
     },
     "fileMapping": {

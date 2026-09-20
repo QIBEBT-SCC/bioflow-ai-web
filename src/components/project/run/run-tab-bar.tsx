@@ -10,6 +10,7 @@ export type FileType =
   | 'newick'
   | 'msa'
   | 'gfa'
+  | 'table'
   | 'html'
   | 'image'
   | 'pdf'

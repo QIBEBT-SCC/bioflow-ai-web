@@ -296,15 +296,23 @@ function RunFlowContent({
               'hic',
               'cool',
               'mcool',
+              'table',
               'unknown',
             ].includes(fileType),
         },
       })
       if (
         isDirectPreview ||
-        ['bigwig', 'bigbed', 'bed', 'hic', 'cool', 'mcool', 'unknown'].includes(
-          fileType,
-        )
+        [
+          'bigwig',
+          'bigbed',
+          'bed',
+          'hic',
+          'cool',
+          'mcool',
+          'table',
+          'unknown',
+        ].includes(fileType)
       )
         return
       try {

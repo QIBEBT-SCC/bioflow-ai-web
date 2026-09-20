@@ -4,6 +4,11 @@ import type {
   PreviewMeta,
   PreviewRegion,
   RunFileNode,
+  TablePreviewFilter,
+  TablePreviewMeta,
+  TablePreviewPage,
+  TablePreviewProfile,
+  TablePreviewSort,
 } from '@/types/run'
 import type { WorkflowDefinition } from '@/types/workflow'
 import type {
@@ -159,4 +164,64 @@ export async function getRunContactPreviewRegion(
     }),
     signal,
   })
+}
+
+/** Read only the inferred schema for a CSV or TSV file. */
+export async function getRunTablePreviewMeta(
+  runUid: string,
+  generation: number,
+  path: string,
+  signal: AbortSignal,
+): Promise<TablePreviewMeta> {
+  return clientFetchV2<TablePreviewMeta>(
+    `/runs/${runUid}/files/preview/table/meta`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ path, generation }),
+      signal,
+    },
+  )
+}
+
+/** Read one projected table page after server-side sorting and filtering. */
+export async function getRunTablePreviewPage(
+  runUid: string,
+  generation: number,
+  path: string,
+  query: {
+    offset: number
+    limit: number
+    columns: string[]
+    sort: TablePreviewSort | null
+    filters: TablePreviewFilter[]
+  },
+  signal: AbortSignal,
+): Promise<TablePreviewPage> {
+  return clientFetchV2<TablePreviewPage>(
+    `/runs/${runUid}/files/preview/table/query`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ path, generation, ...query }),
+      signal,
+    },
+  )
+}
+
+/** Summarize one column on demand using the active filters. */
+export async function getRunTablePreviewProfile(
+  runUid: string,
+  generation: number,
+  path: string,
+  column: string,
+  filters: TablePreviewFilter[],
+  signal: AbortSignal,
+): Promise<TablePreviewProfile> {
+  return clientFetchV2<TablePreviewProfile>(
+    `/runs/${runUid}/files/preview/table/profile`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ path, generation, column, filters }),
+      signal,
+    },
+  )
 }
