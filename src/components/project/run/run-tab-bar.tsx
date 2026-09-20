@@ -20,6 +20,8 @@ export type FileType =
   | 'wig'
   | 'bigbed'
   | 'bed'
+  | 'gff'
+  | 'gtf'
   | 'hic'
   | 'cool'
   | 'mcool'

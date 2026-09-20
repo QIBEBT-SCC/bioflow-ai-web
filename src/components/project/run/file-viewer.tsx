@@ -77,7 +77,9 @@ export function FileViewer({
     fileType === 'bedgraph' ||
     fileType === 'wig' ||
     fileType === 'bigbed' ||
-    fileType === 'bed'
+    fileType === 'bed' ||
+    fileType === 'gff' ||
+    fileType === 'gtf'
   ) {
     return (
       <GenomePreview

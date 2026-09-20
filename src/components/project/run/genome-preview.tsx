@@ -16,6 +16,26 @@ function isSignalKind(kind: PreviewMeta['kind'] | undefined): boolean {
   return kind === 'bigwig' || kind === 'bedgraph' || kind === 'wig'
 }
 
+function featureColor(featureType: string | undefined): string {
+  switch (featureType?.toLowerCase()) {
+    case 'gene':
+      return '#7c3aed'
+    case 'mrna':
+    case 'transcript':
+      return '#2563eb'
+    case 'exon':
+      return '#0d9488'
+    case 'cds':
+      return '#ea580c'
+    case 'utr':
+    case 'five_prime_utr':
+    case 'three_prime_utr':
+      return '#64748b'
+    default:
+      return '#0f766e'
+  }
+}
+
 function formatLocus(view: GenomeViewport): string {
   return `${view.chrom}:${(view.start + 1).toLocaleString('en-US')}-${view.end.toLocaleString('en-US')}`
 }
@@ -113,7 +133,7 @@ function drawTrack(
     if (lane === -1) lane = 7
     laneEnds[lane] = x2
     const y = top + lane * 27
-    context.fillStyle = '#0d9488'
+    context.fillStyle = featureColor(item.feature_type)
     context.fillRect(x1, y, Math.max(2, x2 - x1), 12)
     if (item.name && x2 - x1 > 45) {
       context.fillStyle = '#334155'
@@ -273,6 +293,12 @@ export function GenomePreview({
     region?.kind === 'signal'
       ? region.points.every((point) => point === null)
       : region?.kind === 'intervals' && region.items.length === 0
+  const visibleFeatureTypes =
+    region?.kind === 'intervals'
+      ? [
+          ...new Set(region.items.flatMap((item) => item.feature_type ?? [])),
+        ].slice(0, 8)
+      : []
   const maxSpan = isSignalKind(meta?.kind) ? 10_000_000 : 1_000_000
   const applyLocus = () => {
     const parsed = parseLocus(locus)
@@ -415,9 +441,18 @@ export function GenomePreview({
         <p className='text-muted-foreground'>{t('emptyRegion')}</p>
       )}
       {region?.kind === 'intervals' && (
-        <p className='text-xs text-muted-foreground'>
-          {t('featureCount', { count: region.items.length })}
-        </p>
+        <div className='flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground'>
+          <span>{t('featureCount', { count: region.items.length })}</span>
+          {visibleFeatureTypes.map((featureType) => (
+            <span key={featureType} className='inline-flex items-center gap-1'>
+              <span
+                className='size-2 rounded-sm'
+                style={{ backgroundColor: featureColor(featureType) }}
+              />
+              {featureType}
+            </span>
+          ))}
+        </div>
       )}
     </div>
   )

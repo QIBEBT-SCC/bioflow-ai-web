@@ -9,6 +9,8 @@ export type PreviewMeta = {
     | 'wig'
     | 'bigbed'
     | 'bed'
+    | 'gff'
+    | 'gtf'
     | 'hic'
     | 'cool'
     | 'mcool'
@@ -35,7 +37,13 @@ export type PreviewRegion =
       chrom: string
       start: number
       end: number
-      items: { start: number; end: number; name: string }[]
+      items: {
+        start: number
+        end: number
+        name: string
+        feature_type?: string
+        strand?: string
+      }[]
     }
 
 export type ContactRegion = {

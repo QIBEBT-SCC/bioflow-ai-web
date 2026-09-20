@@ -61,6 +61,20 @@ const TEXT_EXTS = new Set([
 export function getRunFileType(name: string): FileType {
   const lowerName = name.toLowerCase()
   if (lowerName.endsWith('.vcf') || lowerName.endsWith('.vcf.gz')) return 'vcf'
+  if (
+    lowerName.endsWith('.gff') ||
+    lowerName.endsWith('.gff3') ||
+    lowerName.endsWith('.gff.gz') ||
+    lowerName.endsWith('.gff3.gz')
+  )
+    return 'gff'
+  if (
+    lowerName.endsWith('.gtf') ||
+    lowerName.endsWith('.gtt') ||
+    lowerName.endsWith('.gtf.gz') ||
+    lowerName.endsWith('.gtt.gz')
+  )
+    return 'gtf'
   const ext = lowerName.split('.').pop() ?? ''
   if (IMAGE_EXTS.has(ext)) return 'image'
   if (PDF_EXTS.has(ext)) return 'pdf'
