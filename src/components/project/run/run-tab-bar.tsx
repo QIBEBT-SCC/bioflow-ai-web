@@ -7,6 +7,7 @@ export const CANVAS_TAB_ID = '__canvas__'
 export type FileType =
   | 'text'
   | 'json'
+  | 'newick'
   | 'html'
   | 'image'
   | 'pdf'

@@ -267,6 +267,34 @@
         "emptyRegion": "该区间没有接触记录。",
         "heatmap": "Hi-C 接触矩阵热图",
         "details": "分辨率 {resolution} bp · 非零单元 {count} 个 · 最大接触数 {max}"
+      },
+      "newickPreview": {
+        "tree": "树",
+        "treeOption": "第 {index} 棵 · {count} 个叶节点",
+        "search": "搜索节点标签",
+        "branchLengths": "按分支长度",
+        "internalLabels": "显示内部标签",
+        "zoomIn": "放大",
+        "zoomOut": "缩小",
+        "resetZoom": "重置缩放",
+        "exportSvg": "导出 SVG",
+        "summary": "{leaves} 个叶节点 · 共 {nodes} 个节点",
+        "matches": "匹配 {count} 个节点",
+        "rootingNotice": "绘制方向不表示该树已经完成生物学定根。",
+        "treeGraphic": "{fileName} 的系统发育树",
+        "errorPosition": "，位于第 {position} 个字符。",
+        "errors": {
+          "empty": "文件中没有 Newick 树",
+          "invalidBranchLength": "分支长度不是有限数值",
+          "missingLabel": "叶节点缺少标签",
+          "missingSemicolon": "树末尾缺少分号",
+          "tooDeep": "树的嵌套深度超过上限",
+          "tooManyNodes": "文件包含超过 5,000 个节点",
+          "tooManyTrees": "文件包含超过 100 棵树",
+          "unexpectedToken": "文件不是有效的 Newick 格式",
+          "unterminatedComment": "Newick 注释没有闭合",
+          "unterminatedQuote": "带引号的节点标签没有闭合"
+        }
       }
     },
     "fileMapping": {

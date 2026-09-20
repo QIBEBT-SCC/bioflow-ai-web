@@ -13,6 +13,17 @@ const IMAGE_EXTS = new Set([
 ])
 const HTML_EXTS = new Set(['html', 'htm'])
 const PDF_EXTS = new Set(['pdf'])
+const NEWICK_EXTS = new Set([
+  'bionj',
+  'contree',
+  'dnd',
+  'newick',
+  'nwk',
+  'tre',
+  'tree',
+  'treefile',
+  'trees',
+])
 const TEXT_EXTS = new Set([
   'txt',
   'log',
@@ -44,6 +55,7 @@ export function getRunFileType(name: string): FileType {
   if (PDF_EXTS.has(ext)) return 'pdf'
   if (HTML_EXTS.has(ext)) return 'html'
   if (ext === 'json') return 'json'
+  if (NEWICK_EXTS.has(ext)) return 'newick'
   if (ext === 'bw' || ext === 'bigwig') return 'bigwig'
   if (ext === 'bb' || ext === 'bigbed') return 'bigbed'
   if (ext === 'bed') return 'bed'

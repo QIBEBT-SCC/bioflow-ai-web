@@ -267,6 +267,34 @@
         "emptyRegion": "No contacts in this region.",
         "heatmap": "Hi-C contact matrix heatmap",
         "details": "Resolution {resolution} bp · {count} nonzero cells · maximum count {max}"
+      },
+      "newickPreview": {
+        "tree": "Tree",
+        "treeOption": "Tree {index} · {count} leaves",
+        "search": "Search node labels",
+        "branchLengths": "Branch lengths",
+        "internalLabels": "Internal labels",
+        "zoomIn": "Zoom in",
+        "zoomOut": "Zoom out",
+        "resetZoom": "Reset zoom",
+        "exportSvg": "Export SVG",
+        "summary": "{leaves} leaves · {nodes} total nodes",
+        "matches": "{count} matching nodes",
+        "rootingNotice": "The drawing orientation does not imply that the tree is biologically rooted.",
+        "treeGraphic": "Phylogenetic tree from {fileName}",
+        "errorPosition": "at character {position}.",
+        "errors": {
+          "empty": "The file does not contain a Newick tree",
+          "invalidBranchLength": "A branch length is not a finite number",
+          "missingLabel": "A leaf is missing its label",
+          "missingSemicolon": "A tree is missing its terminating semicolon",
+          "tooDeep": "The tree exceeds the maximum nesting depth",
+          "tooManyNodes": "The file contains more than 5,000 nodes",
+          "tooManyTrees": "The file contains more than 100 trees",
+          "unexpectedToken": "The file is not valid Newick",
+          "unterminatedComment": "A Newick comment is not closed",
+          "unterminatedQuote": "A quoted node label is not closed"
+        }
       }
     },
     "fileMapping": {
