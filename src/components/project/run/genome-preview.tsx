@@ -6,26 +6,17 @@ import {
   getRunFilePreviewMeta,
   getRunFilePreviewRegion,
 } from '@/app/actions/run'
+import {
+  type GenomeViewport,
+  parseLocus,
+} from '@/components/project/run/genome-locus'
 import type { PreviewMeta, PreviewRegion } from '@/types/run'
 
-type Viewport = { chrom: string; start: number; end: number }
-
-export function parseLocus(value: string): Viewport | null {
-  const match = /^([^:\s]+):([\d,]+)-([\d,]+)$/.exec(value.trim())
-  if (!match) return null
-  const first = Number(match[2].replaceAll(',', ''))
-  const last = Number(match[3].replaceAll(',', ''))
-  if (
-    !Number.isSafeInteger(first) ||
-    !Number.isSafeInteger(last) ||
-    first < 1 ||
-    last < first
-  )
-    return null
-  return { chrom: match[1], start: first - 1, end: last }
+function isSignalKind(kind: PreviewMeta['kind'] | undefined): boolean {
+  return kind === 'bigwig' || kind === 'bedgraph' || kind === 'wig'
 }
 
-function formatLocus(view: Viewport): string {
+function formatLocus(view: GenomeViewport): string {
   return `${view.chrom}:${(view.start + 1).toLocaleString('en-US')}-${view.end.toLocaleString('en-US')}`
 }
 
@@ -149,7 +140,7 @@ export function GenomePreview({
 }) {
   const t = useTranslations('Project.runDetail.preview')
   const [meta, setMeta] = useState<PreviewMeta | null>(null)
-  const [view, setView] = useState<Viewport | null>(null)
+  const [view, setView] = useState<GenomeViewport | null>(null)
   const [locus, setLocus] = useState('')
   const [search, setSearch] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
@@ -202,7 +193,7 @@ export function GenomePreview({
             start: 0,
             end: Math.min(
               chromosome?.length ?? 10000,
-              data.kind === 'bigwig' ? 100000 : 10000,
+              isSignalKind(data.kind) ? 100000 : 10000,
             ),
           }
           if (initial.end > 0) {
@@ -282,7 +273,7 @@ export function GenomePreview({
     region?.kind === 'signal'
       ? region.points.every((point) => point === null)
       : region?.kind === 'intervals' && region.items.length === 0
-  const maxSpan = meta?.kind === 'bigwig' ? 10_000_000 : 1_000_000
+  const maxSpan = isSignalKind(meta?.kind) ? 10_000_000 : 1_000_000
   const applyLocus = () => {
     const parsed = parseLocus(locus)
     if (!parsed || parsed.end - parsed.start > maxSpan) {
@@ -336,7 +327,7 @@ export function GenomePreview({
               start: 0,
               end: Math.min(
                 chromosome.length,
-                meta?.kind === 'bigwig' ? 100000 : 10000,
+                isSignalKind(meta?.kind) ? 100000 : 10000,
               ),
             }
             setView(next)

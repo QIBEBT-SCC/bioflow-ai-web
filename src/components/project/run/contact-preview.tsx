@@ -6,7 +6,7 @@ import {
   getRunContactPreviewRegion,
   getRunFilePreviewMeta,
 } from '@/app/actions/run'
-import { parseLocus } from '@/components/project/run/genome-preview'
+import { parseLocus } from '@/components/project/run/genome-locus'
 import type { ContactRegion, PreviewMeta } from '@/types/run'
 
 type Locus = { chrom: string; start: number; end: number }

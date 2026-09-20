@@ -71,6 +71,8 @@ export function getRunFileType(name: string): FileType {
   if (ext === 'gfa' || ext === 'gfa1') return 'gfa'
   if (ext === 'csv' || ext === 'tsv') return 'table'
   if (ext === 'bw' || ext === 'bigwig') return 'bigwig'
+  if (ext === 'bedgraph' || ext === 'bdg' || ext === 'bg') return 'bedgraph'
+  if (ext === 'wig' || ext === 'wiggle') return 'wig'
   if (ext === 'bb' || ext === 'bigbed') return 'bigbed'
   if (ext === 'bed') return 'bed'
   if (ext === 'hic' || ext === 'cool' || ext === 'mcool') return ext

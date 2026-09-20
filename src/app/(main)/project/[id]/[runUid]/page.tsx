@@ -291,6 +291,8 @@ function RunFlowContent({
             !isDirectPreview &&
             ![
               'bigwig',
+              'bedgraph',
+              'wig',
               'bigbed',
               'bed',
               'hic',
@@ -306,6 +308,8 @@ function RunFlowContent({
         isDirectPreview ||
         [
           'bigwig',
+          'bedgraph',
+          'wig',
           'bigbed',
           'bed',
           'hic',

@@ -3,7 +3,16 @@ export type RunFileNode =
   | { type: 'folder'; path: string; name: string; children: RunFileNode[] }
 
 export type PreviewMeta = {
-  kind: 'bigwig' | 'bigbed' | 'bed' | 'hic' | 'cool' | 'mcool' | 'unsupported'
+  kind:
+    | 'bigwig'
+    | 'bedgraph'
+    | 'wig'
+    | 'bigbed'
+    | 'bed'
+    | 'hic'
+    | 'cool'
+    | 'mcool'
+    | 'unsupported'
   supported: boolean
   reason?: string
   file_size?: number

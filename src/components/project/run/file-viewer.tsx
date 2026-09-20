@@ -72,7 +72,13 @@ export function FileViewer({
     )
   }
 
-  if (fileType === 'bigwig' || fileType === 'bigbed' || fileType === 'bed') {
+  if (
+    fileType === 'bigwig' ||
+    fileType === 'bedgraph' ||
+    fileType === 'wig' ||
+    fileType === 'bigbed' ||
+    fileType === 'bed'
+  ) {
     return (
       <GenomePreview
         runUid={runUid}
