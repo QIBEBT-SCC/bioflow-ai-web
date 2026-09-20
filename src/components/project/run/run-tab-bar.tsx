@@ -9,6 +9,7 @@ export type FileType =
   | 'json'
   | 'newick'
   | 'msa'
+  | 'gfa'
   | 'html'
   | 'image'
   | 'pdf'

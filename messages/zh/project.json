@@ -330,6 +330,43 @@
           "tooManySequences": "比对包含超过 2,000 条序列",
           "unsupportedFormat": "文件内容应为对齐 FASTA、Clustal、Stockholm 或 PHYLIP 格式"
         }
+      },
+      "gfaPreview": {
+        "search": "搜索片段名称",
+        "locate": "定位",
+        "path": "路径",
+        "noPath": "不高亮路径",
+        "pathOption": "{name} · {count} 个片段",
+        "summary": "{segments} 个片段 · {links} 条连接 · {paths} 条路径 · 已知长度 {length} bp",
+        "matches": "匹配 {count} 个片段",
+        "graphic": "GFA 组装图",
+        "zoomIn": "放大",
+        "zoomOut": "缩小",
+        "fit": "适应画布",
+        "closeDetails": "关闭片段详情",
+        "length": "长度（bp）",
+        "depth": "深度",
+        "degree": "连接数",
+        "tags": "可选标签",
+        "unknown": "未知",
+        "hint": "GFA {version}。拖动平移、滚轮缩放，点击片段查看详情；布局位置不表示基因组顺序。",
+        "unknownLengths": "有 {count} 个片段的长度未知。",
+        "ignoredRecords": "已忽略 {count} 条暂不支持的 C/J/W 记录。",
+        "errorLine": "位于第 {line} 行。",
+        "errors": {
+          "duplicateName": "GFA 的片段与路径名称必须在同一命名空间内保持唯一",
+          "duplicatePath": "GFA 中存在重复的路径名称",
+          "duplicateSegment": "GFA 中存在重复的片段名称",
+          "empty": "文件中没有 GFA 片段",
+          "invalidOrientation": "连接或路径步骤包含无效方向",
+          "invalidRecord": "文件中包含无效的 GFA1 记录",
+          "missingSegment": "连接或路径引用了未定义的片段",
+          "tooManyLinks": "图中包含超过 3,000 条连接",
+          "tooManyPathSteps": "图中包含超过 20,000 个路径步骤",
+          "tooManyPaths": "图中包含超过 200 条路径",
+          "tooManySegments": "图中包含超过 1,000 个片段",
+          "unsupportedVersion": "目前仅支持 GFA1 文件"
+        }
       }
     },
     "fileMapping": {

@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl'
 import { ContactPreview } from '@/components/project/run/contact-preview'
 import { getRunFileViewUrl } from '@/components/project/run/file-view-url'
 import { GenomePreview } from '@/components/project/run/genome-preview'
+import { GfaPreview } from '@/components/project/run/gfa-preview'
 import { JsonViewer } from '@/components/project/run/json-viewer'
 import { MsaPreview } from '@/components/project/run/msa-preview'
 import { NewickPreview } from '@/components/project/run/newick-preview'
@@ -132,6 +133,10 @@ export function FileViewer({
 
   if (fileType === 'msa' && content !== undefined) {
     return <MsaPreview content={content} />
+  }
+
+  if (fileType === 'gfa' && content !== undefined) {
+    return <GfaPreview content={content} />
   }
 
   if (fileType === 'html') {

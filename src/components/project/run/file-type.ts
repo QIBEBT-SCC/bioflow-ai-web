@@ -68,6 +68,7 @@ export function getRunFileType(name: string): FileType {
   if (ext === 'json') return 'json'
   if (NEWICK_EXTS.has(ext)) return 'newick'
   if (MSA_EXTS.has(ext)) return 'msa'
+  if (ext === 'gfa' || ext === 'gfa1') return 'gfa'
   if (ext === 'bw' || ext === 'bigwig') return 'bigwig'
   if (ext === 'bb' || ext === 'bigbed') return 'bigbed'
   if (ext === 'bed') return 'bed'

@@ -330,6 +330,43 @@
           "tooManySequences": "The alignment contains more than 2,000 sequences",
           "unsupportedFormat": "Expected aligned FASTA, Clustal, Stockholm, or PHYLIP content"
         }
+      },
+      "gfaPreview": {
+        "search": "Search segment names",
+        "locate": "Locate",
+        "path": "Path",
+        "noPath": "No path highlight",
+        "pathOption": "{name} · {count} segments",
+        "summary": "{segments} segments · {links} links · {paths} paths · {length} bp known length",
+        "matches": "{count} matching segments",
+        "graphic": "GFA assembly graph",
+        "zoomIn": "Zoom in",
+        "zoomOut": "Zoom out",
+        "fit": "Fit",
+        "closeDetails": "Close segment details",
+        "length": "Length (bp)",
+        "depth": "Depth",
+        "degree": "Links",
+        "tags": "Optional tags",
+        "unknown": "Unknown",
+        "hint": "GFA {version}. Drag to pan, scroll to zoom, and click a segment for details. Layout position does not imply genomic order.",
+        "unknownLengths": "{count} segments have unknown length.",
+        "ignoredRecords": "{count} unsupported C/J/W records were omitted.",
+        "errorLine": "at line {line}.",
+        "errors": {
+          "duplicateName": "GFA segment and path names must share one unique namespace",
+          "duplicatePath": "The GFA contains a duplicate path name",
+          "duplicateSegment": "The GFA contains a duplicate segment name",
+          "empty": "The file does not contain any GFA segments",
+          "invalidOrientation": "A link or path step has an invalid orientation",
+          "invalidRecord": "The file contains an invalid GFA1 record",
+          "missingSegment": "A link or path references a segment that is not defined",
+          "tooManyLinks": "The graph contains more than 3,000 links",
+          "tooManyPathSteps": "The graph contains more than 20,000 path steps",
+          "tooManyPaths": "The graph contains more than 200 paths",
+          "tooManySegments": "The graph contains more than 1,000 segments",
+          "unsupportedVersion": "Only GFA1 files are supported"
+        }
       }
     },
     "fileMapping": {
