@@ -297,6 +297,7 @@ function RunFlowContent({
               'cool',
               'mcool',
               'table',
+              'vcf',
               'unknown',
             ].includes(fileType),
         },
@@ -311,6 +312,7 @@ function RunFlowContent({
           'cool',
           'mcool',
           'table',
+          'vcf',
           'unknown',
         ].includes(fileType)
       )

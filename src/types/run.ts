@@ -110,3 +110,74 @@ export type TablePreviewProfile = {
   maximum?: TablePreviewCell
   mean?: number | null
 }
+
+export type VcfVariantType = 'snp' | 'mnv' | 'indel' | 'sv' | 'mixed' | 'other'
+
+export type VcfFilterStatus = 'pass' | 'filtered' | 'unfiltered'
+
+export type VcfPreviewContig = {
+  name: string
+  length: number
+  count: number
+  bins: number[]
+}
+
+export type VcfPreviewMeta = {
+  kind: 'vcf' | 'vcf.gz'
+  version: string
+  file_size: number
+  record_count: number
+  sample_count: number
+  samples: string[]
+  type_counts: Record<VcfVariantType, number>
+  filter_counts: Record<VcfFilterStatus, number>
+  transitions: number
+  transversions: number
+  ts_tv_ratio: number | null
+  contigs: VcfPreviewContig[]
+  default_contig: string | null
+}
+
+export type VcfPreviewRow = {
+  record_index: number
+  chrom: string
+  pos: number
+  id: string
+  ref: string
+  alt: string
+  qual: number | null
+  filter: string
+  type: VcfVariantType
+}
+
+export type VcfPreviewPage = {
+  rows: VcfPreviewRow[]
+  offset: number
+  limit: number
+  total: number
+  has_more: boolean
+}
+
+export type VcfPreviewDetail = {
+  record_index: number
+  chrom: string
+  pos: number
+  id: string
+  ref: string
+  alts: string[]
+  qual: number | null
+  filters: { id: string; description: string | null }[]
+  type: VcfVariantType
+  info: {
+    key: string
+    value: string | boolean
+    description: string | null
+  }[]
+  format: { key: string; description: string | null }[]
+  samples: {
+    sample: string
+    values: Record<string, string>
+    category: 'hom_ref' | 'het' | 'hom_alt' | 'missing'
+  }[]
+  genotype_counts: Record<'hom_ref' | 'het' | 'hom_alt' | 'missing', number>
+}

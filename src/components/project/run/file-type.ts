@@ -59,7 +59,9 @@ const TEXT_EXTS = new Set([
 ])
 
 export function getRunFileType(name: string): FileType {
-  const ext = name.split('.').pop()?.toLowerCase() ?? ''
+  const lowerName = name.toLowerCase()
+  if (lowerName.endsWith('.vcf') || lowerName.endsWith('.vcf.gz')) return 'vcf'
+  const ext = lowerName.split('.').pop() ?? ''
   if (IMAGE_EXTS.has(ext)) return 'image'
   if (PDF_EXTS.has(ext)) return 'pdf'
   if (HTML_EXTS.has(ext)) return 'html'

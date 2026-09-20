@@ -405,6 +405,65 @@
           "is_null": "is null",
           "is_not_null": "is not null"
         }
+      },
+      "vcfPreview": {
+        "loading": "Parsing VCF…",
+        "variantCount": "{count} variants",
+        "sampleCount": "{count} samples",
+        "contigCount": "{count} contigs",
+        "tsTv": "Ts/Tv {value}",
+        "densityLabel": "Variant density across {contig}",
+        "allContigs": "All contigs",
+        "allTypes": "All types",
+        "allFilters": "All statuses",
+        "search": "Search contig, ID, or allele",
+        "minQual": "Minimum QUAL",
+        "apply": "Apply",
+        "clear": "Clear",
+        "noMatches": "No variant records match the active filters.",
+        "recordDetail": "Variant detail",
+        "closeDetail": "Close variant detail",
+        "id": "ID",
+        "quality": "Quality",
+        "filter": "Filter",
+        "info": "INFO fields",
+        "noInfo": "This record has no INFO fields.",
+        "flag": "present",
+        "genotypes": "Sample genotypes",
+        "sample": "Sample",
+        "rowRange": "Records {start}–{end} of {total}",
+        "page": "Page {page} of {total}",
+        "previous": "Previous page",
+        "next": "Next page",
+        "types": {
+          "snp": "SNP",
+          "mnv": "MNV",
+          "indel": "INDEL",
+          "sv": "SV",
+          "mixed": "Mixed",
+          "other": "Other"
+        },
+        "statuses": {
+          "pass": "Pass",
+          "filtered": "Filtered",
+          "unfiltered": "Unfiltered"
+        },
+        "columns": {
+          "chrom": "CHROM",
+          "pos": "POS",
+          "id": "ID",
+          "ref": "REF",
+          "alt": "ALT",
+          "qual": "QUAL",
+          "filter": "FILTER",
+          "type": "Type"
+        },
+        "genotypeLabels": {
+          "hom_ref": "Homozygous reference",
+          "het": "Heterozygous",
+          "hom_alt": "Homozygous alternate",
+          "missing": "Missing"
+        }
       }
     },
     "fileMapping": {

@@ -9,6 +9,11 @@ import type {
   TablePreviewPage,
   TablePreviewProfile,
   TablePreviewSort,
+  VcfFilterStatus,
+  VcfPreviewDetail,
+  VcfPreviewMeta,
+  VcfPreviewPage,
+  VcfVariantType,
 } from '@/types/run'
 import type { WorkflowDefinition } from '@/types/workflow'
 import type {
@@ -221,6 +226,67 @@ export async function getRunTablePreviewProfile(
     {
       method: 'POST',
       body: JSON.stringify({ path, generation, column, filters }),
+      signal,
+    },
+  )
+}
+
+/** Read VCF header metadata and whole-file variant summaries. */
+export async function getRunVcfPreviewMeta(
+  runUid: string,
+  generation: number,
+  path: string,
+  signal: AbortSignal,
+): Promise<VcfPreviewMeta> {
+  return clientFetchV2<VcfPreviewMeta>(
+    `/runs/${runUid}/files/preview/vcf/meta`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ path, generation }),
+      signal,
+    },
+  )
+}
+
+/** Read one filtered page of VCF records in file order. */
+export async function getRunVcfPreviewPage(
+  runUid: string,
+  generation: number,
+  path: string,
+  query: {
+    offset: number
+    limit: number
+    contig: string | null
+    variant_type: VcfVariantType | 'all'
+    filter_status: VcfFilterStatus | 'all'
+    search: string
+    min_qual: number | null
+  },
+  signal: AbortSignal,
+): Promise<VcfPreviewPage> {
+  return clientFetchV2<VcfPreviewPage>(
+    `/runs/${runUid}/files/preview/vcf/query`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ path, generation, ...query }),
+      signal,
+    },
+  )
+}
+
+/** Read INFO and per-sample FORMAT values for a selected VCF record. */
+export async function getRunVcfPreviewDetail(
+  runUid: string,
+  generation: number,
+  path: string,
+  recordIndex: number,
+  signal: AbortSignal,
+): Promise<VcfPreviewDetail> {
+  return clientFetchV2<VcfPreviewDetail>(
+    `/runs/${runUid}/files/preview/vcf/detail`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ path, generation, record_index: recordIndex }),
       signal,
     },
   )

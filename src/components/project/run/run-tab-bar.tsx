@@ -11,6 +11,7 @@ export type FileType =
   | 'msa'
   | 'gfa'
   | 'table'
+  | 'vcf'
   | 'html'
   | 'image'
   | 'pdf'

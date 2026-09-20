@@ -405,6 +405,65 @@
           "is_null": "为空",
           "is_not_null": "不为空"
         }
+      },
+      "vcfPreview": {
+        "loading": "正在解析 VCF…",
+        "variantCount": "{count} 个变异",
+        "sampleCount": "{count} 个样本",
+        "contigCount": "{count} 条序列",
+        "tsTv": "Ts/Tv {value}",
+        "densityLabel": "{contig} 上的变异密度",
+        "allContigs": "全部序列",
+        "allTypes": "全部类型",
+        "allFilters": "全部状态",
+        "search": "搜索染色体、ID 或等位基因",
+        "minQual": "最低 QUAL",
+        "apply": "应用",
+        "clear": "清除",
+        "noMatches": "没有变异记录满足当前筛选条件。",
+        "recordDetail": "变异详情",
+        "closeDetail": "关闭变异详情",
+        "id": "ID",
+        "quality": "质量",
+        "filter": "过滤状态",
+        "info": "INFO 字段",
+        "noInfo": "该记录没有 INFO 字段。",
+        "flag": "存在",
+        "genotypes": "样本基因型",
+        "sample": "样本",
+        "rowRange": "显示第 {start}–{end} 条，共 {total} 条",
+        "page": "第 {page} / {total} 页",
+        "previous": "上一页",
+        "next": "下一页",
+        "types": {
+          "snp": "SNP",
+          "mnv": "MNV",
+          "indel": "INDEL",
+          "sv": "结构变异",
+          "mixed": "混合",
+          "other": "其他"
+        },
+        "statuses": {
+          "pass": "通过",
+          "filtered": "已过滤",
+          "unfiltered": "未评估"
+        },
+        "columns": {
+          "chrom": "CHROM",
+          "pos": "POS",
+          "id": "ID",
+          "ref": "REF",
+          "alt": "ALT",
+          "qual": "QUAL",
+          "filter": "FILTER",
+          "type": "类型"
+        },
+        "genotypeLabels": {
+          "hom_ref": "纯合参考",
+          "het": "杂合",
+          "hom_alt": "纯合变异",
+          "missing": "缺失"
+        }
       }
     },
     "fileMapping": {

@@ -10,6 +10,7 @@ import { MsaPreview } from '@/components/project/run/msa-preview'
 import { NewickPreview } from '@/components/project/run/newick-preview'
 import type { FileType } from '@/components/project/run/run-tab-bar'
 import { TablePreview } from '@/components/project/run/table-preview'
+import { VcfPreview } from '@/components/project/run/vcf-preview'
 import { ScrollArea } from '@/components/ui/scroll-area'
 
 interface FileViewerProps {
@@ -96,6 +97,17 @@ export function FileViewer({
   if (fileType === 'table') {
     return (
       <TablePreview
+        runUid={runUid}
+        generation={generation}
+        path={path}
+        active={active}
+      />
+    )
+  }
+
+  if (fileType === 'vcf') {
+    return (
+      <VcfPreview
         runUid={runUid}
         generation={generation}
         path={path}
