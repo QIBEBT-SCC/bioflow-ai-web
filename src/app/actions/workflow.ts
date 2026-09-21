@@ -2,6 +2,7 @@ import { clientFetch } from '@/lib/api-client'
 import type {
   ExecutionScope,
   PaginatedWorkflows,
+  SimpleWorkflowInfo,
   Workflow,
   WorkflowDefinition,
   WorkflowType,
@@ -21,6 +22,15 @@ export async function getWorkflows(
       limit: String(limit),
       ...(wfType !== undefined ? { wf_type: String(wfType) } : {}),
     },
+  })
+}
+
+export async function searchSubgraphs(
+  query: string,
+  limit: number = 20,
+): Promise<SimpleWorkflowInfo[]> {
+  return await clientFetch<SimpleWorkflowInfo[]>('/workflows/search', {
+    params: { q: query, limit: String(limit) },
   })
 }
 

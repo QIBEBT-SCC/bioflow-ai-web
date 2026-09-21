@@ -27,6 +27,7 @@ export interface NodeEditorStore {
   setInterface: (value: WorkflowInterface) => void
   getGraph: () => WorkflowDefinition
   getRootGraph: () => WorkflowDefinition
+  getActiveSubgraphSourceUid: () => string
   loadGraph: (graph: WorkflowDefinition) => void
   enterSubgraph: (id: string) => void
   leaveSubgraph: () => void
@@ -67,6 +68,13 @@ export const useNodeEditorStore = create<NodeEditorStore>()(
           }
         }
         return cleanGraph(graph)
+      },
+      getActiveSubgraphSourceUid: () => {
+        const frame = get().parents.at(-1)
+        const sourceUid = frame?.graph.nodes.find(
+          (node) => node.id === frame.id,
+        )?.data.source_uid
+        return typeof sourceUid === 'string' ? sourceUid : ''
       },
       loadGraph: (graph) =>
         set({

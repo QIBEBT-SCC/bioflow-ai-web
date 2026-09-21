@@ -7,11 +7,13 @@ import {
   getWorkflow,
   getWorkflows,
   saveWorkflow,
+  searchSubgraphs,
   updateWorkflow,
 } from '@/app/actions/workflow'
 import type {
   ExecutionScope,
   PaginatedWorkflows,
+  SimpleWorkflowInfo,
   Workflow,
   WorkflowDefinition,
   WorkflowType,
@@ -33,6 +35,16 @@ export const useWorkflows = (
     queryKey: ['workflows', offset, limit, wfType],
     queryFn: () => getWorkflows(offset, limit, wfType),
     staleTime: 5 * 60 * 1000, // 5分钟缓存
+  })
+}
+
+export const useSearchSubgraphs = (query: string, limit: number = 20) => {
+  const normalizedQuery = query.trim()
+  return useQuery<SimpleWorkflowInfo[]>({
+    queryKey: ['workflows', 'search', normalizedQuery, limit],
+    queryFn: () => searchSubgraphs(normalizedQuery, limit),
+    enabled: normalizedQuery.length > 0,
+    staleTime: 5 * 60 * 1000,
   })
 }
 

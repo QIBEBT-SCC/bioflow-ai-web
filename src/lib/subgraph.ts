@@ -1,15 +1,10 @@
 import type { Node } from '@xyflow/react'
 import { generateLetterId } from '@/lib/id-generator'
-import type {
-  InterfaceParameter,
-  WorkflowDefinition,
-  WorkflowInterface,
-} from '@/types/workflow'
+import type { WorkflowDefinition, WorkflowInterface } from '@/types/workflow'
 
 export const emptyInterface = (): WorkflowInterface => ({
   inputs: [],
   outputs: [],
-  parameters: [],
 })
 export const graphNodes = (graph: WorkflowDefinition): Node[] =>
   graph.nodes.map((node) => ({
@@ -22,6 +17,15 @@ export const graphNodes = (graph: WorkflowDefinition): Node[] =>
 export function cleanGraph(graph: WorkflowDefinition): WorkflowDefinition {
   return {
     ...graph,
+    interface: graph.interface
+      ? {
+          ...(graph.interface.positions
+            ? { positions: graph.interface.positions }
+            : {}),
+          inputs: graph.interface.inputs,
+          outputs: graph.interface.outputs,
+        }
+      : graph.interface,
     nodes: graph.nodes.map((node) => {
       const { run_data: _run, ...data } = node.data
       if (node.type === 'subgraph')
@@ -158,9 +162,6 @@ export function groupSelection(graph: WorkflowDefinition): WorkflowDefinition {
         }
         output.source = { node_id: group.id, handle: port.id }
       }
-    for (const parameter of iface.parameters)
-      if (selected.has(parameter.node_path[0]))
-        parameter.node_path.unshift(group.id)
   }
   return {
     ...graph,
@@ -168,35 +169,4 @@ export function groupSelection(graph: WorkflowDefinition): WorkflowDefinition {
     nodes: [...graph.nodes.filter((node) => !selected.has(node.id)), group],
     edges,
   }
-}
-
-export function parameterValue(
-  graph: WorkflowDefinition,
-  parameter: InterfaceParameter,
-): unknown {
-  let current = graph
-  for (const [index, id] of parameter.node_path.entries()) {
-    const node = current.nodes.find((node) => node.id === id)
-    if (!node) return undefined
-    if (index === parameter.node_path.length - 1)
-      return node.data[parameter.field]
-    current = node.data.workflow as WorkflowDefinition
-  }
-}
-
-export function setParameter(
-  graph: WorkflowDefinition,
-  parameter: InterfaceParameter,
-  value: unknown,
-): WorkflowDefinition {
-  const copy = structuredClone(graph)
-  let current = copy
-  for (const [index, id] of parameter.node_path.entries()) {
-    const node = current.nodes.find((node) => node.id === id)
-    if (!node) return graph
-    if (index === parameter.node_path.length - 1)
-      node.data[parameter.field] = value
-    else current = node.data.workflow as WorkflowDefinition
-  }
-  return copy
 }

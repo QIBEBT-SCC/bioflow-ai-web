@@ -4,6 +4,7 @@ import {
   GitForkIcon,
   MoreHorizontalIcon,
   PencilIcon,
+  SearchIcon,
   Trash2Icon,
 } from 'lucide-react'
 import Link from 'next/link'
@@ -41,6 +42,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty'
+import { Input } from '@/components/ui/input'
 import {
   Pagination,
   PaginationContent,
@@ -51,7 +53,12 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useDeleteWorkflow, useWorkflows } from '@/hooks/use-workflow'
+import { useDebouncedValue } from '@/hooks/use-debounced-value'
+import {
+  useDeleteWorkflow,
+  useSearchSubgraphs,
+  useWorkflows,
+} from '@/hooks/use-workflow'
 import { type WorkflowPortSummary, WorkflowType } from '@/types/workflow'
 import { SubgraphDetails } from './subgraph-details'
 
@@ -60,7 +67,9 @@ const SKELETON_IDS = ['one', 'two', 'three', 'four', 'five', 'six']
 
 export function SubgraphManagement() {
   const t = useTranslations('editor.subgraph.management')
+  const subgraphT = useTranslations('editor.subgraph')
   const [page, setPage] = useState(0)
+  const [searchQuery, setSearchQuery] = useState('')
   const [viewUid, setViewUid] = useState<string | null>(null)
   const [deleting, setDeleting] = useState<{
     uid: string
@@ -71,6 +80,21 @@ export function SubgraphManagement() {
     PAGE_SIZE,
     WorkflowType.SUBMODULE,
   )
+  const debouncedQuery = useDebouncedValue(searchQuery.trim(), 300)
+  const isSearching = searchQuery.trim().length > 0
+  const isDebouncing = isSearching && debouncedQuery !== searchQuery.trim()
+  const semanticSearch = useSearchSubgraphs(debouncedQuery, 20)
+  const activeItems = isSearching
+    ? (semanticSearch.data ?? [])
+    : (data?.data ?? [])
+  const activePending = isSearching
+    ? isDebouncing || semanticSearch.isPending
+    : isPending
+  const activeError = isSearching
+    ? isDebouncing
+      ? null
+      : semanticSearch.error
+    : error
   const deletion = useDeleteWorkflow()
   const total = data?.total ?? 0
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
@@ -78,7 +102,7 @@ export function SubgraphManagement() {
     if (!deleting || deletion.isPending) return
     deletion.mutate(deleting.uid, {
       onSuccess: () => {
-        if (data?.data.length === 1 && page > 0)
+        if (!isSearching && data?.data.length === 1 && page > 0)
           setPage((current) => current - 1)
         setDeleting(null)
       },
@@ -104,9 +128,23 @@ export function SubgraphManagement() {
             <p className='mt-1 text-sm text-muted-foreground'>
               {t('description')}
             </p>
+            <div className='relative mt-4 max-w-xl'>
+              <SearchIcon className='absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground' />
+              <Input
+                type='search'
+                className='pl-9'
+                aria-label={subgraphT('search_placeholder')}
+                placeholder={subgraphT('search_placeholder')}
+                value={searchQuery}
+                onChange={(event) => {
+                  setSearchQuery(event.target.value)
+                  setPage(0)
+                }}
+              />
+            </div>
           </div>
 
-          {isPending && (
+          {activePending && (
             <div className='grid gap-4 md:grid-cols-2 xl:grid-cols-3'>
               {SKELETON_IDS.map((id) => (
                 <Skeleton key={id} className='h-56 rounded-xl' />
@@ -114,34 +152,49 @@ export function SubgraphManagement() {
             </div>
           )}
 
-          {error && (
+          {activeError && (
             <Empty className='border'>
               <EmptyHeader>
                 <EmptyTitle>{t('load_error_title')}</EmptyTitle>
-                <EmptyDescription>{error.message}</EmptyDescription>
+                <EmptyDescription>{activeError.message}</EmptyDescription>
               </EmptyHeader>
-              <Button variant='outline' onClick={() => void refetch()}>
+              <Button
+                variant='outline'
+                onClick={() =>
+                  void (isSearching ? semanticSearch.refetch() : refetch())
+                }
+              >
                 {t('retry')}
               </Button>
             </Empty>
           )}
 
-          {!isPending && !error && data?.data.length === 0 && (
+          {!activePending && !activeError && activeItems.length === 0 && (
             <Empty className='border'>
               <EmptyHeader>
                 <EmptyMedia variant='icon'>
-                  <GitForkIcon />
+                  {isSearching ? <SearchIcon /> : <GitForkIcon />}
                 </EmptyMedia>
-                <EmptyTitle>{t('empty_title')}</EmptyTitle>
-                <EmptyDescription>{t('empty')}</EmptyDescription>
+                <EmptyTitle>
+                  {isSearching
+                    ? subgraphT('no_search_results')
+                    : t('empty_title')}
+                </EmptyTitle>
+                <EmptyDescription>
+                  {isSearching
+                    ? subgraphT('no_search_results_description', {
+                        query: searchQuery.trim(),
+                      })
+                    : t('empty')}
+                </EmptyDescription>
               </EmptyHeader>
             </Empty>
           )}
 
-          {!isPending && !error && data && data.data.length > 0 && (
+          {!activePending && !activeError && activeItems.length > 0 && (
             <>
               <div className='grid gap-4 md:grid-cols-2 xl:grid-cols-3'>
-                {data.data.map((item) => (
+                {activeItems.map((item) => (
                   <Card key={item.uid} className='relative gap-0 py-0'>
                     <CardContent className='p-4'>
                       <div className='mb-2 flex items-start justify-between gap-2'>
@@ -207,50 +260,58 @@ export function SubgraphManagement() {
                 ))}
               </div>
 
-              <div className='mt-6 flex flex-col items-center justify-between gap-3 sm:flex-row'>
-                <p className='text-sm text-muted-foreground'>
-                  {t('showing', {
-                    start: page * PAGE_SIZE + 1,
-                    end: Math.min((page + 1) * PAGE_SIZE, total),
-                    total,
+              {isSearching ? (
+                <p className='mt-6 text-sm text-muted-foreground'>
+                  {subgraphT('search_results_count', {
+                    count: activeItems.length,
                   })}
                 </p>
-                <Pagination className='mx-0 w-auto'>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious
-                        onClick={() =>
-                          setPage((current) => Math.max(0, current - 1))
-                        }
-                        className={
-                          !page
-                            ? 'pointer-events-none opacity-50'
-                            : 'cursor-pointer'
-                        }
-                      />
-                    </PaginationItem>
-                    <PaginationItem>
-                      <span className='px-3 text-sm tabular-nums'>
-                        {page + 1} / {totalPages}
-                      </span>
-                    </PaginationItem>
-                    <PaginationItem>
-                      <PaginationNext
-                        onClick={() =>
-                          setPage((current) =>
-                            Math.min(totalPages - 1, current + 1),
-                          )
-                        }
-                        className={
-                          page + 1 === totalPages
-                            ? 'pointer-events-none opacity-50'
-                            : 'cursor-pointer'
-                        }
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
-              </div>
+              ) : (
+                <div className='mt-6 flex flex-col items-center justify-between gap-3 sm:flex-row'>
+                  <p className='text-sm text-muted-foreground'>
+                    {t('showing', {
+                      start: page * PAGE_SIZE + 1,
+                      end: Math.min((page + 1) * PAGE_SIZE, total),
+                      total,
+                    })}
+                  </p>
+                  <Pagination className='mx-0 w-auto'>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          onClick={() =>
+                            setPage((current) => Math.max(0, current - 1))
+                          }
+                          className={
+                            !page
+                              ? 'pointer-events-none opacity-50'
+                              : 'cursor-pointer'
+                          }
+                        />
+                      </PaginationItem>
+                      <PaginationItem>
+                        <span className='px-3 text-sm tabular-nums'>
+                          {page + 1} / {totalPages}
+                        </span>
+                      </PaginationItem>
+                      <PaginationItem>
+                        <PaginationNext
+                          onClick={() =>
+                            setPage((current) =>
+                              Math.min(totalPages - 1, current + 1),
+                            )
+                          }
+                          className={
+                            page + 1 === totalPages
+                              ? 'pointer-events-none opacity-50'
+                              : 'cursor-pointer'
+                          }
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              )}
             </>
           )}
         </div>

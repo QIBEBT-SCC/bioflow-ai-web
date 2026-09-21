@@ -92,8 +92,7 @@ function parseInterface(value: unknown): WorkflowInterface | null {
   if (
     !isRecord(value) ||
     !Array.isArray(value.inputs) ||
-    !Array.isArray(value.outputs) ||
-    !Array.isArray(value.parameters)
+    !Array.isArray(value.outputs)
   )
     throw new WorkflowImportError('invalid_structure')
   const target = (value: unknown) =>
@@ -102,7 +101,7 @@ function parseInterface(value: unknown): WorkflowInterface | null {
     !!value.node_id &&
     typeof value.handle === 'string' &&
     !!value.handle
-  for (const kind of ['inputs', 'outputs', 'parameters'] as const) {
+  for (const kind of ['inputs', 'outputs'] as const) {
     const ports = value[kind] as unknown[]
     const ids = new Set<string>()
     for (const port of ports) {
@@ -125,18 +124,15 @@ function parseInterface(value: unknown): WorkflowInterface | null {
         throw new WorkflowImportError('invalid_structure')
       if (kind === 'outputs' && !target(port.source))
         throw new WorkflowImportError('invalid_structure')
-      if (
-        kind === 'parameters' &&
-        (!Array.isArray(port.node_path) ||
-          !port.node_path.length ||
-          !port.node_path.every((id) => typeof id === 'string' && !!id) ||
-          typeof port.field !== 'string' ||
-          !port.field)
-      )
-        throw new WorkflowImportError('invalid_structure')
     }
   }
-  return value as unknown as WorkflowInterface
+  return {
+    inputs: value.inputs as WorkflowInterface['inputs'],
+    outputs: value.outputs as WorkflowInterface['outputs'],
+    ...(value.positions
+      ? { positions: value.positions as WorkflowInterface['positions'] }
+      : {}),
+  }
 }
 
 function parseDefinition(value: unknown, depth = 0): WorkflowDefinition {

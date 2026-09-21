@@ -28,17 +28,10 @@ export interface InterfaceOutput {
   name: string
   source: PortTarget
 }
-export interface InterfaceParameter {
-  id: string
-  name: string
-  node_path: string[]
-  field: string
-}
 export interface WorkflowInterface {
   positions?: { inputs: XYPosition; outputs: XYPosition }
   inputs: InterfaceInput[]
   outputs: InterfaceOutput[]
-  parameters: InterfaceParameter[]
 }
 
 export interface WorkflowDefinition {

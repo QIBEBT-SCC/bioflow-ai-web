@@ -3,7 +3,6 @@ import { useReactFlow } from '@xyflow/react'
 import { useTranslations } from 'next-intl'
 import { WorkflowMetadataDialog } from '@/components/node-editor/workflow-metadata-dialog'
 import { Button } from '@/components/ui/button'
-import { emptyInterface } from '@/lib/subgraph'
 import { useNodeEditorStore } from '@/stores/nodeviewStore'
 
 export function SubgraphToolbar() {
@@ -30,15 +29,6 @@ export function SubgraphToolbar() {
           / {frame.name}
         </Button>
       ))}
-      {!store.graphInterface && (
-        <Button
-          size='sm'
-          variant='outline'
-          onClick={() => store.setInterface(emptyInterface())}
-        >
-          {t('interface')}
-        </Button>
-      )}
       {!store.parents.length && <WorkflowMetadataDialog />}
     </div>
   )
