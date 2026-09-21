@@ -38,7 +38,7 @@ export interface WorkflowRunStatisticsV2 {
 }
 
 export interface NodeRunDataV2 {
-  uid: string
+  uid?: string
   status: NodeRunStatusV2
   create_time?: string | null
   start_time?: string | null

@@ -17,6 +17,9 @@ import {
 import Link from 'next/link'
 import { nodeTypes } from '@/components/node-editor/node-registry'
 import { ReadOnlyProvider } from '@/components/node-editor/read-only-context'
+import { SubgraphBreadcrumbs } from '@/components/node-editor/subgraph-breadcrumbs'
+import { SubgraphNavigation } from '@/components/node-editor/subgraph-context'
+import { SubgraphInterfaceSummary } from '@/components/node-editor/subgraph-interface-summary'
 import { Badge } from '@/components/ui/badge'
 import {
   Breadcrumb,
@@ -32,6 +35,7 @@ import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { StatusEdge } from '@/components/workflow/status-edge'
 import { useRun } from '@/hooks/use-run'
 import { useRunFlow } from '@/hooks/use-run-flow'
+import { useSubgraphRun } from '@/hooks/use-subgraph-run'
 import { WorkflowRunStatusV2 } from '@/types/workflow-v2'
 
 const edgeTypes = { default: StatusEdge }
@@ -61,7 +65,8 @@ const statusConfig = {
 
 function RunFlowContent({ uid }: { uid: string }) {
   const { data: run } = useRun(uid, 5000)
-  const { flowNodes, edges, handleNodesChange } = useRunFlow(run ?? null)
+  const { visibleRun, labels, enter, navigate } = useSubgraphRun(run)
+  const { flowNodes, edges, handleNodesChange } = useRunFlow(visibleRun)
 
   const taskStats = run?.node_statistics
   const progress =
@@ -77,7 +82,7 @@ function RunFlowContent({ uid }: { uid: string }) {
       <header className='flex flex-col shrink-0 border-b'>
         <div className='flex h-12 items-center gap-2 bg-background px-4'>
           <SidebarTrigger className='-ml-1' />
-          <Separator orientation='vertical' className='!mr-2 !h-4' />
+          <Separator orientation='vertical' className='mr-2! h-4!' />
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
@@ -122,26 +127,31 @@ function RunFlowContent({ uid }: { uid: string }) {
             </Button>
           </div>
         </div>
+        <SubgraphBreadcrumbs labels={labels} onNavigate={navigate} />
       </header>
 
       <div className='flex-1 w-full'>
         <ReadOnlyProvider value={true}>
-          <ReactFlow
-            nodes={flowNodes}
-            edges={edges}
-            onNodesChange={handleNodesChange}
-            nodeTypes={nodeTypes}
-            edgeTypes={edgeTypes}
-            nodesConnectable={false}
-            fitView
-            className='bg-gray-50'
-          >
-            <Background
-              variant={BackgroundVariant.Dots}
-              className='!bg-gray-100'
-            />
-            <Controls />
-          </ReactFlow>
+          <SubgraphNavigation value={enter}>
+            <ReactFlow
+              key={visibleRun?.uid}
+              nodes={flowNodes}
+              edges={edges}
+              onNodesChange={handleNodesChange}
+              nodeTypes={nodeTypes}
+              edgeTypes={edgeTypes}
+              nodesConnectable={false}
+              fitView
+              className='bg-gray-50'
+            >
+              <Background
+                variant={BackgroundVariant.Dots}
+                className='bg-gray-100!'
+              />
+              <SubgraphInterfaceSummary value={visibleRun?.interface} />
+              <Controls />
+            </ReactFlow>
+          </SubgraphNavigation>
         </ReadOnlyProvider>
       </div>
     </SidebarInset>

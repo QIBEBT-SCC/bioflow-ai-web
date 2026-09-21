@@ -14,7 +14,35 @@ export type WorkflowNode = Omit<Node, 'position'> & {
   position?: XYPosition | null
 }
 
+export interface PortTarget {
+  node_id: string
+  handle: string
+}
+export interface InterfaceInput {
+  id: string
+  name: string
+  targets: PortTarget[]
+}
+export interface InterfaceOutput {
+  id: string
+  name: string
+  source: PortTarget
+}
+export interface InterfaceParameter {
+  id: string
+  name: string
+  node_path: string[]
+  field: string
+}
+export interface WorkflowInterface {
+  positions?: { inputs: XYPosition; outputs: XYPosition }
+  inputs: InterfaceInput[]
+  outputs: InterfaceOutput[]
+  parameters: InterfaceParameter[]
+}
+
 export interface WorkflowDefinition {
+  interface?: WorkflowInterface | null
   nodes: WorkflowNode[]
   edges: Edge[]
 }
@@ -29,10 +57,18 @@ export interface Workflow {
 }
 
 export interface SimpleWorkflowInfo {
+  wf_type: WorkflowType
   uid: string
   name: string
   description: string
   execution_scope: ExecutionScope
+  inputs: WorkflowPortSummary[]
+  outputs: WorkflowPortSummary[]
+}
+
+export interface WorkflowPortSummary {
+  id: string
+  name: string
 }
 
 export interface PaginatedWorkflows {

@@ -34,6 +34,7 @@ const projects = [
       { name: 'images', url: '/image' },
       { name: 'tools', url: '/tool' },
       { name: 'code_nodes', url: '/code' },
+      { name: 'subgraphs', url: '/subgraph' },
     ],
   },
   {

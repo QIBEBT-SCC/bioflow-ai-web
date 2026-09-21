@@ -58,6 +58,8 @@ import {
   TextFileInputNode,
 } from '@/components/node-editor/node/input-node'
 import { NoteNode } from '@/components/node-editor/node/note-node'
+import { SubgraphInterfaceNode } from '@/components/node-editor/node/subgraph-interface-node'
+import { SubgraphNode } from '@/components/node-editor/node/subgraph-node'
 import { ToolNode } from '@/components/node-editor/node/tool-node'
 
 // ─────────────────────────────────────────────
@@ -66,6 +68,8 @@ import { ToolNode } from '@/components/node-editor/node/tool-node'
 // biome-ignore lint/suspicious/noExplicitAny: ReactFlow requires ComponentType<any>
 export const nodeTypes: Record<string, React.ComponentType<any>> = {
   tool: ToolNode,
+  subgraph: SubgraphNode,
+  subgraph_interface: SubgraphInterfaceNode,
   // resource / input
   value_string: StringInputNode,
   resource_file: FileInputNode,
@@ -138,7 +142,7 @@ export const nodeDefaultData: Record<string, Record<string, unknown>> = {
 // 3. menuData — 右键菜单结构，供 PanelMenu 使用
 //    labelKey 对应 messages/{zh,en}/editor.json 中 editor.menu.* 的键
 // ─────────────────────────────────────────────
-type SubMenuType = 'inline' | 'tool-modal' | 'db-modal'
+type SubMenuType = 'subgraph-modal' | 'inline' | 'tool-modal' | 'db-modal'
 
 export interface MenuItem {
   type: string
@@ -155,6 +159,12 @@ export interface MenuGroup {
 }
 
 export const menuData: Record<string, MenuGroup> = {
+  subgraph: {
+    labelKey: 'subgraphs',
+    Icon: GroupIcon,
+    submenuType: 'subgraph-modal',
+    items: [],
+  },
   analysis: {
     labelKey: 'analysis_tools',
     Icon: PenToolIcon,

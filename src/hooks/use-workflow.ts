@@ -14,6 +14,7 @@ import type {
   PaginatedWorkflows,
   Workflow,
   WorkflowDefinition,
+  WorkflowType,
 } from '@/types/workflow'
 
 // ============================================
@@ -23,10 +24,14 @@ import type {
 /**
  * 获取workflow列表（分页）
  */
-export const useWorkflows = (offset: number = 0, limit: number = 8) => {
+export const useWorkflows = (
+  offset: number = 0,
+  limit: number = 8,
+  wfType?: WorkflowType,
+) => {
   return useQuery<PaginatedWorkflows>({
-    queryKey: ['workflows', offset, limit],
-    queryFn: () => getWorkflows(offset, limit),
+    queryKey: ['workflows', offset, limit, wfType],
+    queryFn: () => getWorkflows(offset, limit, wfType),
     staleTime: 5 * 60 * 1000, // 5分钟缓存
   })
 }
@@ -81,6 +86,8 @@ export const useUpdateWorkflow = () => {
       uid: string
       data: {
         name?: string
+        description?: string
+        public?: boolean
         workflow?: WorkflowDefinition
         execution_scope?: ExecutionScope
       }
