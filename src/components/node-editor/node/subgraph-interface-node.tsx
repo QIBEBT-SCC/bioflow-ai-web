@@ -10,7 +10,11 @@ export function SubgraphInterfaceNode({ id, data }: NodeProps) {
   const t = useTranslations('editor.subgraph')
   const updateNodeInternals = useUpdateNodeInternals()
   const inputs = data.kind === 'inputs'
-  const ports = data.ports as { id: string; name: string }[]
+  const ports = data.ports as {
+    id: string
+    name: string
+    description: string
+  }[]
   // Handle order changes require React Flow to measure their new positions.
   // biome-ignore lint/correctness/useExhaustiveDependencies: ports controls handle positions, including reorder without resize.
   useEffect(() => {
@@ -20,7 +24,7 @@ export function SubgraphInterfaceNode({ id, data }: NodeProps) {
     id: port.id,
     name: port.id,
     label: port.name,
-    description: '',
+    description: port.description,
   }))
   return (
     <BaseNode

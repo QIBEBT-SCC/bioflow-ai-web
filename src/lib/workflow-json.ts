@@ -111,7 +111,8 @@ function parseInterface(value: unknown): WorkflowInterface | null {
         !port.id ||
         ids.has(port.id) ||
         typeof port.name !== 'string' ||
-        !port.name.trim()
+        !port.name.trim() ||
+        ('description' in port && typeof port.description !== 'string')
       )
         throw new WorkflowImportError('invalid_structure')
       ids.add(port.id)
@@ -127,8 +128,14 @@ function parseInterface(value: unknown): WorkflowInterface | null {
     }
   }
   return {
-    inputs: value.inputs as WorkflowInterface['inputs'],
-    outputs: value.outputs as WorkflowInterface['outputs'],
+    inputs: (value.inputs as WorkflowInterface['inputs']).map((port) => ({
+      ...port,
+      description: port.description ?? '',
+    })),
+    outputs: (value.outputs as WorkflowInterface['outputs']).map((port) => ({
+      ...port,
+      description: port.description ?? '',
+    })),
     ...(value.positions
       ? { positions: value.positions as WorkflowInterface['positions'] }
       : {}),

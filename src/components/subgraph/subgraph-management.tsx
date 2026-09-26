@@ -371,7 +371,11 @@ function InterfaceNames({
             <span
               key={port.id}
               className='max-w-full truncate rounded-md bg-muted px-2 py-1'
-              title={port.name}
+              title={
+                port.description
+                  ? `${port.name}: ${port.description}`
+                  : port.name
+              }
             >
               {port.name}
             </span>

@@ -134,6 +134,7 @@ const BaseNode = memo(function BaseNode({
                 />
                 <span
                   className='absolute left-6 -translate-y-1/2 select-none truncate text-xs text-muted-foreground'
+                  title={input.description || undefined}
                   style={{
                     top: `calc(var(--spacing) * ${calculateTopPos(index)})`,
                   }}
@@ -148,6 +149,7 @@ const BaseNode = memo(function BaseNode({
               <>
                 <span
                   className='absolute right-6 -translate-y-1/2 select-none truncate text-end text-xs text-muted-foreground'
+                  title={output.description || undefined}
                   style={{
                     top: `calc(var(--spacing) * ${calculateTopPos(index)})`,
                   }}

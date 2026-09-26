@@ -1,5 +1,29 @@
 'use client'
 
+import {
+  closestCenter,
+  DndContext,
+  type DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core'
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+import {
+  FileInputIcon,
+  FileOutputIcon,
+  GripVerticalIcon,
+  PlusIcon,
+  Trash2Icon,
+} from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -15,11 +39,102 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import { generateLetterId } from '@/lib/id-generator'
 import { emptyInterface } from '@/lib/subgraph'
+import { cn } from '@/lib/utils'
 import { useNodeEditorStore } from '@/stores/nodeviewStore'
+import type { InterfaceInput, InterfaceOutput } from '@/types/workflow'
 
 type InterfaceKind = 'inputs' | 'outputs'
+type InterfacePort = InterfaceInput | InterfaceOutput
+type EditablePortField = 'name' | 'description'
+
+function SortablePortEditor({
+  kind,
+  port,
+  onUpdate,
+  onRemove,
+}: {
+  kind: InterfaceKind
+  port: InterfacePort
+  onUpdate: (field: EditablePortField, value: string) => void
+  onRemove: () => void
+}) {
+  const t = useTranslations('editor.subgraph')
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: port.id })
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
+  const nameId = `${kind}-${port.id}-name`
+  const descriptionId = `${kind}-${port.id}-description`
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        'space-y-3 rounded-lg border border-l-4 bg-card p-3 shadow-xs',
+        kind === 'inputs' ? 'border-l-blue-500' : 'border-l-green-500',
+      )}
+    >
+      <div className='flex items-center justify-between gap-2'>
+        <button
+          type='button'
+          {...attributes}
+          {...listeners}
+          className='touch-none cursor-grab rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground active:cursor-grabbing'
+          aria-label={t('drag_to_reorder')}
+        >
+          <GripVerticalIcon className='size-4' />
+        </button>
+        <span className='min-w-0 flex-1 truncate text-sm font-medium'>
+          {port.name || t('unnamed_port')}
+        </span>
+        <Button
+          type='button'
+          variant='ghost'
+          size='icon'
+          className='size-8 text-muted-foreground hover:text-destructive'
+          aria-label={t('remove')}
+          onClick={onRemove}
+        >
+          <Trash2Icon className='size-4' />
+        </Button>
+      </div>
+
+      <div className='space-y-2'>
+        <Label htmlFor={nameId}>{t('port_name')}</Label>
+        <Input
+          id={nameId}
+          value={port.name}
+          placeholder={t('port_name_placeholder')}
+          onChange={(event) => onUpdate('name', event.target.value)}
+        />
+      </div>
+      <div className='space-y-2'>
+        <Label htmlFor={descriptionId}>{t('port_description')}</Label>
+        <Textarea
+          id={descriptionId}
+          className='min-h-20 resize-y'
+          value={port.description}
+          placeholder={t('port_description_placeholder')}
+          onChange={(event) => onUpdate('description', event.target.value)}
+        />
+      </div>
+    </div>
+  )
+}
 
 export function SubgraphInterfaceEditor() {
   const t = useTranslations('editor.subgraph')
@@ -29,21 +144,37 @@ export function SubgraphInterfaceEditor() {
     id: string
   } | null>(null)
   const iface = store.graphInterface ?? emptyInterface()
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  )
 
-  const update = (kind: InterfaceKind, id: string, name: string) =>
+  const update = (
+    kind: InterfaceKind,
+    id: string,
+    field: EditablePortField,
+    value: string,
+  ) =>
     store.setInterface({
       ...iface,
       [kind]: iface[kind].map((port) =>
-        port.id === id ? { ...port, name } : port,
+        port.id === id ? { ...port, [field]: value } : port,
       ),
     })
 
-  const move = (kind: InterfaceKind, index: number, delta: number) => {
-    const values = [...iface[kind]]
-    const next = index + delta
-    if (next < 0 || next >= values.length) return
-    ;[values[index], values[next]] = [values[next], values[index]]
-    store.setInterface({ ...iface, [kind]: values })
+  const reorder = (kind: InterfaceKind, event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    const oldIndex = iface[kind].findIndex((port) => port.id === active.id)
+    const newIndex = iface[kind].findIndex((port) => port.id === over.id)
+    if (oldIndex < 0 || newIndex < 0) return
+    store.setInterface(
+      kind === 'inputs'
+        ? { ...iface, inputs: arrayMove(iface.inputs, oldIndex, newIndex) }
+        : { ...iface, outputs: arrayMove(iface.outputs, oldIndex, newIndex) },
+    )
   }
 
   const remove = (kind: InterfaceKind, id: string) => {
@@ -96,6 +227,7 @@ export function SubgraphInterfaceEditor() {
     const port = {
       id: generateLetterId(),
       name: `${t(kind)} ${iface[kind].length + 1}`,
+      description: '',
       ...(kind === 'inputs'
         ? { targets: [] }
         : { source: { node_id: '', handle: '' } }),
@@ -106,54 +238,93 @@ export function SubgraphInterfaceEditor() {
   return (
     <>
       <aside
-        className='w-80 shrink-0 space-y-4 overflow-y-auto border-l bg-background p-4'
+        className='w-[30rem] shrink-0 space-y-6 overflow-y-auto border-l bg-background p-4 xl:w-[32rem]'
         aria-label={t('interface')}
       >
-        <h2 className='font-semibold'>{t('interface')}</h2>
-        <p className='text-sm text-muted-foreground'>{t('interface_help')}</p>
-        {(['inputs', 'outputs'] as const).map((kind) => (
-          <section key={kind} className='space-y-3'>
-            <h3 className='font-semibold'>{t(kind)}</h3>
-            {iface[kind].map((port, index) => (
-              <div className='rounded border p-3' key={port.id}>
-                <div className='flex gap-2'>
-                  <Input
-                    aria-label={t('name')}
-                    value={port.name}
-                    onChange={(event) =>
-                      update(kind, port.id, event.target.value)
-                    }
-                  />
-                  <Button
-                    variant='ghost'
-                    aria-label={t('up')}
-                    disabled={index === 0}
-                    onClick={() => move(kind, index, -1)}
-                  >
-                    ↑
-                  </Button>
-                  <Button
-                    variant='ghost'
-                    aria-label={t('down')}
-                    disabled={index === iface[kind].length - 1}
-                    onClick={() => move(kind, index, 1)}
-                  >
-                    ↓
-                  </Button>
-                  <Button
-                    variant='ghost'
-                    onClick={() => setPendingDelete({ kind, id: port.id })}
-                  >
-                    {t('remove')}
-                  </Button>
-                </div>
+        <div className='space-y-1'>
+          <h2 className='font-semibold'>{t('interface')}</h2>
+          <p className='text-sm text-muted-foreground'>{t('interface_help')}</p>
+        </div>
+        {(['inputs', 'outputs'] as const).map((kind) => {
+          const portIds = iface[kind].map((port) => port.id)
+          const inputs = kind === 'inputs'
+          const KindIcon = inputs ? FileInputIcon : FileOutputIcon
+          return (
+            <section
+              key={kind}
+              className={cn(
+                'space-y-3',
+                !inputs && 'mt-2 border-t-2 border-border pt-6',
+              )}
+            >
+              <div className='flex items-center justify-between'>
+                <h3
+                  className={cn(
+                    'flex items-center gap-2 text-lg font-semibold',
+                    inputs ? 'text-blue-700' : 'text-green-700',
+                  )}
+                >
+                  <KindIcon className='size-5' />
+                  {t(kind)}
+                </h3>
+                <span
+                  className={cn(
+                    'text-sm font-medium',
+                    inputs ? 'text-blue-700' : 'text-green-700',
+                  )}
+                >
+                  {iface[kind].length}
+                </span>
               </div>
-            ))}
-            <Button variant='outline' onClick={() => addPort(kind)}>
-              {t('add')}
-            </Button>
-          </section>
-        ))}
+              {iface[kind].length > 0 ? (
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={(event) => reorder(kind, event)}
+                >
+                  <SortableContext
+                    items={portIds}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <div className='space-y-3'>
+                      {iface[kind].map((port) => (
+                        <SortablePortEditor
+                          key={port.id}
+                          kind={kind}
+                          port={port}
+                          onUpdate={(field, value) =>
+                            update(kind, port.id, field, value)
+                          }
+                          onRemove={() =>
+                            setPendingDelete({ kind, id: port.id })
+                          }
+                        />
+                      ))}
+                    </div>
+                  </SortableContext>
+                </DndContext>
+              ) : (
+                <div className='rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground'>
+                  {t('no_ports')}
+                </div>
+              )}
+              <Button
+                type='button'
+                variant='outline'
+                className={cn(
+                  'w-full bg-background',
+                  inputs
+                    ? 'border-blue-200 text-blue-700 hover:bg-blue-100/70 hover:text-blue-800'
+                    : 'border-green-200 text-green-700 hover:bg-green-100/70 hover:text-green-800',
+                )}
+                onClick={() => addPort(kind)}
+              >
+                <PlusIcon className='size-4' />
+                {t(kind === 'inputs' ? 'add_input' : 'add_output')}
+              </Button>
+            </section>
+          )
+        })}
       </aside>
       <AlertDialog
         open={pendingDelete !== null}

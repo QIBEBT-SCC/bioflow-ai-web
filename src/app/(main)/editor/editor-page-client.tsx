@@ -66,7 +66,6 @@ function FlowContent() {
 
   const {
     currentWorkflowUid,
-    activeSubgraphSourceUid,
     setCurrentWorkflowUid,
     nodes,
     edges,
@@ -75,7 +74,6 @@ function FlowContent() {
   } = useNodeEditorStore(
     useShallow((state) => ({
       currentWorkflowUid: state.currentWorkflowUid,
-      activeSubgraphSourceUid: state.getActiveSubgraphSourceUid(),
       setCurrentWorkflowUid: state.setCurrentWorkflowUid,
       nodes: state.nodes,
       edges: state.edges,
@@ -100,7 +98,6 @@ function FlowContent() {
     useWorkflow(currentWorkflowUid)
   const updateWorkflowMutation = useUpdateWorkflow()
   const runMutation = useNewRunInstance()
-  const saveTargetUid = currentWorkflowUid || activeSubgraphSourceUid
 
   const [clickPosition, setClickPosition] = useState<XYPosition>({ x: 0, y: 0 })
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -268,20 +265,16 @@ function FlowContent() {
 
   // 保存workflow
   const onSave = useCallback(() => {
-    if (!saveTargetUid) {
+    if (!currentWorkflowUid || !workflowData?.workflow) {
       toast.error(t('no_workflow_loaded'))
       return
     }
 
-    const store = useNodeEditorStore.getState()
-    const workflow = currentWorkflowUid
-      ? store.getRootGraph()
-      : store.getGraph()
     updateWorkflowMutation.mutate({
-      uid: saveTargetUid,
-      data: { workflow },
+      uid: currentWorkflowUid,
+      data: { workflow: useNodeEditorStore.getState().getRootGraph() },
     })
-  }, [currentWorkflowUid, saveTargetUid, updateWorkflowMutation, t])
+  }, [currentWorkflowUid, updateWorkflowMutation, workflowData, t])
 
   // 退出项目内编辑模式，返回项目页
   const onExit = useCallback(() => {
@@ -401,7 +394,9 @@ function FlowContent() {
                     size='sm'
                     onClick={onSave}
                     disabled={
-                      !saveTargetUid || updateWorkflowMutation.isPending
+                      !currentWorkflowUid ||
+                      !workflowData?.workflow ||
+                      updateWorkflowMutation.isPending
                     }
                   >
                     <SaveIcon className='size-4 mr-2' />
@@ -448,7 +443,9 @@ function FlowContent() {
                     size='sm'
                     onClick={onSave}
                     disabled={
-                      !saveTargetUid || updateWorkflowMutation.isPending
+                      !currentWorkflowUid ||
+                      !workflowData?.workflow ||
+                      updateWorkflowMutation.isPending
                     }
                   >
                     <SaveIcon className='size-4 mr-2' />

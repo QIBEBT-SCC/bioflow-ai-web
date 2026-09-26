@@ -21,11 +21,13 @@ export interface PortTarget {
 export interface InterfaceInput {
   id: string
   name: string
+  description: string
   targets: PortTarget[]
 }
 export interface InterfaceOutput {
   id: string
   name: string
+  description: string
   source: PortTarget
 }
 export interface WorkflowInterface {
@@ -62,6 +64,7 @@ export interface SimpleWorkflowInfo {
 export interface WorkflowPortSummary {
   id: string
   name: string
+  description: string
 }
 
 export interface PaginatedWorkflows {

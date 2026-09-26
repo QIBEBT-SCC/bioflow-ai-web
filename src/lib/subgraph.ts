@@ -22,8 +22,14 @@ export function cleanGraph(graph: WorkflowDefinition): WorkflowDefinition {
           ...(graph.interface.positions
             ? { positions: graph.interface.positions }
             : {}),
-          inputs: graph.interface.inputs,
-          outputs: graph.interface.outputs,
+          inputs: graph.interface.inputs.map((port) => ({
+            ...port,
+            description: port.description ?? '',
+          })),
+          outputs: graph.interface.outputs.map((port) => ({
+            ...port,
+            description: port.description ?? '',
+          })),
         }
       : graph.interface,
     nodes: graph.nodes.map((node) => {
@@ -95,6 +101,7 @@ export function groupSelection(graph: WorkflowDefinition): WorkflowDefinition {
         port = {
           id: generateLetterId(),
           name: handle,
+          description: '',
           targets: [{ node_id: edge.target, handle }],
         }
         boundary.inputs.push(port)
@@ -116,6 +123,7 @@ export function groupSelection(graph: WorkflowDefinition): WorkflowDefinition {
       port = {
         id: generateLetterId(),
         name: handle,
+        description: '',
         source: { node_id: edge.source, handle },
       }
       boundary.outputs.push(port)
@@ -140,7 +148,12 @@ export function groupSelection(graph: WorkflowDefinition): WorkflowDefinition {
             port.targets[0].handle === target.handle,
         )
         if (!port) {
-          port = { id: generateLetterId(), name: input.name, targets: [target] }
+          port = {
+            id: generateLetterId(),
+            name: input.name,
+            description: input.description,
+            targets: [target],
+          }
           boundary.inputs.push(port)
         }
         return { node_id: group.id, handle: port.id }
@@ -156,6 +169,7 @@ export function groupSelection(graph: WorkflowDefinition): WorkflowDefinition {
           port = {
             id: generateLetterId(),
             name: output.name,
+            description: output.description,
             source: output.source,
           }
           boundary.outputs.push(port)

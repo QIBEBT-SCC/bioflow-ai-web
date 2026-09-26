@@ -21,6 +21,9 @@ export function SubgraphInterfaceSummary({
           {value.inputs.map((port) => (
             <div className='mb-2 text-xs' key={port.id}>
               <strong>{port.name}</strong>
+              {port.description && (
+                <div className='text-muted-foreground'>{port.description}</div>
+              )}
               {port.targets.map((target) => (
                 <div
                   className='text-muted-foreground'
@@ -42,6 +45,9 @@ export function SubgraphInterfaceSummary({
           {value.outputs.map((port) => (
             <div className='mb-2 text-xs' key={port.id}>
               <strong>{port.name}</strong>
+              {port.description && (
+                <div className='text-muted-foreground'>{port.description}</div>
+              )}
               <div className='text-muted-foreground'>
                 {port.source.node_id} · {port.source.handle} →
               </div>
