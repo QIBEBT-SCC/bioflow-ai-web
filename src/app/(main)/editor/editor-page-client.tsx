@@ -35,6 +35,9 @@ import {
   nodeTypes,
 } from '@/components/node-editor/node-registry'
 import { SaveAsDialog } from '@/components/node-editor/save-as-dialog'
+import { SubgraphNavigation } from '@/components/node-editor/subgraph-context'
+import { SubgraphInterfaceEditor } from '@/components/node-editor/subgraph-interface-editor'
+import { SubgraphToolbar } from '@/components/node-editor/subgraph-toolbar'
 import { WorkflowJsonActions } from '@/components/node-editor/workflow-json-actions'
 import {
   Breadcrumb,
@@ -48,27 +51,24 @@ import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { useChatSidebarResize } from '@/hooks/use-chat-sidebar-resize'
 import { useInitialWorkflowLayout } from '@/hooks/use-initial-workflow-layout'
 import { useNewRunInstance } from '@/hooks/use-run'
+import { useSubgraphInterface } from '@/hooks/use-subgraph-interface'
 import { useUpdateWorkflow, useWorkflow } from '@/hooks/use-workflow'
 import { generateLetterId } from '@/lib/id-generator'
-import {
-  layoutWorkflowNodes,
-  prepareWorkflowNodes,
-} from '@/lib/workflow-layout'
+import { layoutSubgraph } from '@/lib/subgraph-interface'
+import { prepareWorkflowNodes } from '@/lib/workflow-layout'
 import { useChatSidebarStore } from '@/stores/chat-sidebar-store'
 import { useNodeEditorStore } from '@/stores/nodeviewStore'
 import type { CodeInfo } from '@/types/code'
 
 function FlowContent() {
   const t = useTranslations('editor')
+  const graphInterface = useNodeEditorStore((state) => state.graphInterface)
 
   const {
     currentWorkflowUid,
     setCurrentWorkflowUid,
     nodes,
     edges,
-    onNodesChange,
-    onEdgesChange,
-    onConnect,
     setNodes,
     setEdges,
   } = useNodeEditorStore(
@@ -77,13 +77,12 @@ function FlowContent() {
       setCurrentWorkflowUid: state.setCurrentWorkflowUid,
       nodes: state.nodes,
       edges: state.edges,
-      onNodesChange: state.onNodesChange,
-      onEdgesChange: state.onEdgesChange,
-      onConnect: state.onConnect,
       setNodes: state.setNodes,
       setEdges: state.setEdges,
     })),
   )
+
+  const interfaceCanvas = useSubgraphInterface()
 
   const isOpen = useChatSidebarStore((s) => s.isOpen)
   const { chatSidebarWidth, handleChatResizeStart } = useChatSidebarResize()
@@ -94,8 +93,7 @@ function FlowContent() {
   const workflowUidParam = searchParams.get('workflowUid')
   const isProjectMode = !!projectId
 
-  const { fitView, getInternalNode, getNodes, screenToFlowPosition } =
-    useReactFlow()
+  const { fitView, getInternalNode, screenToFlowPosition } = useReactFlow()
   const { data: workflowData, dataUpdatedAt: workflowDataUpdatedAt } =
     useWorkflow(currentWorkflowUid)
   const updateWorkflowMutation = useUpdateWorkflow()
@@ -171,10 +169,13 @@ function FlowContent() {
   // 加载workflow数据
   useEffect(() => {
     if (preparedWorkflow) {
-      setNodes(preparedWorkflow.nodes)
-      setEdges(preparedWorkflow.edges)
+      useNodeEditorStore.getState().loadGraph({
+        nodes: preparedWorkflow.nodes,
+        edges: preparedWorkflow.edges,
+        interface: workflowData?.workflow.interface,
+      })
     }
-  }, [preparedWorkflow, setNodes, setEdges])
+  }, [preparedWorkflow, workflowData?.workflow.interface])
 
   // Tool 节点的 handles 依赖异步 tool args；等 handles commit 到 DOM 后再渲染 edges，避免 React Flow 008 警告。
   useEffect(() => {
@@ -264,17 +265,16 @@ function FlowContent() {
 
   // 保存workflow
   const onSave = useCallback(() => {
-    if (!currentWorkflowUid) {
+    if (!currentWorkflowUid || !workflowData?.workflow) {
       toast.error(t('no_workflow_loaded'))
       return
     }
 
-    const workflow = { nodes, edges }
     updateWorkflowMutation.mutate({
       uid: currentWorkflowUid,
-      data: { workflow },
+      data: { workflow: useNodeEditorStore.getState().getRootGraph() },
     })
-  }, [currentWorkflowUid, nodes, edges, updateWorkflowMutation, t])
+  }, [currentWorkflowUid, updateWorkflowMutation, workflowData, t])
 
   // 退出项目内编辑模式，返回项目页
   const onExit = useCallback(() => {
@@ -285,21 +285,23 @@ function FlowContent() {
 
   // 运行workflow
   const onRun = useCallback(() => {
-    const workflow = { nodes, edges }
+    const workflow = useNodeEditorStore.getState().getRootGraph()
     const template_name = workflowData?.name
 
     runMutation.mutate({ workflow, template_name })
-  }, [nodes, edges, workflowData?.name, runMutation])
+  }, [workflowData?.name, runMutation])
 
   const onAutoLayout = useCallback(() => {
-    const layoutedNodes = layoutWorkflowNodes(getNodes(), edges)
-    setNodes(layoutedNodes)
+    const store = useNodeEditorStore.getState()
+    const layouted = layoutSubgraph(store.getGraph())
+    store.setNodes(layouted.nodes)
+    if (layouted.interface) store.setInterface(layouted.interface)
     toast.success(t('layout_complete'))
 
     requestAnimationFrame(() => {
       void fitView({ padding: 0.15, duration: 500 })
     })
-  }, [edges, fitView, getNodes, setNodes, t])
+  }, [fitView, t])
 
   const onCleanDirtyEdges = useCallback(() => {
     const nodeIds = new Set(nodes.map((node) => node.id))
@@ -392,7 +394,9 @@ function FlowContent() {
                     size='sm'
                     onClick={onSave}
                     disabled={
-                      !currentWorkflowUid || updateWorkflowMutation.isPending
+                      !currentWorkflowUid ||
+                      !workflowData?.workflow ||
+                      updateWorkflowMutation.isPending
                     }
                   >
                     <SaveIcon className='size-4 mr-2' />
@@ -421,6 +425,10 @@ function FlowContent() {
 
                   <WorkflowJsonActions workflowName={workflowData?.name} />
 
+                  <SaveAsDialog
+                    currentWorkflowName={workflowData?.name}
+                    disabled={nodes.length === 0}
+                  />
                   <Button variant='ghost' size='sm' onClick={onExit}>
                     <LogOutIcon className='size-4 mr-2' />
                     {t('exit')}
@@ -435,7 +443,9 @@ function FlowContent() {
                     size='sm'
                     onClick={onSave}
                     disabled={
-                      !currentWorkflowUid || updateWorkflowMutation.isPending
+                      !currentWorkflowUid ||
+                      !workflowData?.workflow ||
+                      updateWorkflowMutation.isPending
                     }
                   >
                     <SaveIcon className='size-4 mr-2' />
@@ -490,30 +500,45 @@ function FlowContent() {
               )}
             </div>
           </div>
+          <SubgraphToolbar />
         </header>
 
         {/* React Flow 画布 */}
-        <div className='flex-1 w-full'>
-          <ReactFlow
-            nodes={nodes}
-            edges={renderedEdges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            onPaneContextMenu={onPaneContextMenu}
-            onPaneClick={closeMenu}
-            nodeTypes={nodeTypes}
-            defaultEdgeOptions={{ animated: true }}
-            fitView
-            className='bg-gray-50'
-          >
-            <Background
-              variant={BackgroundVariant.Dots}
-              className='bg-gray-100!'
-            />
-            <Controls />
-            <MiniMap nodeStrokeWidth={3} zoomable pannable />
-          </ReactFlow>
+        <div className='flex min-h-0 flex-1 w-full'>
+          <div className='relative min-w-0 flex-1'>
+            <SubgraphNavigation
+              value={(id) => {
+                useNodeEditorStore.getState().enterSubgraph(id)
+                requestAnimationFrame(() => void fitView({ padding: 0.15 }))
+              }}
+            >
+              <ReactFlow
+                nodes={interfaceCanvas.nodes}
+                edges={[...renderedEdges, ...interfaceCanvas.edges]}
+                onNodesChange={interfaceCanvas.onNodesChange}
+                onEdgesChange={interfaceCanvas.onEdgesChange}
+                onConnect={interfaceCanvas.onConnect}
+                isValidConnection={interfaceCanvas.isValidConnection}
+                onPaneContextMenu={onPaneContextMenu}
+                onSelectionContextMenu={onPaneContextMenu}
+                onNodeContextMenu={onPaneContextMenu}
+                onPaneClick={closeMenu}
+                nodeTypes={nodeTypes}
+                deleteKeyCode={['Backspace', 'Delete']}
+                defaultEdgeOptions={{ animated: true }}
+                fitView
+                className='bg-gray-50'
+              >
+                <Background
+                  variant={BackgroundVariant.Dots}
+                  className='bg-gray-100!'
+                />
+                <Controls />
+                <MiniMap nodeStrokeWidth={3} zoomable pannable />
+              </ReactFlow>
+            </SubgraphNavigation>
+          </div>
+          {graphInterface && <SubgraphInterfaceEditor />}
 
           {/* 右键菜单 */}
           <PanelMenu

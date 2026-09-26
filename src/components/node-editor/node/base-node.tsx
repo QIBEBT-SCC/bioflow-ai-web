@@ -119,13 +119,13 @@ const BaseNode = memo(function BaseNode({
             {input && (
               <>
                 <Handle
-                  id={`${nodeId}-in-${input.name}`}
+                  id={input.id ?? `${nodeId}-in-${input.name}`}
                   type='target'
                   position={Position.Left}
                   className={cn(
                     'left-3! size-2.5 rounded-full border border-border! bg-background! shadow-xs transition-all duration-200',
                     'hover:border-primary/50! hover:bg-primary/10! hover:scale-110!',
-                    isConnected(`${nodeId}-in-${input.name}`) &&
+                    isConnected(input.id ?? `${nodeId}-in-${input.name}`) &&
                       'border-teal-500! bg-teal-100!',
                   )}
                   style={{
@@ -134,11 +134,12 @@ const BaseNode = memo(function BaseNode({
                 />
                 <span
                   className='absolute left-6 -translate-y-1/2 select-none truncate text-xs text-muted-foreground'
+                  title={input.description || undefined}
                   style={{
                     top: `calc(var(--spacing) * ${calculateTopPos(index)})`,
                   }}
                 >
-                  {input.name.replace('_', ' ')}
+                  {input.label ?? input.name.replace('_', ' ')}
                 </span>
               </>
             )}
@@ -148,20 +149,21 @@ const BaseNode = memo(function BaseNode({
               <>
                 <span
                   className='absolute right-6 -translate-y-1/2 select-none truncate text-end text-xs text-muted-foreground'
+                  title={output.description || undefined}
                   style={{
                     top: `calc(var(--spacing) * ${calculateTopPos(index)})`,
                   }}
                 >
-                  {output.name.replace('_', ' ')}
+                  {output.label ?? output.name.replace('_', ' ')}
                 </span>
                 <Handle
-                  id={`${nodeId}-out-${output.name}`}
+                  id={output.id ?? `${nodeId}-out-${output.name}`}
                   type='source'
                   position={Position.Right}
                   className={cn(
                     'right-3! size-2.5 rounded-full border border-border bg-background! shadow-xs transition-all duration-200',
                     'hover:border-primary/50! hover:bg-primary/10! hover:scale-110!',
-                    isConnected(`${nodeId}-out-${output.name}`) &&
+                    isConnected(output.id ?? `${nodeId}-out-${output.name}`) &&
                       'border-indigo-500! bg-indigo-100!',
                   )}
                   style={{

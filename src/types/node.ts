@@ -1,6 +1,8 @@
 import type { ToolTag } from '@/types/tool'
 
 export interface HandleDefine {
+  id?: string
+  label?: string
   name: string
   description: string
 }

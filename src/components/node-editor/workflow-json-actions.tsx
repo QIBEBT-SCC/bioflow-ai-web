@@ -52,11 +52,11 @@ export function WorkflowJsonActions({
   const [pendingImport, setPendingImport] = useState<ParsedWorkflowJson | null>(
     null,
   )
-  const { nodes, edges, setNodes, setEdges } = useNodeEditorStore()
+  const { nodes, loadGraph, getRootGraph } = useNodeEditorStore()
   const { fitView } = useReactFlow()
 
   const handleExport = () => {
-    const content = serializeWorkflowJson({ nodes, edges }, workflowName)
+    const content = serializeWorkflowJson(getRootGraph(), workflowName)
     const url = URL.createObjectURL(
       new Blob([content], { type: 'application/json;charset=utf-8' }),
     )
@@ -99,8 +99,7 @@ export function WorkflowJsonActions({
         })
       : prepared.nodes
 
-    setNodes(importedNodes)
-    setEdges(pendingImport.workflow.edges)
+    loadGraph({ ...pendingImport.workflow, nodes: importedNodes })
     setPendingImport(null)
     toast.success(td('import_success'))
 
@@ -132,6 +131,7 @@ export function WorkflowJsonActions({
       <input
         ref={inputRef}
         type='file'
+        aria-label={t('import')}
         accept='application/json,.json'
         className='hidden'
         onChange={handleFileChange}

@@ -2,8 +2,10 @@ import { clientFetch } from '@/lib/api-client'
 import type {
   ExecutionScope,
   PaginatedWorkflows,
+  SimpleWorkflowInfo,
   Workflow,
   WorkflowDefinition,
+  WorkflowType,
 } from '@/types/workflow'
 
 /**
@@ -12,12 +14,23 @@ import type {
 export async function getWorkflows(
   offset: number = 0,
   limit: number = 8,
+  wfType?: WorkflowType,
 ): Promise<PaginatedWorkflows> {
   return await clientFetch<PaginatedWorkflows>('/workflows', {
     params: {
       offset: String(offset),
       limit: String(limit),
+      ...(wfType !== undefined ? { wf_type: String(wfType) } : {}),
     },
+  })
+}
+
+export async function searchSubgraphs(
+  query: string,
+  limit: number = 20,
+): Promise<SimpleWorkflowInfo[]> {
+  return await clientFetch<SimpleWorkflowInfo[]>('/workflows/search', {
+    params: { q: query, limit: String(limit) },
   })
 }
 
@@ -45,6 +58,8 @@ export async function updateWorkflow(
   uid: string,
   data: {
     name?: string
+    description?: string
+    public?: boolean
     workflow?: WorkflowDefinition
     execution_scope?: ExecutionScope
   },

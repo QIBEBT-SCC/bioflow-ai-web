@@ -13,8 +13,24 @@ import {
 import type { SetStateAction } from 'react'
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
+import { cleanGraph, graphNodes } from '@/lib/subgraph'
+import type { WorkflowDefinition, WorkflowInterface } from '@/types/workflow'
 
+interface ParentFrame {
+  id: string
+  name: string
+  graph: WorkflowDefinition
+}
 export interface NodeEditorStore {
+  parents: ParentFrame[]
+  graphInterface: WorkflowInterface | null
+  setInterface: (value: WorkflowInterface) => void
+  getGraph: () => WorkflowDefinition
+  getRootGraph: () => WorkflowDefinition
+  loadGraph: (graph: WorkflowDefinition) => void
+  enterSubgraph: (id: string) => void
+  leaveSubgraph: () => void
+
   currentWorkflowUid: string
   setCurrentWorkflowUid: (uid: string) => void
 
@@ -30,6 +46,69 @@ export interface NodeEditorStore {
 export const useNodeEditorStore = create<NodeEditorStore>()(
   devtools(
     (set, get) => ({
+      parents: [],
+      graphInterface: null,
+      setInterface: (graphInterface) => set({ graphInterface }),
+      getGraph: () => ({
+        nodes: get().nodes,
+        edges: get().edges,
+        interface: get().graphInterface,
+      }),
+      getRootGraph: () => {
+        let graph = get().getGraph()
+        for (const frame of [...get().parents].reverse()) {
+          graph = {
+            ...frame.graph,
+            nodes: frame.graph.nodes.map((node) =>
+              node.id === frame.id
+                ? { ...node, data: { ...node.data, workflow: graph } }
+                : node,
+            ),
+          }
+        }
+        return cleanGraph(graph)
+      },
+      loadGraph: (graph) =>
+        set({
+          nodes: graphNodes(graph),
+          edges: graph.edges,
+          graphInterface: graph.interface ?? null,
+          parents: [],
+        }),
+      enterSubgraph: (id) => {
+        const node = get().nodes.find(
+          (node) => node.id === id && node.type === 'subgraph',
+        )
+        if (!node) return
+        const graph = node.data.workflow as WorkflowDefinition
+        set({
+          parents: [
+            ...get().parents,
+            { id, name: String(node.data.name || id), graph: get().getGraph() },
+          ],
+          nodes: graphNodes(graph),
+          edges: graph.edges,
+          graphInterface: graph.interface ?? null,
+        })
+      },
+      leaveSubgraph: () => {
+        const frame = get().parents.at(-1)
+        if (!frame) return
+        const graph = get().getGraph()
+        set({
+          nodes: graphNodes({
+            ...frame.graph,
+            nodes: frame.graph.nodes.map((node) =>
+              node.id === frame.id
+                ? { ...node, data: { ...node.data, workflow: graph } }
+                : node,
+            ),
+          }),
+          edges: frame.graph.edges,
+          graphInterface: frame.graph.interface ?? null,
+          parents: get().parents.slice(0, -1),
+        })
+      },
       currentWorkflowUid: '',
       setCurrentWorkflowUid: (uid) => set({ currentWorkflowUid: uid }),
 

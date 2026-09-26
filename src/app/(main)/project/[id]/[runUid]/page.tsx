@@ -30,6 +30,7 @@ import { useNodeRunLogStream } from '@/hooks/use-node-run-v2'
 import { useProject } from '@/hooks/use-project'
 import { useRunFiles, useRunStream } from '@/hooks/use-run'
 import { useRunFlow } from '@/hooks/use-run-flow'
+import { useSubgraphRun } from '@/hooks/use-subgraph-run'
 import { cn } from '@/lib/utils'
 import { useChatSidebarStore } from '@/stores/chat-sidebar-store'
 import { type NodeRunDataV2, NodeRunStatusV2 } from '@/types/workflow-v2'
@@ -124,7 +125,8 @@ function RunFlowContent({
     }
   }, [run?.settled, run?.generation, refreshFiles])
   const isOpen = useChatSidebarStore((s) => s.isOpen)
-  const { flowNodes, edges, handleNodesChange } = useRunFlow(run)
+  const { visibleRun, labels, enter, navigate } = useSubgraphRun(run)
+  const { flowNodes, edges, handleNodesChange } = useRunFlow(visibleRun)
   const [panel, dispatchPanel] = useReducer(panelReducer, {
     leftPanelOpen: true,
     leftPanelWidth: 288,
@@ -413,6 +415,17 @@ function RunFlowContent({
             )}
           >
             <RunFlowCanvas
+              viewKey={visibleRun?.uid}
+              labels={labels}
+              graphInterface={visibleRun?.interface}
+              onEnterSubgraph={(id) => {
+                setSelectedNodeId(undefined)
+                enter(id)
+              }}
+              onNavigate={(depth) => {
+                setSelectedNodeId(undefined)
+                navigate(depth)
+              }}
               nodes={flowNodes}
               edges={edges}
               onNodesChange={handleNodesChange}

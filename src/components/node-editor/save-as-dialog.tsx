@@ -34,12 +34,22 @@ import {
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import { useSaveWorkflow } from '@/hooks/use-workflow'
+import { cleanGraph, emptyInterface } from '@/lib/subgraph'
 import { useNodeEditorStore } from '@/stores/nodeviewStore'
-import { ExecutionScope, WorkflowType } from '@/types/workflow'
+import {
+  ExecutionScope,
+  type WorkflowDefinition,
+  WorkflowType,
+} from '@/types/workflow'
 
 interface SaveAsDialogProps {
   currentWorkflowName?: string
   disabled?: boolean
+  selection?: {
+    workflow: WorkflowDefinition
+    onSaved: (uid: string, name: string, description: string) => void
+    onClose: () => void
+  }
 }
 
 type SaveState = {
@@ -85,25 +95,43 @@ function saveReducer(state: SaveState, action: SaveAction): SaveState {
 export function SaveAsDialog({
   currentWorkflowName,
   disabled,
+  selection,
 }: SaveAsDialogProps) {
   const t = useTranslations('editor')
   const td = useTranslations('editor.save_as_dialog')
   const [
     { name, description, isPublic, workflowType, executionScope },
     dispatch,
-  ] = useReducer(saveReducer, INITIAL_SAVE)
-  const [open, setOpen] = useState(false)
+  ] = useReducer(saveReducer, {
+    ...INITIAL_SAVE,
+    workflowType: selection ? WorkflowType.SUBMODULE : WorkflowType.TEMPLATE,
+  })
+  const [open, setOpen] = useState(Boolean(selection))
 
-  const { nodes, edges, setCurrentWorkflowUid } = useNodeEditorStore()
+  const { setCurrentWorkflowUid } = useNodeEditorStore()
   const saveWorkflowMutation = useSaveWorkflow()
 
   const handleSaveAs = () => {
-    if (!name.trim()) return
+    if (
+      saveWorkflowMutation.isPending ||
+      !name.trim() ||
+      (workflowType === WorkflowType.SUBMODULE && !description.trim())
+    )
+      return
 
     const workflow = {
       name: name.trim(),
       description: description.trim(),
-      workflow: { nodes, edges },
+      workflow:
+        selection?.workflow ??
+        (workflowType === WorkflowType.SUBMODULE
+          ? cleanGraph({
+              ...useNodeEditorStore.getState().getGraph(),
+              interface:
+                useNodeEditorStore.getState().graphInterface ??
+                emptyInterface(),
+            })
+          : useNodeEditorStore.getState().getRootGraph()),
       public: isPublic,
       wf_type: workflowType,
       execution_scope: executionScope,
@@ -111,7 +139,9 @@ export function SaveAsDialog({
 
     saveWorkflowMutation.mutate(workflow, {
       onSuccess: (uid) => {
-        setCurrentWorkflowUid(uid)
+        if (workflowType !== WorkflowType.SUBMODULE) setCurrentWorkflowUid(uid)
+        selection?.onSaved(uid, name.trim(), description.trim())
+        selection?.onClose()
         setOpen(false)
         dispatch({ type: 'RESET' })
       },
@@ -119,30 +149,36 @@ export function SaveAsDialog({
   }
 
   const handleOpenChange = (newOpen: boolean) => {
+    if (saveWorkflowMutation.isPending) return
     if (newOpen && currentWorkflowName) {
       dispatch({
         type: 'RESET',
         name: `${currentWorkflowName} - ${td('copy_suffix')}`,
       })
     }
+    if (!newOpen) selection?.onClose()
     setOpen(newOpen)
   }
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        <Button variant='ghost' size='sm' disabled={disabled}>
-          <SaveIcon className='size-4 mr-2' />
-          {t('save_as')}
-        </Button>
-      </DialogTrigger>
+      {!selection && (
+        <DialogTrigger asChild>
+          <Button variant='ghost' size='sm' disabled={disabled}>
+            <SaveIcon className='size-4 mr-2' />
+            {t('save_as')}
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className='sm:max-w-[425px]'>
         <DialogHeader>
           <div className='flex items-center gap-2'>
             <div className='p-2 bg-primary/10 rounded-full'>
               <CopyIcon className='size-5 text-primary' />
             </div>
-            <DialogTitle>{td('title')}</DialogTitle>
+            <DialogTitle>
+              {selection ? t('subgraph.save_selection') : td('title')}
+            </DialogTitle>
           </div>
           <DialogDescription className='pt-2'>
             {td('description')}
@@ -200,6 +236,7 @@ export function SaveAsDialog({
                 {td('type_label')}
               </Label>
               <Select
+                disabled={Boolean(selection)}
                 value={String(workflowType)}
                 onValueChange={(value) =>
                   dispatch({
@@ -246,49 +283,56 @@ export function SaveAsDialog({
             </div>
           </div>
 
-          <div className='grid gap-2'>
-            <Label
-              htmlFor='execution-scope'
-              className='flex items-center gap-2'
-            >
-              <LayersIcon className='size-4 text-muted-foreground' />
-              {td('scope_label')}
-            </Label>
-            <Select
-              value={String(executionScope)}
-              onValueChange={(value) =>
-                dispatch({
-                  type: 'SET_SCOPE',
-                  value: Number(value) as ExecutionScope,
-                })
-              }
-            >
-              <SelectTrigger id='execution-scope'>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={String(ExecutionScope.SAMPLE_LEVEL)}>
-                  {td('scope_sample')}
-                </SelectItem>
-                <SelectItem value={String(ExecutionScope.PROJECT_LEVEL)}>
-                  {td('scope_project')}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          {!selection && (
+            <div className='grid gap-2'>
+              <Label
+                htmlFor='execution-scope'
+                className='flex items-center gap-2'
+              >
+                <LayersIcon className='size-4 text-muted-foreground' />
+                {td('scope_label')}
+              </Label>
+              <Select
+                value={String(executionScope)}
+                onValueChange={(value) =>
+                  dispatch({
+                    type: 'SET_SCOPE',
+                    value: Number(value) as ExecutionScope,
+                  })
+                }
+              >
+                <SelectTrigger id='execution-scope'>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={String(ExecutionScope.SAMPLE_LEVEL)}>
+                    {td('scope_sample')}
+                  </SelectItem>
+                  <SelectItem value={String(ExecutionScope.PROJECT_LEVEL)}>
+                    {td('scope_project')}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
 
         <DialogFooter>
           <Button
             variant='outline'
-            onClick={() => setOpen(false)}
+            onClick={() => handleOpenChange(false)}
             disabled={saveWorkflowMutation.isPending}
           >
             {td('cancel')}
           </Button>
           <Button
             onClick={handleSaveAs}
-            disabled={!name.trim() || saveWorkflowMutation.isPending}
+            disabled={
+              !name.trim() ||
+              (workflowType === WorkflowType.SUBMODULE &&
+                !description.trim()) ||
+              saveWorkflowMutation.isPending
+            }
             className='min-w-[80px]'
           >
             {saveWorkflowMutation.isPending ? t('saving') : td('confirm')}

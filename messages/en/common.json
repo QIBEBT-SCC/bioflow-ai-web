@@ -39,6 +39,7 @@
     "tool_config": "Tool Config",
     "tools": "Tool",
     "user_management": "User Management",
-    "workflows": "Run Monitor"
+    "workflows": "Run Monitor",
+    "subgraphs": "Subgraph management"
   }
 }

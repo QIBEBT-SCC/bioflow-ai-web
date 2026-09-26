@@ -1,5 +1,10 @@
 import type { Edge } from '@xyflow/react'
-import type { WorkflowDefinition, WorkflowNode } from '@/types/workflow'
+import { cleanGraph } from '@/lib/subgraph'
+import type {
+  WorkflowDefinition,
+  WorkflowInterface,
+  WorkflowNode,
+} from '@/types/workflow'
 
 export const WORKFLOW_JSON_FORMAT = 'bioflow-workflow'
 export const WORKFLOW_JSON_VERSION = 1
@@ -82,7 +87,63 @@ function isValidEdge(value: unknown): value is Edge {
   )
 }
 
-function parseDefinition(value: unknown): WorkflowDefinition {
+function parseInterface(value: unknown): WorkflowInterface | null {
+  if (value == null) return null
+  if (
+    !isRecord(value) ||
+    !Array.isArray(value.inputs) ||
+    !Array.isArray(value.outputs)
+  )
+    throw new WorkflowImportError('invalid_structure')
+  const target = (value: unknown) =>
+    isRecord(value) &&
+    typeof value.node_id === 'string' &&
+    !!value.node_id &&
+    typeof value.handle === 'string' &&
+    !!value.handle
+  for (const kind of ['inputs', 'outputs'] as const) {
+    const ports = value[kind] as unknown[]
+    const ids = new Set<string>()
+    for (const port of ports) {
+      if (
+        !isRecord(port) ||
+        typeof port.id !== 'string' ||
+        !port.id ||
+        ids.has(port.id) ||
+        typeof port.name !== 'string' ||
+        !port.name.trim() ||
+        ('description' in port && typeof port.description !== 'string')
+      )
+        throw new WorkflowImportError('invalid_structure')
+      ids.add(port.id)
+      if (
+        kind === 'inputs' &&
+        (!Array.isArray(port.targets) ||
+          !port.targets.length ||
+          !port.targets.every(target))
+      )
+        throw new WorkflowImportError('invalid_structure')
+      if (kind === 'outputs' && !target(port.source))
+        throw new WorkflowImportError('invalid_structure')
+    }
+  }
+  return {
+    inputs: (value.inputs as WorkflowInterface['inputs']).map((port) => ({
+      ...port,
+      description: port.description ?? '',
+    })),
+    outputs: (value.outputs as WorkflowInterface['outputs']).map((port) => ({
+      ...port,
+      description: port.description ?? '',
+    })),
+    ...(value.positions
+      ? { positions: value.positions as WorkflowInterface['positions'] }
+      : {}),
+  }
+}
+
+function parseDefinition(value: unknown, depth = 0): WorkflowDefinition {
+  if (depth > 32) throw new WorkflowImportError('invalid_structure')
   if (
     !isRecord(value) ||
     !Array.isArray(value.nodes) ||
@@ -115,7 +176,15 @@ function parseDefinition(value: unknown): WorkflowDefinition {
     throw new WorkflowImportError('missing_node')
   }
 
-  return { nodes: value.nodes, edges: value.edges }
+  for (const node of value.nodes) {
+    if (node.type === 'subgraph')
+      node.data.workflow = parseDefinition(node.data.workflow, depth + 1)
+  }
+  return cleanGraph({
+    nodes: value.nodes,
+    edges: value.edges,
+    interface: parseInterface(value.interface),
+  })
 }
 
 export function parseWorkflowJson(json: string): ParsedWorkflowJson {
@@ -157,7 +226,7 @@ export function serializeWorkflowJson(
     version: WORKFLOW_JSON_VERSION,
     ...(name?.trim() ? { name: name.trim() } : {}),
     exported_at: new Date().toISOString(),
-    workflow,
+    workflow: cleanGraph(workflow),
   }
 
   return JSON.stringify(envelope, null, 2)

@@ -12,9 +12,12 @@ import {
 } from 'react'
 import { CodeMenu } from '@/components/node-editor/menu/code-menu'
 import { DbMenu } from '@/components/node-editor/menu/db-menu'
+import { SaveSelectionSubgraph } from '@/components/node-editor/menu/save-selection-subgraph'
+import { SubgraphMenu } from '@/components/node-editor/menu/subgraph-menu'
 import { ToolMenu } from '@/components/node-editor/menu/tool-menu'
 import { menuData } from '@/components/node-editor/node-registry'
 import { cn } from '@/lib/utils'
+import { useNodeEditorStore } from '@/stores/nodeviewStore'
 import type { CodeInfo } from '@/types/code'
 
 interface Position {
@@ -35,6 +38,8 @@ interface PanelMenuProps {
 }
 
 type MenuState = {
+  isSubgraphMenuOpen: boolean
+  isSavingSelection: boolean
   isAnalysisMenuOpen: boolean
   isCodeMenuOpen: boolean
   isDBMenuOpen: boolean
@@ -43,6 +48,8 @@ type MenuState = {
   adjustedPosition: { x: number; y: number }
 }
 type MenuAction =
+  | { type: 'SET_SUBGRAPH_OPEN'; open: boolean }
+  | { type: 'SET_SAVE_SELECTION'; open: boolean }
   | { type: 'OPEN_ANALYSIS' }
   | { type: 'OPEN_CODE' }
   | { type: 'OPEN_DB' }
@@ -55,6 +62,8 @@ type MenuAction =
   | { type: 'RESET_ACTIVE' }
 
 const INITIAL_MENU_STATE: MenuState = {
+  isSubgraphMenuOpen: false,
+  isSavingSelection: false,
   isAnalysisMenuOpen: false,
   isCodeMenuOpen: false,
   isDBMenuOpen: false,
@@ -65,6 +74,10 @@ const INITIAL_MENU_STATE: MenuState = {
 
 function menuReducer(state: MenuState, action: MenuAction): MenuState {
   switch (action.type) {
+    case 'SET_SUBGRAPH_OPEN':
+      return { ...state, isSubgraphMenuOpen: action.open }
+    case 'SET_SAVE_SELECTION':
+      return { ...state, isSavingSelection: action.open }
     case 'OPEN_ANALYSIS':
       return { ...state, isAnalysisMenuOpen: true }
     case 'OPEN_CODE':
@@ -96,8 +109,14 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({
   onSelectCode,
 }) => {
   const t = useTranslations('editor.menu')
+  const ts = useTranslations('editor.subgraph')
+  const canSaveSelection = useNodeEditorStore(
+    (state) => state.nodes.filter((node) => node.selected).length > 1,
+  )
   const [
     {
+      isSubgraphMenuOpen,
+      isSavingSelection,
       isAnalysisMenuOpen,
       isCodeMenuOpen,
       isDBMenuOpen,
@@ -187,6 +206,10 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({
         onClose()
       }
     } else {
+      if (group.submenuType === 'subgraph-modal') {
+        dispatch({ type: 'SET_SUBGRAPH_OPEN', open: true })
+        onClose()
+      }
       if (group.submenuType === 'tool-modal') {
         dispatch({ type: 'OPEN_ANALYSIS' })
         onClose()
@@ -194,7 +217,14 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({
     }
   }
 
-  if (!isOpen && !isAnalysisMenuOpen && !isCodeMenuOpen && !isDBMenuOpen) {
+  if (
+    !isSubgraphMenuOpen &&
+    !isSavingSelection &&
+    !isOpen &&
+    !isAnalysisMenuOpen &&
+    !isCodeMenuOpen &&
+    !isDBMenuOpen
+  ) {
     return null
   }
 
@@ -211,6 +241,20 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({
           onMouseEnter={cancelClose}
         >
           <div className='py-1'>
+            {canSaveSelection && (
+              <button
+                type='button'
+                role='menuitem'
+                className='w-full border-b px-4 py-2 text-left text-sm hover:bg-accent'
+                onClick={() => {
+                  dispatch({ type: 'SET_SAVE_SELECTION', open: true })
+                  onClose()
+                }}
+              >
+                {ts('save_selection')}
+              </button>
+            )}
+
             {Object.entries(menuData).map(([key, group]) => {
               const GroupIcon = group.Icon
               const hasInlineSubmenu =
@@ -317,6 +361,17 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({
         </div>
       )}
 
+      {isSavingSelection && (
+        <SaveSelectionSubgraph
+          onClose={() => dispatch({ type: 'SET_SAVE_SELECTION', open: false })}
+        />
+      )}
+      {isSubgraphMenuOpen && (
+        <SubgraphMenu
+          position={position}
+          onClose={() => dispatch({ type: 'SET_SUBGRAPH_OPEN', open: false })}
+        />
+      )}
       <ToolMenu
         isOpen={isAnalysisMenuOpen}
         onClose={() => dispatch({ type: 'SET_ANALYSIS_OPEN', open: false })}
