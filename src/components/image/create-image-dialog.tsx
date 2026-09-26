@@ -77,12 +77,16 @@ function imageFormReducer(
   }
 }
 
-const DEFAULT_TRIGGER = (
-  <Button>
-    <Plus className='size-4' />
-    新建镜像
-  </Button>
-)
+function DefaultTrigger() {
+  const t = useTranslations('image.dialog')
+
+  return (
+    <Button>
+      <Plus className='size-4' />
+      {t('newImageBtn')}
+    </Button>
+  )
+}
 
 interface CreateImageDialogProps {
   trigger?: React.ReactNode
@@ -150,6 +154,7 @@ function ImportImageUrlButton({ onImport }: ImportImageUrlButtonProps) {
 }
 
 export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
+  const t = useTranslations('image.dialog')
   const [
     {
       name,
@@ -194,31 +199,31 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{trigger || DEFAULT_TRIGGER}</DialogTrigger>
+      <DialogTrigger asChild>{trigger || <DefaultTrigger />}</DialogTrigger>
       <DialogContent className='max-w-2xl max-h-[90vh] overflow-y-auto'>
         <DialogHeader>
           <DialogTitle className='flex items-center gap-2'>
             <Package className='size-5' />
-            创建新镜像
+            {t('title')}
           </DialogTitle>
-          <DialogDescription>
-            填写镜像的基本信息和 Docker 配置
-          </DialogDescription>
+          <DialogDescription>{t('desc')}</DialogDescription>
         </DialogHeader>
 
         <div className='space-y-6 py-4'>
           {/* 基本信息 */}
           <div className='space-y-4'>
-            <h3 className='text-sm font-semibold text-foreground'>基本信息</h3>
+            <h3 className='text-sm font-semibold text-foreground'>
+              {t('basicInfo')}
+            </h3>
 
             <div className='grid grid-cols-2 gap-4'>
               <div className='space-y-2'>
                 <Label htmlFor='name'>
-                  名称 <span className='text-destructive'>*</span>
+                  {t('name')} <span className='text-destructive'>*</span>
                 </Label>
                 <Input
                   id='name'
-                  placeholder='例如: FastQC'
+                  placeholder={t('namePlaceholder')}
                   value={name}
                   onChange={(e) =>
                     dispatch({
@@ -233,11 +238,11 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
 
               <div className='space-y-2'>
                 <Label htmlFor='version'>
-                  版本 <span className='text-destructive'>*</span>
+                  {t('version')} <span className='text-destructive'>*</span>
                 </Label>
                 <Input
                   id='version'
-                  placeholder='例如: 0.11.9'
+                  placeholder={t('versionPlaceholder')}
                   value={version}
                   onChange={(e) =>
                     dispatch({
@@ -252,10 +257,10 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
             </div>
 
             <div className='space-y-2'>
-              <Label htmlFor='aliases'>搜索别名</Label>
+              <Label htmlFor='aliases'>{t('aliases')}</Label>
               <Input
                 id='aliases'
-                placeholder='例如: dada2, feature-classifier（用逗号分隔）'
+                placeholder={t('aliasesPlaceholder')}
                 value={aliases}
                 onChange={(e) =>
                   dispatch({
@@ -268,10 +273,10 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
             </div>
 
             <div className='space-y-2'>
-              <Label htmlFor='description'>描述</Label>
+              <Label htmlFor='description'>{t('description')}</Label>
               <Textarea
                 id='description'
-                placeholder='简要描述该镜像的功能和用途'
+                placeholder={t('descPlaceholder')}
                 value={description}
                 onChange={(e) =>
                   dispatch({
@@ -286,11 +291,11 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
 
             <div className='grid grid-cols-2 gap-4'>
               <div className='space-y-2'>
-                <Label htmlFor='homepage'>主页链接</Label>
+                <Label htmlFor='homepage'>{t('homepage')}</Label>
                 <Input
                   id='homepage'
                   type='url'
-                  placeholder='https://example.com'
+                  placeholder={t('homepagePlaceholder')}
                   value={homepage}
                   onChange={(e) =>
                     dispatch({
@@ -303,11 +308,11 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
               </div>
 
               <div className='space-y-2'>
-                <Label htmlFor='paperLink'>论文链接</Label>
+                <Label htmlFor='paperLink'>{t('paperLink')}</Label>
                 <Input
                   id='paperLink'
                   type='url'
-                  placeholder='https://doi.org/...'
+                  placeholder={t('paperPlaceholder')}
                   value={paperLink}
                   onChange={(e) =>
                     dispatch({
@@ -325,7 +330,7 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
           <div className='space-y-4'>
             <div className='flex items-center justify-between gap-3'>
               <h3 className='text-sm font-semibold text-foreground'>
-                Docker 镜像配置
+                {t('dockerConfig')}
               </h3>
               <ImportImageUrlButton
                 onImport={(value) =>
@@ -341,7 +346,7 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
                 </Label>
                 <Input
                   id='registry'
-                  placeholder='例如: docker.io'
+                  placeholder={t('registryPlaceholder')}
                   value={registry}
                   onChange={(e) =>
                     dispatch({
@@ -360,7 +365,7 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
                 </Label>
                 <Input
                   id='namespace'
-                  placeholder='例如: biocontainers'
+                  placeholder={t('namespacePlaceholder')}
                   value={namespace}
                   onChange={(e) =>
                     dispatch({
@@ -381,7 +386,7 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
                 </Label>
                 <Input
                   id='repository'
-                  placeholder='例如: fastqc'
+                  placeholder={t('repositoryPlaceholder')}
                   value={repository}
                   onChange={(e) =>
                     dispatch({
@@ -400,7 +405,7 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
                 </Label>
                 <Input
                   id='tag'
-                  placeholder='例如: latest'
+                  placeholder={t('tagPlaceholder')}
                   value={tag}
                   onChange={(e) =>
                     dispatch({
@@ -416,12 +421,12 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
 
             {/* 预览完整镜像地址 */}
             <div className='space-y-2'>
-              <Label>镜像地址预览</Label>
+              <Label>{t('previewTitle')}</Label>
               <div className='p-3 bg-muted rounded-md'>
                 <code className='text-xs font-mono text-foreground break-all'>
                   {registry && namespace && repository && tag
                     ? `${registry}/${namespace}/${repository}:${tag}`
-                    : '请填写所有必填字段以预览镜像地址'}
+                    : t('previewEmpty')}
                 </code>
               </div>
             </div>
@@ -434,7 +439,7 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
             variant='outline'
             onClick={() => setOpen(false)}
           >
-            取消
+            {t('cancel')}
           </Button>
           <Button
             type='button'
@@ -449,7 +454,7 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
               !tag
             }
           >
-            {isPending ? '创建中...' : '创建'}
+            {isPending ? t('creating') : t('create')}
           </Button>
         </DialogFooter>
       </DialogContent>

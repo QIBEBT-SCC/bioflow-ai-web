@@ -2,6 +2,7 @@
 
 import { Loader2Icon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import type React from 'react'
 import { useEffect } from 'react'
 import { useAuth } from '@/hooks/use-auth-query'
@@ -37,6 +38,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
  * 已登录时自动重定向到 /project。
  */
 export function GuestGuard({ children }: { children: React.ReactNode }) {
+  const t = useTranslations('Auth')
   const { push } = useRouter()
   const { user, loading } = useAuth()
 
@@ -51,7 +53,7 @@ export function GuestGuard({ children }: { children: React.ReactNode }) {
       <div className='flex h-screen items-center justify-center'>
         <div className='flex flex-col items-center gap-4'>
           <Loader2Icon className='size-8 animate-spin text-primary' />
-          <p className='text-sm text-muted-foreground'>验证身份中...</p>
+          <p className='text-sm text-muted-foreground'>{t('verifying')}</p>
         </div>
       </div>
     )

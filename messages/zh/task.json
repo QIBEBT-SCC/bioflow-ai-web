@@ -155,6 +155,8 @@
       "empty": "这个运行实例没有可执行任务。",
       "open": "查看任务 {name}",
       "count": "共 {count} 个任务；列表最多显示约 6 个，滚动可查看其余任务。"
-    }
+    },
+    "runPageTitle": "工作流运行 | BioFlow AI",
+    "runPageDescription": "查看工作流运行进度和节点状态"
   }
 }

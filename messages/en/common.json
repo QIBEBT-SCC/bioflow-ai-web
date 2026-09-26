@@ -54,5 +54,8 @@
     "logout": "Log out",
     "loggingOut": "Logging out...",
     "accentSaveFailed": "Could not save theme color"
+  },
+  "Auth": {
+    "verifying": "Verifying identity..."
   }
 }

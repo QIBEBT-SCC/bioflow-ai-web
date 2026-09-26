@@ -137,7 +137,8 @@
       "fileMounts": "文件挂载",
       "noFileMounts": "暂无文件挂载",
       "addFileMount": "添加文件挂载",
-      "helpCommandResult": "帮助命令执行结果"
+      "helpCommandResult": "帮助命令执行结果",
+      "helpCommandError": "错误: {message}"
     },
     "Cards": {
       "param": "参数 {index}",

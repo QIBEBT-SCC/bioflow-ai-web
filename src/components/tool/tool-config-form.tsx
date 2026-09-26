@@ -235,7 +235,9 @@ export function ToolConfigForm({
           setShowHelpResult(true)
         },
         onError: (error) => {
-          setHelpCommandResult(`错误: ${error.message}`)
+          setHelpCommandResult(
+            t('helpCommandError', { message: error.message }),
+          )
           setShowHelpResult(true)
         },
       },

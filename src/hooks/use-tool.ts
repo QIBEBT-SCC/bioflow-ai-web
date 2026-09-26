@@ -1,6 +1,7 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import { refreshDocument } from '@/app/actions/document'
 import {
@@ -144,6 +145,7 @@ export const useToolUsage = (
  */
 export const useCreateTool = () => {
   const queryClient = useQueryClient()
+  const t = useTranslations('Toast.tool')
 
   return useMutation({
     mutationFn: (tool: DockerToolCreate) => createTool(tool),
@@ -151,10 +153,10 @@ export const useCreateTool = () => {
       queryClient.invalidateQueries({ queryKey: ['toolList'] })
       queryClient.invalidateQueries({ queryKey: ['groupTools'] })
       queryClient.invalidateQueries({ queryKey: ['searchTools'] })
-      toast.success('工具创建成功')
+      toast.success(t('createSuccess'))
     },
     onError: (error: Error) => {
-      toast.error(`工具创建失败: ${error.message}`)
+      toast.error(t('createFailed', { message: error.message }))
     },
   })
 }
@@ -164,6 +166,7 @@ export const useCreateTool = () => {
  */
 export const useDeleteTool = () => {
   const queryClient = useQueryClient()
+  const t = useTranslations('Toast.tool')
 
   return useMutation({
     mutationFn: (uid: string) => deleteTool(uid),
@@ -172,10 +175,10 @@ export const useDeleteTool = () => {
       queryClient.invalidateQueries({ queryKey: ['groupTools'] })
       queryClient.invalidateQueries({ queryKey: ['searchTools'] })
       queryClient.invalidateQueries({ queryKey: ['toolUsage'] })
-      toast.success('工具删除成功')
+      toast.success(t('deleteSuccess'))
     },
     onError: (error: Error) => {
-      toast.error(`工具删除失败: ${error.message}`)
+      toast.error(t('deleteFailed', { message: error.message }))
     },
   })
 }
@@ -185,6 +188,7 @@ export const useDeleteTool = () => {
  */
 export const useUpdateTool = () => {
   const queryClient = useQueryClient()
+  const t = useTranslations('Toast.tool')
 
   return useMutation({
     mutationFn: ({
@@ -198,10 +202,10 @@ export const useUpdateTool = () => {
       queryClient.invalidateQueries({ queryKey: ['tool', variables.uid] })
       queryClient.invalidateQueries({ queryKey: ['toolList'] })
       queryClient.invalidateQueries({ queryKey: ['groupTools'] })
-      toast.success('工具更新成功')
+      toast.success(t('updateSuccess'))
     },
     onError: (error: Error) => {
-      toast.error(`工具更新失败: ${error.message}`)
+      toast.error(t('updateFailed', { message: error.message }))
     },
   })
 }
@@ -272,16 +276,17 @@ export const useImage = (uid: string) => {
  */
 export const useCreateImage = () => {
   const queryClient = useQueryClient()
+  const t = useTranslations('Toast.image')
 
   return useMutation({
     mutationFn: (image: ToolImage) => createImage(image),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['images'] })
       queryClient.invalidateQueries({ queryKey: ['imageList'] })
-      toast.success('镜像创建成功')
+      toast.success(t('createSuccess'))
     },
     onError: (error: Error) => {
-      toast.error(`镜像创建失败: ${error.message}`)
+      toast.error(t('createFailed', { message: error.message }))
     },
   })
 }
@@ -291,6 +296,7 @@ export const useCreateImage = () => {
  */
 export const useUpdateImage = () => {
   const queryClient = useQueryClient()
+  const t = useTranslations('Toast.image')
 
   return useMutation({
     mutationFn: ({ uid, image }: { uid: string; image: Partial<ToolImage> }) =>
@@ -299,10 +305,10 @@ export const useUpdateImage = () => {
       queryClient.invalidateQueries({ queryKey: ['images'] })
       queryClient.invalidateQueries({ queryKey: ['image', variables.uid] })
       queryClient.invalidateQueries({ queryKey: ['imageList'] })
-      toast.success('镜像更新成功')
+      toast.success(t('updateSuccess'))
     },
     onError: (error: Error) => {
-      toast.error(`镜像更新失败: ${error.message}`)
+      toast.error(t('updateFailed', { message: error.message }))
     },
   })
 }
@@ -322,15 +328,16 @@ export const useRunInImage = () => {
  */
 export const useRefreshDocument = () => {
   const queryClient = useQueryClient()
+  const t = useTranslations('Toast.document')
 
   return useMutation({
     mutationFn: (uid: string) => refreshDocument(uid),
     onSuccess: (_data, uid) => {
       queryClient.invalidateQueries({ queryKey: ['tool', uid] })
-      toast.success('文档刷新成功')
+      toast.success(t('refreshSuccess'))
     },
     onError: (error: Error) => {
-      toast.error(`文档刷新失败: ${error.message}`)
+      toast.error(t('refreshFailed', { message: error.message }))
     },
   })
 }

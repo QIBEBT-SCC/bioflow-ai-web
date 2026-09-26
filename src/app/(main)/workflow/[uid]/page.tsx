@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
+import { getTranslations } from 'next-intl/server'
 import { WorkflowRunFlow } from '@/components/workflow/workflow-run-flow'
 
-export const metadata: Metadata = {
-  title: '工作流运行 | BioFlow AI',
-  description: '查看工作流运行进度和节点状态',
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('workflowMonitor')
+  return { title: t('runPageTitle'), description: t('runPageDescription') }
 }
 
 export default async function WorkflowRunPage({

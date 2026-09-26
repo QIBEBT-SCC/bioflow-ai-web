@@ -42,7 +42,9 @@
       "previewEmpty": "Please fill all required fields to preview the image URI",
       "cancel": "Cancel",
       "creating": "Creating...",
-      "create": "Create"
+      "create": "Create",
+      "aliases": "Search aliases",
+      "aliasesPlaceholder": "e.g. dada2, feature-classifier (comma-separated)"
     },
     "card": {
       "noDesc": "No description available",

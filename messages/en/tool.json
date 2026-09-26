@@ -137,7 +137,8 @@
       "fileMounts": "File Mounts",
       "noFileMounts": "No file mounts",
       "addFileMount": "Add File Mount",
-      "helpCommandResult": "Help Command Execution Result"
+      "helpCommandResult": "Help Command Execution Result",
+      "helpCommandError": "Error: {message}"
     },
     "Cards": {
       "param": "Parameter {index}",

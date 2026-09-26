@@ -217,7 +217,9 @@
         "outputFiles": "输出文件",
         "resizeOrCollapse": "拖拽调整宽度 / 点击收起",
         "expandPanel": "展开面板",
-        "refreshFiles": "刷新文件树"
+        "refreshFiles": "刷新文件树",
+        "blockedTasks": "已阻断",
+        "readyQueued": "就绪 / 队列"
       },
       "view": {
         "list": "列表视图",

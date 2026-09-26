@@ -1,6 +1,7 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import {
@@ -76,12 +77,13 @@ export const useSearchDB = (
  * 创建数据库
  */
 export const useCreateDB = () => {
+  const t = useTranslations('Toast.database')
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (data: BioDbCreate) => createDB(data),
     onSuccess: () => {
-      toast.success('数据库添加成功')
+      toast.success(t('createSuccess'))
       queryClient.invalidateQueries({ queryKey: ['databases', 'list'] })
       queryClient.invalidateQueries({ queryKey: ['databases', 'search'] })
     },
@@ -96,19 +98,25 @@ export const useCreateDB = () => {
  * 删除数据库
  */
 export const useDeleteDB = () => {
+  const t = useTranslations('Toast.database')
+  const tUnknown = useTranslations('Toast')
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (id: number) => deleteDB(id),
     onSuccess: (_, id) => {
-      toast.success('数据库删除成功')
+      toast.success(t('deleteSuccess'))
       queryClient.invalidateQueries({ queryKey: ['databases', 'list'] })
       queryClient.invalidateQueries({ queryKey: ['databases', 'search'] })
       // 删除详情缓存
       queryClient.removeQueries({ queryKey: ['database', id] })
     },
     onError: (error: Error) => {
-      toast.error(`删除失败: ${error.message || '未知错误'}`)
+      toast.error(
+        t('deleteFailed', {
+          message: error.message || tUnknown('unknownError'),
+        }),
+      )
     },
   })
 }
@@ -117,6 +125,8 @@ export const useDeleteDB = () => {
  * 提交数据库下载任务
  */
 export const useDownloadDB = () => {
+  const t = useTranslations('Toast.database')
+  const tUnknown = useTranslations('Toast')
   return useMutation({
     mutationFn: (id: number) => downloadDB(id),
     onSuccess: (result) => {
@@ -124,11 +134,15 @@ export const useDownloadDB = () => {
     },
     onError: (error: Error & { status?: number }) => {
       if (error.status === 409) {
-        toast.error('下载任务已在进行中')
+        toast.error(t('downloadInProgress'))
       } else if (error.status === 422) {
-        toast.error('未配置下载命令')
+        toast.error(t('downloadNotConfigured'))
       } else {
-        toast.error(`提交下载任务失败: ${error.message || '未知错误'}`)
+        toast.error(
+          t('downloadSubmitFailed', {
+            message: error.message || tUnknown('unknownError'),
+          }),
+        )
       }
     },
   })
@@ -234,6 +248,7 @@ export const usePrefetchDB = () => {
  * 乐观更新：删除数据库（立即从列表移除，后台确认）
  */
 export const useOptimisticDeleteDB = () => {
+  const t = useTranslations('Toast.database')
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -280,10 +295,10 @@ export const useOptimisticDeleteDB = () => {
           queryClient.setQueryData(queryKey, data)
         }
       }
-      toast.error('删除失败')
+      toast.error(t('deleteFailedGeneric'))
     },
     onSuccess: (_, id) => {
-      toast.success('数据库删除成功')
+      toast.success(t('deleteSuccess'))
       queryClient.removeQueries({ queryKey: ['database', id] })
       queryClient.invalidateQueries({ queryKey: ['databases', 'list'] })
       queryClient.invalidateQueries({ queryKey: ['databases', 'search'] })

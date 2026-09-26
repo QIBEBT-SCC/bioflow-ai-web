@@ -217,7 +217,9 @@
         "outputFiles": "Output Files",
         "resizeOrCollapse": "Drag to resize / click to collapse",
         "expandPanel": "Expand panel",
-        "refreshFiles": "Refresh file tree"
+        "refreshFiles": "Refresh file tree",
+        "blockedTasks": "Blocked",
+        "readyQueued": "Ready / Queued"
       },
       "view": {
         "list": "List view",
