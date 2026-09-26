@@ -95,7 +95,7 @@ export function NewProjectDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>
-          <PlusIcon className='size-4 mr-2' />
+          <PlusIcon className='size-4' />
           {t('trigger')}
         </Button>
       </DialogTrigger>

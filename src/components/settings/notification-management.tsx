@@ -96,9 +96,7 @@ export function NotificationManagement() {
                 <span
                   className={cn(
                     'size-2 rounded-full',
-                    channel.enabled
-                      ? 'bg-emerald-500'
-                      : 'bg-muted-foreground/40',
+                    channel.enabled ? 'bg-success' : 'bg-muted-foreground/40',
                   )}
                 />
               </button>

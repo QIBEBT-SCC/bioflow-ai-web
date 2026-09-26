@@ -1,15 +1,6 @@
 'use client'
 
-import {
-  BanIcon,
-  CalendarRangeIcon,
-  CheckCircle2Icon,
-  CircleDotIcon,
-  Clock3Icon,
-  ListOrderedIcon,
-  Loader2Icon,
-  XCircleIcon,
-} from 'lucide-react'
+import { CalendarRangeIcon, Clock3Icon, Loader2Icon } from 'lucide-react'
 import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
 import { useEffect, useMemo, useState } from 'react'
@@ -29,6 +20,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import {
+  RUN_STATUS_APPEARANCE,
+  RunStatusIcon,
+  statusToneClasses,
+} from '@/components/workflow/run-status'
 import { useRecentTasks } from '@/hooks/use-task'
 import { cn } from '@/lib/utils'
 import { type NodeRunRecordV2, NodeRunStatusV2 } from '@/types/workflow-v2'
@@ -40,88 +36,16 @@ const RANGE_OPTIONS = [
   { hours: 168, labelKey: 'last7Days' },
 ] as const
 
+// Filter order for the status chips.
 const STATUS_OPTIONS = [
-  {
-    value: NodeRunStatusV2.RUNNING,
-    labelKey: 'running',
-    dotClassName: 'bg-sky-500',
-  },
-  {
-    value: NodeRunStatusV2.QUEUED,
-    labelKey: 'queued',
-    dotClassName: 'bg-violet-500',
-  },
-  {
-    value: NodeRunStatusV2.READY,
-    labelKey: 'ready',
-    dotClassName: 'bg-amber-500',
-  },
-  {
-    value: NodeRunStatusV2.PENDING,
-    labelKey: 'pending',
-    dotClassName: 'bg-slate-400',
-  },
-  {
-    value: NodeRunStatusV2.SUCCEEDED,
-    labelKey: 'succeeded',
-    dotClassName: 'bg-emerald-500',
-  },
-  {
-    value: NodeRunStatusV2.FAILED,
-    labelKey: 'failed',
-    dotClassName: 'bg-rose-500',
-  },
-  {
-    value: NodeRunStatusV2.BLOCKED,
-    labelKey: 'blocked',
-    dotClassName: 'bg-zinc-500',
-  },
-] as const
-
-const STATUS_APPEARANCE = {
-  [NodeRunStatusV2.PENDING]: {
-    icon: Clock3Icon,
-    barClassName:
-      'border-slate-400/50 bg-slate-500/15 text-slate-800 dark:text-slate-200',
-    iconClassName: 'text-slate-600 dark:text-slate-400',
-  },
-  [NodeRunStatusV2.READY]: {
-    icon: CircleDotIcon,
-    barClassName:
-      'border-amber-400/50 bg-amber-500/15 text-amber-800 dark:text-amber-200',
-    iconClassName: 'text-amber-600 dark:text-amber-400',
-  },
-  [NodeRunStatusV2.QUEUED]: {
-    icon: ListOrderedIcon,
-    barClassName:
-      'border-violet-400/50 bg-violet-500/15 text-violet-800 dark:text-violet-200',
-    iconClassName: 'text-violet-600 dark:text-violet-400',
-  },
-  [NodeRunStatusV2.RUNNING]: {
-    icon: Loader2Icon,
-    barClassName:
-      'border-sky-400/60 bg-sky-500/20 text-sky-800 dark:text-sky-100',
-    iconClassName: 'text-sky-600 dark:text-sky-400',
-  },
-  [NodeRunStatusV2.FAILED]: {
-    icon: XCircleIcon,
-    barClassName:
-      'border-rose-400/50 bg-rose-500/15 text-rose-800 dark:text-rose-200',
-    iconClassName: 'text-rose-600 dark:text-rose-400',
-  },
-  [NodeRunStatusV2.SUCCEEDED]: {
-    icon: CheckCircle2Icon,
-    barClassName:
-      'border-emerald-400/50 bg-emerald-500/15 text-emerald-800 dark:text-emerald-200',
-    iconClassName: 'text-emerald-600 dark:text-emerald-400',
-  },
-  [NodeRunStatusV2.BLOCKED]: {
-    icon: BanIcon,
-    barClassName:
-      'border-zinc-400/50 bg-zinc-500/15 text-zinc-800 dark:text-zinc-200',
-    iconClassName: 'text-zinc-600 dark:text-zinc-400',
-  },
-} as const
+  NodeRunStatusV2.RUNNING,
+  NodeRunStatusV2.QUEUED,
+  NodeRunStatusV2.READY,
+  NodeRunStatusV2.PENDING,
+  NodeRunStatusV2.SUCCEEDED,
+  NodeRunStatusV2.FAILED,
+  NodeRunStatusV2.BLOCKED,
+].map((value) => ({ value, ...RUN_STATUS_APPEARANCE[value] }))
 
 const ACTIVE_NODE_RUN_STATUSES = new Set<NodeRunStatusV2>([
   NodeRunStatusV2.PENDING,
@@ -373,7 +297,12 @@ function TimelineStatusFilters({
               'border-foreground/20 bg-accent text-foreground shadow-xs',
           )}
         >
-          <span className={cn('size-1.5 rounded-full', option.dotClassName)} />
+          <span
+            className={cn(
+              'size-1.5 rounded-full',
+              statusToneClasses[option.tone].dot,
+            )}
+          />
           {t(`status.${option.labelKey}`)} · {counts[option.value]}
         </button>
       ))}
@@ -478,8 +407,7 @@ interface TimelineRowProps {
 function TimelineRow({ item, ticks }: TimelineRowProps) {
   const locale = useLocale()
   const t = useTranslations('task')
-  const appearance = STATUS_APPEARANCE[item.task.status]
-  const StatusIcon = appearance.icon
+  const tone = statusToneClasses[RUN_STATUS_APPEARANCE[item.task.status].tone]
   const statusOption = STATUS_OPTIONS.find(
     (option) => option.value === item.task.status,
   )
@@ -517,14 +445,7 @@ function TimelineRow({ item, ticks }: TimelineRowProps) {
   return (
     <div className='group/row grid grid-cols-[280px_minmax(640px,1fr)] border-b last:border-b-0 hover:bg-muted/20'>
       <div className='sticky left-0 z-10 flex h-16 min-w-0 items-center gap-3 border-r bg-card px-5 group-hover/row:bg-muted/20'>
-        <StatusIcon
-          className={cn(
-            'size-4 shrink-0',
-            appearance.iconClassName,
-            item.task.status === NodeRunStatusV2.RUNNING &&
-              'animate-spin motion-reduce:animate-none',
-          )}
-        />
+        <RunStatusIcon status={item.task.status} className='size-4' />
         <div className='min-w-0'>
           <Link
             href={`/task/${item.task.uid}`}
@@ -554,7 +475,7 @@ function TimelineRow({ item, ticks }: TimelineRowProps) {
               aria-label={t('timeline.openTask', { name: item.task.name })}
               className={cn(
                 'absolute top-[18px] flex h-7 min-w-2 items-center overflow-hidden rounded-md border px-2 text-[11px] font-medium shadow-xs transition-[filter,transform] hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                appearance.barClassName,
+                tone.badge,
               )}
               style={{
                 left: `${Math.min(item.startPercent, 99.5)}%`,
@@ -563,7 +484,7 @@ function TimelineRow({ item, ticks }: TimelineRowProps) {
               }}
             >
               {item.task.status === NodeRunStatusV2.RUNNING ? (
-                <span className='absolute inset-0 animate-pulse bg-sky-500/10 motion-reduce:animate-none' />
+                <span className='absolute inset-0 animate-pulse bg-info/10 motion-reduce:animate-none' />
               ) : null}
               <span className='relative truncate'>{duration}</span>
             </Link>

@@ -107,7 +107,7 @@ export function OpenCodeAgentSettings({ available }: { available: boolean }) {
           </div>
         </div>
         {configured ? (
-          <div className='flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400'>
+          <div className='flex items-center gap-2 text-sm text-success'>
             <CheckCircle2Icon className='size-4' />
             {t('connected')}
           </div>

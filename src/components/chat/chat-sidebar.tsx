@@ -567,7 +567,7 @@ function ChatSidebarInner({
                     aria-hidden='true'
                     className='pointer-events-none absolute inset-x-0 top-0 min-h-20 whitespace-pre-wrap wrap-break-word px-3 py-2 text-base md:text-sm'
                   >
-                    <span className='text-blue-600 [-webkit-text-stroke:0.25px_currentColor] dark:text-blue-400'>
+                    <span className='text-primary [-webkit-text-stroke:0.25px_currentColor]'>
                       /{parsedCommand.command.key}
                     </span>
                     <span className='text-foreground'>

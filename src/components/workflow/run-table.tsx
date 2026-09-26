@@ -1,18 +1,14 @@
 'use client'
 
 import {
-  CheckCircle2Icon,
   ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   Clock3Icon,
-  Loader2Icon,
-  XCircleIcon,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
 import { Fragment, useMemo, useState } from 'react'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import {
@@ -31,37 +27,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import {
+  RUN_STATUS_APPEARANCE,
+  RunStatusBadge,
+} from '@/components/workflow/run-status'
 import { RunTaskList } from '@/components/workflow/run-task-list'
 import { useWorkflowMonitorRuns } from '@/hooks/use-workflow-monitor'
 import { cn } from '@/lib/utils'
 import { WorkflowRunStatusV2 } from '@/types/workflow-v2'
-
-const STATUS_APPEARANCE = {
-  [WorkflowRunStatusV2.PENDING]: {
-    labelKey: 'pending',
-    variant: 'secondary' as const,
-    icon: Clock3Icon,
-    iconClassName: 'text-amber-600',
-  },
-  [WorkflowRunStatusV2.RUNNING]: {
-    labelKey: 'running',
-    variant: 'default' as const,
-    icon: Loader2Icon,
-    iconClassName: 'text-blue-600',
-  },
-  [WorkflowRunStatusV2.SUCCEEDED]: {
-    labelKey: 'succeeded',
-    variant: 'outline' as const,
-    icon: CheckCircle2Icon,
-    iconClassName: 'text-emerald-600',
-  },
-  [WorkflowRunStatusV2.FAILED]: {
-    labelKey: 'failed',
-    variant: 'destructive' as const,
-    icon: XCircleIcon,
-    iconClassName: 'text-red-600',
-  },
-}
 
 export function RunTables({
   refetchInterval,
@@ -127,9 +100,9 @@ export function RunTables({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value='all'>{t('table.all')}</SelectItem>
-              {Object.entries(STATUS_APPEARANCE).map(([status, appearance]) => (
+              {Object.values(WorkflowRunStatusV2).map((status) => (
                 <SelectItem key={status} value={status}>
-                  {t(`status.${appearance.labelKey}`)}
+                  {t(`status.${RUN_STATUS_APPEARANCE[status].labelKey}`)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -193,8 +166,7 @@ export function RunTables({
               </TableRow>
             ) : (
               runs.map((run) => {
-                const appearance = STATUS_APPEARANCE[run.status]
-                const StatusIcon = appearance.icon
+                const appearance = RUN_STATUS_APPEARANCE[run.status]
                 const stats = run.node_statistics
                 const terminal = stats.succeeded + stats.failed + stats.blocked
                 const progress =
@@ -246,17 +218,10 @@ export function RunTables({
                       </TableCell>
                       <TableCell>
                         <div className='space-y-1'>
-                          <Badge variant={appearance.variant} className='gap-1'>
-                            <StatusIcon
-                              className={cn(
-                                'size-3',
-                                appearance.iconClassName,
-                                run.status === WorkflowRunStatusV2.RUNNING &&
-                                  'animate-spin motion-reduce:animate-none',
-                              )}
-                            />
-                            {t(`status.${appearance.labelKey}`)}
-                          </Badge>
+                          <RunStatusBadge
+                            status={run.status}
+                            label={t(`status.${appearance.labelKey}`)}
+                          />
                           {!run.settled ? (
                             <p className='text-[11px] text-muted-foreground'>
                               {t('table.unsettled')}
@@ -331,7 +296,7 @@ export function RunTables({
               }}
               disabled={page === 0}
             >
-              <ChevronLeftIcon className='mr-1 size-4' />
+              <ChevronLeftIcon className='size-4' />
               {t('table.previous')}
             </Button>
             <Button
@@ -345,7 +310,7 @@ export function RunTables({
               disabled={page >= totalPages - 1}
             >
               {t('table.next')}
-              <ChevronRightIcon className='ml-1 size-4' />
+              <ChevronRightIcon className='size-4' />
             </Button>
           </div>
         </div>

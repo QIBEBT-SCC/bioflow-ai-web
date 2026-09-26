@@ -79,7 +79,7 @@ function imageFormReducer(
 
 const DEFAULT_TRIGGER = (
   <Button>
-    <Plus className='size-4 mr-2' />
+    <Plus className='size-4' />
     新建镜像
   </Button>
 )

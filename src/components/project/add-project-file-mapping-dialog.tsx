@@ -81,7 +81,7 @@ export function AddProjectFileMappingDialog({
       <DialogTrigger asChild>
         {trigger || (
           <Button size='sm' variant='outline'>
-            <PlusIcon className='size-4 mr-2' />
+            <PlusIcon className='size-4' />
             {t('add')}
           </Button>
         )}

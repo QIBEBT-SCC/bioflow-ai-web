@@ -158,7 +158,7 @@ export function DatabaseAddDialog({
           <div className='grid grid-cols-[minmax(0,1fr)] gap-4 py-4'>
             <div className='space-y-2'>
               <Label htmlFor='name'>
-                {t('database_name')} <span className='text-red-500'>*</span>
+                {t('database_name')} <span className='text-destructive'>*</span>
               </Label>
               <Input
                 id='name'
@@ -179,11 +179,13 @@ export function DatabaseAddDialog({
                 required
                 disabled={createMutation.isPending}
                 className={
-                  nameError ? 'border-red-500 focus-visible:ring-red-500' : ''
+                  nameError
+                    ? 'border-destructive focus-visible:ring-destructive'
+                    : ''
                 }
               />
               {nameError && (
-                <p className='text-sm text-red-500 mt-1'>{nameError}</p>
+                <p className='text-sm text-destructive mt-1'>{nameError}</p>
               )}
             </div>
 
@@ -225,7 +227,9 @@ export function DatabaseAddDialog({
                 }}
                 disabled={createMutation.isPending}
                 className={
-                  sourceError ? 'border-red-500 focus-visible:ring-red-500' : ''
+                  sourceError
+                    ? 'border-destructive focus-visible:ring-destructive'
+                    : ''
                 }
               />
             </div>
@@ -250,13 +254,13 @@ export function DatabaseAddDialog({
                     })
                 }}
                 disabled={createMutation.isPending}
-                className={`font-mono ${sourceError ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
+                className={`font-mono ${sourceError ? 'border-destructive focus-visible:ring-destructive' : ''}`}
               />
               <p className='text-sm text-muted-foreground'>
                 {t('source_hint')}
               </p>
               {sourceError && (
-                <p className='text-sm text-red-500 mt-1'>{sourceError}</p>
+                <p className='text-sm text-destructive mt-1'>{sourceError}</p>
               )}
             </div>
 

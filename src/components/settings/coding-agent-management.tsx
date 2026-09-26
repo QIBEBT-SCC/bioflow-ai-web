@@ -58,7 +58,9 @@ export function CodingAgentManagement({
 
       <TabsContent value='codex' className='space-y-6'>
         <div>
-          <h2 className='text-xl font-semibold'>{t('codexTitle')}</h2>
+          <h2 className='text-lg font-semibold tracking-tight'>
+            {t('codexTitle')}
+          </h2>
           <p className='mt-1 text-sm text-muted-foreground'>
             {t('codexDescription')}
           </p>
@@ -69,7 +71,9 @@ export function CodingAgentManagement({
 
       <TabsContent value='opencode' className='space-y-6'>
         <div>
-          <h2 className='text-xl font-semibold'>{t('openCodeTitle')}</h2>
+          <h2 className='text-lg font-semibold tracking-tight'>
+            {t('openCodeTitle')}
+          </h2>
           <p className='mt-1 text-sm text-muted-foreground'>
             {t('openCodeDescription')}
           </p>

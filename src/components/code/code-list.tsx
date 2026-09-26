@@ -4,7 +4,7 @@ import { MoreHorizontalIcon, PencilIcon, Trash2Icon } from 'lucide-react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
-import { CodeTypeBadge } from '@/components/code/code-type-badge'
+import { CodeTypeBadge, CodeTypeIcon } from '@/components/code/code-type-badge'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -104,7 +104,7 @@ export function CodeList({
 
   if (isError) {
     return (
-      <Empty className='border'>
+      <Empty className='border border-dashed'>
         <EmptyHeader>
           <EmptyTitle>{t('loadErrorTitle')}</EmptyTitle>
           <EmptyDescription>{t('loadErrorDescription')}</EmptyDescription>
@@ -115,7 +115,7 @@ export function CodeList({
 
   if (!data?.data.length) {
     return (
-      <Empty className='border'>
+      <Empty className='border border-dashed'>
         <EmptyHeader>
           <EmptyMedia variant='icon'>
             <span className='font-mono text-sm'>&lt;/&gt;</span>
@@ -131,31 +131,23 @@ export function CodeList({
     <>
       <div className='grid gap-4 md:grid-cols-2 xl:grid-cols-3'>
         {data.data.map((code) => {
-          const isPython = code.node_type === 'code_python'
-          const isR = code.node_type === 'code_R'
           return (
             <Card
               key={code.uid}
-              className='group relative gap-0 overflow-hidden py-0 transition-all hover:-translate-y-0.5 hover:border-foreground/20 hover:shadow-md'
+              className='group relative gap-0 py-0 transition-[border-color,box-shadow] hover:border-primary/40 hover:shadow-md'
             >
-              <div
-                className={
-                  isPython
-                    ? 'h-1 bg-gradient-to-r from-blue-500 to-cyan-400'
-                    : isR
-                      ? 'h-1 bg-gradient-to-r from-violet-500 to-fuchsia-400'
-                      : 'h-1 bg-gradient-to-r from-amber-500 to-orange-400'
-                }
-              />
               <CardHeader className='gap-3 px-5 pt-5 pb-3'>
-                <CardTitle className='line-clamp-2 min-w-0 text-base leading-6'>
-                  <Link
-                    href={`/code/${code.uid}`}
-                    className='after:absolute after:inset-0'
-                  >
-                    {code.name}
-                  </Link>
-                </CardTitle>
+                <div className='flex min-w-0 items-start gap-3'>
+                  <CodeTypeIcon nodeType={code.node_type} />
+                  <CardTitle className='line-clamp-2 min-w-0 pt-0.5 text-base leading-6'>
+                    <Link
+                      href={`/code/${code.uid}`}
+                      className='after:absolute after:inset-0 group-hover:text-primary'
+                    >
+                      {code.name}
+                    </Link>
+                  </CardTitle>
+                </div>
 
                 <CardAction className='relative z-10'>
                   <DropdownMenu>
@@ -174,7 +166,7 @@ export function CodeList({
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
-                        className='text-destructive'
+                        variant='destructive'
                         onClick={() =>
                           setDeleteTarget({ uid: code.uid, name: code.name })
                         }
@@ -193,7 +185,7 @@ export function CodeList({
                 </p>
               </CardContent>
 
-              <CardFooter className='mt-auto border-t bg-muted/20 px-5 py-3 pt-3!'>
+              <CardFooter className='mt-auto border-t px-5 py-3 pt-3!'>
                 <CodeTypeBadge nodeType={code.node_type} />
               </CardFooter>
             </Card>

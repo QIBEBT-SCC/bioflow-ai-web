@@ -77,7 +77,7 @@ export function NavMain({ role }: { role?: UserRole }) {
                 asChild
                 isActive={item.name === activePage}
                 onClick={() => setActivePage(item.name)}
-                tooltip={item.name}
+                tooltip={t(item.name)}
               >
                 <Link href={item.url}>
                   <item.icon />

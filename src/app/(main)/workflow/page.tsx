@@ -11,13 +11,12 @@ import {
 } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { TaskTimeline } from '@/components/task/task-timeline'
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbPage,
-} from '@/components/ui/breadcrumb'
+  PageContainer,
+  PageHeader,
+  PageShell,
+} from '@/components/layout/page-shell'
+import { TaskTimeline } from '@/components/task/task-timeline'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -27,8 +26,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Separator } from '@/components/ui/separator'
-import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { RunTables } from '@/components/workflow/run-table'
 import { useRunStats } from '@/hooks/use-run'
 import { useWorkflowStore } from '@/stores/workflowStore'
@@ -78,45 +75,28 @@ export default function WorkflowPage() {
   }, [queryClient])
 
   return (
-    <SidebarInset className='flex h-screen flex-col'>
-      <header className='flex shrink-0 flex-col border-b'>
-        <div className='flex h-12 items-center justify-between bg-background px-4'>
-          <div className='flex items-center gap-2'>
-            <SidebarTrigger className='-ml-1' />
-            <Separator orientation='vertical' className='!mr-2 !h-4' />
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem className='hidden md:block'>
-                  <BreadcrumbPage>{t('title')}</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </div>
-        </div>
-      </header>
-
-      <main className='flex-1 overflow-y-auto'>
-        <div className='container mx-auto max-w-[96rem] px-6 py-8'>
-          <div className='grid items-start gap-x-6 gap-y-8 2xl:grid-cols-[13rem_minmax(0,1fr)]'>
-            <div className='flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center 2xl:col-start-2'>
-              <div>
-                <h1 className='text-3xl font-semibold tracking-tight'>
-                  {t('title')}
-                </h1>
-                <p className='mt-1 text-muted-foreground'>{t('description')}</p>
-              </div>
-              <div className='flex items-center gap-2'>
-                <div className='flex items-center rounded-md bg-muted/50 px-3 py-2 text-sm text-muted-foreground'>
-                  <Clock3Icon className='mr-2 size-4' />
-                  {t('refresh.updatedAt', {
-                    time: timeFormatter.format(lastRefreshTime),
-                  })}
+    <PageShell breadcrumbs={[{ label: t('title') }]}>
+      <PageContainer size='wide'>
+        <div className='grid items-start gap-x-6 gap-y-6 2xl:grid-cols-[13rem_minmax(0,1fr)]'>
+          <PageHeader
+            className='mb-0 2xl:col-start-2'
+            title={t('title')}
+            description={t('description')}
+            actions={
+              <>
+                <div className='flex h-9 items-center gap-2 rounded-md border bg-card px-3 text-sm text-muted-foreground'>
+                  <Clock3Icon className='size-4' />
+                  <span className='tabular-nums'>
+                    {t('refresh.updatedAt', {
+                      time: timeFormatter.format(lastRefreshTime),
+                    })}
+                  </span>
                 </div>
                 <Select
                   value={refreshInterval}
                   onValueChange={setRefreshInterval}
                 >
-                  <SelectTrigger className='w-36'>
+                  <SelectTrigger className='w-full sm:w-36'>
                     <SelectValue placeholder={t('refresh.label')} />
                   </SelectTrigger>
                   <SelectContent>
@@ -137,33 +117,34 @@ export default function WorkflowPage() {
                   size='icon'
                   onClick={handleForceRefresh}
                   title={t('refresh.manual')}
+                  aria-label={t('refresh.manual')}
                 >
                   <RefreshCwIcon className='size-4' />
                 </Button>
+              </>
+            }
+          />
+
+          <RunStatsSidebar stats={runStats} />
+
+          <div className='min-w-0 space-y-6 2xl:col-start-2 2xl:row-start-2'>
+            <TaskTimeline refetchInterval={refetchIntervalMs} />
+
+            <section className='space-y-4'>
+              <div>
+                <h2 className='text-lg font-semibold tracking-tight'>
+                  {t('table.title')}
+                </h2>
+                <p className='mt-1 text-sm text-muted-foreground'>
+                  {t('table.description')}
+                </p>
               </div>
-            </div>
-
-            <RunStatsSidebar stats={runStats} />
-
-            <div className='min-w-0 space-y-8 2xl:col-start-2 2xl:row-start-2'>
-              <TaskTimeline refetchInterval={refetchIntervalMs} />
-
-              <section className='space-y-4'>
-                <div>
-                  <h2 className='text-xl font-semibold tracking-tight'>
-                    {t('table.title')}
-                  </h2>
-                  <p className='mt-1 text-sm text-muted-foreground'>
-                    {t('table.description')}
-                  </p>
-                </div>
-                <RunTables refetchInterval={refetchIntervalMs} />
-              </section>
-            </div>
+              <RunTables refetchInterval={refetchIntervalMs} />
+            </section>
           </div>
         </div>
-      </main>
-    </SidebarInset>
+      </PageContainer>
+    </PageShell>
   )
 }
 
@@ -181,35 +162,35 @@ function RunStatsSidebar({ stats }: { stats?: WorkflowRunStatisticsV2 }) {
       key: 'pending',
       value: stats?.pending ?? 0,
       icon: Clock3Icon,
-      iconClassName: 'text-amber-500',
-      valueClassName: 'text-amber-600',
+      iconClassName: 'text-warning',
+      valueClassName: 'text-warning',
     },
     {
       key: 'running',
       value: stats?.running ?? 0,
       icon: Loader2Icon,
-      iconClassName: 'text-blue-500',
-      valueClassName: 'text-blue-600',
+      iconClassName: 'text-info',
+      valueClassName: 'text-info',
     },
     {
       key: 'succeeded',
       value: stats?.succeeded ?? 0,
       icon: CheckCircle2Icon,
-      iconClassName: 'text-emerald-500',
-      valueClassName: 'text-emerald-600',
+      iconClassName: 'text-success',
+      valueClassName: 'text-success',
     },
     {
       key: 'failed',
       value: stats?.failed ?? 0,
       icon: XCircleIcon,
-      iconClassName: 'text-red-500',
-      valueClassName: 'text-red-600',
+      iconClassName: 'text-destructive',
+      valueClassName: 'text-destructive',
     },
   ] as const
 
   return (
-    <aside className='2xl:sticky 2xl:top-8 2xl:col-start-1 2xl:row-start-2 2xl:self-start'>
-      <Card className='gap-0 overflow-hidden py-0 shadow-xs'>
+    <aside className='2xl:sticky 2xl:top-0 2xl:col-start-1 2xl:row-start-2 2xl:self-start'>
+      <Card className='gap-0 overflow-hidden py-0'>
         <CardHeader className='hidden border-b px-4 py-3 2xl:flex'>
           <CardTitle className='text-sm font-medium'>{t('title')}</CardTitle>
         </CardHeader>

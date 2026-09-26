@@ -86,7 +86,9 @@ export function DatabaseDetail({ databaseId, onDelete }: DatabaseDetailProps) {
     <div className='space-y-4'>
       <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
         <div className='flex items-center gap-3'>
-          <h2 className='text-2xl font-semibold'>{database.name}</h2>
+          <h2 className='text-lg font-semibold tracking-tight'>
+            {database.name}
+          </h2>
           <DownloadStatusBadge status={downloadStatus} />
         </div>
         <div className='flex gap-2'>
@@ -97,11 +99,11 @@ export function DatabaseDetail({ databaseId, onDelete }: DatabaseDetailProps) {
               disabled={isDownloading || downloadMutation.isPending}
             >
               {isDownloading ? (
-                <Loader2Icon className='mr-2 size-4 animate-spin' />
+                <Loader2Icon className='size-4 animate-spin' />
               ) : database.path ? (
-                <RefreshCwIcon className='mr-2 size-4' />
+                <RefreshCwIcon className='size-4' />
               ) : (
-                <DownloadIcon className='mr-2 size-4' />
+                <DownloadIcon className='size-4' />
               )}
               {isDownloading
                 ? t('downloading_status')
@@ -115,7 +117,7 @@ export function DatabaseDetail({ databaseId, onDelete }: DatabaseDetailProps) {
             onClick={() => setIsDeleteDialogOpen(true)}
             disabled={deleteMutation.isPending}
           >
-            <Trash2Icon className='mr-2 size-4' />
+            <Trash2Icon className='size-4' />
             {deleteMutation.isPending ? t('deleting') : t('delete')}
           </Button>
         </div>
@@ -214,22 +216,16 @@ function DownloadStatusBadge({
 
   if (status === 'ready') {
     return (
-      <Badge
-        variant='outline'
-        className='border-green-500/50 text-green-600 dark:text-green-400'
-      >
-        <CheckCircle2Icon className='mr-1 size-3' />
+      <Badge variant='outline' className='border-success/50 text-success'>
+        <CheckCircle2Icon className='size-3' />
         {t('status_ready')}
       </Badge>
     )
   }
   if (status === 'downloading') {
     return (
-      <Badge
-        variant='outline'
-        className='border-blue-500/50 text-blue-600 dark:text-blue-400'
-      >
-        <Loader2Icon className='mr-1 size-3 animate-spin' />
+      <Badge variant='outline' className='border-info/50 text-info'>
+        <Loader2Icon className='size-3 animate-spin' />
         {t('downloading_status')}
       </Badge>
     )
@@ -237,7 +233,7 @@ function DownloadStatusBadge({
   if (status === 'not_downloaded') {
     return (
       <Badge variant='outline' className='text-muted-foreground'>
-        <CircleDashedIcon className='mr-1 size-3' />
+        <CircleDashedIcon className='size-3' />
         {t('status_not_downloaded')}
       </Badge>
     )

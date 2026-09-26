@@ -123,7 +123,7 @@ function ProjectTable({
       <div
         className={
           viewMode === 'grid'
-            ? 'grid gap-3 sm:grid-cols-2 2xl:grid-cols-3'
+            ? 'grid gap-4 sm:grid-cols-2 xl:grid-cols-3'
             : 'hidden'
         }
       >
@@ -135,16 +135,17 @@ function ProjectTable({
           </Card>
         ) : (
           projects.map((project) => (
-            <Card key={project.id} className='gap-0 py-0'>
+            <Card
+              key={project.id}
+              className='gap-0 py-0 transition-[border-color,box-shadow] hover:border-primary/40 hover:shadow-md'
+            >
               <CardContent className='space-y-3 p-4'>
                 <div className='flex items-start gap-2'>
                   <Button
                     variant='ghost'
                     size='icon'
                     className={
-                      project.starred
-                        ? 'text-amber-400'
-                        : 'text-muted-foreground'
+                      project.starred ? 'text-warning' : 'text-muted-foreground'
                     }
                     onClick={() => handleStar(project)}
                     disabled={isStarPending && pendingId === String(project.id)}
@@ -158,7 +159,7 @@ function ProjectTable({
                   <div className='min-w-0 flex-1'>
                     <Link
                       href={getProjectDetailHref(project.id, projectListHref)}
-                      className='block truncate font-medium hover:underline'
+                      className='block truncate font-semibold hover:text-primary'
                     >
                       {project.name}
                     </Link>
@@ -195,22 +196,24 @@ function ProjectTable({
 
       <div
         className={
-          viewMode === 'list' ? 'rounded-lg border bg-card shadow-sm' : 'hidden'
+          viewMode === 'list'
+            ? 'overflow-hidden rounded-xl border bg-card'
+            : 'hidden'
         }
       >
         <Table className='min-w-[1000px]'>
-          <TableHeader className='bg-muted/50'>
+          <TableHeader>
             <TableRow>
-              <TableHead className='h-12 px-4'>{t('projectName')}</TableHead>
-              <TableHead className='h-12 px-4'>{t('description')}</TableHead>
-              <TableHead className='h-12 px-4'>{t('tags')}</TableHead>
-              <TableHead className='h-12 text-right'>
+              <TableHead className='h-10 px-4'>{t('projectName')}</TableHead>
+              <TableHead className='h-10 px-4'>{t('description')}</TableHead>
+              <TableHead className='h-10 px-4'>{t('tags')}</TableHead>
+              <TableHead className='h-10 text-right'>
                 <div className='flex items-center justify-end'>
                   <UserIcon className='mr-1 size-3' />
                   {t('owner')}
                 </div>
               </TableHead>
-              <TableHead className='h-12 text-right'>
+              <TableHead className='h-10 text-right'>
                 <div className='flex items-center justify-end'>
                   <ClockIcon className='mr-1 size-3' />
                   {t('lastUpdated')}
@@ -241,7 +244,7 @@ function ProjectTable({
                         size='icon'
                         className={
                           project.starred
-                            ? 'text-amber-400'
+                            ? 'text-warning'
                             : 'text-muted-foreground'
                         }
                         onClick={() => handleStar(project)}
@@ -257,7 +260,7 @@ function ProjectTable({
                       </Button>
                       <Link
                         href={getProjectDetailHref(project.id, projectListHref)}
-                        className='font-medium hover:underline'
+                        className='font-medium hover:text-primary'
                       >
                         {project.name}
                       </Link>
@@ -360,14 +363,14 @@ function ProjectActions({
       </DropdownMenuTrigger>
       <DropdownMenuContent align='end'>
         <DropdownMenuItem onSelect={() => onEdit(project)}>
-          <PencilIcon className='mr-2 size-4' />
+          <PencilIcon className='size-4' />
           {t('edit')}
         </DropdownMenuItem>
         <DropdownMenuItem
-          className='text-destructive focus:text-destructive'
+          variant='destructive'
           onSelect={() => onDelete(project)}
         >
-          <Trash2Icon className='mr-2 size-4' />
+          <Trash2Icon className='size-4' />
           {t('delete')}
         </DropdownMenuItem>
       </DropdownMenuContent>
@@ -485,7 +488,7 @@ export function RecentProjectCard() {
     <Card className='gap-0 rounded-lg border py-0'>
       <Link
         href={`/project/${recentProject.id}`}
-        className='block p-4 transition-colors hover:bg-slate-50'
+        className='block p-4 transition-colors hover:bg-muted/50'
       >
         <div className='mb-2 font-medium'>{recentProject.name}</div>
         <div className='flex items-center text-xs text-muted-foreground'>

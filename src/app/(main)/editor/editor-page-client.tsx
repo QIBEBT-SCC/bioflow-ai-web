@@ -28,6 +28,7 @@ import { useShallow } from 'zustand/react/shallow'
 import { getToolArg } from '@/app/actions/tool'
 import { ChatSidebar } from '@/components/chat/chat-sidebar'
 import { ChatSidebarToggle } from '@/components/chat/chat-sidebar-toggle'
+import { PageTopbar } from '@/components/layout/page-shell'
 import { LoadWorkflowDialog } from '@/components/node-editor/load-workflow-dialog'
 import { PanelMenu } from '@/components/node-editor/menu/panel-menu'
 import {
@@ -39,15 +40,9 @@ import { SubgraphNavigation } from '@/components/node-editor/subgraph-context'
 import { SubgraphInterfaceEditor } from '@/components/node-editor/subgraph-interface-editor'
 import { SubgraphToolbar } from '@/components/node-editor/subgraph-toolbar'
 import { WorkflowJsonActions } from '@/components/node-editor/workflow-json-actions'
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbPage,
-} from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
+import { SidebarInset } from '@/components/ui/sidebar'
 import { useChatSidebarResize } from '@/hooks/use-chat-sidebar-resize'
 import { useInitialWorkflowLayout } from '@/hooks/use-initial-workflow-layout'
 import { useNewRunInstance } from '@/hooks/use-run'
@@ -366,26 +361,16 @@ function FlowContent() {
   }, [])
 
   return (
-    <SidebarInset className='h-screen flex flex-row'>
+    <SidebarInset className='flex h-screen flex-row overflow-hidden'>
       <div className='flex-1 flex flex-col min-w-0'>
-        <header className='flex flex-col shrink-0 border-b'>
-          <div className='flex h-12 items-center gap-2 bg-background px-4'>
-            <SidebarTrigger className='-ml-1' />
-            <Separator orientation='vertical' className='mr-2! h-4!' />
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem className='hidden md:block'>
-                  <BreadcrumbPage>{t('title')}</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-            <div className='ml-auto'>
-              <ChatSidebarToggle />
-            </div>
-          </div>
+        <header className='flex shrink-0 flex-col'>
+          <PageTopbar
+            breadcrumbs={[{ label: t('title') }]}
+            actions={<ChatSidebarToggle />}
+          />
 
           {/* 工具栏 */}
-          <div className='flex h-12 items-center border-t bg-muted/30 px-3'>
+          <div className='flex h-11 items-center border-b bg-muted/30 px-3'>
             <div className='flex items-center gap-1'>
               {isProjectMode ? (
                 <>
@@ -399,7 +384,7 @@ function FlowContent() {
                       updateWorkflowMutation.isPending
                     }
                   >
-                    <SaveIcon className='size-4 mr-2' />
+                    <SaveIcon className='size-4' />
                     {updateWorkflowMutation.isPending ? t('saving') : t('save')}
                   </Button>
 
@@ -409,7 +394,7 @@ function FlowContent() {
                     onClick={onAutoLayout}
                     disabled={nodes.length === 0}
                   >
-                    <WandSparklesIcon className='size-4 mr-2' />
+                    <WandSparklesIcon className='size-4' />
                     {t('auto_layout')}
                   </Button>
 
@@ -419,7 +404,7 @@ function FlowContent() {
                     onClick={onCleanDirtyEdges}
                     disabled={edges.length === 0 || !edgesReady}
                   >
-                    <UnlinkIcon className='size-4 mr-2' />
+                    <UnlinkIcon className='size-4' />
                     {t('clean_dirty_edges')}
                   </Button>
 
@@ -430,7 +415,7 @@ function FlowContent() {
                     disabled={nodes.length === 0}
                   />
                   <Button variant='ghost' size='sm' onClick={onExit}>
-                    <LogOutIcon className='size-4 mr-2' />
+                    <LogOutIcon className='size-4' />
                     {t('exit')}
                   </Button>
                 </>
@@ -448,7 +433,7 @@ function FlowContent() {
                       updateWorkflowMutation.isPending
                     }
                   >
-                    <SaveIcon className='size-4 mr-2' />
+                    <SaveIcon className='size-4' />
                     {updateWorkflowMutation.isPending ? t('saving') : t('save')}
                   </Button>
 
@@ -458,7 +443,7 @@ function FlowContent() {
                     onClick={onAutoLayout}
                     disabled={nodes.length === 0}
                   >
-                    <WandSparklesIcon className='size-4 mr-2' />
+                    <WandSparklesIcon className='size-4' />
                     {t('auto_layout')}
                   </Button>
 
@@ -468,7 +453,7 @@ function FlowContent() {
                     onClick={onCleanDirtyEdges}
                     disabled={edges.length === 0 || !edgesReady}
                   >
-                    <UnlinkIcon className='size-4 mr-2' />
+                    <UnlinkIcon className='size-4' />
                     {t('clean_dirty_edges')}
                   </Button>
 
@@ -479,7 +464,7 @@ function FlowContent() {
 
                   <WorkflowJsonActions workflowName={workflowData?.name} />
 
-                  <Separator orientation='vertical' className='h-8! mx-2' />
+                  <Separator orientation='vertical' className='mx-2 h-5!' />
 
                   <Button
                     variant='ghost'
@@ -487,11 +472,11 @@ function FlowContent() {
                     onClick={onRun}
                     disabled={runMutation.isPending}
                   >
-                    <PlayIcon className='size-4 mr-2 text-green-500' />
+                    <PlayIcon className='size-4 text-success' />
                     {runMutation.isPending ? t('running') : t('run')}
                   </Button>
 
-                  <Separator orientation='vertical' className='h-8! mx-2' />
+                  <Separator orientation='vertical' className='mx-2 h-5!' />
 
                   <div className='text-sm text-muted-foreground'>
                     {t('right_click_to_add')}

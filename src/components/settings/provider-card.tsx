@@ -139,7 +139,7 @@ export function ProviderCard({ provider }: ProviderCardProps) {
               {provider.is_active && (
                 <Badge
                   variant='destructive'
-                  className='ml-1 bg-green-500 text-white'
+                  className='ml-1 bg-success text-white'
                 >
                   {t('active')}
                 </Badge>

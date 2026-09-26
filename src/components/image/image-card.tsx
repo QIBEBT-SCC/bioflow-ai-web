@@ -1,14 +1,9 @@
 import { ExternalLinkIcon, FileTextIcon, PackageIcon } from 'lucide-react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card } from '@/components/ui/card'
 import { formatImageTag } from '@/lib/image-utils'
 
 interface ImageCardProps {
@@ -29,80 +24,67 @@ interface ImageCardProps {
 }
 
 export function ImageCard({ image }: ImageCardProps) {
-  return (
-    <Card className='flex flex-col h-full hover:shadow-lg transition-shadow relative'>
-      <CardHeader>
-        <div className='flex items-start justify-between gap-2 mb-2'>
-          <div className='flex items-center gap-2 min-w-0'>
-            <PackageIcon className='size-5 text-primary shrink-0' />
-            <CardTitle className='text-lg truncate'>
-              <Link
-                href={`/image/${image.uid}`}
-                className='after:absolute after:inset-0'
-              >
-                {image.name}
-              </Link>
-            </CardTitle>
-          </div>
-        </div>
-        {image.version && (
-          <Badge variant='secondary' className='w-fit font-mono text-xs'>
-            {image.version}
-          </Badge>
-        )}
-      </CardHeader>
-      <CardContent className='flex-1 flex flex-col'>
-        <CardDescription className='mb-4 line-clamp-3 leading-relaxed'>
-          {image.description || 'No description available'}
-        </CardDescription>
+  const t = useTranslations('image.card')
+  const hasLinks = Boolean(image.homepage || image.paper_link)
 
-        {/* Image Tag */}
-        <div className='mb-4 p-3 bg-muted rounded-md'>
-          <code className='text-xs font-mono break-all text-foreground'>
+  return (
+    <Card className='group relative h-full gap-4 p-5 transition-[border-color,box-shadow] hover:border-primary/40 hover:shadow-md'>
+      <div className='flex items-start gap-3'>
+        <div className='flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary'>
+          <PackageIcon className='size-5' />
+        </div>
+        <div className='min-w-0 flex-1'>
+          <div className='flex items-center gap-2'>
+            <Link
+              href={`/image/${image.uid}`}
+              className='truncate font-semibold after:absolute after:inset-0 group-hover:text-primary'
+            >
+              {image.name}
+            </Link>
+            {image.version && (
+              <Badge variant='secondary' className='shrink-0 font-mono'>
+                {image.version}
+              </Badge>
+            )}
+          </div>
+          <code className='mt-1 block truncate font-mono text-xs text-muted-foreground'>
             {formatImageTag(image)}
           </code>
         </div>
+      </div>
 
-        {/* Links */}
-        <div className='flex flex-wrap gap-2 mt-auto relative z-10'>
+      <p className='line-clamp-3 flex-1 text-sm leading-relaxed text-muted-foreground'>
+        {image.description || t('noDesc')}
+      </p>
+
+      {hasLinks && (
+        <div className='relative z-10 -mb-1 flex gap-1 border-t pt-3'>
           {image.homepage && (
-            <Button
-              variant='outline'
-              size='sm'
-              asChild
-              className='flex-1 bg-transparent'
-            >
+            <Button variant='ghost' size='sm' asChild>
               <a
                 href={image.homepage}
                 target='_blank'
                 rel='noopener noreferrer'
-                className='flex items-center justify-center gap-1.5'
               >
-                <ExternalLinkIcon className='size-3.5' />
-                <span>Homepage</span>
+                <ExternalLinkIcon />
+                {t('homepageBtn')}
               </a>
             </Button>
           )}
           {image.paper_link && (
-            <Button
-              variant='outline'
-              size='sm'
-              asChild
-              className='flex-1 bg-transparent'
-            >
+            <Button variant='ghost' size='sm' asChild>
               <a
                 href={image.paper_link}
                 target='_blank'
                 rel='noopener noreferrer'
-                className='flex items-center justify-center gap-1.5'
               >
-                <FileTextIcon className='size-3.5' />
-                <span>Paper</span>
+                <FileTextIcon />
+                {t('paperBtn')}
               </a>
             </Button>
           )}
         </div>
-      </CardContent>
+      )}
     </Card>
   )
 }

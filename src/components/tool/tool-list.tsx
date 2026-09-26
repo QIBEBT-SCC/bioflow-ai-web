@@ -5,11 +5,13 @@ import {
   MoreHorizontalIcon,
   NetworkIcon,
   Trash2Icon,
+  WrenchIcon,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
+import { ToolTagBadge } from '@/components/tool/tool-tag-badge'
 import { ToolUsageSheet } from '@/components/tool/tool-usage-sheet'
 import {
   AlertDialog,
@@ -23,7 +25,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card } from '@/components/ui/card'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,6 +42,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   useDeleteTool,
   useGroupTools,
@@ -49,17 +52,7 @@ import {
 } from '@/hooks/use-tool'
 import type { SimpleToolInfo } from '@/types/tool'
 
-// 根据标签名称获取对应的样式
-function getTagStyle(tagName: string) {
-  switch (tagName) {
-    case 'AI Checked':
-      return 'bg-green-50 text-green-600 border-green-200'
-    case 'AI Unchecked':
-      return 'bg-yellow-50 text-yellow-600 border-yellow-200'
-    default:
-      return 'bg-blue-50 text-blue-600 border-blue-200'
-  }
-}
+const SKELETON_KEYS = ['sk-0', 'sk-1', 'sk-2', 'sk-3', 'sk-4', 'sk-5']
 
 interface ToolListProps {
   searchQuery?: string
@@ -220,11 +213,14 @@ export function ToolList({
 
   if (isLoading) {
     return (
-      <div className='flex items-center justify-center py-12'>
-        <div className='text-center'>
-          <div className='animate-spin rounded-full size-8 border-b-2 border-primary mx-auto mb-2'></div>
-          <p className='text-muted-foreground'>{t('loading')}</p>
-        </div>
+      <div
+        className='grid gap-4 md:grid-cols-2 xl:grid-cols-3'
+        aria-busy='true'
+      >
+        <span className='sr-only'>{t('loading')}</span>
+        {SKELETON_KEYS.map((key) => (
+          <Skeleton key={key} className='h-40 rounded-xl' />
+        ))}
       </div>
     )
   }
@@ -286,73 +282,78 @@ function ToolGridView({
 }: ToolViewProps) {
   return (
     <div>
-      <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
+      <div className='grid gap-4 md:grid-cols-2 xl:grid-cols-3'>
         {tools.map((tool: SimpleToolInfo) => (
-          <Card key={tool.uid} className='py-0 gap-0'>
-            <CardContent className='p-4'>
-              <div className='flex justify-between items-start mb-2'>
+          <Card
+            key={tool.uid}
+            className='group relative gap-3 p-5 transition-[border-color,box-shadow] hover:border-primary/40 hover:shadow-md'
+          >
+            <div className='flex items-start gap-3'>
+              <div className='flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary'>
+                <WrenchIcon className='size-5' />
+              </div>
+              <div className='min-w-0 flex-1'>
                 <Link
                   href={`/tool/${tool.uid}`}
-                  className='font-medium hover:underline'
+                  className='block truncate font-semibold after:absolute after:inset-0 group-hover:text-primary'
                 >
                   {tool.name}
                 </Link>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant='ghost' size='icon' className='size-8'>
-                      <MoreHorizontalIcon className='size-4' />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align='end'>
-                    <DropdownMenuItem
-                      onClick={() => onViewUsage(tool.uid, tool.name)}
-                    >
-                      <NetworkIcon className='size-4 mr-2' />
-                      {t('viewUsage')}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onCopy(tool.uid)}>
-                      <CopyIcon className='size-4 mr-2' />
-                      {t('copyTool')}
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      className='text-destructive'
-                      onClick={() => onDelete(tool.uid, tool.name)}
-                    >
-                      <Trash2Icon className='size-4 mr-2' />
-                      {t('deleteTool')}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-              <p className='text-sm text-muted-foreground mb-3 line-clamp-2'>
-                {tool.description || t('noDescription')}
-              </p>
-              <div className='flex items-center justify-between text-xs text-muted-foreground'>
-                <span className='truncate'>
+                <code className='mt-1 block truncate font-mono text-xs text-muted-foreground'>
                   {tool.image.image.registry}/{tool.image.image.namespace}/
                   {tool.image.image.repository}:{tool.image.image.tag}
-                </span>
+                </code>
               </div>
-              <div className='flex flex-wrap gap-1 mt-3'>
-                {tool.tags.slice(0, 3).map((tag) => (
-                  <Badge
-                    key={tag.id}
-                    variant='outline'
-                    className={getTagStyle(tag.name)}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant='ghost'
+                    size='icon'
+                    className='relative z-10 -mt-1 -mr-2 size-8 text-muted-foreground'
+                    aria-label={t('moreActions')}
                   >
-                    {tag.name}
-                  </Badge>
+                    <MoreHorizontalIcon className='size-4' />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align='end'>
+                  <DropdownMenuItem
+                    onClick={() => onViewUsage(tool.uid, tool.name)}
+                  >
+                    <NetworkIcon className='size-4' />
+                    {t('viewUsage')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onCopy(tool.uid)}>
+                    <CopyIcon className='size-4' />
+                    {t('copyTool')}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    variant='destructive'
+                    onClick={() => onDelete(tool.uid, tool.name)}
+                  >
+                    <Trash2Icon className='size-4' />
+                    {t('deleteTool')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            <p className='line-clamp-2 flex-1 text-sm leading-relaxed text-muted-foreground'>
+              {tool.description || t('noDescription')}
+            </p>
+            {tool.tags.length > 0 && (
+              <div className='flex flex-wrap gap-1'>
+                {tool.tags.slice(0, 3).map((tag) => (
+                  <ToolTagBadge key={tag.id} name={tag.name} />
                 ))}
                 {tool.tags.length > 3 && (
                   <Badge variant='outline'>+{tool.tags.length - 3}</Badge>
                 )}
               </div>
-            </CardContent>
+            )}
           </Card>
         ))}
       </div>
-      <div className='flex items-center justify-center mt-6'>
+      <div className='mt-6 flex items-center justify-center'>
         <Pagination>
           <PaginationContent>
             <PaginationItem>

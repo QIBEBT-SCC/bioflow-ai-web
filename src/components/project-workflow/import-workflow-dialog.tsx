@@ -114,7 +114,7 @@ export function ImportWorkflowDialog({ projectId }: ImportWorkflowDialogProps) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>
-          <PlusIcon className='size-4 mr-2' />
+          <PlusIcon className='size-4' />
           {t('trigger')}
         </Button>
       </DialogTrigger>
@@ -184,7 +184,7 @@ export function ImportWorkflowDialog({ projectId }: ImportWorkflowDialogProps) {
                           className={cn(
                             'h-5 max-w-full gap-1 rounded px-1.5 text-[11px]',
                             isProjectLevel
-                              ? 'border-sky-200 bg-sky-50 text-sky-700'
+                              ? 'border-info/30 bg-info/10 text-info'
                               : 'border-teal-200 bg-teal-50 text-teal-700',
                           )}
                         >
@@ -225,7 +225,7 @@ export function ImportWorkflowDialog({ projectId }: ImportWorkflowDialogProps) {
           >
             {addWorkflowMutation.isPending ? (
               <>
-                <Loader2 className='size-4 mr-2 animate-spin' />
+                <Loader2 className='size-4 animate-spin' />
                 {t('importing')}
               </>
             ) : (

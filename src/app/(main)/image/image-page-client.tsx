@@ -2,18 +2,16 @@
 
 import { PackageIcon, PlusIcon, SearchIcon, XIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { useState } from 'react'
+import { type ComponentProps, useState } from 'react'
 import { CreateImageDialog } from '@/components/image/create-image-dialog'
 import { ImageCard } from '@/components/image/image-card'
 import { ImagePagination } from '@/components/image/image-pagination'
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbPage,
-} from '@/components/ui/breadcrumb'
+  PageContainer,
+  PageHeader,
+  PageShell,
+} from '@/components/layout/page-shell'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
 import {
   Empty,
   EmptyContent,
@@ -23,13 +21,10 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty'
 import { Input } from '@/components/ui/input'
-import { Separator } from '@/components/ui/separator'
-import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useImageList, useSearchImages } from '@/hooks/use-tool'
 
 const SKELETON_KEYS = ['sk-0', 'sk-1', 'sk-2', 'sk-3', 'sk-4', 'sk-5']
-
-// 以实际接口数据替换 mock
 
 export default function ImagePage() {
   const t = useTranslations('image')
@@ -62,55 +57,27 @@ export default function ImagePage() {
   }
 
   return (
-    <SidebarInset className='h-screen flex flex-col'>
-      <header className='flex flex-col shrink-0 border-b'>
-        <div className='flex items-center justify-between px-4 h-12 bg-background'>
-          <div className='flex items-center gap-2'>
-            <SidebarTrigger className='-ml-1' />
-            <Separator orientation='vertical' className='mr-2! h-4!' />
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem className='hidden md:block'>
-                  <BreadcrumbPage>{t('title')}</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </div>
-        </div>
-      </header>
-      <div className='flex-1 overflow-y-auto'>
-        <div className='container mx-auto px-4 py-8 max-w-7xl'>
-          {/* Header */}
-          <div className='mb-12'>
-            <div className='flex items-start justify-between gap-4 mb-3'>
-              <div>
-                <h1 className='text-4xl font-semibold text-balance'>
-                  {t('headerTitle')}
-                </h1>
-              </div>
-            </div>
-            <p className='text-lg text-muted-foreground text-pretty'>
-              {t('headerDesc')}
-            </p>
-          </div>
-
-          {/* Search Bar */}
-          <div className='mb-8'>
-            <div className='flex items-center justify-between gap-4'>
-              <div className='relative flex-1 max-w-2xl'>
-                <SearchIcon className='absolute left-3 top-1/2 -translate-y-1/2 size-5 text-muted-foreground' />
+    <PageShell breadcrumbs={[{ label: t('title') }]}>
+      <PageContainer>
+        <PageHeader
+          title={t('headerTitle')}
+          description={t('headerDesc')}
+          actions={
+            <>
+              <div className='relative w-full sm:w-64'>
+                <SearchIcon className='pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground' />
                 <Input
                   type='text'
                   placeholder={t('searchPlaceholder')}
                   value={searchQuery}
                   onChange={(e) => handleSearchChange(e.target.value)}
-                  className='pl-10 pr-10 h-12 text-base'
+                  className='pr-9 pl-8'
                 />
                 {searchQuery && (
                   <Button
                     variant='ghost'
                     size='icon'
-                    className='absolute right-1.5 top-1/2 -translate-y-1/2 size-8'
+                    className='absolute top-1/2 right-1 size-7 -translate-y-1/2'
                     aria-label={t('searchClear')}
                     onClick={() => handleSearchChange('')}
                   >
@@ -119,90 +86,121 @@ export default function ImagePage() {
                 )}
               </div>
               <CreateImageDialog />
-            </div>
-          </div>
-
-          {/* Results Count - only show when searching */}
-          {enableSearch && (
-            <div className='mb-6'>
-              <p className='text-sm text-muted-foreground'>
-                {totalCount === 1
-                  ? t('imageFound', { count: totalCount })
-                  : t('imagesFound', { count: totalCount })}
-              </p>
-            </div>
-          )}
-
-          {error ? (
-            <Empty className='border'>
-              <EmptyHeader>
-                <EmptyMedia>
-                  <PackageIcon className='size-12' />
-                </EmptyMedia>
-                <EmptyTitle>{t('loadFail')}</EmptyTitle>
-                <EmptyDescription>
-                  {error ? error.message : t('loadFail')}
-                </EmptyDescription>
-              </EmptyHeader>
-              <EmptyContent>
-                <Button
-                  variant='outline'
-                  onClick={() => window.location.reload()}
-                >
-                  {t('retry')}
-                </Button>
-              </EmptyContent>
-            </Empty>
-          ) : loading ? (
-            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-              {SKELETON_KEYS.map((k) => (
-                <Card key={k} className='h-48 animate-pulse' />
-              ))}
-            </div>
-          ) : images.length === 0 ? (
-            <Empty className='border'>
-              <EmptyHeader>
-                <EmptyMedia>
-                  <PackageIcon className='size-12' />
-                </EmptyMedia>
-                <EmptyTitle>{t('noImagesTitle')}</EmptyTitle>
-                <EmptyDescription>{t('noImagesDesc')}</EmptyDescription>
-              </EmptyHeader>
-              <EmptyContent>
-                <CreateImageDialog
-                  trigger={
-                    <Button>
-                      <PlusIcon className='size-4 mr-2' />
-                      {t('createFirstBtn')}
-                    </Button>
-                  }
-                />
-              </EmptyContent>
-            </Empty>
-          ) : (
-            <>
-              {/* Image Grid */}
-              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-                {images.map((image) => (
-                  <ImageCard
-                    key={image.uid || `${image.name}-${image.version}`}
-                    image={image}
-                  />
-                ))}
-              </div>
-
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <ImagePagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={setCurrentPage}
-                />
-              )}
             </>
-          )}
-        </div>
+          }
+        />
+
+        {/* Results Count - only show when searching */}
+        {enableSearch && (
+          <div className='mb-4'>
+            <p className='text-sm text-muted-foreground'>
+              {totalCount === 1
+                ? t('imageFound', { count: totalCount })
+                : t('imagesFound', { count: totalCount })}
+            </p>
+          </div>
+        )}
+
+        <ImageResults
+          error={error}
+          loading={loading}
+          images={images}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
+      </PageContainer>
+    </PageShell>
+  )
+}
+
+function ImageResults({
+  error,
+  loading,
+  images,
+  currentPage,
+  totalPages,
+  onPageChange,
+}: {
+  error: Error | null
+  loading: boolean
+  images: ComponentProps<typeof ImageCard>['image'][]
+  currentPage: number
+  totalPages: number
+  onPageChange: (page: number) => void
+}) {
+  const t = useTranslations('image')
+
+  if (error) {
+    return (
+      <Empty className='border border-dashed'>
+        <EmptyHeader>
+          <EmptyMedia variant='icon'>
+            <PackageIcon />
+          </EmptyMedia>
+          <EmptyTitle>{t('loadFail')}</EmptyTitle>
+          <EmptyDescription>{error.message}</EmptyDescription>
+        </EmptyHeader>
+        <EmptyContent>
+          <Button variant='outline' onClick={() => window.location.reload()}>
+            {t('retry')}
+          </Button>
+        </EmptyContent>
+      </Empty>
+    )
+  }
+
+  if (loading) {
+    return (
+      <div className='grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3'>
+        {SKELETON_KEYS.map((k) => (
+          <Skeleton key={k} className='h-52 rounded-xl' />
+        ))}
       </div>
-    </SidebarInset>
+    )
+  }
+
+  if (images.length === 0) {
+    return (
+      <Empty className='border border-dashed'>
+        <EmptyHeader>
+          <EmptyMedia variant='icon'>
+            <PackageIcon />
+          </EmptyMedia>
+          <EmptyTitle>{t('noImagesTitle')}</EmptyTitle>
+          <EmptyDescription>{t('noImagesDesc')}</EmptyDescription>
+        </EmptyHeader>
+        <EmptyContent>
+          <CreateImageDialog
+            trigger={
+              <Button>
+                <PlusIcon className='size-4' />
+                {t('createFirstBtn')}
+              </Button>
+            }
+          />
+        </EmptyContent>
+      </Empty>
+    )
+  }
+
+  return (
+    <>
+      <div className='grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3'>
+        {images.map((image) => (
+          <ImageCard
+            key={image.uid || `${image.name}-${image.version}`}
+            image={image}
+          />
+        ))}
+      </div>
+      {totalPages > 1 && (
+        <ImagePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={onPageChange}
+        />
+      )}
+    </>
   )
 }

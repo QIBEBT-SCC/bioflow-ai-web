@@ -41,5 +41,18 @@
     "user_management": "用户管理",
     "workflows": "运行监控",
     "subgraphs": "子图管理"
+  },
+  "UserMenu": {
+    "accentColor": "主题色",
+    "accent": {
+      "blue": "海洋蓝",
+      "teal": "青绿",
+      "green": "叶绿",
+      "violet": "紫罗兰",
+      "neutral": "石墨"
+    },
+    "logout": "退出登录",
+    "loggingOut": "退出中...",
+    "accentSaveFailed": "主题色保存失败"
   }
 }

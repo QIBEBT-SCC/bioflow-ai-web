@@ -28,6 +28,7 @@ import {
   type ToolTemplateVariable,
 } from '@/components/tool/template-variable-field'
 import { ToolFileCard, ToolParamCard } from '@/components/tool/tool-cards'
+import { ToolTagBadge } from '@/components/tool/tool-tag-badge'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -361,7 +362,7 @@ function BasicConfigTab({
       <CardContent className='space-y-6 pt-6'>
         <div className='space-y-2'>
           <Label htmlFor='tool-name'>
-            {t('toolName')} <span className='text-red-500'>*</span>
+            {t('toolName')} <span className='text-destructive'>*</span>
           </Label>
           <Input
             id='tool-name'
@@ -374,7 +375,7 @@ function BasicConfigTab({
 
         <div className='space-y-2'>
           <Label htmlFor='tool-description'>
-            {t('description')} <span className='text-red-500'>*</span>
+            {t('description')} <span className='text-destructive'>*</span>
           </Label>
           <Textarea
             id='tool-description'
@@ -388,7 +389,7 @@ function BasicConfigTab({
 
         <div className='space-y-2'>
           <Label htmlFor='tool-command'>
-            {t('commandTemplate')} <span className='text-red-500'>*</span>
+            {t('commandTemplate')} <span className='text-destructive'>*</span>
           </Label>
           <TemplateVariableField
             id='tool-command'
@@ -407,7 +408,7 @@ function BasicConfigTab({
 
         <div className='space-y-2'>
           <Label htmlFor='tool-help-command'>
-            {t('helpCommand')} <span className='text-red-500'>*</span>
+            {t('helpCommand')} <span className='text-destructive'>*</span>
           </Label>
           <div className='flex gap-2'>
             <Input
@@ -459,19 +460,9 @@ function BasicConfigTab({
         {availableTags.length > 0 && (
           <div className='space-y-2'>
             <Label>{t('toolTags')}</Label>
-            <div className='flex flex-wrap gap-3 p-3 border rounded-md bg-muted/30'>
+            <div className='flex flex-wrap gap-3 rounded-md border bg-muted/30 p-3'>
               {availableTags.map((tag) => {
                 const isSelected = value.tags.some((tt) => tt.id === tag.id)
-                const getTagStyle = (tagName: string) => {
-                  switch (tagName) {
-                    case 'AI Checked':
-                      return 'bg-green-50 text-green-600 border-green-200'
-                    case 'AI Unchecked':
-                      return 'bg-yellow-50 text-yellow-600 border-yellow-200'
-                    default:
-                      return 'bg-blue-50 text-blue-600 border-blue-200'
-                  }
-                }
                 return (
                   <div key={tag.id} className='flex items-center gap-x-2'>
                     <Checkbox
@@ -485,12 +476,7 @@ function BasicConfigTab({
                       }}
                     />
                     <Label htmlFor={`tag-${tag.id}`} className='cursor-pointer'>
-                      <Badge
-                        variant='outline'
-                        className={`${getTagStyle(tag.name)} text-xs`}
-                      >
-                        {tag.name}
-                      </Badge>
+                      <ToolTagBadge name={tag.name} />
                     </Label>
                   </div>
                 )

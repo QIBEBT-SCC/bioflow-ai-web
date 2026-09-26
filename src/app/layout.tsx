@@ -1,9 +1,11 @@
 import { Geist, Geist_Mono } from 'next/font/google'
+import { cookies } from 'next/headers'
 import './globals.css'
 import { NextIntlClientProvider } from 'next-intl'
 import { getTranslations } from 'next-intl/server'
 import type React from 'react'
 import { QueryProvider } from '@/components/providers/query-provider'
+import { ACCENT_COOKIE, defaultAccent, isAccentColor } from '@/lib/theme'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -31,8 +33,11 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const storedAccent = (await cookies()).get(ACCENT_COOKIE)?.value
+  const accent = isAccentColor(storedAccent) ? storedAccent : defaultAccent
+
   return (
-    <html lang='zh' suppressHydrationWarning>
+    <html lang='zh' data-accent={accent} suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

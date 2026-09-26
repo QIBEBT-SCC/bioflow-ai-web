@@ -7,6 +7,7 @@ import {
   WrenchIcon,
 } from 'lucide-react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import {
   Collapsible,
@@ -61,6 +62,7 @@ const projects = [
 export function NavSecond() {
   const { activePage, setActivePage } = useSidebarStore()
   const t = useTranslations('Sidebar')
+  const pathname = usePathname()
 
   return (
     <SidebarGroup>
@@ -77,7 +79,10 @@ export function NavSecond() {
               >
                 <SidebarMenuItem>
                   <CollapsibleTrigger asChild>
-                    <SidebarMenuButton onClick={() => setActivePage(item.name)}>
+                    <SidebarMenuButton
+                      tooltip={t(item.name)}
+                      onClick={() => setActivePage(item.name)}
+                    >
                       {item.icon && <item.icon />}
                       <span>{t(item.name)}</span>
                       <ChevronRightIcon className='ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90' />
@@ -87,7 +92,12 @@ export function NavSecond() {
                     <SidebarMenuSub>
                       {item.items?.map((subItem) => (
                         <SidebarMenuSubItem key={subItem.name}>
-                          <SidebarMenuSubButton asChild>
+                          <SidebarMenuSubButton
+                            asChild
+                            isActive={
+                              !!subItem.url && pathname.startsWith(subItem.url)
+                            }
+                          >
                             <Link href={subItem.url ?? '/'}>
                               <span>{t(subItem.name)}</span>
                             </Link>

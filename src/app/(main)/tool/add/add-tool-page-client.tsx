@@ -1,30 +1,24 @@
 'use client'
 
-import { ArrowLeft, ArrowRight, Check } from 'lucide-react'
-import Link from 'next/link'
+import { ArrowLeft, ArrowRight, Check, Search } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Suspense, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { getTool } from '@/app/actions/tool'
 import {
+  PageContainer,
+  PageHeader,
+  PageShell,
+} from '@/components/layout/page-shell'
+import {
   ToolConfigForm,
   type ToolConfigValues,
 } from '@/components/tool/tool-config-form'
 import { Badge } from '@/components/ui/badge'
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Separator } from '@/components/ui/separator'
-import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import {
   useCreateTool,
   useSearchImages,
@@ -32,6 +26,7 @@ import {
   useToolTagList,
 } from '@/hooks/use-tool'
 import { updateFileMountValue } from '@/lib/tool-file-mount'
+import { cn } from '@/lib/utils'
 import { useCreateToolStore } from '@/stores/toolStore'
 import type {
   DockerToolCreate,
@@ -57,10 +52,11 @@ function ImageSelectionStep({
   const t = useTranslations('tool.AddPage')
   return (
     <div>
-      <h2 className='text-xl font-semibold mb-2'>{t('selectImage')}</h2>
-      <p className='text-muted-foreground mb-6'>{t('searchImage')}</p>
-      <div className='mb-6'>
+      <StepHeading title={t('selectImage')} description={t('searchImage')} />
+      <div className='relative mb-4'>
+        <Search className='pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground' />
         <Input
+          className='pl-8'
           placeholder={t('searchPlaceholder')}
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
@@ -68,34 +64,39 @@ function ImageSelectionStep({
       </div>
       <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
         {searchResults.map((image) => (
-          <Card
+          <button
             key={image.uid}
-            className={`pt-2 cursor-pointer transition-all hover:shadow-md border-2 ${
-              currentImageUid === image.uid
-                ? 'border-primary bg-primary/5'
-                : 'border-border hover:border-primary/50'
-            }`}
+            type='button'
+            aria-pressed={currentImageUid === image.uid}
+            className={cn(
+              'flex flex-col gap-2 rounded-xl border bg-card p-4 text-left transition-[border-color,box-shadow] hover:border-primary/40 hover:shadow-md',
+              currentImageUid === image.uid &&
+                'border-primary bg-primary/5 ring-1 ring-primary hover:border-primary',
+            )}
             onClick={() => onSelect(image)}
           >
-            <CardContent className='p-4'>
-              <h3 className='font-semibold'>{image.name}</h3>
-              <Badge variant='secondary' className='mt-2'>
+            <div className='flex items-center gap-2'>
+              <span className='truncate font-semibold'>{image.name}</span>
+              <Badge variant='secondary' className='shrink-0 font-mono'>
                 {image.version}
               </Badge>
-              <p className='text-sm text-muted-foreground mt-2 line-clamp-2'>
-                {image.description}
-              </p>
-              <code className='text-xs bg-muted px-2 py-1 rounded block overflow-x-auto mt-2'>
-                {image.image.registry}/{image.image.namespace}/
-                {image.image.repository}:{image.image.tag}
-              </code>
-            </CardContent>
-          </Card>
+              {currentImageUid === image.uid && (
+                <Check className='ml-auto size-4 shrink-0 text-primary' />
+              )}
+            </div>
+            <p className='line-clamp-2 text-sm text-muted-foreground'>
+              {image.description}
+            </p>
+            <code className='block truncate font-mono text-xs text-muted-foreground'>
+              {image.image.registry}/{image.image.namespace}/
+              {image.image.repository}:{image.image.tag}
+            </code>
+          </button>
         ))}
       </div>
       {searchQuery && searchResults.length === 0 && (
-        <div className='text-center py-12 text-muted-foreground'>
-          <p>{t('noImageFound')}</p>
+        <div className='rounded-xl border border-dashed py-12 text-center text-sm text-muted-foreground'>
+          {t('noImageFound')}
         </div>
       )}
     </div>
@@ -121,9 +122,9 @@ function StepNavigation({
 }) {
   const t = useTranslations('tool.AddPage')
   return (
-    <div className='flex justify-between items-center pt-4 border-t'>
+    <div className='sticky bottom-0 -mx-4 flex items-center justify-between gap-3 border-t bg-background/95 px-4 py-4 backdrop-blur sm:-mx-6 sm:px-6'>
       <Button variant='outline' onClick={onPrev} disabled={currentStep === 1}>
-        <ArrowLeft className='size-4 mr-2' />
+        <ArrowLeft className='size-4' />
         {t('prevStep')}
       </Button>
       <div className='text-sm text-muted-foreground'>
@@ -132,14 +133,10 @@ function StepNavigation({
       {currentStep < totalSteps ? (
         <Button onClick={onNext} disabled={!canProceed}>
           {t('nextStep')}
-          <ArrowRight className='size-4 ml-2' />
+          <ArrowRight className='size-4' />
         </Button>
       ) : (
-        <Button
-          onClick={onCreate}
-          className='bg-green-600 hover:bg-green-700'
-          disabled={!canProceed || isCreating}
-        >
+        <Button onClick={onCreate} disabled={!canProceed || isCreating}>
           {isCreating ? t('creating') : t('createTool')}
         </Button>
       )}
@@ -401,108 +398,79 @@ function AddToolPageContent() {
   }
 
   return (
-    <SidebarInset className='h-screen flex flex-col'>
-      <header className='flex flex-col shrink-0 border-b'>
-        <div className='flex items-center gap-2 px-4 h-12 bg-background'>
-          <SidebarTrigger className='-ml-1' />
-          <Separator orientation='vertical' className='mr-2! h-4!' />
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem className='hidden md:block'>
-                <BreadcrumbLink asChild>
-                  <Link href='/tool'>{tPage('title')}</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator className='hidden md:block' />
-              <BreadcrumbItem>
-                <BreadcrumbPage>{t('breadcrumb')}</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-        </div>
-      </header>
+    <PageShell
+      breadcrumbs={[
+        { label: tPage('title'), href: '/tool' },
+        { label: t('breadcrumb') },
+      ]}
+    >
+      <PageContainer size='narrow'>
+        <PageHeader title={t('title')} description={t('subtitle')} />
 
-      <div className='flex-1 overflow-y-auto'>
-        <div className='container mx-auto py-6 max-w-4xl'>
-          <div className='mb-6'>
-            <Link
-              href='/tool'
-              className='inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-2'
-            >
-              <ArrowLeft className='size-4 mr-1' />
-              {t('back')}
-            </Link>
-            <h1 className='text-2xl font-semibold'>{t('title')}</h1>
-            <p className='text-muted-foreground mt-1'>{t('subtitle')}</p>
-          </div>
+        <StepProgressBar steps={steps} currentStep={currentStep} />
 
-          <StepProgressBar steps={steps} currentStep={currentStep} />
-
-          {/* 步骤内容 */}
-          <div className='mb-8'>
-            {currentStep === 1 && (
-              <ImageSelectionStep
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                searchResults={searchResults}
-                currentImageUid={currentImage?.uid}
-                onSelect={setCurrentImage}
+        {/* 步骤内容 */}
+        <div className='mb-6'>
+          {currentStep === 1 && (
+            <ImageSelectionStep
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              searchResults={searchResults}
+              currentImageUid={currentImage?.uid}
+              onSelect={setCurrentImage}
+            />
+          )}
+          {currentStep === 2 && (
+            <div>
+              <StepHeading
+                title={t('configTool')}
+                description={t('fillBasicInfo')}
               />
-            )}
-            {currentStep === 2 && (
-              <div>
-                <h2 className='text-xl font-semibold mb-2'>
-                  {t('configTool')}
-                </h2>
-                <p className='text-muted-foreground mb-6'>
-                  {t('fillBasicInfo')}
-                </p>
-                <ToolConfigForm
-                  value={toolConfig}
-                  toolGroups={toolGroups}
-                  availableTags={availableTags}
-                  onFieldChange={updateToolConfigField}
-                  onAddDynamicParam={addDynamicParam}
-                  onUpdateDynamicParam={updateDynamicParam}
-                  onRemoveDynamicParam={removeDynamicParam}
-                  onAddFileMount={addFileMount}
-                  onUpdateFileMount={updateFileMount}
-                  onRemoveFileMount={removeFileMount}
-                  onReorderDynamicParams={reorderDynamicParams}
-                  onReorderFileMounts={reorderFileMounts}
-                  imageUid={currentImage?.uid}
-                  imageSummary={
-                    currentImage?.name || currentImage?.version
-                      ? {
-                          name: currentImage.name,
-                          version: currentImage.version,
-                        }
-                      : undefined
-                  }
-                  showTabBadges
-                />
-              </div>
-            )}
-            {currentStep === 3 && (
-              <ConfirmStep
-                toolConfig={toolConfig}
-                currentImageName={currentImage?.name}
+              <ToolConfigForm
+                value={toolConfig}
+                toolGroups={toolGroups}
+                availableTags={availableTags}
+                onFieldChange={updateToolConfigField}
+                onAddDynamicParam={addDynamicParam}
+                onUpdateDynamicParam={updateDynamicParam}
+                onRemoveDynamicParam={removeDynamicParam}
+                onAddFileMount={addFileMount}
+                onUpdateFileMount={updateFileMount}
+                onRemoveFileMount={removeFileMount}
+                onReorderDynamicParams={reorderDynamicParams}
+                onReorderFileMounts={reorderFileMounts}
+                imageUid={currentImage?.uid}
+                imageSummary={
+                  currentImage?.name || currentImage?.version
+                    ? {
+                        name: currentImage.name,
+                        version: currentImage.version,
+                      }
+                    : undefined
+                }
+                showTabBadges
               />
-            )}
-          </div>
-
-          <StepNavigation
-            currentStep={currentStep}
-            totalSteps={steps.length}
-            canProceed={canProceed()}
-            isCreating={isCreating}
-            onPrev={handlePrev}
-            onNext={handleNext}
-            onCreate={handleCreateTool}
-          />
+            </div>
+          )}
+          {currentStep === 3 && (
+            <ConfirmStep
+              toolConfig={toolConfig}
+              currentImageName={currentImage?.name}
+            />
+          )}
         </div>
-      </div>
-    </SidebarInset>
+
+        <StepNavigation
+          currentStep={currentStep}
+          totalSteps={steps.length}
+          canProceed={canProceed()}
+          isCreating={isCreating}
+          onPrev={handlePrev}
+          onNext={handleNext}
+          onCreate={handleCreateTool}
+        />
+      </PageContainer>
+    </PageShell>
   )
 }
 
@@ -520,44 +488,68 @@ function StepProgressBar({
   currentStep: number
 }) {
   return (
-    <Card className='mb-8 py-4'>
-      <CardContent className='py-0'>
-        <div className='flex items-center justify-between'>
-          {steps.map((step, index) => (
-            <div key={step.id} className='flex items-center'>
-              <div className='flex flex-col items-center'>
+    <ol className='mb-8 flex items-start rounded-xl border bg-card p-4'>
+      {steps.map((step, index) => {
+        const done = currentStep > step.id
+        const active = currentStep === step.id
+        return (
+          <li
+            key={step.id}
+            className='flex flex-1 items-start last:flex-none'
+            aria-current={active ? 'step' : undefined}
+          >
+            <div className='flex items-center gap-3'>
+              <div
+                className={cn(
+                  'flex size-8 shrink-0 items-center justify-center rounded-full border text-sm font-medium',
+                  done && 'border-primary bg-primary text-primary-foreground',
+                  active && 'border-primary bg-primary/10 text-primary',
+                  !done && !active && 'text-muted-foreground',
+                )}
+              >
+                {done ? <Check className='size-4' /> : step.id}
+              </div>
+              <div className='hidden min-w-0 sm:block'>
                 <div
-                  className={`size-9 rounded-full flex items-center justify-center text-sm font-medium ${
-                    currentStep > step.id
-                      ? 'bg-green-500 text-white'
-                      : currentStep === step.id
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted text-muted-foreground'
-                  }`}
-                >
-                  {currentStep > step.id ? (
-                    <Check className='size-5' />
-                  ) : (
-                    step.id
+                  className={cn(
+                    'text-sm font-medium',
+                    !done && !active && 'text-muted-foreground',
                   )}
+                >
+                  {step.title}
                 </div>
-                <div className='mt-2 text-center'>
-                  <div className='text-sm font-medium'>{step.title}</div>
-                  <div className='text-xs text-muted-foreground'>
-                    {step.description}
-                  </div>
+                <div className='text-xs text-muted-foreground'>
+                  {step.description}
                 </div>
               </div>
-              {index < steps.length - 1 && (
-                <div
-                  className={`flex-1 h-0.5 mx-4 ${currentStep > step.id ? 'bg-green-500' : 'bg-muted'}`}
-                />
-              )}
             </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+            {index < steps.length - 1 && (
+              <div
+                className={cn(
+                  'mx-4 mt-4 h-px flex-1',
+                  done ? 'bg-primary' : 'bg-border',
+                )}
+              />
+            )}
+          </li>
+        )
+      })}
+    </ol>
+  )
+}
+
+function StepHeading({
+  title,
+  description,
+}: {
+  title: string
+  description: string
+}) {
+  return (
+    <div className='mb-4'>
+      <h2 className='text-lg font-semibold tracking-tight'>{title}</h2>
+      <p className='text-sm text-muted-foreground'>{description}</p>
+    </div>
   )
 }
 
@@ -575,12 +567,11 @@ function ConfirmStep({
 
   return (
     <div>
-      <h2 className='text-xl font-semibold mb-2'>{t('confirmCreate')}</h2>
-      <p className='text-muted-foreground mb-6'>{t('checkConfig')}</p>
+      <StepHeading title={t('confirmCreate')} description={t('checkConfig')} />
       <div className='space-y-4'>
-        <Card>
-          <CardContent className='pt-6'>
-            <h3 className='font-semibold mb-4'>{t('basicInfo')}</h3>
+        <Card className='py-5'>
+          <CardContent className='px-5'>
+            <h3 className='mb-4 text-sm font-semibold'>{t('basicInfo')}</h3>
             <div className='space-y-2'>
               <div className='flex justify-between'>
                 <span className='text-muted-foreground'>{t('toolName')}</span>
@@ -605,12 +596,12 @@ function ConfirmStep({
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className='pt-6'>
-            <h3 className='font-semibold mb-4'>{t('configSummary')}</h3>
+        <Card className='py-5'>
+          <CardContent className='px-5'>
+            <h3 className='mb-4 text-sm font-semibold'>{t('configSummary')}</h3>
             <div className='grid grid-cols-2 md:grid-cols-3 gap-4'>
               <div className='text-center'>
-                <div className='text-2xl font-bold text-primary'>
+                <div className='text-2xl font-semibold text-primary tabular-nums'>
                   {toolConfig.dynamic_params.length}
                 </div>
                 <div className='text-sm text-muted-foreground'>
@@ -618,7 +609,7 @@ function ConfirmStep({
                 </div>
               </div>
               <div className='text-center'>
-                <div className='text-2xl font-bold text-primary'>
+                <div className='text-2xl font-semibold text-primary tabular-nums'>
                   {toolConfig.file_mounts.length}
                 </div>
                 <div className='text-sm text-muted-foreground'>
@@ -626,7 +617,7 @@ function ConfirmStep({
                 </div>
               </div>
               <div className='text-center'>
-                <div className='text-2xl font-bold text-primary'>
+                <div className='text-2xl font-semibold text-primary tabular-nums'>
                   {hasStaticParams ? t('yes') : t('no')}
                 </div>
                 <div className='text-sm text-muted-foreground'>

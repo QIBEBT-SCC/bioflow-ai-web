@@ -12,14 +12,13 @@ import {
   useRef,
   useState,
 } from 'react'
+import {
+  PageContainer,
+  PageHeader,
+  PageShell,
+} from '@/components/layout/page-shell'
 import { ToolGroupSidebar } from '@/components/tool/tool-group-sidebar'
 import { ToolList } from '@/components/tool/tool-list'
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbPage,
-} from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -29,8 +28,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
-import { Separator } from '@/components/ui/separator'
-import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 
 const SEARCH_DEBOUNCE_MS = 300
 
@@ -102,12 +99,12 @@ function ToolSearchInput({
   }
 
   return (
-    <div className='relative flex-1 sm:flex-initial'>
-      <Search className='absolute left-2.5 top-2.5 size-4 text-muted-foreground' />
+    <div className='relative w-full sm:w-64'>
+      <Search className='pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground' />
       <Input
         type='search'
         placeholder={placeholder}
-        className='pl-8 w-full sm:w-62.5'
+        className='pl-8'
         value={value}
         onChange={updateSearchDraft}
         onCompositionStart={handleCompositionStart}
@@ -160,27 +157,13 @@ export default function ToolsPage() {
     updateParams({ page: page > 1 ? String(page) : null })
 
   return (
-    <SidebarInset className='h-screen overflow-hidden'>
-      <header className='flex flex-col shrink-0 border-b'>
-        <div className='flex items-center gap-2 px-4 h-12 bg-background'>
-          <SidebarTrigger className='-ml-1' />
-          <Separator orientation='vertical' className='mr-2! h-4!' />
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem className='hidden md:block'>
-                <BreadcrumbPage>{t('title')}</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-        </div>
-      </header>
-
-      <div className='flex-1 overflow-y-auto'>
-        <div className='container mx-auto py-6'>
-          {/* 顶部操作栏 */}
-          <div className='flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center mb-6'>
-            <h1 className='text-2xl font-semibold'>{t('management')}</h1>
-            <div className='flex gap-2 w-full sm:w-auto'>
+    <PageShell breadcrumbs={[{ label: t('title') }]}>
+      <PageContainer>
+        <PageHeader
+          title={t('management')}
+          description={t('description')}
+          actions={
+            <>
               <ToolSearchInput
                 initialValue={searchQuery}
                 placeholder={t('searchPlaceholder')}
@@ -188,57 +171,53 @@ export default function ToolsPage() {
               />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant='outline'>
-                    <Plus className='size-4 mr-2' />
+                  <Button>
+                    <Plus className='size-4' />
                     {t('add')}
-                    <ChevronDown className='size-4 ml-2' />
+                    <ChevronDown className='size-4 opacity-70' />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align='end'>
-                  <Link href='/tool/add'>
-                    <DropdownMenuItem>
-                      <Plus className='size-4 mr-2' />
+                <DropdownMenuContent align='end' className='w-48'>
+                  <DropdownMenuItem asChild>
+                    <Link href='/tool/add'>
+                      <Plus className='size-4' />
                       {t('addTool')}
-                    </DropdownMenuItem>
-                  </Link>
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuItem>
-                    <FolderPlus className='size-4 mr-2' />
+                    <FolderPlus className='size-4' />
                     {t('createGroup')}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem>
-                    <Download className='size-4 mr-2' />
+                    <Download className='size-4' />
                     {t('importTool')}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            </div>
-          </div>
+            </>
+          }
+        />
 
-          <div className='flex flex-col md:flex-row gap-6'>
-            {/* 侧边栏 - 分组筛选 */}
-            <ToolGroupSidebar
+        <div className='flex flex-col gap-6 md:flex-row'>
+          <ToolGroupSidebar
+            selectedGroupId={selectedGroupId}
+            onSelectGroup={setSelectedGroupId}
+          />
+
+          <section className='min-w-0 flex-1 space-y-4'>
+            <h2 className='text-sm font-medium text-muted-foreground'>
+              {selectedGroupId === null ? t('allTools') : t('groupTools')}
+            </h2>
+            <ToolList
+              searchQuery={searchQuery}
               selectedGroupId={selectedGroupId}
-              onSelectGroup={setSelectedGroupId}
+              currentPage={currentPage}
+              onPageChange={setCurrentPage}
             />
-
-            {/* 主内容区 */}
-            <main className='flex-1 space-y-6'>
-              <h2 className='text-lg font-medium'>
-                {selectedGroupId === null ? t('allTools') : t('groupTools')}
-              </h2>
-
-              {/* 工具卡片 */}
-              <ToolList
-                searchQuery={searchQuery}
-                selectedGroupId={selectedGroupId}
-                currentPage={currentPage}
-                onPageChange={setCurrentPage}
-              />
-            </main>
-          </div>
+          </section>
         </div>
-      </div>
-    </SidebarInset>
+      </PageContainer>
+    </PageShell>
   )
 }

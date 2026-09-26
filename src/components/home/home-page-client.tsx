@@ -116,7 +116,7 @@ function NavBar({
         ) : (
           <Button size='sm' asChild>
             <Link href='/login'>
-              <LogInIcon className='size-4 mr-1' />
+              <LogInIcon className='size-4' />
               {t('login')}
             </Link>
           </Button>
@@ -194,7 +194,7 @@ export default function HomePage() {
           <div className='flex items-center gap-4 pt-2'>
             {loading ? (
               <Button size='lg' disabled>
-                <Loader2Icon className='size-4 mr-2 animate-spin' />
+                <Loader2Icon className='size-4 animate-spin' />
                 {t('loading')}
               </Button>
             ) : user ? (

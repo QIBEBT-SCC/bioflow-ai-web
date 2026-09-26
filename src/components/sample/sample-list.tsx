@@ -115,15 +115,14 @@ function SampleFilesSection({
               <div
                 className={cn(
                   '-mx-3 -my-2 flex min-w-0 flex-col justify-center space-y-2 rounded-md border-l-2 border-transparent px-3 py-2 md:self-stretch',
-                  file.is_dynamic &&
-                    'border-blue-500 bg-blue-50/80 dark:bg-blue-950/30',
+                  file.is_dynamic && 'border-primary bg-primary/5',
                 )}
                 title={file.is_dynamic ? t('dynamic') : undefined}
               >
                 <div className='flex min-w-0 flex-wrap items-center gap-1'>
                   <Badge
                     variant='outline'
-                    className='max-w-full break-all border-blue-200 bg-blue-50 text-blue-700'
+                    className='max-w-full break-all border-primary/25 bg-primary/10 text-primary'
                   >
                     {file.tag}
                   </Badge>
@@ -139,7 +138,7 @@ function SampleFilesSection({
                       className='flex min-w-0 items-center'
                       title={file.md5_checksum}
                     >
-                      <CheckIcon className='mr-1 size-4 shrink-0 text-green-500' />
+                      <CheckIcon className='mr-1 size-4 shrink-0 text-success' />
                       <span className='truncate'>
                         {file.md5_checksum.substring(0, 8)}...
                       </span>
@@ -481,18 +480,18 @@ export function SampleList({ projectId }: SampleListProps) {
                               })
                             }
                           >
-                            <EditIcon className='mr-2 size-4' />
+                            <EditIcon className='size-4' />
                             {t('edit')}
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            className='text-destructive'
+                            variant='destructive'
                             onClick={() =>
                               updateListState({
                                 deletingSample: sample.uid,
                               })
                             }
                           >
-                            <Trash2Icon className='mr-2 size-4' />
+                            <Trash2Icon className='size-4' />
                             {t('delete')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>

@@ -3,6 +3,7 @@
     "Page": {
       "title": "Tools",
       "management": "Tool Management",
+      "description": "Manage reusable command-line tools and their parameter definitions.",
       "searchPlaceholder": "Search tools...",
       "add": "Add",
       "addTool": "Add Tool",
@@ -13,10 +14,12 @@
     },
     "Sidebar": {
       "title": "Tool Groups",
-      "allTools": "All Tools"
+      "allTools": "All Tools",
+      "createGroup": "Create group"
     },
     "List": {
       "loading": "Loading...",
+      "moreActions": "More actions",
       "noDescription": "No description available",
       "viewUsage": "View Usage",
       "copyTool": "Copy Tool",
@@ -178,6 +181,54 @@
         "optionalParams": "Optional and static parameters",
         "positionParams": "Positional parameters"
       }
+    },
+    "Detail": {
+      "breadcrumb": "Tools",
+      "loading": "Loading...",
+      "notFoundTitle": "Tool not found",
+      "notFoundDescription": "The requested tool does not exist or has been deleted.",
+      "backToList": "Back to tools",
+      "usage": "Usage",
+      "edit": "Edit tool",
+      "commandTitle": "Command template",
+      "commandDescription": "Complete command with all parameters",
+      "paramsTitle": "Parameters",
+      "paramsDescription": "Parameters used when the tool runs",
+      "dynamicParams": "Dynamic parameters",
+      "noDynamicParams": "No dynamic parameters",
+      "staticParams": "Static parameters",
+      "immutableStatic": "Immutable static parameters",
+      "modifiableStatic": "Modifiable static parameters",
+      "noStaticParams": "No static parameters",
+      "fileMountsTitle": "File mounts",
+      "fileMountsDescription": "Input and output file definitions",
+      "inputFiles": "Input files ({count})",
+      "outputFiles": "Output files ({count})",
+      "noFiles": "No files",
+      "filePath": "File path",
+      "mountPath": "Mount path",
+      "docsTitle": "Documentation",
+      "helpCommand": "Help command",
+      "commandOutput": "Command output",
+      "infoTitle": "Tool information",
+      "about": "About",
+      "version": "Version",
+      "toolType": "Tool type",
+      "tags": "Tags",
+      "dockerImage": "Docker image",
+      "homepage": "Homepage",
+      "publication": "Publication"
+    },
+    "Edit": {
+      "breadcrumb": "Edit",
+      "title": "Edit tool",
+      "description": "Update tool parameters and file mounts",
+      "loading": "Loading tool...",
+      "refreshDoc": "Refresh docs",
+      "refreshing": "Refreshing...",
+      "cancel": "Cancel",
+      "save": "Save changes",
+      "saving": "Saving..."
     }
   }
 }

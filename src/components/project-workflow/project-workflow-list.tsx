@@ -128,7 +128,7 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
 
         <CardContent className='p-4 sm:p-5'>
           {!workflows || workflows.length === 0 ? (
-            <Empty className='border py-12'>
+            <Empty className='border border-dashed py-12'>
               <EmptyHeader>
                 <EmptyMedia variant='icon'>
                   <SparklesIcon className='size-5' />
@@ -181,7 +181,7 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
                               {workflow.enabled ? (
                                 <Badge
                                   variant='outline'
-                                  className='border-emerald-200 bg-emerald-50 text-emerald-700'
+                                  className='border-success/30 bg-success/10 text-success'
                                 >
                                   {t('enabled')}
                                 </Badge>
@@ -197,7 +197,7 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
                                 variant='outline'
                                 className={cn(
                                   isProjectLevel
-                                    ? 'border-sky-200 bg-sky-50 text-sky-700'
+                                    ? 'border-info/30 bg-info/10 text-info'
                                     : 'border-teal-200 bg-teal-50 text-teal-700',
                                 )}
                               >
@@ -223,7 +223,7 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
                             }
                             disabled={!workflow.enabled}
                           >
-                            <PlayIcon className='size-4 mr-1.5' />
+                            <PlayIcon className='size-4' />
                             {t('run')}
                           </Button>
                           <Tooltip>

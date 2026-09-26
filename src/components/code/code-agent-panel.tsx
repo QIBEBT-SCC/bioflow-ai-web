@@ -647,7 +647,7 @@ export function CodeAgentPanel({
                   </p>
                   {proposal.warnings.map((warning) => (
                     <Alert key={warning}>
-                      <AlertDescription className='text-xs text-amber-700 dark:text-amber-400'>
+                      <AlertDescription className='text-xs text-warning'>
                         {warning}
                       </AlertDescription>
                     </Alert>

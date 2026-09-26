@@ -3,6 +3,7 @@
     "Page": {
       "title": "工具",
       "management": "工具管理",
+      "description": "管理工作流中可复用的命令行工具及其参数定义",
       "searchPlaceholder": "搜索工具...",
       "add": "添加",
       "addTool": "添加工具",
@@ -13,10 +14,12 @@
     },
     "Sidebar": {
       "title": "工具分组",
-      "allTools": "所有工具"
+      "allTools": "所有工具",
+      "createGroup": "创建分组"
     },
     "List": {
       "loading": "加载中...",
+      "moreActions": "更多操作",
       "noDescription": "暂无描述",
       "viewUsage": "查看使用情况",
       "copyTool": "复制工具",
@@ -61,9 +64,18 @@
       "subtitle": "通过3个步骤创建自定义分析工具",
       "back": "返回",
       "steps": {
-        "step1": { "title": "选择镜像", "description": "选择或创建Docker镜像" },
-        "step2": { "title": "配置工具", "description": "配置工具参数和文件" },
-        "step3": { "title": "确认创建", "description": "确认并创建工具" }
+        "step1": {
+          "title": "选择镜像",
+          "description": "选择或创建Docker镜像"
+        },
+        "step2": {
+          "title": "配置工具",
+          "description": "配置工具参数和文件"
+        },
+        "step3": {
+          "title": "确认创建",
+          "description": "确认并创建工具"
+        }
       },
       "selectImage": "选择Docker镜像",
       "searchImage": "搜索并选择要使用的Docker镜像",
@@ -169,6 +181,54 @@
         "optionalParams": "非位置参数和静态参数",
         "positionParams": "位置参数"
       }
+    },
+    "Detail": {
+      "breadcrumb": "工具",
+      "loading": "加载中...",
+      "notFoundTitle": "工具未找到",
+      "notFoundDescription": "请求的工具不存在或已被删除",
+      "backToList": "返回工具列表",
+      "usage": "使用情况",
+      "edit": "编辑工具",
+      "commandTitle": "命令模板",
+      "commandDescription": "包含全部参数的完整命令",
+      "paramsTitle": "参数",
+      "paramsDescription": "工具执行时的参数配置",
+      "dynamicParams": "动态参数",
+      "noDynamicParams": "暂无动态参数",
+      "staticParams": "静态参数",
+      "immutableStatic": "不可变静态参数",
+      "modifiableStatic": "可修改静态参数",
+      "noStaticParams": "暂无静态参数",
+      "fileMountsTitle": "文件挂载",
+      "fileMountsDescription": "输入与输出文件定义",
+      "inputFiles": "输入文件 ({count})",
+      "outputFiles": "输出文件 ({count})",
+      "noFiles": "暂无文件",
+      "filePath": "文件路径",
+      "mountPath": "挂载路径",
+      "docsTitle": "帮助文档",
+      "helpCommand": "帮助命令",
+      "commandOutput": "命令输出",
+      "infoTitle": "工具信息",
+      "about": "简介",
+      "version": "版本",
+      "toolType": "工具类型",
+      "tags": "标签",
+      "dockerImage": "Docker 镜像",
+      "homepage": "主页",
+      "publication": "论文"
+    },
+    "Edit": {
+      "breadcrumb": "编辑",
+      "title": "编辑工具",
+      "description": "更新工具参数与文件挂载配置",
+      "loading": "加载工具信息...",
+      "refreshDoc": "刷新文档",
+      "refreshing": "刷新中...",
+      "cancel": "取消",
+      "save": "保存修改",
+      "saving": "保存中..."
     }
   }
 }

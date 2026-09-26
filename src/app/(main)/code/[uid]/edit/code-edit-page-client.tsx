@@ -1,18 +1,9 @@
 'use client'
 
-import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { CodeForm } from '@/components/code/code-form'
-import { CodePageHeader } from '@/components/code/code-page-header'
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb'
+import { PageBreadcrumbs, PageTopbar } from '@/components/layout/page-shell'
 import {
   Empty,
   EmptyDescription,
@@ -31,31 +22,19 @@ export default function CodeEditPageClient() {
   const { data: code, isLoading, isError } = useCode(uid)
 
   const pageHeaderContent = (
-    <Breadcrumb>
-      <BreadcrumbList>
-        <BreadcrumbItem>
-          <BreadcrumbLink asChild>
-            <Link href='/code'>{t('breadcrumb')}</Link>
-          </BreadcrumbLink>
-        </BreadcrumbItem>
-        <BreadcrumbSeparator />
-        <BreadcrumbItem>
-          <BreadcrumbLink asChild>
-            <Link href={`/code/${uid}`}>{code?.name ?? t('loading')}</Link>
-          </BreadcrumbLink>
-        </BreadcrumbItem>
-        <BreadcrumbSeparator />
-        <BreadcrumbItem>
-          <BreadcrumbPage>{t('title')}</BreadcrumbPage>
-        </BreadcrumbItem>
-      </BreadcrumbList>
-    </Breadcrumb>
+    <PageBreadcrumbs
+      items={[
+        { label: t('breadcrumb'), href: '/code' },
+        { label: code?.name ?? t('loading'), href: `/code/${uid}` },
+        { label: t('title') },
+      ]}
+    />
   )
 
   if (isLoading || isError || !code) {
     return (
       <SidebarInset className='h-screen overflow-hidden'>
-        <CodePageHeader>{pageHeaderContent}</CodePageHeader>
+        <PageTopbar>{pageHeaderContent}</PageTopbar>
         <div className='min-h-0 flex-1 overflow-hidden'>
           {isLoading && (
             <div className='h-full space-y-4 p-6'>
@@ -66,7 +45,7 @@ export default function CodeEditPageClient() {
 
           {isError && (
             <div className='p-6'>
-              <Empty className='border'>
+              <Empty className='border border-dashed'>
                 <EmptyHeader>
                   <EmptyTitle>{t('notFound')}</EmptyTitle>
                   <EmptyDescription>

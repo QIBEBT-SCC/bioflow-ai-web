@@ -327,31 +327,21 @@ export function UserManagement() {
 
         <Table>
           <TableHeader>
-            <TableRow className='bg-muted/40 hover:bg-muted/40'>
-              <TableHead className='h-11 px-5 text-muted-foreground text-xs uppercase tracking-wide'>
-                {t('col_username')}
-              </TableHead>
-              <TableHead className='h-11 text-muted-foreground text-xs uppercase tracking-wide'>
-                {t('col_email')}
-              </TableHead>
-              <TableHead className='h-11 w-32 text-muted-foreground text-xs uppercase tracking-wide'>
-                {t('col_role')}
-              </TableHead>
-              <TableHead className='h-11 w-28 text-muted-foreground text-xs uppercase tracking-wide'>
-                {t('col_status')}
-              </TableHead>
-              <TableHead className='h-11 w-36 text-right text-muted-foreground text-xs uppercase tracking-wide'>
+            <TableRow>
+              <TableHead className='px-5'>{t('col_username')}</TableHead>
+              <TableHead>{t('col_email')}</TableHead>
+              <TableHead className='w-32'>{t('col_role')}</TableHead>
+              <TableHead className='w-28'>{t('col_status')}</TableHead>
+              <TableHead className='w-36 text-right'>
                 {t('col_total_cost')}
               </TableHead>
-              <TableHead className='h-11 w-36 text-right text-muted-foreground text-xs uppercase tracking-wide'>
+              <TableHead className='w-36 text-right'>
                 {t('col_monthly_cost')}
               </TableHead>
-              <TableHead className='h-11 w-28 pr-8 text-right text-muted-foreground text-xs uppercase tracking-wide'>
+              <TableHead className='w-28 pr-8 text-right'>
                 {t('col_runs')}
               </TableHead>
-              <TableHead className='h-11 w-40 pl-6 text-muted-foreground text-xs uppercase tracking-wide'>
-                {t('col_action')}
-              </TableHead>
+              <TableHead className='w-40 pl-6'>{t('col_action')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -388,7 +378,7 @@ export function UserManagement() {
                       variant='outline'
                       className={
                         user.is_active
-                          ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300'
+                          ? 'border-success/30 bg-success/10 text-success'
                           : ''
                       }
                     >

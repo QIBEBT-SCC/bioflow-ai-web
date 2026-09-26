@@ -27,6 +27,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { cn } from '@/lib/utils'
 import type { FileMount, ParamDefine } from '@/types/tool'
 
 export function ToolParamCard({
@@ -67,9 +68,9 @@ export function ToolParamCard({
     <Card
       ref={setNodeRef}
       style={style}
-      className='overflow-hidden shadow-[inset_3px_0_0_hsl(var(--primary)/0.6)] pt-0'
+      className='overflow-hidden border-l-[3px] border-l-primary/60 pt-0'
     >
-      <CardHeader className='py-3 bg-muted/30'>
+      <CardHeader className='border-b bg-muted/30 py-3'>
         <div className='flex justify-between items-center'>
           <div className='flex items-center gap-2'>
             <button
@@ -83,7 +84,10 @@ export function ToolParamCard({
             <CardTitle className='text-base'>
               {t('param', { index: index + 1 })}
               {param.is_position && (
-                <Badge className='ml-2 bg-blue-500'>
+                <Badge
+                  variant='outline'
+                  className='ml-2 border-primary/25 bg-primary/10 text-primary'
+                >
                   {t('positionalParam')}
                 </Badge>
               )}
@@ -136,7 +140,7 @@ export function ToolParamCard({
 
         <div className='space-y-2 mb-4'>
           <Label htmlFor={`param-command-${index}`}>
-            {t('commandFormat')} <span className='text-red-500'>*</span>
+            {t('commandFormat')} <span className='text-destructive'>*</span>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -215,9 +219,12 @@ export function ToolFileCard({
     <Card
       ref={setNodeRef}
       style={style}
-      className={`overflow-hidden border-l-4 pt-0 ${file.file_type === 'INPUT' ? 'border-l-blue-500' : 'border-l-green-500'}`}
+      className={cn(
+        'overflow-hidden border-l-[3px] pt-0',
+        file.file_type === 'INPUT' ? 'border-l-info/60' : 'border-l-success/60',
+      )}
     >
-      <CardHeader className='py-3 bg-muted/30'>
+      <CardHeader className='border-b bg-muted/30 py-3'>
         <div className='flex justify-between items-center'>
           <div className='flex items-center gap-2'>
             <button
@@ -231,7 +238,13 @@ export function ToolFileCard({
             <CardTitle className='text-base'>
               {t('file', { index: index + 1, name: file.name || t('unnamed') })}
               <Badge
-                className={`ml-2 ${file.file_type === 'INPUT' ? 'bg-blue-500' : 'bg-green-500'}`}
+                variant='outline'
+                className={cn(
+                  'ml-2',
+                  file.file_type === 'INPUT'
+                    ? 'border-info/30 bg-info/10 text-info'
+                    : 'border-success/30 bg-success/10 text-success',
+                )}
               >
                 {file.file_type === 'INPUT' ? t('input') : t('output')}
               </Badge>
@@ -262,7 +275,7 @@ export function ToolFileCard({
         <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mb-4'>
           <div className='space-y-2'>
             <Label htmlFor={`file-name-${index}`}>
-              {t('fileName')} <span className='text-red-500'>*</span>
+              {t('fileName')} <span className='text-destructive'>*</span>
             </Label>
             <Input
               id={`file-name-${index}`}
@@ -278,7 +291,7 @@ export function ToolFileCard({
           </div>
           <div className='space-y-2'>
             <Label htmlFor={`file-type-${index}`}>
-              {t('fileType')} <span className='text-red-500'>*</span>
+              {t('fileType')} <span className='text-destructive'>*</span>
             </Label>
             <Select
               value={file.file_type}
@@ -314,7 +327,7 @@ export function ToolFileCard({
         <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mb-4'>
           <div className='space-y-2'>
             <Label htmlFor={`file-path-${index}`}>
-              {t('filePath')} <span className='text-red-500'>*</span>
+              {t('filePath')} <span className='text-destructive'>*</span>
             </Label>
             <Input
               id={`file-path-${index}`}
@@ -343,7 +356,7 @@ export function ToolFileCard({
           </div>
           <div className='space-y-2'>
             <Label htmlFor={`mount-path-${index}`}>
-              {t('mountPath')} <span className='text-red-500'>*</span>
+              {t('mountPath')} <span className='text-destructive'>*</span>
             </Label>
             <Input
               id={`mount-path-${index}`}

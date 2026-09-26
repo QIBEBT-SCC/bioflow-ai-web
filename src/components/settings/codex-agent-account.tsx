@@ -140,7 +140,7 @@ export function CodexAgentAccount({
             </div>
           </div>
           {available ? (
-            <div className='flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400'>
+            <div className='flex items-center gap-2 text-sm text-success'>
               <CheckCircle2Icon className='size-4' />
               {t('connected')}
             </div>
@@ -231,7 +231,7 @@ export function CodexAgentAccount({
               </>
             )}
             {completed && (
-              <div className='flex items-center gap-2 rounded-lg bg-emerald-50 p-4 text-sm text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300'>
+              <div className='flex items-center gap-2 rounded-lg bg-success/10 p-4 text-sm text-success'>
                 <CheckCircle2Icon className='size-5' />
                 {t('loginSucceeded')}
               </div>

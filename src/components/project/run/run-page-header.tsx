@@ -1,15 +1,6 @@
-import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { ChatSidebarToggle } from '@/components/chat/chat-sidebar-toggle'
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb'
-import { Separator } from '@/components/ui/separator'
-import { SidebarTrigger } from '@/components/ui/sidebar'
+import { PageTopbar } from '@/components/layout/page-shell'
 
 interface RunPageHeaderProps {
   projectId: string
@@ -27,39 +18,13 @@ export function RunPageHeader({
   const t = useTranslations('Project.detail.breadcrumb')
 
   return (
-    <header className='flex flex-col shrink-0 border-b'>
-      <div className='flex h-12 items-center gap-2 bg-background px-4'>
-        <SidebarTrigger className='-ml-1' />
-        <Separator orientation='vertical' className='!mr-2 !h-4' />
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <Link
-                href='/project'
-                className='text-muted-foreground hover:text-foreground text-sm'
-              >
-                {t('projects')}
-              </Link>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <Link
-                href={`/project/${projectId}`}
-                className='text-muted-foreground hover:text-foreground text-sm'
-              >
-                {projectName ?? projectId}
-              </Link>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>{runName ?? runUid}</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-        <div className='ml-auto'>
-          <ChatSidebarToggle />
-        </div>
-      </div>
-    </header>
+    <PageTopbar
+      breadcrumbs={[
+        { label: t('projects'), href: '/project' },
+        { label: projectName ?? projectId, href: `/project/${projectId}` },
+        { label: runName ?? runUid },
+      ]}
+      actions={<ChatSidebarToggle />}
+    />
   )
 }

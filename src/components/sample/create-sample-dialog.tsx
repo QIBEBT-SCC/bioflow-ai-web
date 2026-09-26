@@ -103,7 +103,7 @@ export function CreateSampleDialog({
       <DialogTrigger asChild>
         {trigger || (
           <Button size='sm'>
-            <PlusIcon className='size-4 mr-2' />
+            <PlusIcon className='size-4' />
             {t('add')}
           </Button>
         )}
@@ -136,7 +136,7 @@ export function CreateSampleDialog({
                 size='sm'
                 onClick={handleAddMetaData}
               >
-                <PlusIcon className='size-4 mr-2' />
+                <PlusIcon className='size-4' />
                 {t('addField')}
               </Button>
             </div>

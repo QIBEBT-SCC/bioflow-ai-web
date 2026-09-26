@@ -14,11 +14,10 @@ import {
 } from 'react'
 import { CodeList } from '@/components/code/code-list'
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbPage,
-} from '@/components/ui/breadcrumb'
+  PageContainer,
+  PageHeader,
+  PageShell,
+} from '@/components/layout/page-shell'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -34,8 +33,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Separator } from '@/components/ui/separator'
-import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import type { CodeNodeType } from '@/types/code'
 
 const SEARCH_DEBOUNCE_MS = 300
@@ -88,8 +85,8 @@ function CodeSearchInput({
   }
 
   return (
-    <div className='relative flex-1 sm:w-72 sm:flex-none'>
-      <SearchIcon className='absolute top-2.5 left-2.5 size-4 text-muted-foreground' />
+    <div className='relative w-full sm:w-64'>
+      <SearchIcon className='pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground' />
       <Input
         type='search'
         value={value}
@@ -139,29 +136,13 @@ export default function CodePageClient({
   )
 
   return (
-    <SidebarInset className='h-screen overflow-hidden'>
-      <header className='flex h-12 shrink-0 items-center gap-2 border-b px-4'>
-        <SidebarTrigger className='-ml-1' />
-        <Separator orientation='vertical' className='mr-2! h-4!' />
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbPage>{t('title')}</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-      </header>
-
-      <div className='flex-1 overflow-y-auto'>
-        <div className='container mx-auto max-w-6xl py-6'>
-          <div className='mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end'>
-            <div>
-              <h1 className='text-2xl font-semibold'>{t('management')}</h1>
-              <p className='mt-1 text-sm text-muted-foreground'>
-                {t('description')}
-              </p>
-            </div>
-            <div className='flex w-full flex-col gap-2 sm:w-auto sm:flex-row'>
+    <PageShell breadcrumbs={[{ label: t('title') }]}>
+      <PageContainer>
+        <PageHeader
+          title={t('management')}
+          description={t('description')}
+          actions={
+            <>
               <CodeSearchInput
                 key={query}
                 initialValue={query}
@@ -208,19 +189,19 @@ export default function CodePageClient({
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            </div>
-          </div>
+            </>
+          }
+        />
 
-          <CodeList
-            query={query}
-            nodeType={nodeType}
-            currentPage={currentPage}
-            onPageChange={(page) =>
-              updateParams({ page: page > 1 ? String(page) : null })
-            }
-          />
-        </div>
-      </div>
-    </SidebarInset>
+        <CodeList
+          query={query}
+          nodeType={nodeType}
+          currentPage={currentPage}
+          onPageChange={(page) =>
+            updateParams({ page: page > 1 ? String(page) : null })
+          }
+        />
+      </PageContainer>
+    </PageShell>
   )
 }

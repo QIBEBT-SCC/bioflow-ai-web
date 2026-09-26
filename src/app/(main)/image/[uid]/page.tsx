@@ -9,6 +9,7 @@ import {
   FileTextIcon,
   PackageIcon,
   SaveIcon,
+  WrenchIcon,
   XIcon,
 } from 'lucide-react'
 import Link from 'next/link'
@@ -16,27 +17,28 @@ import { useParams, useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { toast } from 'sonner'
+import {
+  PageContainer,
+  PageHeader,
+  PageShell,
+} from '@/components/layout/page-shell'
+import { SectionCard } from '@/components/layout/section-card'
+import { ToolTagBadge } from '@/components/tool/tool-tag-badge'
 import { Badge } from '@/components/ui/badge'
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
-import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Textarea } from '@/components/ui/textarea'
 import { useImage, useUpdateImage } from '@/hooks/use-tool'
 import { formatImageTag, parseImageAliases } from '@/lib/image-utils'
@@ -163,16 +165,17 @@ function ImageViewContent({
   copied: boolean
 }) {
   const t = useTranslations('image.detail')
+  const tCard = useTranslations('image.card')
   return (
     <>
       <div>
-        <h3 className='text-sm font-medium text-muted-foreground mb-2'>
+        <h3 className='mb-2 text-sm font-medium text-muted-foreground'>
           {t('descLabel')}
         </h3>
         <p className='text-sm'>{image.description || t('noDesc')}</p>
       </div>
       <div>
-        <h3 className='text-sm font-medium text-muted-foreground mb-2'>
+        <h3 className='mb-2 text-sm font-medium text-muted-foreground'>
           {t('aliasesLabel')}
         </h3>
         {image.aliases.length > 0 ? (
@@ -188,12 +191,14 @@ function ImageViewContent({
         )}
       </div>
       <div>
-        <h3 className='text-sm font-medium text-muted-foreground mb-2'>
+        <h3 className='mb-2 text-sm font-medium text-muted-foreground'>
           {t('imageTag')}
         </h3>
         <div className='flex items-center gap-2'>
-          <div className='flex-1 p-3 bg-muted rounded-md'>
-            <code className='text-sm font-mono'>{formatImageTag(image)}</code>
+          <div className='min-w-0 flex-1 rounded-md bg-muted p-3'>
+            <code className='font-mono text-sm break-all'>
+              {formatImageTag(image)}
+            </code>
           </div>
           <Button
             variant='outline'
@@ -202,7 +207,7 @@ function ImageViewContent({
             className='shrink-0'
           >
             {copied ? (
-              <CheckIcon className='size-4 text-green-600' />
+              <CheckIcon className='size-4 text-success' />
             ) : (
               <CopyIcon className='size-4' />
             )}
@@ -213,8 +218,8 @@ function ImageViewContent({
         {image.homepage && (
           <Button variant='outline' size='sm' asChild>
             <a href={image.homepage} target='_blank' rel='noopener noreferrer'>
-              <ExternalLinkIcon className='size-4 mr-2' />
-              Homepage
+              <ExternalLinkIcon className='size-4' />
+              {tCard('homepageBtn')}
             </a>
           </Button>
         )}
@@ -225,8 +230,8 @@ function ImageViewContent({
               target='_blank'
               rel='noopener noreferrer'
             >
-              <FileTextIcon className='size-4 mr-2' />
-              Paper
+              <FileTextIcon className='size-4' />
+              {tCard('paperBtn')}
             </a>
           </Button>
         )}
@@ -237,6 +242,7 @@ function ImageViewContent({
 
 export default function ImageDetailPage() {
   const t = useTranslations('image.detail')
+  const tList = useTranslations('image')
   const params = useParams()
   const { push } = useRouter()
   const uid = params.uid as string
@@ -308,118 +314,83 @@ export default function ImageDetailPage() {
     setAliasesText('')
   }
 
-  if (isLoading) {
-    return (
-      <SidebarInset className='h-screen flex flex-col'>
-        <header className='flex flex-col shrink-0 border-b'>
-          <div className='flex items-center justify-between px-4 h-12 bg-background'>
-            <div className='flex items-center gap-2'>
-              <SidebarTrigger className='-ml-1' />
-              <Separator orientation='vertical' className='!mr-2 !h-4' />
-            </div>
-          </div>
-        </header>
-        <div className='flex-1 overflow-y-auto flex items-center justify-center'>
-          <div className='text-muted-foreground'>{t('loading')}</div>
-        </div>
-      </SidebarInset>
-    )
-  }
-
-  if (error || !image) {
-    return (
-      <SidebarInset className='h-screen flex flex-col'>
-        <header className='flex flex-col shrink-0 border-b'>
-          <div className='flex items-center justify-between px-4 h-12 bg-background'>
-            <div className='flex items-center gap-2'>
-              <SidebarTrigger className='-ml-1' />
-              <Separator orientation='vertical' className='!mr-2 !h-4' />
-            </div>
-          </div>
-        </header>
-        <div className='flex-1 overflow-y-auto flex items-center justify-center'>
-          <div className='text-center'>
-            <PackageIcon className='size-12 mx-auto mb-4 text-muted-foreground' />
-            <h2 className='text-xl font-semibold mb-2'>{t('notFoundTitle')}</h2>
-            <p className='text-muted-foreground mb-4'>
-              {error?.message || t('notFoundDesc')}
-            </p>
-            <Button onClick={() => push('/image')} variant='outline'>
-              <ArrowLeftIcon className='size-4 mr-2' />
-              {t('backToList')}
-            </Button>
-          </div>
-        </div>
-      </SidebarInset>
-    )
-  }
-
   return (
-    <SidebarInset className='h-screen flex flex-col'>
-      <header className='flex flex-col shrink-0 border-b'>
-        <div className='flex items-center justify-between px-4 h-12 bg-background'>
-          <div className='flex items-center gap-2'>
-            <SidebarTrigger className='-ml-1' />
-            <Separator orientation='vertical' className='!mr-2 !h-4' />
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink href='/image'>Images</BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>{image.name}</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
+    <PageShell
+      breadcrumbs={[
+        { label: tList('title'), href: '/image' },
+        { label: image?.name ?? t('loading') },
+      ]}
+    >
+      <PageContainer>
+        {isLoading && (
+          <div className='space-y-6'>
+            <Skeleton className='h-10 w-72' />
+            <Skeleton className='h-64 rounded-xl' />
           </div>
-        </div>
-      </header>
+        )}
 
-      <div className='flex-1 overflow-y-auto'>
-        <div className='container mx-auto px-4 py-8 max-w-7xl'>
-          {/* 镜像基本信息卡片 */}
-          <Card className='mb-8'>
-            <CardHeader>
-              <div className='flex items-start justify-between'>
-                <div className='flex items-center gap-3'>
-                  <PackageIcon className='size-8 text-primary' />
-                  <div>
-                    <CardTitle className='text-2xl'>{image.name}</CardTitle>
-                    <CardDescription>
-                      {t('version', { val: image.version })}
-                    </CardDescription>
-                  </div>
-                </div>
-                {!isEditing ? (
-                  <Button onClick={handleEdit} variant='outline' size='sm'>
-                    <EditIcon className='size-4 mr-2' />
+        {!isLoading && (error || !image) && (
+          <Empty className='border border-dashed'>
+            <EmptyHeader>
+              <EmptyMedia variant='icon'>
+                <PackageIcon />
+              </EmptyMedia>
+              <EmptyTitle>{t('notFoundTitle')}</EmptyTitle>
+              <EmptyDescription>
+                {error?.message || t('notFoundDesc')}
+              </EmptyDescription>
+            </EmptyHeader>
+            <EmptyContent>
+              <Button onClick={() => push('/image')} variant='outline'>
+                <ArrowLeftIcon className='size-4' />
+                {t('backToList')}
+              </Button>
+            </EmptyContent>
+          </Empty>
+        )}
+
+        {!isLoading && image && (
+          <>
+            <PageHeader
+              title={image.name}
+              titleAddon={
+                <Badge variant='secondary' className='font-mono'>
+                  {image.version}
+                </Badge>
+              }
+              actions={
+                !isEditing ? (
+                  <Button onClick={handleEdit} variant='outline'>
+                    <EditIcon className='size-4' />
                     {t('edit')}
                   </Button>
                 ) : (
-                  <div className='flex gap-2'>
+                  <>
                     <Button
                       onClick={handleCancel}
                       variant='outline'
-                      size='sm'
                       disabled={updateImageMutation.isPending}
                     >
-                      <XIcon className='size-4 mr-2' />
+                      <XIcon className='size-4' />
                       {t('cancel')}
                     </Button>
                     <Button
                       onClick={handleSave}
-                      size='sm'
                       disabled={updateImageMutation.isPending}
                     >
-                      <SaveIcon className='size-4 mr-2' />
+                      <SaveIcon className='size-4' />
                       {t('save')}
                     </Button>
-                  </div>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent className='space-y-6'>
+                  </>
+                )
+              }
+            />
+
+            <SectionCard
+              icon={<PackageIcon />}
+              title={t('config')}
+              contentClassName='space-y-6'
+            >
               {isEditing ? (
                 <ImageEditForm
                   formData={formData}
@@ -434,71 +405,60 @@ export default function ImageDetailPage() {
                   copied={copied}
                 />
               )}
-            </CardContent>
-          </Card>
+            </SectionCard>
 
-          <ImageRelatedTools image={image} />
-        </div>
-      </div>
-    </SidebarInset>
+            <ImageRelatedTools image={image} />
+          </>
+        )}
+      </PageContainer>
+    </PageShell>
   )
 }
 
 function ImageRelatedTools({ image }: { image: ToolImagePublic }) {
   const t = useTranslations('image.detail')
-  const getTagStyle = (tagName: string) => {
-    switch (tagName) {
-      case 'AI Checked':
-        return 'bg-green-50 text-green-600 border-green-200'
-      case 'AI Unchecked':
-        return 'bg-yellow-50 text-yellow-600 border-yellow-200'
-      default:
-        return 'bg-blue-50 text-blue-600 border-blue-200'
-    }
-  }
 
   return (
-    <div className='mt-8'>
-      <h2 className='text-xl font-semibold mb-4'>
+    <section className='mt-8 space-y-4'>
+      <h2 className='text-lg font-semibold tracking-tight'>
         {t('relatedTools', { count: image.tools?.length || 0 })}
       </h2>
       {!image.tools || image.tools.length === 0 ? (
-        <Card>
-          <CardContent className='py-12 text-center text-muted-foreground'>
-            {t('noTools')}
-          </CardContent>
-        </Card>
+        <div className='rounded-xl border border-dashed py-12 text-center text-sm text-muted-foreground'>
+          {t('noTools')}
+        </div>
       ) : (
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
+        <div className='grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3'>
           {image.tools.map((tool) => (
-            <Link key={tool.uid} href={`/tool/${tool.uid}`}>
-              <Card className='h-full hover:shadow-lg transition-shadow cursor-pointer'>
-                <CardHeader>
-                  <CardTitle className='text-lg'>{tool.name}</CardTitle>
-                  <CardDescription className='line-clamp-2'>
-                    {tool.description || t('noDesc')}
-                  </CardDescription>
-                </CardHeader>
-                {tool.tags && tool.tags.length > 0 && (
-                  <CardContent>
-                    <div className='flex flex-wrap gap-1'>
-                      {tool.tags.map((tag) => (
-                        <Badge
-                          key={tag.id}
-                          variant='outline'
-                          className={`${getTagStyle(tag.name)} text-xs`}
-                        >
-                          {tag.name}
-                        </Badge>
-                      ))}
-                    </div>
-                  </CardContent>
-                )}
-              </Card>
-            </Link>
+            <Card
+              key={tool.uid}
+              className='group relative gap-3 p-5 transition-[border-color,box-shadow] hover:border-primary/40 hover:shadow-md'
+            >
+              <div className='flex items-center gap-3'>
+                <div className='flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary'>
+                  <WrenchIcon className='size-5' />
+                </div>
+                <Link
+                  href={`/tool/${tool.uid}`}
+                  className='truncate font-semibold after:absolute after:inset-0 group-hover:text-primary'
+                >
+                  {tool.name}
+                </Link>
+              </div>
+              <p className='line-clamp-2 text-sm text-muted-foreground'>
+                {tool.description || t('noDesc')}
+              </p>
+              {tool.tags && tool.tags.length > 0 && (
+                <div className='flex flex-wrap gap-1'>
+                  {tool.tags.map((tag) => (
+                    <ToolTagBadge key={tag.id} name={tag.name} />
+                  ))}
+                </div>
+              )}
+            </Card>
           ))}
         </div>
       )}
-    </div>
+    </section>
   )
 }

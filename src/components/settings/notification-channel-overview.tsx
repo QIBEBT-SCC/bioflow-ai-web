@@ -166,7 +166,7 @@ export function NotificationChannelOverview({
                   className={cn(
                     'inline-flex items-center gap-1.5',
                     channel.credential_configured
-                      ? 'text-emerald-600 dark:text-emerald-400'
+                      ? 'text-success'
                       : 'text-destructive',
                   )}
                 >
@@ -190,8 +190,7 @@ export function NotificationChannelOverview({
                   className={cn(
                     'inline-flex items-center gap-1.5',
                     statusKey === 'error' && 'text-destructive',
-                    statusKey === 'success' &&
-                      'text-emerald-600 dark:text-emerald-400',
+                    statusKey === 'success' && 'text-success',
                     statusKey === 'never' && 'text-muted-foreground',
                   )}
                 >
