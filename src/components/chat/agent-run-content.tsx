@@ -756,14 +756,14 @@ function ToolArtifactCard({ artifact }: { artifact: AgentToolArtifact }) {
       title={artifact.uid}
       className='group relative block overflow-hidden rounded-xl border border-border bg-card p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:border-foreground/30 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
     >
-      <span className='absolute inset-y-0 left-0 w-1 bg-emerald-500' />
+      <span className='absolute inset-y-0 left-0 w-1 bg-success' />
       <div className='flex items-start gap-3 pl-1'>
         <span className='flex size-10 shrink-0 items-center justify-center rounded-lg bg-foreground text-background shadow-sm'>
           <WrenchIcon className='size-5' />
         </span>
         <div className='min-w-0 flex-1'>
           <p className='flex items-center gap-1.5 font-semibold text-[11px] text-foreground uppercase tracking-wide'>
-            <CheckCircle2Icon className='size-3.5 text-emerald-600 dark:text-emerald-400' />
+            <CheckCircle2Icon className='size-3.5 text-success' />
             <span>{t('tool_created')}</span>
           </p>
           <p className='mt-1 truncate font-semibold text-sm'>{name}</p>
@@ -803,14 +803,14 @@ function WorkflowArtifactCard({
       title={uid}
       className='group relative block overflow-hidden rounded-xl border border-border bg-card p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:border-foreground/30 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
     >
-      <span className='absolute inset-y-0 left-0 w-1 bg-sky-500' />
+      <span className='absolute inset-y-0 left-0 w-1 bg-info' />
       <div className='flex items-start gap-3 pl-1'>
-        <span className='flex size-10 shrink-0 items-center justify-center rounded-lg bg-sky-600 text-white shadow-sm dark:bg-sky-500'>
+        <span className='flex size-10 shrink-0 items-center justify-center rounded-lg bg-info text-white shadow-sm'>
           <WaypointsIcon className='size-5' />
         </span>
         <div className='min-w-0 flex-1'>
           <p className='flex items-center gap-1.5 font-semibold text-[11px] text-foreground uppercase tracking-wide'>
-            <CheckCircle2Icon className='size-3.5 text-sky-600 dark:text-sky-400' />
+            <CheckCircle2Icon className='size-3.5 text-info' />
             <span>{t('workflow_created')}</span>
           </p>
           <p className='mt-1 truncate font-semibold text-sm'>

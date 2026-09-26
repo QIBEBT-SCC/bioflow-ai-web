@@ -91,7 +91,7 @@ export function ModelConfigTab() {
   if (isEditing) {
     return (
       <Card className='border-border bg-card p-6'>
-        <h2 className='text-xl font-semibold mb-6'>
+        <h2 className='mb-4 text-lg font-semibold tracking-tight'>
           {t('module_config_title')}
         </h2>
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
@@ -153,7 +153,7 @@ export function ModelConfigTab() {
       <div className='flex items-center justify-between mb-4'>
         <h3 className='text-lg font-semibold'>{t('current_config_title')}</h3>
         <Button variant='outline' onClick={() => setIsEditing(true)}>
-          <SettingsIcon className='size-4 mr-2' />
+          <SettingsIcon className='size-4' />
           {tSetting('edit')}
         </Button>
       </div>

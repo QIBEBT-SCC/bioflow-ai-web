@@ -120,7 +120,7 @@ export function ProviderCard({ provider }: ProviderCardProps) {
                   value={draft?.name || ''}
                   onChange={(e) => updateDraft('name', e.target.value)}
                   className='max-w-xs font-semibold text-lg bg-background'
-                  placeholder='Provider 名称'
+                  placeholder={t('provider_name')}
                 />
               ) : (
                 <h2 className='font-semibold text-lg'>{provider.name}</h2>
@@ -139,7 +139,7 @@ export function ProviderCard({ provider }: ProviderCardProps) {
               {provider.is_active && (
                 <Badge
                   variant='destructive'
-                  className='ml-1 bg-green-500 text-white'
+                  className='ml-1 bg-success text-white'
                 >
                   {t('active')}
                 </Badge>

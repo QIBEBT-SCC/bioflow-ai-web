@@ -110,7 +110,7 @@ export function ProjectFileMappings({ projectId }: ProjectFileMappingsProps) {
                 projectId={projectId}
                 trigger={
                   <Button>
-                    <PlusIcon className='mr-2 size-4' />
+                    <PlusIcon className='size-4' />
                     {t('add')}
                   </Button>
                 }
@@ -132,8 +132,7 @@ export function ProjectFileMappings({ projectId }: ProjectFileMappingsProps) {
                     <div
                       className={cn(
                         '-mx-3 -my-2 flex min-w-0 items-center rounded-md border-l-2 border-transparent px-3 py-2 lg:self-stretch',
-                        mapping.is_dynamic &&
-                          'border-blue-500 bg-blue-50/80 dark:bg-blue-950/30',
+                        mapping.is_dynamic && 'border-primary bg-primary/5',
                       )}
                     >
                       <div className='flex min-w-0 items-center gap-2 font-mono font-medium'>
@@ -194,14 +193,14 @@ export function ProjectFileMappings({ projectId }: ProjectFileMappingsProps) {
                           <DropdownMenuItem
                             onClick={() => setEditingMapping(mapping)}
                           >
-                            <EditIcon className='mr-2 size-4' />
+                            <EditIcon className='size-4' />
                             {t('edit')}
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            className='text-destructive'
+                            variant='destructive'
                             onClick={() => setDeletingMapping(mapping)}
                           >
-                            <Trash2Icon className='mr-2 size-4' />
+                            <Trash2Icon className='size-4' />
                             {t('delete')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>

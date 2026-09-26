@@ -166,11 +166,11 @@ export function RunLeftPanel({
                   value: run?.node_statistics.failed ?? '--',
                 },
                 {
-                  label: '已阻断',
+                  label: t('blockedTasks'),
                   value: run?.node_statistics.blocked ?? '--',
                 },
                 {
-                  label: '就绪 / 队列',
+                  label: t('readyQueued'),
                   value: run
                     ? `${run.node_statistics.ready} / ${run.node_statistics.queued}`
                     : '--',

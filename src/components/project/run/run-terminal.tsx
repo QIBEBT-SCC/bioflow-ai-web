@@ -29,7 +29,7 @@ export function RunTerminal({
           type='button'
           aria-label={t('resizeHeight')}
           onMouseDown={onResizeStart}
-          className='block h-1 w-full cursor-row-resize border-none bg-zinc-800 p-0 hover:bg-blue-500 transition-colors'
+          className='block h-1 w-full cursor-row-resize border-none bg-zinc-800 p-0 transition-colors hover:bg-primary'
           title={t('resizeHeight')}
         />
       )}

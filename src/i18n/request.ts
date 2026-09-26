@@ -15,6 +15,7 @@ const namespaces = [
   'code',
   'project',
   'task',
+  'toast',
 ]
 
 export default getRequestConfig(async () => {

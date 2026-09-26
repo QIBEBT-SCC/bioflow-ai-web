@@ -2,15 +2,18 @@
 
 import {
   BracesIcon,
-  CheckCircle2Icon,
   Loader2Icon,
   PencilIcon,
+  ShieldCheckIcon,
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { type FormEvent, useState } from 'react'
+import { type FormEvent, type ReactNode, useState } from 'react'
 import { toast } from 'sonner'
+import {
+  CodingAgentBlock,
+  CodingAgentSection,
+} from '@/components/settings/coding-agent-section'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -20,10 +23,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   useOpenCodeAgentSettings,
   useSaveOpenCodeCredentials,
 } from '@/hooks/use-code-agent'
+import { cn } from '@/lib/utils'
 import type { OpenCodeModelProvider } from '@/types/code-agent'
 
 const MODEL_PROVIDERS: Array<{
@@ -95,33 +100,36 @@ export function OpenCodeAgentSettings({ available }: { available: boolean }) {
   const showSummary = configured && Boolean(settings.data) && !draft.editing
 
   return (
-    <Card>
-      <CardHeader className='flex-row items-center justify-between gap-4'>
-        <div className='flex items-center gap-3'>
-          <div className='rounded-lg bg-primary/10 p-2 text-primary'>
-            <BracesIcon className='size-5' />
-          </div>
-          <div>
-            <CardTitle className='text-base'>OpenCode</CardTitle>
-            <p className='text-xs text-muted-foreground'>ACP v1</p>
-          </div>
-        </div>
-        {configured ? (
-          <div className='flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400'>
-            <CheckCircle2Icon className='size-4' />
-            {t('connected')}
-          </div>
-        ) : (
-          <span className='text-sm text-muted-foreground'>
-            {t('disconnected')}
-          </span>
-        )}
-      </CardHeader>
-      <CardContent className='space-y-5'>
+    <CodingAgentSection
+      icon={<BracesIcon />}
+      name='OpenCode'
+      summary={t('openCodeSummary')}
+      connected={configured}
+      statusLabel={configured ? t('credentialsConfigured') : t('disconnected')}
+      action={
+        showSummary && (
+          <Button
+            type='button'
+            variant='outline'
+            onClick={() =>
+              setDraft((current) => ({ ...current, editing: true }))
+            }
+          >
+            <PencilIcon className='size-4' />
+            {t('updateCredentials')}
+          </Button>
+        )
+      }
+    >
+      <CodingAgentBlock
+        title={t('modelProvider')}
+        description={showSummary ? undefined : t('apiCredentialHelp')}
+      >
         {settings.isLoading && (
-          <div className='flex items-center gap-2 text-sm text-muted-foreground'>
-            <Loader2Icon className='size-4 animate-spin' />
-            {t('loadingSettings')}
+          <div className='space-y-2' aria-busy='true'>
+            <span className='sr-only'>{t('loadingSettings')}</span>
+            <Skeleton className='h-9 rounded-md' />
+            <Skeleton className='h-9 rounded-md' />
           </div>
         )}
         {settings.error && (
@@ -130,57 +138,33 @@ export function OpenCodeAgentSettings({ available }: { available: boolean }) {
           </p>
         )}
         {showSummary && (
-          <>
-            <div className='space-y-3 rounded-lg border bg-muted/30 p-4 text-sm'>
-              <div className='flex items-start justify-between gap-4'>
-                <span className='text-muted-foreground'>
-                  {t('configuredProvider')}
-                </span>
-                <span className='font-medium'>{providerName}</span>
-              </div>
-              {modelProvider === 'custom' && (
-                <>
-                  <div className='flex items-start justify-between gap-4'>
-                    <span className='text-muted-foreground'>
-                      {t('customBaseUrl')}
-                    </span>
-                    <span className='break-all text-right font-mono text-xs'>
-                      {baseUrl}
-                    </span>
-                  </div>
-                  <div className='flex items-start justify-between gap-4'>
-                    <span className='text-muted-foreground'>
-                      {t('customModelId')}
-                    </span>
-                    <span className='break-all text-right font-mono text-xs'>
-                      {modelId}
-                    </span>
-                  </div>
-                </>
-              )}
-              <p className='border-t pt-3 text-xs text-muted-foreground'>
-                {t('credentialStored')}
-              </p>
-            </div>
-            <div className='flex justify-end'>
-              <Button
-                type='button'
-                variant='outline'
-                onClick={() =>
-                  setDraft((current) => ({ ...current, editing: true }))
-                }
-              >
-                <PencilIcon className='size-4' />
-                {t('updateCredentials')}
-              </Button>
-            </div>
-          </>
+          <dl className='divide-y rounded-lg border text-sm'>
+            <SummaryRow label={t('modelProvider')}>{providerName}</SummaryRow>
+            {modelProvider === 'custom' && (
+              <>
+                <SummaryRow label={t('customBaseUrl')} mono>
+                  {baseUrl}
+                </SummaryRow>
+                <SummaryRow label={t('customModelId')} mono>
+                  {modelId}
+                </SummaryRow>
+              </>
+            )}
+            <SummaryRow label={t('apiKey')}>
+              <span className='inline-flex items-center gap-1.5 text-success'>
+                <ShieldCheckIcon className='size-4' />
+                {t('credentialsConfigured')}
+              </span>
+            </SummaryRow>
+          </dl>
+        )}
+        {showSummary && (
+          <p className='text-xs text-muted-foreground'>
+            {t('credentialStored')}
+          </p>
         )}
         {!settings.isLoading && !showSummary && (
           <form className='space-y-4' onSubmit={save}>
-            <p className='text-sm text-muted-foreground'>
-              {t('apiCredentialHelp')}
-            </p>
             <div className='space-y-2'>
               <Label htmlFor='opencode-model-provider'>
                 {t('modelProvider')}
@@ -209,7 +193,7 @@ export function OpenCodeAgentSettings({ available }: { available: boolean }) {
               </Select>
             </div>
             {modelProvider === 'custom' && (
-              <>
+              <div className='grid gap-4 sm:grid-cols-2'>
                 <div className='space-y-2'>
                   <Label htmlFor='opencode-custom-base-url'>
                     {t('customBaseUrl')}
@@ -247,14 +231,14 @@ export function OpenCodeAgentSettings({ available }: { available: boolean }) {
                     required
                     disabled={saving}
                   />
-                  <p className='text-xs text-muted-foreground'>
-                    {t('customProviderHelp')}
-                  </p>
                 </div>
-              </>
+                <p className='text-xs text-muted-foreground sm:col-span-2'>
+                  {t('customProviderHelp')}
+                </p>
+              </div>
             )}
             <div className='space-y-2'>
-              <Label htmlFor='opencode-api-key'>API Key</Label>
+              <Label htmlFor='opencode-api-key'>{t('apiKey')}</Label>
               <Input
                 id='opencode-api-key'
                 type='password'
@@ -276,9 +260,7 @@ export function OpenCodeAgentSettings({ available }: { available: boolean }) {
                   type='button'
                   variant='ghost'
                   disabled={saving}
-                  onClick={() => {
-                    resetForm()
-                  }}
+                  onClick={resetForm}
                 >
                   {t('cancel')}
                 </Button>
@@ -287,12 +269,37 @@ export function OpenCodeAgentSettings({ available }: { available: boolean }) {
                 type='submit'
                 disabled={saving || !draft.apiKey.trim() || !customReady}
               >
+                {saving && <Loader2Icon className='size-4 animate-spin' />}
                 {saving ? t('savingCredentials') : t('saveCredentials')}
               </Button>
             </div>
           </form>
         )}
-      </CardContent>
-    </Card>
+      </CodingAgentBlock>
+    </CodingAgentSection>
+  )
+}
+
+function SummaryRow({
+  label,
+  mono,
+  children,
+}: {
+  label: string
+  mono?: boolean
+  children: ReactNode
+}) {
+  return (
+    <div className='flex items-start justify-between gap-4 px-4 py-2.5'>
+      <dt className='shrink-0 text-muted-foreground'>{label}</dt>
+      <dd
+        className={cn(
+          'min-w-0 text-right font-medium break-all',
+          mono && 'font-mono text-xs',
+        )}
+      >
+        {children}
+      </dd>
+    </div>
   )
 }

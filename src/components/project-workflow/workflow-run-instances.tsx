@@ -203,7 +203,7 @@ export function WorkflowRunInstances({
           </div>
           <Table>
             <TableHeader>
-              <TableRow className='bg-muted/20 hover:bg-muted/20'>
+              <TableRow>
                 <TableHead className='w-[220px]'>{t('viewDetails')}</TableHead>
                 <TableHead className='w-[110px]'>{t('status')}</TableHead>
                 <TableHead className='w-[220px] pr-8'>
@@ -288,7 +288,7 @@ export function WorkflowRunInstances({
                             <Loader2 className='size-3 animate-spin' />
                           ) : (
                             <>
-                              <PlayIcon className='size-3 mr-1' />
+                              <PlayIcon className='size-3' />
                               {t('rerun')}
                             </>
                           )}
@@ -328,7 +328,7 @@ export function WorkflowRunInstances({
         </div>
         <Table>
           <TableHeader>
-            <TableRow className='bg-muted/20 hover:bg-muted/20'>
+            <TableRow>
               <TableHead className='w-[220px]'>{t('sampleName')}</TableHead>
               <TableHead className='w-[110px]'>{t('status')}</TableHead>
               <TableHead className='w-[220px] pr-8'>{t('progress')}</TableHead>
@@ -424,7 +424,7 @@ export function WorkflowRunInstances({
                           <Loader2 className='size-3 animate-spin' />
                         ) : (
                           <>
-                            <PlayIcon className='size-3 mr-1' />
+                            <PlayIcon className='size-3' />
                             {run ? t('rerun') : t('run')}
                           </>
                         )}

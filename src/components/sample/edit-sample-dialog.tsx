@@ -136,7 +136,7 @@ export function EditSampleDialog({
                 size='sm'
                 onClick={handleAddMetaData}
               >
-                <PlusIcon className='size-4 mr-2' />
+                <PlusIcon className='size-4' />
                 {t('addField')}
               </Button>
             </div>

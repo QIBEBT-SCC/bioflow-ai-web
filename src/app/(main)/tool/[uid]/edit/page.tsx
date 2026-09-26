@@ -1,20 +1,16 @@
 'use client'
 
-import { ArrowLeft, Loader2, RefreshCw } from 'lucide-react'
-import Link from 'next/link'
+import { Loader2, RefreshCw } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
-import { ToolConfigForm } from '@/components/tool/tool-config-form'
+import { useTranslations } from 'next-intl'
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb'
+  PageContainer,
+  PageHeader,
+  PageShell,
+} from '@/components/layout/page-shell'
+import { ToolConfigForm } from '@/components/tool/tool-config-form'
 import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
-import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   useRefreshDocument,
   useTool,
@@ -26,6 +22,8 @@ import { useToolFormState } from '@/hooks/use-tool-form-state'
 import type { DockerToolCreate } from '@/types/tool'
 
 export default function EditToolPage() {
+  const t = useTranslations('tool.Edit')
+  const tDetail = useTranslations('tool.Detail')
   const params = useParams()
   const { push } = useRouter()
   const toolUid = params.uid as string
@@ -63,119 +61,82 @@ export default function EditToolPage() {
     )
   }
 
-  if (isLoading || !formState) {
-    return (
-      <SidebarInset className='h-screen flex items-center justify-center'>
-        <div className='flex flex-col items-center gap-2 text-muted-foreground'>
-          <Loader2 className='size-6 animate-spin' />
-          <span>加载工具信息...</span>
-        </div>
-      </SidebarInset>
-    )
-  }
-
   return (
-    <SidebarInset className='h-screen flex flex-col'>
-      <header className='flex flex-col shrink-0 border-b'>
-        <div className='flex items-center gap-2 px-4 h-12 bg-background'>
-          <SidebarTrigger className='-ml-1' />
-          <Separator orientation='vertical' className='!mr-2 !h-4' />
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem className='hidden md:block'>
-                <BreadcrumbLink asChild>
-                  <Link href='/tool'>工具</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator className='hidden md:block' />
-              <BreadcrumbItem className='hidden md:block'>
-                <BreadcrumbLink asChild>
-                  <Link href={`/tool/${tool?.uid}`}>{tool?.name}</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator className='hidden md:block' />
-              <BreadcrumbItem>
-                <BreadcrumbPage>编辑工具</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-        </div>
-      </header>
+    <PageShell
+      breadcrumbs={[
+        { label: tDetail('breadcrumb'), href: '/tool' },
+        {
+          label: tool?.name ?? tDetail('loading'),
+          href: tool ? `/tool/${tool.uid}` : undefined,
+        },
+        { label: t('breadcrumb') },
+      ]}
+    >
+      <PageContainer size='narrow'>
+        <PageHeader title={t('title')} description={t('description')} />
 
-      <div className='flex-1 overflow-y-auto'>
-        <div className='container mx-auto py-6 max-w-4xl'>
-          <div className='mb-6'>
-            <Link
-              href={`/tool/${tool?.uid}`}
-              className='inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-2'
-            >
-              <ArrowLeft className='size-4 mr-1' />
-              返回工具详情
-            </Link>
-            <h1 className='text-2xl font-semibold'>编辑工具</h1>
-            <p className='text-muted-foreground mt-1'>
-              更新工具参数与文件挂载配置
-            </p>
+        {isLoading || !formState ? (
+          <div className='space-y-4' aria-busy='true'>
+            <span className='sr-only'>{t('loading')}</span>
+            <Skeleton className='h-48 rounded-xl' />
+            <Skeleton className='h-72 rounded-xl' />
           </div>
+        ) : (
+          <>
+            <ToolConfigForm
+              value={formState}
+              toolGroups={toolGroups}
+              availableTags={availableTags}
+              onFieldChange={updateFormField}
+              onAddDynamicParam={addDynamicParam}
+              onUpdateDynamicParam={updateDynamicParam}
+              onRemoveDynamicParam={removeDynamicParam}
+              onAddFileMount={addFileMount}
+              onUpdateFileMount={updateFileMount}
+              onRemoveFileMount={removeFileMount}
+              onReorderDynamicParams={reorderDynamicParams}
+              onReorderFileMounts={reorderFileMounts}
+              imageSummary={{
+                name: tool?.image.name,
+                version: tool?.image.version,
+              }}
+              imageUid={tool?.image.uid}
+            />
 
-          <ToolConfigForm
-            value={formState}
-            toolGroups={toolGroups}
-            availableTags={availableTags}
-            onFieldChange={updateFormField}
-            onAddDynamicParam={addDynamicParam}
-            onUpdateDynamicParam={updateDynamicParam}
-            onRemoveDynamicParam={removeDynamicParam}
-            onAddFileMount={addFileMount}
-            onUpdateFileMount={updateFileMount}
-            onRemoveFileMount={removeFileMount}
-            onReorderDynamicParams={reorderDynamicParams}
-            onReorderFileMounts={reorderFileMounts}
-            imageSummary={{
-              name: tool?.image.name,
-              version: tool?.image.version,
-            }}
-            imageUid={tool?.image.uid}
-          />
-
-          <div className='flex justify-between pt-4 border-t'>
-            <Button
-              variant='outline'
-              onClick={() =>
-                tool?.help_doc.uid && refreshDoc(tool.help_doc.uid)
-              }
-              disabled={!tool?.help_doc.uid || isRefreshing}
-            >
-              {isRefreshing ? (
-                <>
-                  <Loader2 className='size-4 mr-2 animate-spin' />
-                  刷新中...
-                </>
-              ) : (
-                <>
-                  <RefreshCw className='size-4 mr-2' />
-                  刷新文档
-                </>
-              )}
-            </Button>
-            <div className='flex gap-3'>
+            <div className='sticky bottom-0 -mx-4 mt-6 flex justify-between gap-3 border-t bg-background/95 px-4 py-4 backdrop-blur sm:-mx-6 sm:px-6'>
               <Button
                 variant='outline'
-                onClick={() => push(`/tool/${tool?.uid}`)}
-                disabled={isUpdating}
+                onClick={() =>
+                  tool?.help_doc.uid && refreshDoc(tool.help_doc.uid)
+                }
+                disabled={!tool?.help_doc.uid || isRefreshing}
               >
-                取消
+                {isRefreshing ? (
+                  <Loader2 className='size-4 animate-spin' />
+                ) : (
+                  <RefreshCw className='size-4' />
+                )}
+                {isRefreshing ? t('refreshing') : t('refreshDoc')}
               </Button>
-              <Button
-                onClick={handleSaveChanges}
-                disabled={!canSave || isUpdating}
-              >
-                {isUpdating ? '保存中...' : '保存修改'}
-              </Button>
+              <div className='flex gap-2'>
+                <Button
+                  variant='outline'
+                  onClick={() => push(`/tool/${tool?.uid}`)}
+                  disabled={isUpdating}
+                >
+                  {t('cancel')}
+                </Button>
+                <Button
+                  onClick={handleSaveChanges}
+                  disabled={!canSave || isUpdating}
+                >
+                  {isUpdating ? t('saving') : t('save')}
+                </Button>
+              </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </SidebarInset>
+          </>
+        )}
+      </PageContainer>
+    </PageShell>
   )
 }

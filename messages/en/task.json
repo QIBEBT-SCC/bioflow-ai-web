@@ -155,6 +155,8 @@
       "empty": "This run has no executable tasks.",
       "open": "Open task {name}",
       "count": "{count, plural, one {# task} other {# tasks}}; about six are visible at once, with the rest available by scrolling."
-    }
+    },
+    "runPageTitle": "Workflow Run | BioFlow AI",
+    "runPageDescription": "View workflow run progress and node status"
   }
 }

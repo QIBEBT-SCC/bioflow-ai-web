@@ -1,0 +1,58 @@
+{
+  "Toast": {
+    "unknownError": "未知错误",
+    "tool": {
+      "createSuccess": "工具创建成功",
+      "createFailed": "工具创建失败: {message}",
+      "deleteSuccess": "工具删除成功",
+      "deleteFailed": "工具删除失败: {message}",
+      "updateSuccess": "工具更新成功",
+      "updateFailed": "工具更新失败: {message}"
+    },
+    "image": {
+      "createSuccess": "镜像创建成功",
+      "createFailed": "镜像创建失败: {message}",
+      "updateSuccess": "镜像更新成功",
+      "updateFailed": "镜像更新失败: {message}"
+    },
+    "document": {
+      "refreshSuccess": "文档刷新成功",
+      "refreshFailed": "文档刷新失败: {message}"
+    },
+    "database": {
+      "createSuccess": "数据库添加成功",
+      "deleteSuccess": "数据库删除成功",
+      "deleteFailed": "删除失败: {message}",
+      "deleteFailedGeneric": "删除失败",
+      "downloadInProgress": "下载任务已在进行中",
+      "downloadNotConfigured": "未配置下载命令",
+      "downloadSubmitFailed": "提交下载任务失败: {message}"
+    },
+    "genome": {
+      "deleteSuccess": "参考基因组已删除",
+      "deleteFailed": "删除失败: {message}",
+      "downloadSubmitted": "下载任务已提交：{species} ({accession})",
+      "alreadyExists": "基因组已存在：{species}",
+      "notFound": "NCBI 中未找到该物种的参考基因组，请检查物种名或 Tax ID",
+      "downloadFailed": "下载失败: {message}",
+      "buildSubmitted": "索引构建任务已提交：{message}",
+      "buildFailed": "构建失败: {message}"
+    },
+    "workflow": {
+      "saveSuccess": "Workflow保存成功",
+      "saveFailed": "保存失败: {message}",
+      "updateSuccess": "Workflow更新成功",
+      "updateFailed": "更新失败: {message}",
+      "deleteSuccess": "Workflow已删除",
+      "deleteFailed": "删除失败: {message}"
+    },
+    "run": {
+      "submitSuccess": "工作流已提交运行",
+      "submitFailed": "运行失败: {message}"
+    },
+    "workflowPackage": {
+      "downloadSuccess": "工作流结果包下载成功",
+      "downloadFailed": "工作流结果包下载失败"
+    }
+  }
+}

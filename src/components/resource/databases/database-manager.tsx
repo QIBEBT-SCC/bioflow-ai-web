@@ -29,7 +29,7 @@ export function DatabasesManager() {
           />
         </div>
         <Button onClick={() => setIsAddDialogOpen(true)}>
-          <PlusCircle className='mr-2 size-4' />
+          <PlusCircle className='size-4' />
           {t('add_database')}
         </Button>
       </div>

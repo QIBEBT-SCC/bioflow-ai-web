@@ -1,6 +1,7 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import {
   addWorkflowToProject,
@@ -127,6 +128,7 @@ export function useRemoveWorkflowFromProject() {
 }
 
 export function useDownloadWorkflowPackage() {
+  const t = useTranslations('Toast.workflowPackage')
   return useMutation({
     mutationFn: ({
       projectId,
@@ -144,10 +146,10 @@ export function useDownloadWorkflowPackage() {
       link.click()
       link.remove()
       URL.revokeObjectURL(url)
-      toast.success('工作流结果包下载成功')
+      toast.success(t('downloadSuccess'))
     },
     onError: () => {
-      toast.error('工作流结果包下载失败')
+      toast.error(t('downloadFailed'))
     },
   })
 }

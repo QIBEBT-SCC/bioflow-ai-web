@@ -36,9 +36,9 @@ interface GenomeDetailProps {
 
 function IndexStatusIcon({ status }: { status: IndexStatus }) {
   if (status === 'ready')
-    return <CheckCircle2 className='size-4 text-emerald-500' />
+    return <CheckCircle2 className='size-4 text-success' />
   if (status === 'building')
-    return <Loader2 className='size-4 text-amber-500 animate-spin' />
+    return <Loader2 className='size-4 text-warning animate-spin' />
   return <MinusCircle className='size-4 text-muted-foreground' />
 }
 
@@ -46,13 +46,13 @@ function IndexStatusLabel({ status }: { status: IndexStatus }) {
   const t = useTranslations('resource')
   if (status === 'ready')
     return (
-      <span className='text-emerald-600 dark:text-emerald-400 text-sm font-medium'>
+      <span className='text-success text-sm font-medium'>
         {t('genome.status_ready')}
       </span>
     )
   if (status === 'building')
     return (
-      <span className='text-amber-600 dark:text-amber-400 text-sm font-medium'>
+      <span className='text-warning text-sm font-medium'>
         {t('genome.status_building')}
       </span>
     )
@@ -105,7 +105,9 @@ export function GenomeDetail({ genomeId, onDelete }: GenomeDetailProps) {
       {/* 标题栏 */}
       <div className='flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between'>
         <div>
-          <h2 className='text-xl font-semibold'>{genome.name}</h2>
+          <h2 className='text-lg font-semibold tracking-tight'>
+            {genome.name}
+          </h2>
           <code className='text-xs text-muted-foreground'>
             {genome.accession}
           </code>
@@ -126,7 +128,7 @@ export function GenomeDetail({ genomeId, onDelete }: GenomeDetailProps) {
               size='sm'
               onClick={() => setIsBuildIndexOpen(true)}
             >
-              <Hammer className='size-4 mr-1' />
+              <Hammer className='size-4' />
               {t('genome.build_index')}
             </Button>
           )}
@@ -136,7 +138,7 @@ export function GenomeDetail({ genomeId, onDelete }: GenomeDetailProps) {
             onClick={() => setIsDeleteDialogOpen(true)}
             disabled={deleteMutation.isPending}
           >
-            <Trash2 className='size-4 mr-1' />
+            <Trash2 className='size-4' />
             {deleteMutation.isPending ? t('deleting') : t('delete')}
           </Button>
         </div>

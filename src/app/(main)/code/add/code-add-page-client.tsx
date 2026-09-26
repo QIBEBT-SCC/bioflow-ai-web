@@ -1,17 +1,9 @@
 'use client'
 
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { CodeCreateForm } from '@/components/code/code-create-form'
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb'
+import { PageBreadcrumbs } from '@/components/layout/page-shell'
 import type { CodeNodeType } from '@/types/code'
 
 export default function CodeAddPageClient({
@@ -29,19 +21,9 @@ export default function CodeAddPageClient({
         : t('bashTitle')
 
   const pageHeaderContent = (
-    <Breadcrumb>
-      <BreadcrumbList>
-        <BreadcrumbItem>
-          <BreadcrumbLink asChild>
-            <Link href='/code'>{t('breadcrumb')}</Link>
-          </BreadcrumbLink>
-        </BreadcrumbItem>
-        <BreadcrumbSeparator />
-        <BreadcrumbItem>
-          <BreadcrumbPage>{title}</BreadcrumbPage>
-        </BreadcrumbItem>
-      </BreadcrumbList>
-    </Breadcrumb>
+    <PageBreadcrumbs
+      items={[{ label: t('breadcrumb'), href: '/code' }, { label: title }]}
+    />
   )
 
   return (

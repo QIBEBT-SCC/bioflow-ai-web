@@ -176,7 +176,7 @@ export function RunWorkflowDialog({
                             })}
                             checked={selectedSampleUids.has(sample.uid)}
                             onChange={() => toggleSample(sample.uid)}
-                            className='size-4 rounded border-gray-300'
+                            className='size-4 rounded border-input accent-primary'
                           />
                         </div>
                         <div className='flex-1 min-w-0'>
@@ -266,7 +266,7 @@ export function RunWorkflowDialog({
           >
             {runWorkflowMutation.isPending ? (
               <>
-                <Loader2 className='size-4 mr-2 animate-spin' />
+                <Loader2 className='size-4 animate-spin' />
                 {t('running')}
               </>
             ) : (

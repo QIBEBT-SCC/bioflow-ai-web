@@ -4,6 +4,7 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query'
+import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import {
@@ -32,6 +33,8 @@ const V2_API_URL = '/api/v2'
  * 创建运行实例
  */
 export const useNewRunInstance = () => {
+  const t = useTranslations('Toast.run')
+  const tUnknown = useTranslations('Toast')
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -43,14 +46,18 @@ export const useNewRunInstance = () => {
       template_name?: string
     }) => newRunInstance(workflow, template_name),
     onSuccess: () => {
-      toast.success('工作流已提交运行')
+      toast.success(t('submitSuccess'))
       // 刷新运行实例列表
       queryClient.invalidateQueries({ queryKey: ['runs'] })
       queryClient.invalidateQueries({ queryKey: ['runCount'] })
       queryClient.invalidateQueries({ queryKey: ['runStats'] })
     },
     onError: (error: Error) => {
-      toast.error(`运行失败: ${error.message || '未知错误'}`)
+      toast.error(
+        t('submitFailed', {
+          message: error.message || tUnknown('unknownError'),
+        }),
+      )
     },
   })
 }

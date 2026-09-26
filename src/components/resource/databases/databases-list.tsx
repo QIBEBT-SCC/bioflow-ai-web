@@ -68,7 +68,9 @@ export function DatabasesList({
 
   return (
     <div className='space-y-4'>
-      <h2 className='text-xl font-semibold'>{t('database_list')}</h2>
+      <h2 className='text-lg font-semibold tracking-tight'>
+        {t('database_list')}
+      </h2>
 
       {isLoading ? (
         <div className='py-12 text-center text-muted-foreground'>
@@ -76,7 +78,7 @@ export function DatabasesList({
         </div>
       ) : databases.length > 0 ? (
         <>
-          <div className='rounded-md border'>
+          <div className='overflow-hidden rounded-xl border bg-card'>
             <Table>
               <TableHeader>
                 <TableRow>

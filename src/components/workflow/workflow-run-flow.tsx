@@ -7,63 +7,27 @@ import {
   ReactFlow,
   ReactFlowProvider,
 } from '@xyflow/react'
-import {
-  ArrowLeftIcon,
-  CheckCircle2Icon,
-  ClockIcon,
-  Loader2Icon,
-  XCircleIcon,
-} from 'lucide-react'
-import Link from 'next/link'
+import { useTranslations } from 'next-intl'
+import { PageTopbar } from '@/components/layout/page-shell'
 import { nodeTypes } from '@/components/node-editor/node-registry'
 import { ReadOnlyProvider } from '@/components/node-editor/read-only-context'
 import { SubgraphBreadcrumbs } from '@/components/node-editor/subgraph-breadcrumbs'
 import { SubgraphNavigation } from '@/components/node-editor/subgraph-context'
 import { SubgraphInterfaceSummary } from '@/components/node-editor/subgraph-interface-summary'
-import { Badge } from '@/components/ui/badge'
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb'
-import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import { Separator } from '@/components/ui/separator'
-import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
+import { SidebarInset } from '@/components/ui/sidebar'
+import { RunStatusBadge } from '@/components/workflow/run-status'
 import { StatusEdge } from '@/components/workflow/status-edge'
 import { useRun } from '@/hooks/use-run'
 import { useRunFlow } from '@/hooks/use-run-flow'
 import { useSubgraphRun } from '@/hooks/use-subgraph-run'
+import { RUN_STATUS_APPEARANCE } from '@/lib/status'
 import { WorkflowRunStatusV2 } from '@/types/workflow-v2'
 
 const edgeTypes = { default: StatusEdge }
 
-const statusConfig = {
-  [WorkflowRunStatusV2.PENDING]: {
-    label: '等待中',
-    variant: 'secondary' as const,
-    icon: ClockIcon,
-  },
-  [WorkflowRunStatusV2.RUNNING]: {
-    label: '运行中',
-    variant: 'default' as const,
-    icon: Loader2Icon,
-  },
-  [WorkflowRunStatusV2.FAILED]: {
-    label: '失败',
-    variant: 'destructive' as const,
-    icon: XCircleIcon,
-  },
-  [WorkflowRunStatusV2.SUCCEEDED]: {
-    label: '成功',
-    variant: 'outline' as const,
-    icon: CheckCircle2Icon,
-  },
-}
-
 function RunFlowContent({ uid }: { uid: string }) {
+  const t = useTranslations('workflowMonitor')
   const { data: run } = useRun(uid, 5000)
   const { visibleRun, labels, enter, navigate } = useSubgraphRun(run)
   const { flowNodes, edges, handleNodesChange } = useRunFlow(visibleRun)
@@ -74,63 +38,44 @@ function RunFlowContent({ uid }: { uid: string }) {
       ? (taskStats.succeeded / taskStats.total) * 100
       : 0
 
-  const cfg = run ? statusConfig[run.status] : null
-  const Icon = cfg?.icon
-
   return (
-    <SidebarInset className='h-screen flex flex-col'>
-      <header className='flex flex-col shrink-0 border-b'>
-        <div className='flex h-12 items-center gap-2 bg-background px-4'>
-          <SidebarTrigger className='-ml-1' />
-          <Separator orientation='vertical' className='mr-2! h-4!' />
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <Link
-                  href='/workflow'
-                  className='text-muted-foreground hover:text-foreground text-sm'
-                >
-                  工作流运行
-                </Link>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>{run?.name ?? uid}</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-
-          <div className='ml-auto flex items-center gap-3'>
-            {cfg && Icon ? (
-              <Badge variant={cfg.variant} className='gap-1'>
-                <Icon
-                  className={`size-3 ${run?.status === WorkflowRunStatusV2.RUNNING ? 'animate-spin' : ''}`}
+    <SidebarInset className='flex h-screen flex-col overflow-hidden'>
+      <PageTopbar
+        breadcrumbs={[
+          { label: t('title'), href: '/workflow' },
+          { label: run?.name ?? uid },
+        ]}
+        actions={
+          <>
+            {run && (
+              <div className='flex items-center gap-2'>
+                <RunStatusBadge
+                  status={run.status}
+                  label={t(
+                    `status.${RUN_STATUS_APPEARANCE[run.status].labelKey}`,
+                  )}
                 />
-                {run?.status === WorkflowRunStatusV2.FAILED && !run.settled
-                  ? '失败（独立分支仍在运行）'
-                  : cfg.label}
-              </Badge>
-            ) : null}
-            {taskStats ? (
-              <div className='flex items-center gap-2 text-sm text-muted-foreground'>
-                <span>
+                {run.status === WorkflowRunStatusV2.FAILED && !run.settled && (
+                  <span className='hidden text-xs text-muted-foreground lg:inline'>
+                    {t('table.unsettled')}
+                  </span>
+                )}
+              </div>
+            )}
+            {taskStats && (
+              <div className='hidden items-center gap-2 text-sm text-muted-foreground sm:flex'>
+                <span className='tabular-nums'>
                   {taskStats.succeeded}/{taskStats.total}
                 </span>
-                <Progress value={progress} className='w-24 h-1.5' />
+                <Progress value={progress} className='h-1.5 w-24' />
               </div>
-            ) : null}
-            <Button variant='ghost' size='sm' asChild>
-              <Link href='/workflow'>
-                <ArrowLeftIcon className='size-4 mr-1' />
-                返回
-              </Link>
-            </Button>
-          </div>
-        </div>
-        <SubgraphBreadcrumbs labels={labels} onNavigate={navigate} />
-      </header>
+            )}
+          </>
+        }
+      />
+      <SubgraphBreadcrumbs labels={labels} onNavigate={navigate} />
 
-      <div className='flex-1 w-full'>
+      <div className='min-h-0 w-full flex-1'>
         <ReadOnlyProvider value={true}>
           <SubgraphNavigation value={enter}>
             <ReactFlow

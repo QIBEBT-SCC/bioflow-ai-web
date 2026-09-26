@@ -9,7 +9,7 @@ import {
 import dynamic from 'next/dynamic'
 import { useLocale, useTranslations } from 'next-intl'
 import { useMemo } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { StatTile } from '@/components/layout/stat-tile'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useTaskMonitor } from '@/hooks/use-task'
 
@@ -139,98 +139,55 @@ export function TaskMonitor({ taskUid }: TaskMonitorProps) {
   return (
     <div className='space-y-6'>
       {/* 统计卡片 */}
-      <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
-        {/* CPU使用率 */}
-        <Card className='bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800'>
-          <CardHeader className='pb-3'>
-            <CardTitle className='text-sm font-medium flex items-center gap-2 text-blue-700 dark:text-blue-300'>
-              <CpuIcon className='size-4' />
-              {t('cpuUsage')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className='text-3xl font-bold text-blue-600 dark:text-blue-400'>
-              {stats.avgCpu.toFixed(2)}%
+      <div className='grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4'>
+        <StatTile icon={<CpuIcon />} label={t('cpuUsage')}>
+          <div className='text-2xl font-semibold tabular-nums'>
+            {stats.avgCpu.toFixed(2)}%
+          </div>
+          <p className='mt-1 text-xs text-muted-foreground'>
+            {t('peak', { value: `${stats.maxCpu.toFixed(2)}%` })}
+          </p>
+        </StatTile>
+        <StatTile icon={<MemoryStickIcon />} label={t('memoryUsage')}>
+          <div className='text-2xl font-semibold tabular-nums'>
+            {stats.avgMem.toFixed(2)}%
+          </div>
+          <p className='mt-1 text-xs text-muted-foreground'>
+            {t('peak', { value: `${stats.maxMem.toFixed(2)}%` })}
+          </p>
+        </StatTile>
+        <StatTile icon={<MemoryStickIcon />} label={t('memoryUsed')}>
+          <div className='text-2xl font-semibold tabular-nums'>
+            {(stats.avgMemUsed / 1024).toFixed(2)} GB
+          </div>
+          <p className='mt-1 text-xs text-muted-foreground'>
+            {t('peak', {
+              value: `${(stats.maxMemUsed / 1024).toFixed(2)} GB`,
+            })}
+          </p>
+        </StatTile>
+        <StatTile icon={<HardDriveIcon />} label={t('ioStats')}>
+          <dl className='space-y-1 text-sm'>
+            <div className='flex justify-between'>
+              <dt className='text-muted-foreground'>{t('input')}</dt>
+              <dd className='font-medium tabular-nums'>
+                {(() => {
+                  const formatted = formatBytes(stats.avgIoIn * 1024 * 1024)
+                  return `${formatted.value} ${formatted.unit}`
+                })()}
+              </dd>
             </div>
-            <p className='text-xs text-blue-600/70 dark:text-blue-400/70 mt-1'>
-              {t('peak', { value: `${stats.maxCpu.toFixed(2)}%` })}
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* 内存使用率 */}
-        <Card className='bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900 border-purple-200 dark:border-purple-800'>
-          <CardHeader className='pb-3'>
-            <CardTitle className='text-sm font-medium flex items-center gap-2 text-purple-700 dark:text-purple-300'>
-              <MemoryStickIcon className='size-4' />
-              {t('memoryUsage')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className='text-3xl font-bold text-purple-600 dark:text-purple-400'>
-              {stats.avgMem.toFixed(2)}%
+            <div className='flex justify-between'>
+              <dt className='text-muted-foreground'>{t('output')}</dt>
+              <dd className='font-medium tabular-nums'>
+                {(() => {
+                  const formatted = formatBytes(stats.avgIoOut * 1024 * 1024)
+                  return `${formatted.value} ${formatted.unit}`
+                })()}
+              </dd>
             </div>
-            <p className='text-xs text-purple-600/70 dark:text-purple-400/70 mt-1'>
-              {t('peak', { value: `${stats.maxMem.toFixed(2)}%` })}
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* 内存用量 */}
-        <Card className='bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border-green-200 dark:border-green-800'>
-          <CardHeader className='pb-3'>
-            <CardTitle className='text-sm font-medium flex items-center gap-2 text-green-700 dark:text-green-300'>
-              <MemoryStickIcon className='size-4' />
-              {t('memoryUsed')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className='text-3xl font-bold text-green-600 dark:text-green-400'>
-              {(stats.avgMemUsed / 1024).toFixed(2)} GB
-            </div>
-            <p className='text-xs text-green-600/70 dark:text-green-400/70 mt-1'>
-              {t('peak', {
-                value: `${(stats.maxMemUsed / 1024).toFixed(2)} GB`,
-              })}
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* IO统计 */}
-        <Card className='bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950 dark:to-orange-900 border-orange-200 dark:border-orange-800'>
-          <CardHeader className='pb-3'>
-            <CardTitle className='text-sm font-medium flex items-center gap-2 text-orange-700 dark:text-orange-300'>
-              <HardDriveIcon className='size-4' />
-              {t('ioStats')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className='text-sm space-y-1 text-orange-700 dark:text-orange-300'>
-              <div className='flex justify-between'>
-                <span className='text-orange-600/70 dark:text-orange-400/70'>
-                  {t('input')}
-                </span>
-                <span className='font-medium'>
-                  {(() => {
-                    const formatted = formatBytes(stats.avgIoIn * 1024 * 1024)
-                    return `${formatted.value} ${formatted.unit}`
-                  })()}
-                </span>
-              </div>
-              <div className='flex justify-between'>
-                <span className='text-orange-600/70 dark:text-orange-400/70'>
-                  {t('output')}
-                </span>
-                <span className='font-medium'>
-                  {(() => {
-                    const formatted = formatBytes(stats.avgIoOut * 1024 * 1024)
-                    return `${formatted.value} ${formatted.unit}`
-                  })()}
-                </span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          </dl>
+        </StatTile>
       </div>
 
       <TaskMonitorCharts chartData={chartData} />

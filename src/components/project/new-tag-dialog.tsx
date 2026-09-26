@@ -47,8 +47,12 @@ export function NewTagDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant='outline' className='w-full' size='sm'>
-          <PlusIcon className='size-4 mr-2' />
+        <Button
+          variant='ghost'
+          size='sm'
+          className='w-full justify-start text-muted-foreground'
+        >
+          <PlusIcon className='size-4' />
           {t('trigger')}
         </Button>
       </DialogTrigger>
@@ -79,7 +83,7 @@ export function NewTagDialog() {
                   key={presetColor}
                   type='button'
                   aria-label={t('selectColor', { color: presetColor })}
-                  className={`size-5 rounded-full border border-gray-200 ${colorClassMap[presetColor]} transition-all hover:scale-110`}
+                  className={`size-5 rounded-full border border-border ${colorClassMap[presetColor]} transition-all hover:scale-110`}
                   onClick={() => setColor(presetColor)}
                 />
               ))}

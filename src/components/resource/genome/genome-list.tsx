@@ -48,7 +48,7 @@ function IndexStatusBadge({
 }) {
   if (status === 'ready') {
     return (
-      <Badge className='bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 gap-1'>
+      <Badge className='bg-success/15 text-success border-success/20 gap-1'>
         <CheckCircle2 className='size-3' />
         {label}
       </Badge>
@@ -56,7 +56,7 @@ function IndexStatusBadge({
   }
   if (status === 'building') {
     return (
-      <Badge className='bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/20 gap-1'>
+      <Badge className='bg-warning/15 text-warning border-warning/20 gap-1'>
         <Loader2 className='size-3 animate-spin' />
         {label}
       </Badge>
@@ -119,7 +119,7 @@ export function GenomeList({
         </div>
       ) : genomes.length > 0 ? (
         <>
-          <div className='rounded-md border overflow-hidden'>
+          <div className='overflow-hidden rounded-xl border bg-card'>
             <Table>
               <TableHeader>
                 <TableRow>

@@ -1,68 +1,13 @@
 'use client'
 
-import {
-  BanIcon,
-  CheckCircle2Icon,
-  CircleDotIcon,
-  Clock3Icon,
-  ListOrderedIcon,
-  Loader2Icon,
-  XCircleIcon,
-} from 'lucide-react'
 import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
 import { useMemo } from 'react'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { RunStatusBadge } from '@/components/workflow/run-status'
 import { useRunTasks } from '@/hooks/use-task'
-import { cn } from '@/lib/utils'
-import { NodeRunStatusV2 } from '@/types/workflow-v2'
-
-const STATUS_APPEARANCE = {
-  [NodeRunStatusV2.PENDING]: {
-    labelKey: 'pending',
-    icon: Clock3Icon,
-    variant: 'secondary' as const,
-    iconClassName: 'text-slate-500',
-  },
-  [NodeRunStatusV2.READY]: {
-    labelKey: 'ready',
-    icon: CircleDotIcon,
-    variant: 'secondary' as const,
-    iconClassName: 'text-amber-600',
-  },
-  [NodeRunStatusV2.QUEUED]: {
-    labelKey: 'queued',
-    icon: ListOrderedIcon,
-    variant: 'secondary' as const,
-    iconClassName: 'text-violet-600',
-  },
-  [NodeRunStatusV2.RUNNING]: {
-    labelKey: 'running',
-    icon: Loader2Icon,
-    variant: 'default' as const,
-    iconClassName: 'text-blue-600',
-  },
-  [NodeRunStatusV2.SUCCEEDED]: {
-    labelKey: 'succeeded',
-    icon: CheckCircle2Icon,
-    variant: 'outline' as const,
-    iconClassName: 'text-emerald-600',
-  },
-  [NodeRunStatusV2.FAILED]: {
-    labelKey: 'failed',
-    icon: XCircleIcon,
-    variant: 'destructive' as const,
-    iconClassName: 'text-red-600',
-  },
-  [NodeRunStatusV2.BLOCKED]: {
-    labelKey: 'blocked',
-    icon: BanIcon,
-    variant: 'outline' as const,
-    iconClassName: 'text-zinc-600',
-  },
-}
+import { RUN_STATUS_APPEARANCE } from '@/lib/status'
 
 function formatDuration(
   startTime: string | null,
@@ -161,8 +106,7 @@ export function RunTaskList({
             <span>{t('duration')}</span>
           </div>
           {tasks.map((task) => {
-            const appearance = STATUS_APPEARANCE[task.status]
-            const StatusIcon = appearance.icon
+            const appearance = RUN_STATUS_APPEARANCE[task.status]
             return (
               <Link
                 key={task.uid}
@@ -177,17 +121,10 @@ export function RunTaskList({
                   </p>
                 </div>
                 <div>
-                  <Badge variant={appearance.variant} className='gap-1'>
-                    <StatusIcon
-                      className={cn(
-                        'size-3',
-                        appearance.iconClassName,
-                        task.status === NodeRunStatusV2.RUNNING &&
-                          'animate-spin motion-reduce:animate-none',
-                      )}
-                    />
-                    {taskT(`status.${appearance.labelKey}`)}
-                  </Badge>
+                  <RunStatusBadge
+                    status={task.status}
+                    label={taskT(`status.${appearance.labelKey}`)}
+                  />
                 </div>
                 <span className='tabular-nums text-muted-foreground'>
                   {task.start_time

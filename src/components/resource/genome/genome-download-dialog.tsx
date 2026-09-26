@@ -131,10 +131,10 @@ export function GenomeDownloadDialog({
         {result ? (
           /* 成功结果展示 */
           <div className='py-4 space-y-4'>
-            <div className='flex items-start gap-3 p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20'>
-              <CheckCircle2 className='size-5 text-emerald-500 shrink-0 mt-0.5' />
+            <div className='flex items-start gap-3 p-4 rounded-lg bg-success/10 border border-success/20'>
+              <CheckCircle2 className='size-5 text-success shrink-0 mt-0.5' />
               <div>
-                <div className='font-medium text-sm text-emerald-700 dark:text-emerald-400'>
+                <div className='font-medium text-sm text-success'>
                   {result.task_id
                     ? t('genome.task_submitted')
                     : t('genome.genome_exists')}
@@ -291,7 +291,7 @@ export function GenomeDownloadDialog({
                 onClick={handleSubmit}
                 disabled={!isValid || downloadMutation.isPending}
               >
-                <Download className='size-4 mr-1.5' />
+                <Download className='size-4' />
                 {downloadMutation.isPending
                   ? t('genome.querying_ncbi')
                   : t('genome.start_download')}

@@ -512,7 +512,7 @@ function SkillWorkspace({
     <div className='space-y-5'>
       <div>
         <div className='flex flex-wrap items-center gap-2'>
-          <h2 className='text-2xl font-semibold'>{skill.name}</h2>
+          <h2 className='text-lg font-semibold tracking-tight'>{skill.name}</h2>
           <Badge variant='outline'>{skill.agent_name}</Badge>
         </div>
         <p className='mt-2 max-w-4xl text-sm text-muted-foreground'>

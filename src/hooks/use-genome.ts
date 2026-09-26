@@ -1,6 +1,7 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import {
   buildGenomeIndex,
@@ -75,18 +76,24 @@ export const useGenome = (id: number | null) => {
  * 删除基因组
  */
 export const useDeleteGenome = () => {
+  const t = useTranslations('Toast.genome')
+  const tUnknown = useTranslations('Toast')
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (id: number) => deleteGenome(id),
     onSuccess: (_, id) => {
-      toast.success('参考基因组已删除')
+      toast.success(t('deleteSuccess'))
       queryClient.invalidateQueries({ queryKey: ['genomes', 'list'] })
       queryClient.invalidateQueries({ queryKey: ['genomes', 'count'] })
       queryClient.removeQueries({ queryKey: ['genome', id] })
     },
     onError: (error: Error) => {
-      toast.error(`删除失败: ${error.message || '未知错误'}`)
+      toast.error(
+        t('deleteFailed', {
+          message: error.message || tUnknown('unknownError'),
+        }),
+      )
     },
   })
 }
@@ -95,6 +102,8 @@ export const useDeleteGenome = () => {
  * 下载新基因组（触发后台任务）
  */
 export const useDownloadGenome = () => {
+  const t = useTranslations('Toast.genome')
+  const tUnknown = useTranslations('Toast')
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -102,19 +111,26 @@ export const useDownloadGenome = () => {
     onSuccess: (resp) => {
       if (resp.task_id) {
         toast.success(
-          `下载任务已提交：${resp.species_name} (${resp.ncbi_accession})`,
+          t('downloadSubmitted', {
+            species: resp.species_name,
+            accession: resp.ncbi_accession,
+          }),
         )
       } else {
-        toast.info(`基因组已存在：${resp.species_name}`)
+        toast.info(t('alreadyExists', { species: resp.species_name }))
       }
       queryClient.invalidateQueries({ queryKey: ['genomes', 'list'] })
       queryClient.invalidateQueries({ queryKey: ['genomes', 'count'] })
     },
     onError: (error: Error & { status?: number }) => {
       if (error.status === 404) {
-        toast.error('NCBI 中未找到该物种的参考基因组，请检查物种名或 Tax ID')
+        toast.error(t('notFound'))
       } else {
-        toast.error(`下载失败: ${error.message || '未知错误'}`)
+        toast.error(
+          t('downloadFailed', {
+            message: error.message || tUnknown('unknownError'),
+          }),
+        )
       }
     },
   })
@@ -124,6 +140,8 @@ export const useDownloadGenome = () => {
  * 为已有基因组构建索引
  */
 export const useBuildGenomeIndex = () => {
+  const t = useTranslations('Toast.genome')
+  const tUnknown = useTranslations('Toast')
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -135,13 +153,17 @@ export const useBuildGenomeIndex = () => {
       data: ReferenceGenomeBuildIndexRequest
     }) => buildGenomeIndex(id, data),
     onSuccess: (resp, { id }) => {
-      toast.success(`索引构建任务已提交：${resp.message}`)
+      toast.success(t('buildSubmitted', { message: resp.message }))
       // 刷新详情缓存（状态会变 building）
       queryClient.invalidateQueries({ queryKey: ['genome', id] })
       queryClient.invalidateQueries({ queryKey: ['genomes', 'list'] })
     },
     onError: (error: Error) => {
-      toast.error(`构建失败: ${error.message || '未知错误'}`)
+      toast.error(
+        t('buildFailed', {
+          message: error.message || tUnknown('unknownError'),
+        }),
+      )
     },
   })
 }

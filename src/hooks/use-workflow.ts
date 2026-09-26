@@ -1,6 +1,7 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import {
   deleteWorkflow,
@@ -68,18 +69,22 @@ export const useWorkflow = (uid: string) => {
  * 保存新workflow
  */
 export const useSaveWorkflow = () => {
+  const t = useTranslations('Toast.workflow')
+  const tUnknown = useTranslations('Toast')
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (workflow: Workflow) => saveWorkflow(workflow),
     onSuccess: () => {
-      toast.success('Workflow保存成功')
+      toast.success(t('saveSuccess'))
       // 刷新workflow列表
       queryClient.invalidateQueries({ queryKey: ['workflows'] })
       queryClient.invalidateQueries({ queryKey: ['workflowCount'] })
     },
     onError: (error: Error) => {
-      toast.error(`保存失败: ${error.message || '未知错误'}`)
+      toast.error(
+        t('saveFailed', { message: error.message || tUnknown('unknownError') }),
+      )
     },
   })
 }
@@ -88,6 +93,8 @@ export const useSaveWorkflow = () => {
  * 更新workflow
  */
 export const useUpdateWorkflow = () => {
+  const t = useTranslations('Toast.workflow')
+  const tUnknown = useTranslations('Toast')
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -105,12 +112,16 @@ export const useUpdateWorkflow = () => {
       }
     }) => updateWorkflow(uid, data),
     onSuccess: (_, { uid }) => {
-      toast.success('Workflow更新成功')
+      toast.success(t('updateSuccess'))
       queryClient.invalidateQueries({ queryKey: ['workflow', uid] })
       queryClient.invalidateQueries({ queryKey: ['workflows'] })
     },
     onError: (error: Error) => {
-      toast.error(`更新失败: ${error.message || '未知错误'}`)
+      toast.error(
+        t('updateFailed', {
+          message: error.message || tUnknown('unknownError'),
+        }),
+      )
     },
   })
 }
@@ -119,17 +130,23 @@ export const useUpdateWorkflow = () => {
  * 删除workflow
  */
 export const useDeleteWorkflow = () => {
+  const t = useTranslations('Toast.workflow')
+  const tUnknown = useTranslations('Toast')
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (uid: string) => deleteWorkflow(uid),
     onSuccess: () => {
-      toast.success('Workflow已删除')
+      toast.success(t('deleteSuccess'))
       queryClient.invalidateQueries({ queryKey: ['workflows'] })
       queryClient.invalidateQueries({ queryKey: ['workflowCount'] })
     },
     onError: (error: Error) => {
-      toast.error(`删除失败: ${error.message || '未知错误'}`)
+      toast.error(
+        t('deleteFailed', {
+          message: error.message || tUnknown('unknownError'),
+        }),
+      )
     },
   })
 }

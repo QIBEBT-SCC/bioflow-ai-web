@@ -19,9 +19,9 @@ import {
 } from 'react'
 import { ChatSidebarToggleButton } from '@/components/chat/chat-sidebar-toggle'
 import { CodeAgentPanel } from '@/components/code/code-agent-panel'
-import { CodePageHeader } from '@/components/code/code-page-header'
 import { CodeSourceEditor } from '@/components/code/code-source-editor'
 import { CodeTypeBadge } from '@/components/code/code-type-badge'
+import { PageTopbar } from '@/components/layout/page-shell'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -265,10 +265,7 @@ export function CodeWorkspaceForm(props: CodeWorkspaceFormProps) {
   return (
     <SidebarInset className='flex h-screen flex-row overflow-hidden'>
       <div className='flex min-h-0 min-w-0 flex-1 flex-col'>
-        <CodePageHeader>
-          {props.children}
-          {agentToggle}
-        </CodePageHeader>
+        <PageTopbar actions={agentToggle}>{props.children}</PageTopbar>
         <div className='flex min-h-0 flex-1 flex-col bg-background'>
           <div className='flex h-12 shrink-0 items-center justify-between gap-3 border-b bg-background px-3'>
             <div className='flex min-w-0 items-center gap-2'>
@@ -285,10 +282,10 @@ export function CodeWorkspaceForm(props: CodeWorkspaceFormProps) {
                 <span
                   className={
                     props.mode === 'create'
-                      ? 'size-1.5 rounded-full bg-blue-400'
+                      ? 'size-1.5 rounded-full bg-info'
                       : isDirty
-                        ? 'size-1.5 rounded-full bg-amber-400'
-                        : 'size-1.5 rounded-full bg-emerald-400'
+                        ? 'size-1.5 rounded-full bg-warning'
+                        : 'size-1.5 rounded-full bg-success'
                   }
                 />
                 {statusText}

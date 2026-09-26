@@ -122,7 +122,7 @@ export function TagSelector({
               </Badge>
             ))}
           </div>
-          <ChevronsUpDown className='ml-2 size-4 shrink-0 opacity-50 mr-2' />
+          <ChevronsUpDown className='size-4 shrink-0 opacity-50' />
         </Button>
       </PopoverTrigger>
       <PopoverContent className='w-[400px] p-0' align='start'>
@@ -188,7 +188,7 @@ export function TagSelector({
                       onSelect={handleCreate}
                       value={`create-${inputValue}`}
                     >
-                      <Plus className='mr-2 size-4' />
+                      <Plus className='size-4' />
                       {t('createTag', { name: inputValue })}
                     </CommandItem>
                   </CommandGroup>

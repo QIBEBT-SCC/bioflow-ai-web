@@ -127,7 +127,7 @@ export function ChatHistoryItem({
           onClick={() => onSelectAction(chat)}
         >
           {active && (
-            <span className='size-2 shrink-0 rounded-full bg-blue-500' />
+            <span className='size-2 shrink-0 rounded-full bg-primary' />
           )}
           <div className='flex min-w-0 flex-1 flex-col gap-1'>
             <span

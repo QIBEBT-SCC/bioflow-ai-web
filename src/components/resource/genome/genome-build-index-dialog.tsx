@@ -111,12 +111,12 @@ export function GenomeBuildIndexDialog({
                   </div>
                   <div className='text-xs mt-0.5'>
                     {status === 'ready' && (
-                      <span className='text-emerald-600 dark:text-emerald-400'>
+                      <span className='text-success'>
                         ✓ {t('genome.status_ready')}
                       </span>
                     )}
                     {status === 'building' && (
-                      <span className='text-amber-600 dark:text-amber-400'>
+                      <span className='text-warning'>
                         ⟳ {t('genome.status_building')}
                       </span>
                     )}
@@ -144,7 +144,7 @@ export function GenomeBuildIndexDialog({
             onClick={handleSubmit}
             disabled={selected.length === 0 || buildMutation.isPending}
           >
-            <Hammer className='size-4 mr-1.5' />
+            <Hammer className='size-4' />
             {buildMutation.isPending
               ? t('genome.submitting')
               : t('genome.submit_build', { count: selected.length })}

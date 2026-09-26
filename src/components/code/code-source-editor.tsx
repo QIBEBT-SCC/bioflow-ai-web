@@ -221,7 +221,7 @@ export function CodeSourceEditor({
                   variant='secondary'
                   className={
                     status === 'added'
-                      ? 'gap-1 border-emerald-500/50 bg-emerald-500/10 font-mono font-normal text-emerald-700 dark:text-emerald-300'
+                      ? 'gap-1 border-success/50 bg-success/10 font-mono font-normal text-success'
                       : status === 'removed'
                         ? 'gap-1 border-destructive/40 bg-destructive/10 font-mono font-normal text-destructive line-through'
                         : 'gap-1 border font-mono font-normal'

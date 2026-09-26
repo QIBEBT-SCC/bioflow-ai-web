@@ -1,0 +1,58 @@
+{
+  "Toast": {
+    "unknownError": "Unknown error",
+    "tool": {
+      "createSuccess": "Tool created",
+      "createFailed": "Failed to create tool: {message}",
+      "deleteSuccess": "Tool deleted",
+      "deleteFailed": "Failed to delete tool: {message}",
+      "updateSuccess": "Tool updated",
+      "updateFailed": "Failed to update tool: {message}"
+    },
+    "image": {
+      "createSuccess": "Image created",
+      "createFailed": "Failed to create image: {message}",
+      "updateSuccess": "Image updated",
+      "updateFailed": "Failed to update image: {message}"
+    },
+    "document": {
+      "refreshSuccess": "Documentation refreshed",
+      "refreshFailed": "Failed to refresh documentation: {message}"
+    },
+    "database": {
+      "createSuccess": "Database added",
+      "deleteSuccess": "Database deleted",
+      "deleteFailed": "Failed to delete: {message}",
+      "deleteFailedGeneric": "Failed to delete",
+      "downloadInProgress": "A download task is already in progress",
+      "downloadNotConfigured": "No download command configured",
+      "downloadSubmitFailed": "Failed to submit download task: {message}"
+    },
+    "genome": {
+      "deleteSuccess": "Reference genome deleted",
+      "deleteFailed": "Failed to delete: {message}",
+      "downloadSubmitted": "Download task submitted: {species} ({accession})",
+      "alreadyExists": "Genome already exists: {species}",
+      "notFound": "No reference genome found in NCBI for this species. Check the species name or Tax ID",
+      "downloadFailed": "Download failed: {message}",
+      "buildSubmitted": "Index build task submitted: {message}",
+      "buildFailed": "Build failed: {message}"
+    },
+    "workflow": {
+      "saveSuccess": "Workflow saved",
+      "saveFailed": "Failed to save: {message}",
+      "updateSuccess": "Workflow updated",
+      "updateFailed": "Failed to update: {message}",
+      "deleteSuccess": "Workflow deleted",
+      "deleteFailed": "Failed to delete: {message}"
+    },
+    "run": {
+      "submitSuccess": "Workflow submitted for execution",
+      "submitFailed": "Failed to run: {message}"
+    },
+    "workflowPackage": {
+      "downloadSuccess": "Workflow result package downloaded",
+      "downloadFailed": "Failed to download workflow result package"
+    }
+  }
+}

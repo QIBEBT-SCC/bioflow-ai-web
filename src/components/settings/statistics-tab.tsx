@@ -180,7 +180,7 @@ function UsageDetailTable({
   t,
 }: UsageDetailTableProps) {
   return (
-    <div className='border border-border rounded-lg overflow-hidden'>
+    <div className='overflow-hidden rounded-xl border bg-card'>
       <Table>
         <TableHeader>
           <TableRow className='bg-muted/50'>
@@ -288,7 +288,7 @@ function DateRangeFilter({
                 !dateRange.from && !dateRange.to && 'text-muted-foreground',
               )}
             >
-              <CalendarIcon className='mr-2 size-4' />
+              <CalendarIcon className='size-4' />
               {dateRange.from ? (
                 dateRange.to ? (
                   <>
@@ -542,7 +542,7 @@ export function StatisticsTab() {
             </div>
             <p className='text-sm text-muted-foreground'>{t('total_cost')}</p>
           </div>
-          <p className='whitespace-nowrap text-3xl font-bold text-primary tabular-nums'>
+          <p className='whitespace-nowrap text-2xl font-semibold text-primary tabular-nums'>
             {formatTotalPrice(statsData.total.total_price)}
           </p>
         </Card>
@@ -555,7 +555,7 @@ export function StatisticsTab() {
             <p className='text-sm text-muted-foreground'>{t('input_tokens')}</p>
           </div>
           <p
-            className='whitespace-nowrap text-3xl font-bold tabular-nums'
+            className='whitespace-nowrap text-2xl font-semibold tabular-nums'
             title={statsData.total.total_input_tokens.toLocaleString()}
           >
             {formatTokenCount(statsData.total.total_input_tokens)}
@@ -572,7 +572,7 @@ export function StatisticsTab() {
             </p>
           </div>
           <p
-            className='whitespace-nowrap text-3xl font-bold tabular-nums'
+            className='whitespace-nowrap text-2xl font-semibold tabular-nums'
             title={statsData.total.total_output_tokens.toLocaleString()}
           >
             {formatTokenCount(statsData.total.total_output_tokens)}
@@ -587,7 +587,7 @@ export function StatisticsTab() {
             <p className='text-sm text-muted-foreground'>{t('cache_read')}</p>
           </div>
           <p
-            className='whitespace-nowrap text-3xl font-bold tabular-nums'
+            className='whitespace-nowrap text-2xl font-semibold tabular-nums'
             title={statsData.total.total_cache_read.toLocaleString()}
           >
             {formatTokenCount(statsData.total.total_cache_read)}

@@ -41,5 +41,20 @@
     "user_management": "User Management",
     "workflows": "Run Monitor",
     "subgraphs": "Subgraph management"
+  },
+  "UserMenu": {
+    "accentColor": "Theme color",
+    "accent": {
+      "blue": "Ocean blue",
+      "teal": "Teal",
+      "green": "Leaf green",
+      "violet": "Violet",
+      "neutral": "Graphite"
+    },
+    "logout": "Log out",
+    "loggingOut": "Logging out..."
+  },
+  "Auth": {
+    "verifying": "Verifying identity..."
   }
 }

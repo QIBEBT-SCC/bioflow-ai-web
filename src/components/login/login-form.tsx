@@ -77,7 +77,7 @@ export function LoginForm({
 
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>
-      <Card>
+      <Card className='shadow-lg shadow-primary/5'>
         <CardHeader className='text-center'>
           <CardTitle className='text-xl'>{t('title')}</CardTitle>
         </CardHeader>

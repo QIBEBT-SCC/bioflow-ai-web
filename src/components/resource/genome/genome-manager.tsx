@@ -28,7 +28,7 @@ export function GenomeManager() {
           />
         </div>
         <Button onClick={() => setIsDownloadOpen(true)}>
-          <Download className='size-4 mr-2' />
+          <Download className='size-4' />
           {t('genome.download_genome')}
         </Button>
       </div>
