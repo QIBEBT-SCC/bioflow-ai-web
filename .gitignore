@@ -44,11 +44,11 @@ next-env.d.ts
 
 .agent
 .agents/
-.claude
+.claude/*
+!.claude/skills
 AGENTS.md
 CLAUDE.md
 skills-lock.json
 
 documents/
 screenshot/
-
