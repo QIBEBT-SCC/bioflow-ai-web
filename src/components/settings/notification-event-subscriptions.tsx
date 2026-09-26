@@ -1,27 +1,15 @@
 'use client'
 
-import { BellRingIcon, Loader2Icon, Settings2Icon } from 'lucide-react'
+import { BellRingIcon } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { SectionCard } from '@/components/layout/section-card'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { Checkbox } from '@/components/ui/checkbox'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Switch } from '@/components/ui/switch'
 import {
   useNotificationEvents,
   useUpdateNotificationChannel,
@@ -38,6 +26,10 @@ function localizedValue(
   return values[locale] ?? values.en ?? Object.values(values)[0] ?? ''
 }
 
+function sameSelection(a: Set<string>, b: string[]) {
+  return a.size === b.length && b.every((key) => a.has(key))
+}
+
 export function NotificationEventSubscriptions({
   channel,
 }: {
@@ -47,26 +39,13 @@ export function NotificationEventSubscriptions({
   const locale = useLocale()
   const { data: events, isLoading, error } = useNotificationEvents()
   const updateChannel = useUpdateNotificationChannel()
-  const [dialogOpen, setDialogOpen] = useState(false)
-  const [selectedEvents, setSelectedEvents] = useState(
+  const [selected, setSelected] = useState(
     () => new Set<NotificationEventType>(channel.event_types),
   )
-  const subscribedEvents = events?.filter((event) =>
-    channel.event_types.includes(event.key),
-  )
+  const dirty = !sameSelection(selected, channel.event_types)
 
-  function handleDialogOpenChange(open: boolean) {
-    setDialogOpen(open)
-    if (open) {
-      setSelectedEvents(new Set(channel.event_types))
-    }
-  }
-
-  function toggleSubscription(
-    eventType: NotificationEventType,
-    checked: boolean,
-  ) {
-    setSelectedEvents((current) => {
+  function toggle(eventType: NotificationEventType, checked: boolean) {
+    setSelected((current) => {
       const next = new Set(current)
       if (checked) next.add(eventType)
       else next.delete(eventType)
@@ -78,9 +57,8 @@ export function NotificationEventSubscriptions({
     try {
       await updateChannel.mutateAsync({
         id: channel.id,
-        data: { event_types: Array.from(selectedEvents) },
+        data: { event_types: Array.from(selected) },
       })
-      setDialogOpen(false)
       toast.success(t('subscription_save_success'))
     } catch (mutationError) {
       toast.error(
@@ -92,128 +70,83 @@ export function NotificationEventSubscriptions({
   }
 
   return (
-    <>
-      <Card>
-        <CardHeader>
-          <div className='flex flex-wrap items-start justify-between gap-3'>
-            <div className='space-y-1'>
-              <CardTitle>{t('event_subscriptions')}</CardTitle>
-              <CardDescription>
-                {t('event_subscriptions_summary')}
-              </CardDescription>
-            </div>
-            <Button
-              variant='outline'
-              onClick={() => handleDialogOpenChange(true)}
-              disabled={isLoading || Boolean(error)}
-            >
-              <Settings2Icon />
-              {t('manage_subscriptions')}
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {isLoading && (
-            <div className='flex min-h-24 items-center justify-center'>
-              <Loader2Icon className='size-5 animate-spin text-muted-foreground' />
-            </div>
-          )}
-          {error && (
-            <p className='text-sm text-destructive'>
-              {t('events_load_failed')}
-            </p>
-          )}
-          {!isLoading && !error && subscribedEvents?.length === 0 && (
-            <div className='rounded-lg border border-dashed p-6 text-center'>
-              <BellRingIcon className='mx-auto mb-2 size-6 text-muted-foreground' />
-              <p className='text-sm font-medium'>{t('no_subscriptions')}</p>
-              <p className='mt-1 text-sm text-muted-foreground'>
-                {t('no_subscriptions_help')}
-              </p>
-            </div>
-          )}
-          {subscribedEvents && subscribedEvents.length > 0 && (
-            <div className='grid gap-3'>
-              {subscribedEvents.map((event) => (
-                <div
-                  key={event.key}
-                  className='flex items-start gap-3 rounded-lg border bg-muted/20 p-4'
-                >
-                  <span className='flex size-8 shrink-0 items-center justify-center rounded-md bg-background text-primary shadow-xs'>
-                    <BellRingIcon className='size-4' />
-                  </span>
-                  <div className='min-w-0 space-y-1'>
-                    <p className='text-sm font-medium'>
-                      {localizedValue(event.name, locale)}
-                    </p>
-                    <p className='text-sm text-muted-foreground'>
-                      {localizedValue(event.description, locale)}
-                    </p>
-                    <code className='text-xs text-muted-foreground'>
-                      {event.key}
-                    </code>
-                  </div>
+    <SectionCard
+      icon={<BellRingIcon />}
+      title={t('events')}
+      description={t('events_help')}
+      action={
+        <Badge variant='secondary' className='tabular-nums'>
+          {t('event_count', { count: channel.event_types.length })}
+        </Badge>
+      }
+      contentClassName='space-y-4'
+    >
+      {isLoading && (
+        <div className='space-y-2' aria-busy='true'>
+          <Skeleton className='h-14 rounded-lg' />
+          <Skeleton className='h-14 rounded-lg' />
+          <Skeleton className='h-14 rounded-lg' />
+        </div>
+      )}
+      {error && (
+        <p role='alert' className='text-sm text-destructive'>
+          {t('events_load_failed')}
+        </p>
+      )}
+      {events && events.length === 0 && (
+        <p className='rounded-lg border border-dashed p-4 text-sm text-muted-foreground'>
+          {t('events_empty')}
+        </p>
+      )}
+      {events && events.length > 0 && (
+        <div className='divide-y rounded-lg border'>
+          {events.map((event) => {
+            const switchId = `notification-event-${channel.id}-${event.key}`
+            return (
+              <div
+                key={event.key}
+                className='flex items-start justify-between gap-4 px-4 py-3'
+                title={event.key}
+              >
+                <div className='min-w-0 space-y-0.5'>
+                  <Label htmlFor={switchId} className='cursor-pointer'>
+                    {localizedValue(event.name, locale)}
+                  </Label>
+                  <p className='text-sm text-muted-foreground'>
+                    {localizedValue(event.description, locale)}
+                  </p>
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
-        <DialogContent className='sm:max-w-2xl'>
-          <DialogHeader>
-            <DialogTitle>{t('manage_subscriptions')}</DialogTitle>
-            <DialogDescription>
-              {t('event_subscriptions_help')}
-            </DialogDescription>
-          </DialogHeader>
-          <div className='max-h-[55vh] divide-y overflow-y-auto rounded-lg border'>
-            {events?.map((event) => {
-              const checkboxId = `notification-event-${channel.id}-${event.key}`
-              return (
-                <div key={event.key} className='flex items-start gap-3 p-4'>
-                  <Checkbox
-                    id={checkboxId}
-                    className='mt-0.5'
-                    checked={selectedEvents.has(event.key)}
-                    disabled={updateChannel.isPending}
-                    onCheckedChange={(checked) =>
-                      toggleSubscription(event.key, checked === true)
-                    }
-                  />
-                  <div className='space-y-1'>
-                    <Label htmlFor={checkboxId} className='cursor-pointer'>
-                      {localizedValue(event.name, locale)}
-                    </Label>
-                    <p className='text-sm text-muted-foreground'>
-                      {localizedValue(event.description, locale)}
-                    </p>
-                    <code className='text-xs text-muted-foreground'>
-                      {event.key}
-                    </code>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-          <DialogFooter>
+                <Switch
+                  id={switchId}
+                  className='mt-0.5'
+                  checked={selected.has(event.key)}
+                  disabled={updateChannel.isPending}
+                  onCheckedChange={(checked) => toggle(event.key, checked)}
+                />
+              </div>
+            )
+          })}
+        </div>
+      )}
+      {dirty && (
+        <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+          <span className='text-sm text-muted-foreground'>
+            {t('unsaved_changes')}
+          </span>
+          <div className='flex justify-end gap-2'>
             <Button
-              variant='outline'
-              onClick={() => setDialogOpen(false)}
+              variant='ghost'
               disabled={updateChannel.isPending}
+              onClick={() => setSelected(new Set(channel.event_types))}
             >
-              {t('cancel')}
+              {t('reset')}
             </Button>
             <Button onClick={handleSave} disabled={updateChannel.isPending}>
-              {updateChannel.isPending && (
-                <Loader2Icon className='animate-spin' />
-              )}
-              {t('save')}
+              {updateChannel.isPending ? t('saving') : t('save')}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+          </div>
+        </div>
+      )}
+    </SectionCard>
   )
 }

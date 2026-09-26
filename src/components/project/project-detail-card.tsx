@@ -8,10 +8,7 @@ import { EditProjectDialog } from '@/components/project/edit-project-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import {
-  type RunStatus,
-  RunStatusBadge,
-} from '@/components/workflow/run-status'
+import { RunStatusBadge } from '@/components/workflow/run-status'
 import {
   useProject,
   useStarProject,
@@ -19,6 +16,7 @@ import {
 } from '@/hooks/use-project'
 import { useProjectRunStats } from '@/hooks/use-project-workflow'
 import { useSampleCount } from '@/hooks/use-sample'
+import type { RunStatus } from '@/lib/status'
 import { cn } from '@/lib/utils'
 import { colorClassMap } from '@/types/color'
 

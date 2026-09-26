@@ -20,12 +20,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import {
-  RUN_STATUS_APPEARANCE,
-  RunStatusIcon,
-  statusToneClasses,
-} from '@/components/workflow/run-status'
+import { RunStatusIcon } from '@/components/workflow/run-status'
 import { useRecentTasks } from '@/hooks/use-task'
+import { RUN_STATUS_APPEARANCE, statusToneClasses } from '@/lib/status'
 import { cn } from '@/lib/utils'
 import { type NodeRunRecordV2, NodeRunStatusV2 } from '@/types/workflow-v2'
 

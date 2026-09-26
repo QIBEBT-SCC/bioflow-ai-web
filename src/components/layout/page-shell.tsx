@@ -13,7 +13,7 @@ import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
 
 export interface PageCrumb {
-  label: ReactNode
+  label: string
   href?: string
 }
 
@@ -24,7 +24,7 @@ export function PageBreadcrumbs({ items }: { items: PageCrumb[] }) {
         {items.map((crumb, index) => {
           const isLast = index === items.length - 1
           return (
-            <Fragment key={crumb.href ?? index}>
+            <Fragment key={crumb.href ?? `current:${crumb.label}`}>
               {index > 0 && <BreadcrumbSeparator className='hidden md:block' />}
               <BreadcrumbItem
                 className={cn('min-w-0', !isLast && 'hidden md:inline-flex')}

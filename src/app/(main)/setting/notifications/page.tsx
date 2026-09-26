@@ -17,7 +17,7 @@ export default async function NotificationManagementPage() {
 
   return (
     <PageShell breadcrumbs={[{ label: t('breadcrumb') }]}>
-      <PageContainer size='narrow'>
+      <PageContainer>
         <PageHeader title={t('title')} description={t('description')} />
         <NotificationManagement />
       </PageContainer>

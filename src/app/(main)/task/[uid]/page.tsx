@@ -29,11 +29,9 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  RUN_STATUS_APPEARANCE,
-  RunStatusBadge,
-} from '@/components/workflow/run-status'
+import { RunStatusBadge } from '@/components/workflow/run-status'
 import { useTask } from '@/hooks/use-task'
+import { RUN_STATUS_APPEARANCE } from '@/lib/status'
 import { NodeRunStatusV2, type NodeRunV2 } from '@/types/workflow-v2'
 
 // 格式化时间

@@ -81,7 +81,7 @@ export function NavUser({ user }: NavUserProps) {
   const logout = useLogout()
   const [securityOpen, setSecurityOpen] = useState(false)
   const t = useTranslations()
-  const [accent, setAccent] = useAccent(t('UserMenu.accentSaveFailed'))
+  const [accent, setAccent] = useAccent()
 
   const handleLocaleChange = async (value: string) => {
     const locale = value as Locale

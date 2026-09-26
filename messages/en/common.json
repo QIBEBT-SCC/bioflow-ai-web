@@ -52,8 +52,7 @@
       "neutral": "Graphite"
     },
     "logout": "Log out",
-    "loggingOut": "Logging out...",
-    "accentSaveFailed": "Could not save theme color"
+    "loggingOut": "Logging out..."
   },
   "Auth": {
     "verifying": "Verifying identity..."

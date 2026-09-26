@@ -16,14 +16,12 @@ import { SubgraphNavigation } from '@/components/node-editor/subgraph-context'
 import { SubgraphInterfaceSummary } from '@/components/node-editor/subgraph-interface-summary'
 import { Progress } from '@/components/ui/progress'
 import { SidebarInset } from '@/components/ui/sidebar'
-import {
-  RUN_STATUS_APPEARANCE,
-  RunStatusBadge,
-} from '@/components/workflow/run-status'
+import { RunStatusBadge } from '@/components/workflow/run-status'
 import { StatusEdge } from '@/components/workflow/status-edge'
 import { useRun } from '@/hooks/use-run'
 import { useRunFlow } from '@/hooks/use-run-flow'
 import { useSubgraphRun } from '@/hooks/use-subgraph-run'
+import { RUN_STATUS_APPEARANCE } from '@/lib/status'
 import { WorkflowRunStatusV2 } from '@/types/workflow-v2'
 
 const edgeTypes = { default: StatusEdge }

@@ -8,13 +8,18 @@ import {
   ExternalLinkIcon,
   Loader2Icon,
   LogInIcon,
+  ShieldCheckIcon,
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { cancelCodexLogin } from '@/app/actions/code-agent'
+import { CodexAgentSettingsPanel } from '@/components/settings/codex-agent-settings'
+import {
+  CodingAgentBlock,
+  CodingAgentSection,
+} from '@/components/settings/coding-agent-section'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -33,7 +38,7 @@ interface DeviceCode {
   message: string
 }
 
-export function CodexAgentAccount({
+export function CodexAgentSection({
   available = false,
 }: {
   available?: boolean
@@ -128,54 +133,41 @@ export function CodexAgentAccount({
 
   return (
     <>
-      <Card>
-        <CardHeader className='flex-row items-center justify-between gap-4'>
-          <div className='flex items-center gap-3'>
-            <div className='rounded-lg bg-primary/10 p-2 text-primary'>
-              <BotIcon className='size-5' />
-            </div>
-            <div>
-              <CardTitle className='text-base'>Codex</CardTitle>
-              <p className='text-xs text-muted-foreground'>ACP v1</p>
-            </div>
-          </div>
-          {available ? (
-            <div className='flex items-center gap-2 text-sm text-success'>
-              <CheckCircle2Icon className='size-4' />
-              {t('connected')}
-            </div>
-          ) : (
-            <span className='text-sm text-muted-foreground'>
-              {t('disconnected')}
-            </span>
-          )}
-        </CardHeader>
-        <CardContent className='space-y-5'>
-          <div className='rounded-lg border bg-muted/30 p-4 text-sm'>
-            <p className='text-muted-foreground'>
-              {available ? t('connectedHelp') : t('accountHelp')}
-            </p>
-            <p className='mt-2 text-xs text-muted-foreground'>
+      <CodingAgentSection
+        icon={<BotIcon />}
+        name='Codex'
+        summary={t('codexSummary')}
+        connected={available}
+        statusLabel={available ? t('connected') : t('disconnected')}
+        action={
+          !available && (
+            <Button
+              type='button'
+              onClick={() => void startLogin()}
+              disabled={loginMutation.isPending}
+            >
+              {loginMutation.isPending ? (
+                <Loader2Icon className='size-4 animate-spin' />
+              ) : (
+                <LogInIcon className='size-4' />
+              )}
+              {t('login')}
+            </Button>
+          )
+        }
+      >
+        <CodingAgentBlock title={t('accountTitle')}>
+          <div className='space-y-2 text-sm text-muted-foreground'>
+            <p>{available ? t('connectedHelp') : t('accountHelp')}</p>
+            {available && <p>{t('connectedLocked')}</p>}
+            <p className='flex items-start gap-2 text-xs'>
+              <ShieldCheckIcon className='mt-0.5 size-3.5 shrink-0' />
               {t('credentialHelp')}
             </p>
           </div>
-          {!available && (
-            <div className='flex justify-end'>
-              <Button
-                type='button'
-                onClick={() => void startLogin()}
-                disabled={loginMutation.isPending}
-              >
-                {loginMutation.isPending && (
-                  <Loader2Icon className='size-4 animate-spin' />
-                )}
-                {!loginMutation.isPending && <LogInIcon className='size-4' />}
-                {t('login')}
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        </CodingAgentBlock>
+        <CodexAgentSettingsPanel />
+      </CodingAgentSection>
 
       <Dialog
         open={Boolean(loginId)}

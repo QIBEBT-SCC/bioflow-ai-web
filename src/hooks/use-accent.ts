@@ -1,9 +1,12 @@
 'use client'
 
 import { useCallback, useSyncExternalStore } from 'react'
-import { toast } from 'sonner'
-import { setUserAccent } from '@/app/actions/theme'
-import { type AccentColor, defaultAccent, isAccentColor } from '@/lib/theme'
+import {
+  ACCENT_COOKIE,
+  type AccentColor,
+  defaultAccent,
+  isAccentColor,
+} from '@/lib/theme'
 
 // The active accent lives on <html data-accent>, set server-side from a cookie.
 function subscribe(onChange: () => void) {
@@ -24,24 +27,15 @@ function getServerSnapshot(): AccentColor {
   return defaultAccent
 }
 
-export function useAccent(failureMessage: string) {
+export function useAccent() {
   const accent = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
 
-  const setAccent = useCallback(
-    async (next: AccentColor) => {
-      const previous = getSnapshot()
-      if (next === previous) return
-      // Apply immediately; the cookie only matters for the next page load.
-      document.documentElement.dataset.accent = next
-      try {
-        await setUserAccent(next)
-      } catch {
-        document.documentElement.dataset.accent = previous
-        toast.error(failureMessage)
-      }
-    },
-    [failureMessage],
-  )
+  const setAccent = useCallback((next: AccentColor) => {
+    document.documentElement.dataset.accent = next
+    // A plain UI preference: the root layout reads it on the next page load.
+    // biome-ignore lint/suspicious/noDocumentCookie: no sensitive data; mirrors the locale cookie
+    document.cookie = `${ACCENT_COOKIE}=${next}; path=/; max-age=31536000; samesite=lax`
+  }, [])
 
   return [accent, setAccent] as const
 }

@@ -5,11 +5,9 @@ import { useLocale, useTranslations } from 'next-intl'
 import { useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import {
-  RUN_STATUS_APPEARANCE,
-  RunStatusBadge,
-} from '@/components/workflow/run-status'
+import { RunStatusBadge } from '@/components/workflow/run-status'
 import { useRunTasks } from '@/hooks/use-task'
+import { RUN_STATUS_APPEARANCE } from '@/lib/status'
 
 function formatDuration(
   startTime: string | null,

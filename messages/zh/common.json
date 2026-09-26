@@ -31,7 +31,7 @@
     "images": "镜像",
     "llm_management": "LLM 管理",
     "coding_agent": "编码智能体",
-    "notification_management": "通知管理",
+    "notification_management": "消息通知",
     "projects": "项目",
     "resource": "资源管理",
     "setting": "设置",
@@ -52,8 +52,7 @@
       "neutral": "石墨"
     },
     "logout": "退出登录",
-    "loggingOut": "退出中...",
-    "accentSaveFailed": "主题色保存失败"
+    "loggingOut": "退出中..."
   },
   "Auth": {
     "verifying": "验证身份中..."

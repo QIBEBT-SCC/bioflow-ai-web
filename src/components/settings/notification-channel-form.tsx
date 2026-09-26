@@ -1,23 +1,19 @@
 'use client'
 
-import { Loader2Icon, Trash2Icon } from 'lucide-react'
+import { Loader2Icon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { useReducer } from 'react'
+import {
+  type ComponentProps,
+  type FormEvent,
+  useReducer,
+  useState,
+} from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Switch } from '@/components/ui/switch'
-import {
   useCreateNotificationChannel,
-  useDeleteNotificationChannel,
   useUpdateNotificationChannel,
 } from '@/hooks/use-notification'
 import type {
@@ -32,230 +28,192 @@ interface ChannelFormState {
   botId: string
   chatId: string
   secret: string
-  enabled: boolean
 }
 
-type ChannelFormAction = {
-  [Key in keyof ChannelFormState]: {
-    field: Key
-    value: ChannelFormState[Key]
-  }
-}[keyof ChannelFormState]
+type ChannelField = keyof ChannelFormState
 
 function channelFormReducer(
   state: ChannelFormState,
-  action: ChannelFormAction,
+  action: { field: ChannelField; value: string } | { reset: ChannelFormState },
 ): ChannelFormState {
+  if ('reset' in action) return action.reset
   return { ...state, [action.field]: action.value }
+}
+
+function initialState(channel?: NotificationChannelPublic): ChannelFormState {
+  return {
+    name: channel?.name ?? '',
+    botId: channel?.config.bot_id ?? '',
+    chatId: channel?.config.chat_id ?? '',
+    secret: '',
+  }
 }
 
 function errorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback
 }
 
+/**
+ * WeCom connection settings. Without `channel` it creates a new (enabled)
+ * channel; with `channel` it edits in place and only shows actions when dirty.
+ */
 export function NotificationChannelForm({
   channel,
   onCreated,
-  onSaved,
-  onDeleted,
   onCancel,
 }: {
   channel?: NotificationChannelPublic
   onCreated?: (channel: NotificationChannelPublic) => void
-  onSaved?: (channel: NotificationChannelPublic) => void
-  onDeleted?: () => void
   onCancel?: () => void
 }) {
   const t = useTranslations('setting.notification_management')
   const createChannel = useCreateNotificationChannel()
   const updateChannel = useUpdateNotificationChannel()
-  const deleteChannel = useDeleteNotificationChannel()
-  const [form, updateForm] = useReducer(channelFormReducer, {
-    name: channel?.name ?? '',
-    botId: channel?.config.bot_id ?? '',
-    chatId: channel?.config.chat_id ?? '',
-    secret: '',
-    enabled: channel?.enabled ?? true,
-  })
+  const [form, dispatch] = useReducer(channelFormReducer, channel, initialState)
+  const [submitted, setSubmitted] = useState(false)
   const saving = createChannel.isPending || updateChannel.isPending
+  const isCreate = !channel
 
-  async function handleSave() {
-    if (!form.name.trim() || !form.botId.trim() || !form.chatId.trim()) {
-      toast.error(t('required_fields'))
-      return
-    }
-    if (!channel && !form.secret.trim()) {
-      toast.error(t('secret_required'))
-      return
-    }
+  const baseline = initialState(channel)
+  const dirty =
+    isCreate ||
+    form.name !== baseline.name ||
+    form.botId !== baseline.botId ||
+    form.chatId !== baseline.chatId ||
+    form.secret !== ''
 
-    const common = {
-      name: form.name.trim(),
-      enabled: form.enabled,
-      config: {
-        bot_id: form.botId.trim(),
-        chat_id: form.chatId.trim(),
-        ws_url: channel?.config.ws_url ?? DEFAULT_WS_URL,
-      },
+  const errors: Partial<Record<ChannelField, boolean>> = {
+    name: !form.name.trim(),
+    botId: !form.botId.trim(),
+    chatId: !form.chatId.trim(),
+    secret: isCreate && !form.secret.trim(),
+  }
+  const hasErrors = Object.values(errors).some(Boolean)
+  const showError = (field: ChannelField) => submitted && errors[field]
+
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault()
+    if (saving) return
+    setSubmitted(true)
+    if (hasErrors) return
+
+    const config = {
+      bot_id: form.botId.trim(),
+      chat_id: form.chatId.trim(),
+      ws_url: channel?.config.ws_url ?? DEFAULT_WS_URL,
     }
     try {
-      let savedChannel: NotificationChannelPublic
       if (channel) {
-        savedChannel = await updateChannel.mutateAsync({
+        await updateChannel.mutateAsync({
           id: channel.id,
           data: {
-            ...common,
+            name: form.name.trim(),
+            config,
             ...(form.secret.trim() ? { secret: form.secret } : {}),
           },
         })
+        dispatch({ field: 'secret', value: '' })
       } else {
-        savedChannel = await createChannel.mutateAsync({
-          ...common,
+        const created = await createChannel.mutateAsync({
+          name: form.name.trim(),
           provider: 'wecom',
+          enabled: true,
+          config,
           secret: form.secret,
           event_types: [],
         } satisfies NotificationChannelCreate)
-        onCreated?.(savedChannel)
+        onCreated?.(created)
       }
-      onSaved?.(savedChannel)
-      updateForm({ field: 'secret', value: '' })
+      setSubmitted(false)
       toast.success(t('save_success'))
     } catch (error) {
       toast.error(errorMessage(error, t('save_failed')))
     }
   }
 
-  async function handleDelete() {
-    if (!channel || !window.confirm(t('delete_confirm'))) return
-    try {
-      await deleteChannel.mutateAsync(channel.id)
-      onDeleted?.()
-      toast.success(t('delete_success'))
-    } catch (error) {
-      toast.error(errorMessage(error, t('delete_failed')))
-    }
-  }
+  const idFor = (field: string) => `channel-${field}-${channel?.id ?? 'new'}`
+
+  const field = (
+    name: ChannelField,
+    label: string,
+    input: Omit<ComponentProps<typeof Input>, 'id' | 'value'>,
+  ) => (
+    <div className='space-y-2'>
+      <Label htmlFor={idFor(name)}>{label}</Label>
+      <Input
+        id={idFor(name)}
+        value={form[name]}
+        aria-invalid={showError(name) || undefined}
+        aria-describedby={showError(name) ? `${idFor(name)}-error` : undefined}
+        disabled={saving}
+        onChange={(event) =>
+          dispatch({ field: name, value: event.target.value })
+        }
+        {...input}
+      />
+      {showError(name) && (
+        <p id={`${idFor(name)}-error`} className='text-xs text-destructive'>
+          {t('field_required')}
+        </p>
+      )}
+    </div>
+  )
 
   return (
-    <div className='space-y-6'>
-      <div className='grid gap-5 md:grid-cols-2'>
-        {!channel && (
-          <div className='space-y-2 md:col-span-2'>
-            <Label htmlFor='notification-provider'>{t('provider_type')}</Label>
-            <Select value='wecom' disabled>
-              <SelectTrigger id='notification-provider' className='w-full'>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value='wecom'>{t('provider_wecom')}</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className='text-sm text-muted-foreground'>
-              {t('provider_type_help')}
-            </p>
+    <form className='space-y-5' onSubmit={handleSubmit} noValidate>
+      <div className='grid gap-4 sm:grid-cols-2'>
+        <div className='sm:col-span-2'>
+          {field('name', t('channel_name'), {
+            placeholder: t('channel_name_placeholder'),
+          })}
+        </div>
+        {field('botId', t('bot_id'), { autoComplete: 'off' })}
+        {field('chatId', t('chat_id'), { autoComplete: 'off' })}
+        <div className='sm:col-span-2'>
+          {field('secret', t('secret'), {
+            type: 'password',
+            autoComplete: 'new-password',
+            placeholder: channel?.credential_configured
+              ? t('secret_configured')
+              : t('secret_placeholder'),
+          })}
+        </div>
+      </div>
+
+      {(isCreate || dirty) && (
+        <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end'>
+          {!isCreate && (
+            <span className='mr-auto text-sm text-muted-foreground'>
+              {t('unsaved_changes')}
+            </span>
+          )}
+          <div className='flex justify-end gap-2'>
+            {isCreate ? (
+              onCancel && (
+                <Button type='button' variant='outline' onClick={onCancel}>
+                  {t('cancel')}
+                </Button>
+              )
+            ) : (
+              <Button
+                type='button'
+                variant='ghost'
+                disabled={saving}
+                onClick={() => {
+                  dispatch({ reset: baseline })
+                  setSubmitted(false)
+                }}
+              >
+                {t('reset')}
+              </Button>
+            )}
+            <Button type='submit' disabled={saving}>
+              {saving && <Loader2Icon className='size-4 animate-spin' />}
+              {isCreate ? t('create') : t('save')}
+            </Button>
           </div>
-        )}
-        <div className='space-y-2'>
-          <Label htmlFor={`channel-name-${channel?.id ?? 'new'}`}>
-            {t('channel_name')}
-          </Label>
-          <Input
-            id={`channel-name-${channel?.id ?? 'new'}`}
-            value={form.name}
-            onChange={(event) =>
-              updateForm({ field: 'name', value: event.target.value })
-            }
-            placeholder={t('channel_name_placeholder')}
-          />
         </div>
-        <div className='space-y-2'>
-          <Label htmlFor={`bot-id-${channel?.id ?? 'new'}`}>
-            {t('bot_id')}
-          </Label>
-          <Input
-            id={`bot-id-${channel?.id ?? 'new'}`}
-            value={form.botId}
-            onChange={(event) =>
-              updateForm({ field: 'botId', value: event.target.value })
-            }
-            autoComplete='off'
-          />
-        </div>
-        <div className='space-y-2'>
-          <Label htmlFor={`chat-id-${channel?.id ?? 'new'}`}>
-            {t('chat_id')}
-          </Label>
-          <Input
-            id={`chat-id-${channel?.id ?? 'new'}`}
-            value={form.chatId}
-            onChange={(event) =>
-              updateForm({ field: 'chatId', value: event.target.value })
-            }
-            autoComplete='off'
-          />
-        </div>
-        <div className='space-y-2'>
-          <Label htmlFor={`secret-${channel?.id ?? 'new'}`}>
-            {t('secret')}
-          </Label>
-          <Input
-            id={`secret-${channel?.id ?? 'new'}`}
-            type='password'
-            value={form.secret}
-            onChange={(event) =>
-              updateForm({ field: 'secret', value: event.target.value })
-            }
-            placeholder={
-              channel?.credential_configured
-                ? t('secret_configured')
-                : t('secret_placeholder')
-            }
-            autoComplete='new-password'
-          />
-        </div>
-      </div>
-
-      <div className='flex items-center justify-between gap-4 rounded-lg border p-4'>
-        <div className='space-y-1'>
-          <Label htmlFor={`enabled-${channel?.id ?? 'new'}`}>
-            {t('channel_enabled')}
-          </Label>
-          <p className='text-sm text-muted-foreground'>
-            {t('channel_enabled_help')}
-          </p>
-        </div>
-        <Switch
-          id={`enabled-${channel?.id ?? 'new'}`}
-          checked={form.enabled}
-          onCheckedChange={(value) => updateForm({ field: 'enabled', value })}
-        />
-      </div>
-
-      <div className='flex flex-wrap justify-between gap-3'>
-        <div>
-          {channel && (
-            <Button
-              variant='ghost'
-              onClick={handleDelete}
-              disabled={deleteChannel.isPending}
-            >
-              <Trash2Icon />
-              {t('delete')}
-            </Button>
-          )}
-        </div>
-        <div className='flex gap-2'>
-          {onCancel && (
-            <Button variant='outline' onClick={onCancel}>
-              {t('cancel')}
-            </Button>
-          )}
-          <Button onClick={handleSave} disabled={saving}>
-            {saving && <Loader2Icon className='animate-spin' />}
-            {t('save')}
-          </Button>
-        </div>
-      </div>
-    </div>
+      )}
+    </form>
   )
 }

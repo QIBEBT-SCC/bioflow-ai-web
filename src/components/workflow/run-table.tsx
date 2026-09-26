@@ -27,12 +27,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import {
-  RUN_STATUS_APPEARANCE,
-  RunStatusBadge,
-} from '@/components/workflow/run-status'
+import { RunStatusBadge } from '@/components/workflow/run-status'
 import { RunTaskList } from '@/components/workflow/run-task-list'
 import { useWorkflowMonitorRuns } from '@/hooks/use-workflow-monitor'
+import { RUN_STATUS_APPEARANCE } from '@/lib/status'
 import { cn } from '@/lib/utils'
 import { WorkflowRunStatusV2 } from '@/types/workflow-v2'
 
