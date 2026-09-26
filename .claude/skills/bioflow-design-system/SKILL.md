@@ -45,8 +45,8 @@ Solid dots/indicators: `bg-{tone}`.
 ### Accent themes
 
 Users pick an accent in the user menu (blue · teal · green · violet · neutral). Implementation:
-`src/lib/theme.ts` (list + cookie name), `src/app/actions/theme.ts` (cookie), `src/hooks/use-accent.ts`
-(reads/writes `<html data-accent>`), root layout sets the attribute server-side. Each
+`src/lib/theme.ts` (list + cookie name), `src/hooks/use-accent.ts` (reads/writes `<html data-accent>`
+and the `accent` cookie client-side), root layout sets the attribute server-side from the cookie. Each
 `[data-accent='x']` block in `globals.css` overrides only `primary`, `ring`, `accent` and
 `sidebar-*` tokens — so **always use `primary`/`accent` for brand color, never hardcode blue**, or it
 won't follow the user's choice. To add an accent: extend `accentColors`, add light + `.dark` blocks,
@@ -99,8 +99,8 @@ import { PageContainer, PageHeader, PageShell } from '@/components/layout/page-s
 
 | Container size | Width | Use for |
 | --- | --- | --- |
-| `narrow` | `max-w-5xl` | Add/edit forms, wizards, form-style settings (notifications, coding agent) |
-| `default` | `max-w-7xl` | Lists, detail pages, table-heavy settings |
+| `narrow` | `max-w-5xl` | Add/edit forms, wizards, single-column settings (coding agent) |
+| `default` | `max-w-7xl` | Lists, detail pages, table or list+detail settings (notifications) |
 | `wide` | `max-w-[96rem]` | Dashboards (workflow monitor) |
 
 - Last breadcrumb is the current page (no `href`); earlier crumbs link back. Don't add "← Back"
@@ -151,9 +151,15 @@ tinted header (`bg-muted/40`, `text-xs text-muted-foreground`) and `px-3 py-2.5`
 restyle header rows per table.
 
 **Run / task status:** always `RunStatusBadge` / `RunStatusIcon` from
-`src/components/workflow/run-status.tsx` (tones: pending/ready → warning, running → info,
-succeeded → success, failed → danger, queued/blocked → neutral). For other status-like visuals
-use `statusToneClasses[tone]`. Never define a local status→color map.
+`src/components/workflow/run-status.tsx`. The maps live in `src/lib/status.ts`:
+`RUN_STATUS_APPEARANCE` (pending/ready → warning, running → info, succeeded → success,
+failed → danger, queued/blocked → neutral) and `statusToneClasses[tone]` (`badge`, `text`, `dot`,
+`soft`) for any other status-like visual (e.g. notification channel health in
+`src/lib/notification.ts`). Never define a local status→color map.
+
+**Settings forms:** save bars appear only when the form is dirty (`unsaved changes` + Discard +
+Save). Options that need explanation are described radio cards (see Codex sandbox in
+`codex-agent-settings.tsx`), with a `warning` tone on dangerous choices.
 
 **Tool tags:** `ToolTagBadge`. **Code language:** `CodeTypeBadge` / `CodeTypeIcon`.
 
