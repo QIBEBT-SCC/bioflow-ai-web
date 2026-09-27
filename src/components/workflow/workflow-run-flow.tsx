@@ -43,7 +43,16 @@ function RunFlowContent({ uid }: { uid: string }) {
       <PageTopbar
         breadcrumbs={[
           { label: t('title'), href: '/workflow' },
-          { label: run?.name ?? uid },
+          ...(run?.parent_run_uid
+            ? [
+                {
+                  label: run.parent_run_name ?? run.parent_run_uid,
+                  href: `/workflow/${run.parent_run_uid}`,
+                },
+                { label: run.parent_node_name ?? 'ForEach' },
+              ]
+            : []),
+          { label: run?.item_name ?? run?.name ?? uid },
         ]}
         actions={
           <>
