@@ -7,12 +7,14 @@ export const emptyInterface = (): WorkflowInterface => ({
   outputs: [],
 })
 export const graphNodes = (graph: WorkflowDefinition): Node[] =>
-  graph.nodes.map((node) => ({
-    ...node,
-    position: node.position ?? { x: 0, y: 0 },
-    dragHandle: node.dragHandle ?? '.nodeDragable',
-    zIndex: node.zIndex ?? 20,
-  }))
+  graph.nodes
+    .filter((node) => node.type !== 'subgraph_interface')
+    .map((node) => ({
+      ...node,
+      position: node.position ?? { x: 0, y: 0 },
+      dragHandle: node.dragHandle ?? '.nodeDragable',
+      zIndex: node.zIndex ?? 20,
+    }))
 
 export function cleanGraph(graph: WorkflowDefinition): WorkflowDefinition {
   return {
@@ -32,19 +34,21 @@ export function cleanGraph(graph: WorkflowDefinition): WorkflowDefinition {
           })),
         }
       : graph.interface,
-    nodes: graph.nodes.map((node) => {
-      const { run_data: _run, ...data } = node.data
-      if (node.type === 'subgraph')
-        data.workflow = cleanGraph(data.workflow as WorkflowDefinition)
-      if (node.type === 'collect_file_collection') delete data.patterns
-      const { selected: _selected, measured: _measured, ...definition } = node
-      return {
-        ...definition,
-        data,
-        dragHandle: node.dragHandle ?? '.nodeDragable',
-        zIndex: node.zIndex ?? 20,
-      }
-    }),
+    nodes: graph.nodes
+      .filter((node) => node.type !== 'subgraph_interface')
+      .map((node) => {
+        const { run_data: _run, ...data } = node.data
+        if (node.type === 'subgraph')
+          data.workflow = cleanGraph(data.workflow as WorkflowDefinition)
+        if (node.type === 'collect_file_collection') delete data.patterns
+        const { selected: _selected, measured: _measured, ...definition } = node
+        return {
+          ...definition,
+          data,
+          dragHandle: node.dragHandle ?? '.nodeDragable',
+          zIndex: node.zIndex ?? 20,
+        }
+      }),
   }
 }
 
