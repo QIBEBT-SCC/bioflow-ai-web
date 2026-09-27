@@ -41,6 +41,7 @@ export const StatusEdge = ({
   sourceHandleId,
   targetHandleId,
   markerEnd,
+  data,
 }: EdgeProps) => {
   const sourceNode = useInternalNode(source)
   const targetNode = useInternalNode(target)
@@ -59,7 +60,9 @@ export const StatusEdge = ({
     targetPosition: Position.Left,
   })
 
-  const runData = sourceNode.data?.run_data as NodeRunDataV2 | undefined
+  const runData = (data?.run_data ?? sourceNode.data?.run_data) as
+    | NodeRunDataV2
+    | undefined
   const status = runData?.status
 
   if (status === NodeRunStatusV2.SUCCEEDED) {

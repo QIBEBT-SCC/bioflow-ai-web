@@ -1,5 +1,5 @@
 import type { Edge } from '@xyflow/react'
-import type { WorkflowNode } from '@/types/workflow'
+import type { WorkflowInterface, WorkflowNode } from '@/types/workflow'
 
 export enum WorkflowRunStatusV2 {
   PENDING = 'pending',
@@ -69,6 +69,7 @@ export interface WorkflowRunV2 {
   end_time: string | null
   nodes: WorkflowNode[]
   edges: Edge[]
+  interface?: WorkflowInterface | null
   node_statistics: NodeRunStatisticsV2
 }
 
