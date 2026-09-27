@@ -196,6 +196,15 @@ export function useAgentRunEvents(
         if (event.event_type === 'resource.changed') {
           invalidateResource(queryClient, event)
         }
+        if (
+          event.event_type === 'run.progress' &&
+          event.payload.kind === 'workflow_manager_action' &&
+          event.payload.manager === 'subgraph' &&
+          event.payload.action === 'create' &&
+          event.payload.status === 'completed'
+        ) {
+          queryClient.invalidateQueries({ queryKey: ['workflows'] })
+        }
       }
       queryClient.invalidateQueries({ queryKey: agentQueryKeys.run(runId) })
       queryClient.invalidateQueries({ queryKey: agentQueryKeys.all })

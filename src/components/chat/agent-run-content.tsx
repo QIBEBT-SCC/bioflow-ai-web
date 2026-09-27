@@ -236,7 +236,8 @@ function activityIcon(activity: ProgressActivity): LucideIcon {
   }
   if (activity.kind === 'workflow_manager_action') {
     if (activity.manager === 'resource_node') return DatabaseIcon
-    if (activity.manager === 'workflow') return WaypointsIcon
+    if (activity.manager === 'workflow' || activity.manager === 'subgraph')
+      return WaypointsIcon
     if (activity.manager === 'tool_node') return WrenchIcon
     return SparklesIcon
   }
@@ -477,7 +478,9 @@ function useProgressActivities(events: AgentEvent[]) {
                 ? t('builder.manager.resource_node')
                 : activity.manager === 'utility_node'
                   ? t('builder.manager.utility_node')
-                  : t('builder.manager.workflow')
+                  : activity.manager === 'subgraph'
+                    ? t('builder.manager.subgraph')
+                    : t('builder.manager.workflow')
           const operation = activity.operation ?? 'update'
           const subject = activity.subject ?? manager
           const values = { manager, subject }
@@ -787,15 +790,18 @@ function ToolArtifactCard({ artifact }: { artifact: AgentToolArtifact }) {
 function WorkflowArtifactCard({
   uid,
   projectId,
+  subgraph = false,
 }: {
   uid: string
   projectId: number | null
+  subgraph?: boolean
 }) {
   const t = useTranslations('Chat.artifact')
   const { data: workflow } = useWorkflow(uid)
-  const href = projectId
-    ? `/editor?workflowUid=${uid}&projectId=${projectId}`
-    : `/editor?workflowUid=${uid}`
+  const href =
+    projectId && !subgraph
+      ? `/editor?workflowUid=${uid}&projectId=${projectId}`
+      : `/editor?workflowUid=${uid}`
 
   return (
     <Link
@@ -811,7 +817,7 @@ function WorkflowArtifactCard({
         <div className='min-w-0 flex-1'>
           <p className='flex items-center gap-1.5 font-semibold text-[11px] text-foreground uppercase tracking-wide'>
             <CheckCircle2Icon className='size-3.5 text-info' />
-            <span>{t('workflow_created')}</span>
+            <span>{t(subgraph ? 'subgraph_created' : 'workflow_created')}</span>
           </p>
           <p className='mt-1 truncate font-semibold text-sm'>
             {workflow?.name || t('workflow_fallback')}
@@ -861,10 +867,16 @@ export function AgentRunArtifacts({ run }: { run: AgentRun }) {
         (workflowUid): workflowUid is string => typeof workflowUid === 'string',
       )
     : []
+  const subgraphUids = Array.isArray(payload.subgraph_uids)
+    ? payload.subgraph_uids.filter(
+        (subgraphUid): subgraphUid is string => typeof subgraphUid === 'string',
+      )
+    : []
 
   if (
     artifacts.length === 0 &&
     workflowUids.length === 0 &&
+    subgraphUids.length === 0 &&
     fileArtifacts.length === 0
   )
     return null
@@ -875,6 +887,9 @@ export function AgentRunArtifacts({ run }: { run: AgentRun }) {
       ))}
       {workflowUids.map((uid) => (
         <WorkflowArtifactCard key={uid} uid={uid} projectId={run.project_id} />
+      ))}
+      {subgraphUids.map((uid) => (
+        <WorkflowArtifactCard key={uid} uid={uid} projectId={null} subgraph />
       ))}
       {fileArtifacts.map((file) => (
         <AgentFileCard key={file.id} file={file} compact />

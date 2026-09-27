@@ -58,6 +58,7 @@
       "tool_created": "已创建工具节点",
       "tool_fallback": "新工具节点",
       "workflow_created": "已创建并导入工作流",
+      "subgraph_created": "已创建子图",
       "workflow_fallback": "新工作流"
     },
     "progress": {
@@ -68,7 +69,8 @@
           "resource_node": "资源节点",
           "tool_node": "工具节点",
           "utility_node": "处理器与代码节点",
-          "workflow": "工作流草稿"
+          "workflow": "工作流草稿",
+          "subgraph": "子图"
         },
         "operation": {
           "add": {

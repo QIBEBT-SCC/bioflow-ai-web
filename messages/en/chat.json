@@ -58,6 +58,7 @@
       "tool_created": "Tool node created",
       "tool_fallback": "New tool node",
       "workflow_created": "Workflow created and imported",
+      "subgraph_created": "Subgraph created",
       "workflow_fallback": "New workflow"
     },
     "progress": {
@@ -68,7 +69,8 @@
           "resource_node": "resource nodes",
           "tool_node": "tool nodes",
           "utility_node": "processor and code nodes",
-          "workflow": "workflow drafts"
+          "workflow": "workflow drafts",
+          "subgraph": "subgraphs"
         },
         "operation": {
           "add": {
