@@ -61,6 +61,10 @@ export interface SimpleWorkflowInfo {
   outputs: WorkflowPortSummary[]
 }
 
+export interface WorkflowSearchResult extends SimpleWorkflowInfo {
+  relevance_score: number
+}
+
 export interface WorkflowPortSummary {
   id: string
   name: string

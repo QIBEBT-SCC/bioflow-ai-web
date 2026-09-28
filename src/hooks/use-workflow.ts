@@ -31,10 +31,13 @@ export const useWorkflows = (
   offset: number = 0,
   limit: number = 8,
   wfType?: WorkflowType,
+  query: string = '',
+  enabled: boolean = true,
 ) => {
   return useQuery<PaginatedWorkflows>({
-    queryKey: ['workflows', offset, limit, wfType],
-    queryFn: () => getWorkflows(offset, limit, wfType),
+    queryKey: ['workflows', offset, limit, wfType, query],
+    queryFn: () => getWorkflows(offset, limit, wfType, query),
+    enabled,
     staleTime: 5 * 60 * 1000, // 5分钟缓存
   })
 }

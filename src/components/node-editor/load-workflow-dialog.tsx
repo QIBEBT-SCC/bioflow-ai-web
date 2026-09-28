@@ -2,8 +2,6 @@
 
 import {
   CheckIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
   FileTextIcon,
   FolderOpenIcon,
   LayersIcon,
@@ -45,10 +43,14 @@ import {
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
-  useDeleteWorkflow,
-  useUpdateWorkflow,
-  useWorkflows,
-} from '@/hooks/use-workflow'
+  relevanceOf,
+  WorkflowLibrarySearch,
+  WorkflowRelevanceBadge,
+  WorkflowSearchFooter,
+  WorkflowSearchResults,
+} from '@/components/workflow/workflow-library-search'
+import { useDeleteWorkflow, useUpdateWorkflow } from '@/hooks/use-workflow'
+import { useWorkflowLibrarySearch } from '@/hooks/use-workflow-library-search'
 import { useNodeEditorStore } from '@/stores/nodeviewStore'
 import { ExecutionScope } from '@/types/workflow'
 
@@ -89,11 +91,47 @@ function interactionReducer(
   }
 }
 
+function DeleteWorkflowConfirmation({
+  open,
+  pending,
+  onClose,
+  onConfirm,
+}: {
+  open: boolean
+  pending: boolean
+  onClose: () => void
+  onConfirm: () => Promise<void>
+}) {
+  const t = useTranslations('editor.load_workflow_dialog')
+  return (
+    <AlertDialog open={open} onOpenChange={(next) => !next && onClose()}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{t('confirm_delete_title')}</AlertDialogTitle>
+          <AlertDialogDescription>
+            {t('confirm_delete_description')}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={() => void onConfirm()}
+            className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
+          >
+            {pending ? t('deleting') : t('confirm_delete_action')}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  )
+}
+
 export function LoadWorkflowDialog() {
   const t = useTranslations('editor.load_workflow_dialog')
+  const tSearch = useTranslations('WorkflowSearch')
   const [open, setOpen] = useState(false)
-  const [page, setPage] = useState(0)
   const pageSize = 8
+  const search = useWorkflowLibrarySearch(open, pageSize)
 
   const [{ deletingUid, renamingUid, renameValue }, dispatch] = useReducer(
     interactionReducer,
@@ -101,20 +139,18 @@ export function LoadWorkflowDialog() {
   )
 
   const { currentWorkflowUid, setCurrentWorkflowUid } = useNodeEditorStore()
-  const { data: workflowsPage, isLoading } = useWorkflows(
-    page * pageSize,
-    pageSize,
-  )
-  const workflows = workflowsPage?.data ?? []
-  const totalCount = workflowsPage?.total ?? 0
+  const workflows = search.results
   const updateWorkflowMutation = useUpdateWorkflow()
   const deleteWorkflowMutation = useDeleteWorkflow()
 
-  const totalPages = Math.ceil(totalCount / pageSize)
+  const handleOpenChange = (next: boolean) => {
+    search.reset()
+    setOpen(next)
+  }
 
   const handleLoadWorkflow = (uid: string, name: string) => {
     setCurrentWorkflowUid(uid)
-    setOpen(false)
+    handleOpenChange(false)
     toast.success(t('workflow_loaded', { name }))
   }
 
@@ -128,12 +164,14 @@ export function LoadWorkflowDialog() {
       uid: renamingUid,
       data: { name: renameValue.trim() },
     })
+    search.invalidateSemantic()
     dispatch({ type: 'CANCEL_RENAME' })
   }
 
   const handleDeleteConfirm = async () => {
     if (!deletingUid) return
     await deleteWorkflowMutation.mutateAsync(deletingUid)
+    search.invalidateSemantic()
     if (deletingUid === currentWorkflowUid) {
       setCurrentWorkflowUid('')
     }
@@ -142,14 +180,14 @@ export function LoadWorkflowDialog() {
 
   return (
     <>
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogTrigger asChild>
           <Button variant='ghost' size='sm'>
             <FolderOpenIcon className='size-4 mr-2' />
             {t('trigger')}
           </Button>
         </DialogTrigger>
-        <DialogContent className='flex flex-col sm:max-w-130 max-h-[80vh]'>
+        <DialogContent className='flex flex-col sm:max-w-xl max-h-[80vh]'>
           <DialogHeader className='shrink-0'>
             <div className='flex items-center gap-2'>
               <div className='p-2 bg-primary/10 rounded-full'>
@@ -163,21 +201,21 @@ export function LoadWorkflowDialog() {
           </DialogHeader>
 
           <div className='flex flex-col min-h-0 flex-1 gap-3 overflow-hidden'>
-            {isLoading ? (
-              <div className='flex items-center justify-center py-10'>
-                <Loader2Icon className='size-6 animate-spin text-muted-foreground' />
-              </div>
-            ) : workflows.length === 0 ? (
-              <div className='flex flex-col items-center justify-center py-10 text-muted-foreground'>
-                <FileTextIcon className='size-12 mb-2 opacity-50' />
-                <p>{t('empty')}</p>
-              </div>
-            ) : (
+            <WorkflowLibrarySearch
+              search={search}
+              placeholder={tSearch('namePlaceholder')}
+            />
+            <WorkflowSearchResults
+              search={search}
+              emptyLabel={t('empty')}
+              noMatchesLabel={tSearch('noMatches')}
+            >
               <ScrollArea className='flex-1 -mr-1 pr-1'>
                 <div className='space-y-1.5'>
                   {workflows.map((workflow) => {
                     const isActive = workflow.uid === currentWorkflowUid
                     const isRenaming = renamingUid === workflow.uid
+                    const relevance = relevanceOf(workflow)
 
                     return (
                       <div
@@ -261,6 +299,9 @@ export function LoadWorkflowDialog() {
                                   ? t('scope_project')
                                   : t('scope_sample')}
                               </Badge>
+                              {relevance !== undefined && (
+                                <WorkflowRelevanceBadge score={relevance} />
+                              )}
                               <span className='truncate text-xs text-muted-foreground/70'>
                                 {workflow.description || t('no_description')}
                               </span>
@@ -315,67 +356,19 @@ export function LoadWorkflowDialog() {
                   })}
                 </div>
               </ScrollArea>
-            )}
+            </WorkflowSearchResults>
 
-            {totalPages > 1 && (
-              <div className='shrink-0 flex items-center justify-between pt-2 border-t'>
-                <p className='text-xs text-muted-foreground'>
-                  {t('pagination', {
-                    page: page + 1,
-                    total_pages: totalPages,
-                    total: totalCount,
-                  })}
-                </p>
-                <div className='flex gap-1.5'>
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    onClick={() => setPage((p) => Math.max(0, p - 1))}
-                    disabled={page === 0}
-                  >
-                    <ChevronLeftIcon className='size-4' />
-                  </Button>
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    onClick={() =>
-                      setPage((p) => Math.min(totalPages - 1, p + 1))
-                    }
-                    disabled={page >= totalPages - 1}
-                  >
-                    <ChevronRightIcon className='size-4' />
-                  </Button>
-                </div>
-              </div>
-            )}
+            <WorkflowSearchFooter search={search} pageSize={pageSize} />
           </div>
         </DialogContent>
       </Dialog>
 
-      <AlertDialog
+      <DeleteWorkflowConfirmation
         open={!!deletingUid}
-        onOpenChange={(open) => !open && dispatch({ type: 'CANCEL_DELETE' })}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('confirm_delete_title')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('confirm_delete_description')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
-            >
-              {deleteWorkflowMutation.isPending
-                ? t('deleting')
-                : t('confirm_delete_action')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        pending={deleteWorkflowMutation.isPending}
+        onClose={() => dispatch({ type: 'CANCEL_DELETE' })}
+        onConfirm={handleDeleteConfirm}
+      />
     </>
   )
 }
