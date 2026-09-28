@@ -27,10 +27,11 @@ import { cn } from '@/lib/utils'
 import { type NodeRunRecordV2, NodeRunStatusV2 } from '@/types/workflow-v2'
 
 const RANGE_OPTIONS = [
-  { hours: 6, labelKey: 'last6Hours' },
-  { hours: 24, labelKey: 'last24Hours' },
-  { hours: 72, labelKey: 'last3Days' },
-  { hours: 168, labelKey: 'last7Days' },
+  { minutes: 4320, labelKey: 'last3Days' },
+  { minutes: 1440, labelKey: 'last24Hours' },
+  { minutes: 360, labelKey: 'last6Hours' },
+  { minutes: 60, labelKey: 'last1Hour' },
+  { minutes: 10, labelKey: 'last10Minutes' },
 ] as const
 
 // Filter order for the status chips.
@@ -51,7 +52,7 @@ const ACTIVE_NODE_RUN_STATUSES = new Set<NodeRunStatusV2>([
   NodeRunStatusV2.RUNNING,
 ])
 
-type RangeHours = (typeof RANGE_OPTIONS)[number]['hours']
+type RangeMinutes = (typeof RANGE_OPTIONS)[number]['minutes']
 type StatusFilter = NodeRunStatusV2 | 'all'
 
 interface TimelineItem {
@@ -91,23 +92,28 @@ export function TaskTimeline({
 }: {
   refetchInterval?: number | false
 }) {
-  const [rangeHours, setRangeHours] = useState<RangeHours>(24)
+  const [rangeMinutes, setRangeMinutes] = useState<RangeMinutes>(1440)
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [now, setNow] = useState(() => Date.now())
+  // The API takes whole hours; short ranges are trimmed client-side below.
   const {
     data: tasks = [],
     isFetching,
     isLoading,
-  } = useRecentTasks(rangeHours, refetchInterval)
+  } = useRecentTasks(Math.ceil(rangeMinutes / 60), refetchInterval)
 
   useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), 30_000)
+    // Short ranges need a finer clock so the axis doesn't jump visibly.
+    const timer = window.setInterval(
+      () => setNow(Date.now()),
+      rangeMinutes <= 60 ? 5_000 : 30_000,
+    )
     return () => window.clearInterval(timer)
-  }, [])
+  }, [rangeMinutes])
 
   const timeline = useMemo(() => {
     const rangeEnd = now
-    const rangeStart = rangeEnd - rangeHours * 60 * 60 * 1000
+    const rangeStart = rangeEnd - rangeMinutes * 60 * 1000
     const duration = rangeEnd - rangeStart
     const ticks = Array.from({ length: 6 }, (_, index) => {
       const percent = index * 20
@@ -140,7 +146,7 @@ export function TaskTimeline({
       .sort((a, b) => b.startTime - a.startTime)
 
     return { items, ticks }
-  }, [now, rangeHours, tasks])
+  }, [now, rangeMinutes, tasks])
 
   const counts = useMemo(() => {
     const result = {
@@ -169,9 +175,9 @@ export function TaskTimeline({
   return (
     <Card className='gap-0 overflow-hidden py-0 shadow-xs'>
       <TimelineHeader
-        rangeHours={rangeHours}
+        rangeMinutes={rangeMinutes}
         isRefreshing={isFetching && !isLoading}
-        onRangeChange={setRangeHours}
+        onRangeChange={setRangeMinutes}
       />
       <TimelineStatusFilters
         counts={counts}
@@ -189,7 +195,7 @@ export function TaskTimeline({
           <TimelineChart
             items={visibleItems}
             ticks={timeline.ticks}
-            rangeHours={rangeHours}
+            rangeMinutes={rangeMinutes}
           />
         )}
       </CardContent>
@@ -198,13 +204,13 @@ export function TaskTimeline({
 }
 
 interface TimelineHeaderProps {
-  rangeHours: RangeHours
+  rangeMinutes: RangeMinutes
   isRefreshing: boolean
-  onRangeChange: (hours: RangeHours) => void
+  onRangeChange: (minutes: RangeMinutes) => void
 }
 
 function TimelineHeader({
-  rangeHours,
+  rangeMinutes,
   isRefreshing,
   onRangeChange,
 }: TimelineHeaderProps) {
@@ -235,12 +241,14 @@ function TimelineHeader({
           <ButtonGroup className='shrink-0'>
             {RANGE_OPTIONS.map((option) => (
               <Button
-                key={option.hours}
+                key={option.minutes}
                 type='button'
                 size='sm'
-                variant={rangeHours === option.hours ? 'secondary' : 'outline'}
-                aria-pressed={rangeHours === option.hours}
-                onClick={() => onRangeChange(option.hours)}
+                variant={
+                  rangeMinutes === option.minutes ? 'secondary' : 'outline'
+                }
+                aria-pressed={rangeMinutes === option.minutes}
+                onClick={() => onRangeChange(option.minutes)}
               >
                 {t(`timeline.${option.labelKey}`)}
               </Button>
@@ -334,22 +342,22 @@ interface TimelineTick {
 interface TimelineChartProps {
   items: TimelineItem[]
   ticks: TimelineTick[]
-  rangeHours: RangeHours
+  rangeMinutes: RangeMinutes
 }
 
-function TimelineChart({ items, ticks, rangeHours }: TimelineChartProps) {
+function TimelineChart({ items, ticks, rangeMinutes }: TimelineChartProps) {
   const locale = useLocale()
   const t = useTranslations('task')
   const axisFormatter = useMemo(
     () =>
       new Intl.DateTimeFormat(locale, {
-        month: rangeHours > 24 ? 'numeric' : undefined,
-        day: rangeHours > 24 ? 'numeric' : undefined,
+        month: rangeMinutes > 1440 ? 'numeric' : undefined,
+        day: rangeMinutes > 1440 ? 'numeric' : undefined,
         hour: '2-digit',
         minute: '2-digit',
         hourCycle: 'h23',
       }),
-    [locale, rangeHours],
+    [locale, rangeMinutes],
   )
 
   return (
