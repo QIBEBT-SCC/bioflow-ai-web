@@ -111,19 +111,21 @@ export function RunTables({
         </div>
       </div>
 
-      <div className='overflow-x-auto rounded-xl border bg-card'>
-        <Table className='min-w-[940px]'>
+      <div className='overflow-hidden rounded-xl border bg-card'>
+        <Table className='table-fixed'>
           <TableHeader>
             <TableRow className='bg-muted/50 hover:bg-muted/50'>
               <TableHead className='w-12' />
-              <TableHead className='w-[280px]'>{t('table.name')}</TableHead>
-              <TableHead className='w-[130px]'>{t('table.status')}</TableHead>
-              <TableHead className='w-[220px]'>{t('table.progress')}</TableHead>
-              <TableHead className='w-[110px]'>{t('table.owner')}</TableHead>
-              <TableHead className='w-[150px]'>
+              <TableHead>{t('table.name')}</TableHead>
+              <TableHead className='w-32'>{t('table.status')}</TableHead>
+              <TableHead className='w-48'>{t('table.progress')}</TableHead>
+              <TableHead className='hidden w-28 xl:table-cell'>
+                {t('table.owner')}
+              </TableHead>
+              <TableHead className='hidden w-32 lg:table-cell'>
                 {t('table.startedAt')}
               </TableHead>
-              <TableHead className='w-[120px]'>{t('table.duration')}</TableHead>
+              <TableHead className='w-28'>{t('table.duration')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -134,7 +136,7 @@ export function RunTables({
                     <Skeleton className='size-8 rounded-md' />
                   </TableCell>
                   <TableCell>
-                    <Skeleton className='h-5 w-52' />
+                    <Skeleton className='h-5 w-full max-w-md' />
                   </TableCell>
                   <TableCell>
                     <Skeleton className='h-6 w-20' />
@@ -142,10 +144,10 @@ export function RunTables({
                   <TableCell>
                     <Skeleton className='h-4 w-full' />
                   </TableCell>
-                  <TableCell>
+                  <TableCell className='hidden xl:table-cell'>
                     <Skeleton className='h-5 w-14' />
                   </TableCell>
-                  <TableCell>
+                  <TableCell className='hidden lg:table-cell'>
                     <Skeleton className='h-5 w-24' />
                   </TableCell>
                   <TableCell>
@@ -203,12 +205,14 @@ export function RunTables({
                           />
                         </Button>
                       </TableCell>
-                      <TableCell className='font-medium'>
+                      <TableCell className='whitespace-normal font-medium'>
                         <Link
                           href={runHref}
                           className='block min-w-0 hover:underline'
                         >
-                          <span className='block truncate'>{run.name}</span>
+                          <span className='block [overflow-wrap:anywhere]'>
+                            {run.name}
+                          </span>
                           <span className='mt-0.5 block truncate font-mono text-[11px] font-normal text-muted-foreground'>
                             {run.uid}
                           </span>
@@ -243,10 +247,10 @@ export function RunTables({
                           <Progress value={progress} className='h-1.5' />
                         </div>
                       </TableCell>
-                      <TableCell className='text-sm text-muted-foreground'>
+                      <TableCell className='hidden truncate text-sm text-muted-foreground xl:table-cell'>
                         {t('table.ownerValue', { id: run.owner_id })}
                       </TableCell>
-                      <TableCell className='text-sm tabular-nums text-muted-foreground'>
+                      <TableCell className='hidden text-sm tabular-nums text-muted-foreground lg:table-cell'>
                         {run.start_time
                           ? dateFormatter.format(new Date(run.start_time))
                           : '-'}

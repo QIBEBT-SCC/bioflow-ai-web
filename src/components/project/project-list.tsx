@@ -201,25 +201,27 @@ function ProjectTable({
             : 'hidden'
         }
       >
-        <Table className='min-w-[1000px]'>
+        <Table className='table-fixed'>
           <TableHeader>
             <TableRow>
               <TableHead className='h-10 px-4'>{t('projectName')}</TableHead>
-              <TableHead className='h-10 px-4'>{t('description')}</TableHead>
-              <TableHead className='h-10 px-4'>{t('tags')}</TableHead>
-              <TableHead className='h-10 text-right'>
+              <TableHead className='hidden h-10 w-[18%] px-4 xl:table-cell'>
+                {t('description')}
+              </TableHead>
+              <TableHead className='h-10 w-36 px-4'>{t('tags')}</TableHead>
+              <TableHead className='hidden h-10 w-24 text-right lg:table-cell'>
                 <div className='flex items-center justify-end'>
                   <UserIcon className='mr-1 size-3' />
                   {t('owner')}
                 </div>
               </TableHead>
-              <TableHead className='h-10 text-right'>
+              <TableHead className='h-10 w-44 text-right'>
                 <div className='flex items-center justify-end'>
                   <ClockIcon className='mr-1 size-3' />
                   {t('lastUpdated')}
                 </div>
               </TableHead>
-              <TableHead className='size-12'>
+              <TableHead className='w-14'>
                 <span className='sr-only'>{tActions('label')}</span>
               </TableHead>
             </TableRow>
@@ -237,7 +239,7 @@ function ProjectTable({
             ) : (
               projects.map((project) => (
                 <TableRow key={project.id}>
-                  <TableCell>
+                  <TableCell className='whitespace-normal'>
                     <div className='flex items-center gap-2'>
                       <Button
                         variant='ghost'
@@ -260,18 +262,21 @@ function ProjectTable({
                       </Button>
                       <Link
                         href={getProjectDetailHref(project.id, projectListHref)}
-                        className='font-medium hover:text-primary'
+                        className='min-w-0 font-medium [overflow-wrap:anywhere] hover:text-primary'
                       >
                         {project.name}
                       </Link>
                     </div>
                   </TableCell>
-                  <TableCell className='max-w-72'>
-                    <div className='line-clamp-1 text-muted-foreground'>
+                  <TableCell className='hidden whitespace-normal xl:table-cell'>
+                    <div
+                      className='line-clamp-2 text-muted-foreground'
+                      title={project.description || undefined}
+                    >
                       {project.description || '-'}
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className='whitespace-normal'>
                     <div className='flex flex-wrap gap-1'>
                       {project.tags.map((tag) => (
                         <Badge
@@ -283,10 +288,10 @@ function ProjectTable({
                       ))}
                     </div>
                   </TableCell>
-                  <TableCell className='text-right'>
+                  <TableCell className='hidden truncate text-right lg:table-cell'>
                     {project.owner.username}
                   </TableCell>
-                  <TableCell className='whitespace-nowrap text-right text-muted-foreground'>
+                  <TableCell className='text-right tabular-nums text-muted-foreground'>
                     {formatDateTime(project.update_time, locale)}
                   </TableCell>
                   <TableCell>
