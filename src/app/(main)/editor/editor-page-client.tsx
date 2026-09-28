@@ -28,7 +28,7 @@ import { useShallow } from 'zustand/react/shallow'
 import { getToolArg } from '@/app/actions/tool'
 import { ChatSidebar } from '@/components/chat/chat-sidebar'
 import { ChatSidebarToggle } from '@/components/chat/chat-sidebar-toggle'
-import { PageTopbar } from '@/components/layout/page-shell'
+import { EditorTopbar } from '@/components/node-editor/editor-topbar'
 import { LoadWorkflowDialog } from '@/components/node-editor/load-workflow-dialog'
 import { PanelMenu } from '@/components/node-editor/menu/panel-menu'
 import {
@@ -38,8 +38,8 @@ import {
 import { SaveAsDialog } from '@/components/node-editor/save-as-dialog'
 import { SubgraphNavigation } from '@/components/node-editor/subgraph-context'
 import { SubgraphInterfaceEditor } from '@/components/node-editor/subgraph-interface-editor'
-import { SubgraphToolbar } from '@/components/node-editor/subgraph-toolbar'
 import { WorkflowJsonActions } from '@/components/node-editor/workflow-json-actions'
+import { WorkflowMetadataDialog } from '@/components/node-editor/workflow-metadata-dialog'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset } from '@/components/ui/sidebar'
@@ -364,8 +364,9 @@ function FlowContent() {
     <SidebarInset className='flex h-screen flex-row overflow-hidden'>
       <div className='flex-1 flex flex-col min-w-0'>
         <header className='flex shrink-0 flex-col'>
-          <PageTopbar
-            breadcrumbs={[{ label: t('title') }]}
+          <EditorTopbar
+            title={t('title')}
+            workflowName={workflowData?.name}
             actions={<ChatSidebarToggle />}
           />
 
@@ -414,6 +415,8 @@ function FlowContent() {
                     currentWorkflowName={workflowData?.name}
                     disabled={nodes.length === 0}
                   />
+
+                  <WorkflowMetadataDialog />
                   <Button variant='ghost' size='sm' onClick={onExit}>
                     <LogOutIcon className='size-4' />
                     {t('exit')}
@@ -462,6 +465,8 @@ function FlowContent() {
                     disabled={nodes.length === 0}
                   />
 
+                  <WorkflowMetadataDialog />
+
                   <WorkflowJsonActions workflowName={workflowData?.name} />
 
                   <Separator orientation='vertical' className='mx-2 h-5!' />
@@ -485,7 +490,6 @@ function FlowContent() {
               )}
             </div>
           </div>
-          <SubgraphToolbar />
         </header>
 
         {/* React Flow 画布 */}

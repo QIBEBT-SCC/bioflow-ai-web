@@ -15,6 +15,28 @@ import { cn } from '@/lib/utils'
 export interface PageCrumb {
   label: string
   href?: string
+  /** In-page navigation (e.g. leaving a subgraph); used when there is no href. */
+  onClick?: () => void
+}
+
+function CrumbLink({ crumb }: { crumb: PageCrumb }) {
+  if (crumb.href)
+    return (
+      <BreadcrumbLink asChild>
+        <Link href={crumb.href} className='truncate'>
+          {crumb.label}
+        </Link>
+      </BreadcrumbLink>
+    )
+  if (crumb.onClick)
+    return (
+      <BreadcrumbLink asChild>
+        <button type='button' onClick={crumb.onClick} className='truncate'>
+          {crumb.label}
+        </button>
+      </BreadcrumbLink>
+    )
+  return <BreadcrumbPage className='truncate'>{crumb.label}</BreadcrumbPage>
 }
 
 export function PageBreadcrumbs({ items }: { items: PageCrumb[] }) {
@@ -23,22 +45,23 @@ export function PageBreadcrumbs({ items }: { items: PageCrumb[] }) {
       <BreadcrumbList className='flex-nowrap'>
         {items.map((crumb, index) => {
           const isLast = index === items.length - 1
+          // Subgraph crumbs may repeat a label, so key by the full trail.
+          const trail = items
+            .slice(0, index + 1)
+            .map((item) => item.label)
+            .join('/')
           return (
-            <Fragment key={crumb.href ?? `current:${crumb.label}`}>
+            <Fragment key={crumb.href ?? trail}>
               {index > 0 && <BreadcrumbSeparator className='hidden md:block' />}
               <BreadcrumbItem
                 className={cn('min-w-0', !isLast && 'hidden md:inline-flex')}
               >
-                {isLast || !crumb.href ? (
+                {isLast ? (
                   <BreadcrumbPage className='truncate'>
                     {crumb.label}
                   </BreadcrumbPage>
                 ) : (
-                  <BreadcrumbLink asChild>
-                    <Link href={crumb.href} className='truncate'>
-                      {crumb.label}
-                    </Link>
-                  </BreadcrumbLink>
+                  <CrumbLink crumb={crumb} />
                 )}
               </BreadcrumbItem>
             </Fragment>

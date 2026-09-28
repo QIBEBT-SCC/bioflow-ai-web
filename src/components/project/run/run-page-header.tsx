@@ -1,6 +1,7 @@
 import { useTranslations } from 'next-intl'
 import { ChatSidebarToggle } from '@/components/chat/chat-sidebar-toggle'
 import { PageTopbar } from '@/components/layout/page-shell'
+import { withSubgraphCrumbs } from '@/lib/subgraph-crumbs'
 import type { WorkflowRunV2 } from '@/types/workflow-v2'
 
 interface RunPageHeaderProps {
@@ -8,6 +9,8 @@ interface RunPageHeaderProps {
   runUid: string
   projectName?: string
   run?: WorkflowRunV2 | null
+  subgraphLabels: string[]
+  onNavigateSubgraph: (depth: number) => void
 }
 
 export function RunPageHeader({
@@ -15,25 +18,31 @@ export function RunPageHeader({
   runUid,
   projectName,
   run,
+  subgraphLabels,
+  onNavigateSubgraph,
 }: RunPageHeaderProps) {
   const t = useTranslations('Project.detail.breadcrumb')
 
   return (
     <PageTopbar
-      breadcrumbs={[
-        { label: t('projects'), href: '/project' },
-        { label: projectName ?? projectId, href: `/project/${projectId}` },
-        ...(run?.parent_run_uid
-          ? [
-              {
-                label: run.parent_run_name ?? run.parent_run_uid,
-                href: `/project/${projectId}/${run.parent_run_uid}`,
-              },
-              { label: run.parent_node_name ?? 'ForEach' },
-            ]
-          : []),
-        { label: run?.item_name ?? run?.name ?? runUid },
-      ]}
+      breadcrumbs={withSubgraphCrumbs(
+        [
+          { label: t('projects'), href: '/project' },
+          { label: projectName ?? projectId, href: `/project/${projectId}` },
+          ...(run?.parent_run_uid
+            ? [
+                {
+                  label: run.parent_run_name ?? run.parent_run_uid,
+                  href: `/project/${projectId}/${run.parent_run_uid}`,
+                },
+                { label: run.parent_node_name ?? 'ForEach' },
+              ]
+            : []),
+          { label: run?.item_name ?? run?.name ?? runUid },
+        ],
+        subgraphLabels,
+        onNavigateSubgraph,
+      )}
       actions={<ChatSidebarToggle />}
     />
   )

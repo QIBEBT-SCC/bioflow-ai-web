@@ -8,7 +8,6 @@ import {
 import { nodeTypes } from '@/components/node-editor/node-registry'
 import { ReadOnlyProvider } from '@/components/node-editor/read-only-context'
 import { RunLinkProvider } from '@/components/node-editor/run-link-context'
-import { SubgraphBreadcrumbs } from '@/components/node-editor/subgraph-breadcrumbs'
 import { SubgraphNavigation } from '@/components/node-editor/subgraph-context'
 import { SubgraphInterfaceSummary } from '@/components/node-editor/subgraph-interface-summary'
 import { StatusEdge } from '@/components/workflow/status-edge'
@@ -19,10 +18,8 @@ const edgeTypes = { default: StatusEdge }
 interface RunFlowCanvasProps {
   viewKey?: string
   runLink: (runUid: string) => string
-  labels: string[]
   graphInterface?: WorkflowInterface | null
   onEnterSubgraph: (id: string) => void
-  onNavigate: (depth: number) => void
   nodes: FlowNode[]
   edges: Edge[]
   onNodesChange: (changes: NodeChange<FlowNode>[]) => void
@@ -33,10 +30,8 @@ interface RunFlowCanvasProps {
 export function RunFlowCanvas({
   viewKey,
   runLink,
-  labels,
   graphInterface,
   onEnterSubgraph,
-  onNavigate,
   nodes,
   edges,
   onNodesChange,
@@ -45,7 +40,6 @@ export function RunFlowCanvas({
 }: RunFlowCanvasProps) {
   return (
     <div className='flex-1 min-h-0 flex flex-col'>
-      <SubgraphBreadcrumbs labels={labels} onNavigate={onNavigate} />
       <div className='flex-1 min-h-0'>
         <ReadOnlyProvider value={true}>
           <RunLinkProvider value={runLink}>

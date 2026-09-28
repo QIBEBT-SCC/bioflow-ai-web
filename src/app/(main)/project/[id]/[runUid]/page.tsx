@@ -385,6 +385,11 @@ function RunFlowContent({
         runUid={runUid}
         projectName={project?.name}
         run={run}
+        subgraphLabels={labels}
+        onNavigateSubgraph={(depth) => {
+          setSelectedNodeId(undefined)
+          navigate(depth)
+        }}
       />
 
       {/* 主内容区：左侧面板 + 右侧选项卡区域 */}
@@ -421,15 +426,10 @@ function RunFlowContent({
             <RunFlowCanvas
               viewKey={visibleRun?.uid}
               runLink={runLink}
-              labels={labels}
               graphInterface={visibleRun?.interface}
               onEnterSubgraph={(id) => {
                 setSelectedNodeId(undefined)
                 enter(id)
-              }}
-              onNavigate={(depth) => {
-                setSelectedNodeId(undefined)
-                navigate(depth)
               }}
               nodes={flowNodes}
               edges={edges}

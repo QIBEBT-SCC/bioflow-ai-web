@@ -1,4 +1,5 @@
 'use client'
+import { InfoIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useId, useState } from 'react'
 import { Button } from '@/components/ui/button'
@@ -103,6 +104,7 @@ export function WorkflowMetadataDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button size='sm' variant='ghost'>
+          <InfoIcon className='size-4' />
           {t('metadata')}
         </Button>
       </DialogTrigger>

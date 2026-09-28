@@ -11,7 +11,6 @@ import { useTranslations } from 'next-intl'
 import { PageTopbar } from '@/components/layout/page-shell'
 import { nodeTypes } from '@/components/node-editor/node-registry'
 import { ReadOnlyProvider } from '@/components/node-editor/read-only-context'
-import { SubgraphBreadcrumbs } from '@/components/node-editor/subgraph-breadcrumbs'
 import { SubgraphNavigation } from '@/components/node-editor/subgraph-context'
 import { SubgraphInterfaceSummary } from '@/components/node-editor/subgraph-interface-summary'
 import { Progress } from '@/components/ui/progress'
@@ -22,6 +21,7 @@ import { useRun } from '@/hooks/use-run'
 import { useRunFlow } from '@/hooks/use-run-flow'
 import { useSubgraphRun } from '@/hooks/use-subgraph-run'
 import { RUN_STATUS_APPEARANCE } from '@/lib/status'
+import { withSubgraphCrumbs } from '@/lib/subgraph-crumbs'
 import { WorkflowRunStatusV2 } from '@/types/workflow-v2'
 
 const edgeTypes = { default: StatusEdge }
@@ -41,19 +41,23 @@ function RunFlowContent({ uid }: { uid: string }) {
   return (
     <SidebarInset className='flex h-screen flex-col overflow-hidden'>
       <PageTopbar
-        breadcrumbs={[
-          { label: t('title'), href: '/workflow' },
-          ...(run?.parent_run_uid
-            ? [
-                {
-                  label: run.parent_run_name ?? run.parent_run_uid,
-                  href: `/workflow/${run.parent_run_uid}`,
-                },
-                { label: run.parent_node_name ?? 'ForEach' },
-              ]
-            : []),
-          { label: run?.item_name ?? run?.name ?? uid },
-        ]}
+        breadcrumbs={withSubgraphCrumbs(
+          [
+            { label: t('title'), href: '/workflow' },
+            ...(run?.parent_run_uid
+              ? [
+                  {
+                    label: run.parent_run_name ?? run.parent_run_uid,
+                    href: `/workflow/${run.parent_run_uid}`,
+                  },
+                  { label: run.parent_node_name ?? 'ForEach' },
+                ]
+              : []),
+            { label: run?.item_name ?? run?.name ?? uid },
+          ],
+          labels,
+          navigate,
+        )}
         actions={
           <>
             {run && (
@@ -82,7 +86,6 @@ function RunFlowContent({ uid }: { uid: string }) {
           </>
         }
       />
-      <SubgraphBreadcrumbs labels={labels} onNavigate={navigate} />
 
       <div className='min-h-0 w-full flex-1'>
         <ReadOnlyProvider value={true}>
