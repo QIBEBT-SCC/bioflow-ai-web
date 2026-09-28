@@ -4,6 +4,17 @@
     "check_validity": "Check Validity",
     "export": "Export Configuration",
     "import": "Import from JSON",
+    "image_preview": {
+      "title": "Image Preview",
+      "description": "Display an image from the current run",
+      "connect": "Connect an Image Path",
+      "waiting": "Waiting for image",
+      "upstream_failed": "Upstream node failed",
+      "missing_path": "No image path was produced",
+      "outside_run": "Image is outside this run",
+      "unsupported_format": "Unsupported image format",
+      "load_failed": "Image unavailable"
+    },
     "load_workflow": "Load Workflow",
     "fileCollection": {
       "title": "ForEach",
@@ -51,6 +62,7 @@
       "no_tools_found": "No matching tools found",
       "no_tools_in_group": "No tools in this group",
       "note": "Note",
+      "image_preview": "Image Preview",
       "other": "Other",
       "orchestration": "Workflow Composition",
       "processor": "Processor",

@@ -37,7 +37,7 @@ export function cleanGraph(graph: WorkflowDefinition): WorkflowDefinition {
     nodes: graph.nodes
       .filter((node) => node.type !== 'subgraph_interface')
       .map((node) => {
-        const { run_data: _run, ...data } = node.data
+        const { run_data: _run, preview_data: _preview, ...data } = node.data
         if (node.type === 'subgraph')
           data.workflow = cleanGraph(data.workflow as WorkflowDefinition)
         if (node.type === 'collect_file_collection') delete data.patterns

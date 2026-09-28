@@ -22,6 +22,7 @@ import {
   FolderInputIcon,
   FolderOutputIcon,
   GroupIcon,
+  ImageIcon,
   PenToolIcon,
   RepeatIcon,
   StickyNoteIcon,
@@ -51,6 +52,7 @@ import {
 } from '@/components/node-editor/node/data-node'
 import { ForeachInputNode } from '@/components/node-editor/node/foreach-input-node'
 import { ForeachNode } from '@/components/node-editor/node/foreach-node'
+import { ImagePreviewNode } from '@/components/node-editor/node/image-preview-node'
 import {
   DBInputNode,
   FileInputNode,
@@ -105,8 +107,9 @@ export const nodeTypes: Record<string, React.ComponentType<any>> = {
   code_python: PythonCodeNode,
   code_bash: BashCodeNode,
   downstream_summary: DownstreamSummaryNode,
-  // note
+  // presentation
   note: NoteNode,
+  image_preview: ImagePreviewNode,
 }
 
 // ─────────────────────────────────────────────
@@ -145,6 +148,7 @@ export const nodeDefaultData: Record<string, Record<string, unknown>> = {
   code_bash: { code: '' },
   downstream_summary: { prompt: '' },
   note: { content: '', anchor_node_id: null },
+  image_preview: {},
 }
 
 // ─────────────────────────────────────────────
@@ -276,6 +280,9 @@ export const menuData: Record<string, MenuGroup> = {
     labelKey: 'other',
     Icon: StickyNoteIcon,
     submenuType: 'inline',
-    items: [{ type: 'note', labelKey: 'note', Icon: StickyNoteIcon }],
+    items: [
+      { type: 'note', labelKey: 'note', Icon: StickyNoteIcon },
+      { type: 'image_preview', labelKey: 'image_preview', Icon: ImageIcon },
+    ],
   },
 }

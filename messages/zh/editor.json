@@ -4,6 +4,17 @@
     "check_validity": "检查合法性",
     "export": "导出配置",
     "import": "从JSON导入",
+    "image_preview": {
+      "title": "图像预览",
+      "description": "显示当前运行产生的图片",
+      "connect": "请连接 Image Path",
+      "waiting": "等待图片产生",
+      "upstream_failed": "上游节点运行失败",
+      "missing_path": "上游未输出图片路径",
+      "outside_run": "图片不在当前运行目录内",
+      "unsupported_format": "不支持的图片格式",
+      "load_failed": "图片无法加载"
+    },
     "load_workflow": "加载Workflow",
     "fileCollection": {
       "title": "ForEach",
@@ -51,6 +62,7 @@
       "no_tools_found": "没有找到匹配的工具",
       "no_tools_in_group": "该分组下没有工具",
       "note": "笔记",
+      "image_preview": "图像预览",
       "other": "其它",
       "orchestration": "流程编排",
       "processor": "处理器",
