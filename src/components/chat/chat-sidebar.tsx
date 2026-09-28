@@ -106,6 +106,30 @@ function parseAgentCommand(value: string, commands: AgentSlashCommand[]) {
   return { command, prompt: match[2] ?? '' }
 }
 
+type WorkflowSuggestionAgent = Extract<
+  AgentName,
+  'workflow-diagnoser' | 'workflow-fixer'
+>
+
+// New conversation → diagnose; diagnosed → fix; fixed → nothing left to suggest.
+function getSuggestedAgent(
+  runs: AgentRun[],
+  sourceRunUid: string,
+): WorkflowSuggestionAgent | null {
+  const completedAgents = new Set(
+    runs
+      .filter(
+        (run) =>
+          run.status === 'completed' &&
+          (run.result_payload?.source_run_uid ?? sourceRunUid) === sourceRunUid,
+      )
+      .map((run) => run.agent_name),
+  )
+  if (completedAgents.has('workflow-fixer')) return null
+  if (completedAgents.has('workflow-diagnoser')) return 'workflow-fixer'
+  return 'workflow-diagnoser'
+}
+
 function ChatMessage({ message }: { message: AgentMessage }) {
   return (
     <Message from={message.role}>
@@ -204,20 +228,22 @@ function ChatSidebarInner({
   const inputDisabled =
     !sessionId || isSessionLoading || isMessagesLoading || isRunsLoading
 
-  const workflowSuggestions = sourceRunUid
-    ? [
-        {
-          agentName: 'workflow-diagnoser' as const,
-          label: t('suggestions.diagnose'),
-          prompt: t('default_requests.workflow-diagnoser'),
-        },
-        {
-          agentName: 'workflow-fixer' as const,
-          label: t('suggestions.fix'),
-          prompt: t('default_requests.workflow-fixer'),
-        },
-      ]
-    : []
+  const workflowSuggestions = useMemo(() => {
+    if (!sourceRunUid) return []
+    const agentName = getSuggestedAgent(displayRuns, sourceRunUid)
+    if (!agentName) return []
+    return [
+      {
+        agentName,
+        label: t(
+          agentName === 'workflow-diagnoser'
+            ? 'suggestions.diagnose'
+            : 'suggestions.fix',
+        ),
+        prompt: t(`default_requests.${agentName}`),
+      },
+    ]
+  }, [displayRuns, sourceRunUid, t])
 
   const unmatchedMessages = useMemo(() => {
     const runIds = new Set(displayRuns.map((storedRun) => storedRun.uid))
