@@ -7,6 +7,7 @@ import {
 } from '@xyflow/react'
 import { nodeTypes } from '@/components/node-editor/node-registry'
 import { ReadOnlyProvider } from '@/components/node-editor/read-only-context'
+import { RunLinkProvider } from '@/components/node-editor/run-link-context'
 import { SubgraphBreadcrumbs } from '@/components/node-editor/subgraph-breadcrumbs'
 import { SubgraphNavigation } from '@/components/node-editor/subgraph-context'
 import { SubgraphInterfaceSummary } from '@/components/node-editor/subgraph-interface-summary'
@@ -17,6 +18,7 @@ const edgeTypes = { default: StatusEdge }
 
 interface RunFlowCanvasProps {
   viewKey?: string
+  runLink: (runUid: string) => string
   labels: string[]
   graphInterface?: WorkflowInterface | null
   onEnterSubgraph: (id: string) => void
@@ -30,6 +32,7 @@ interface RunFlowCanvasProps {
 
 export function RunFlowCanvas({
   viewKey,
+  runLink,
   labels,
   graphInterface,
   onEnterSubgraph,
@@ -45,28 +48,30 @@ export function RunFlowCanvas({
       <SubgraphBreadcrumbs labels={labels} onNavigate={onNavigate} />
       <div className='flex-1 min-h-0'>
         <ReadOnlyProvider value={true}>
-          <SubgraphNavigation value={onEnterSubgraph}>
-            <ReactFlow
-              key={viewKey}
-              nodes={nodes}
-              edges={edges}
-              onNodesChange={onNodesChange}
-              onNodeClick={onNodeClick}
-              onPaneClick={onPaneClick}
-              nodeTypes={nodeTypes}
-              edgeTypes={edgeTypes}
-              nodesConnectable={false}
-              fitView
-              className='bg-gray-50'
-            >
-              <Background
-                variant={BackgroundVariant.Dots}
-                className='!bg-gray-100'
-              />
-              <SubgraphInterfaceSummary value={graphInterface} />
-              <Controls />
-            </ReactFlow>
-          </SubgraphNavigation>
+          <RunLinkProvider value={runLink}>
+            <SubgraphNavigation value={onEnterSubgraph}>
+              <ReactFlow
+                key={viewKey}
+                nodes={nodes}
+                edges={edges}
+                onNodesChange={onNodesChange}
+                onNodeClick={onNodeClick}
+                onPaneClick={onPaneClick}
+                nodeTypes={nodeTypes}
+                edgeTypes={edgeTypes}
+                nodesConnectable={false}
+                fitView
+                className='bg-gray-50'
+              >
+                <Background
+                  variant={BackgroundVariant.Dots}
+                  className='!bg-gray-100'
+                />
+                <SubgraphInterfaceSummary value={graphInterface} />
+                <Controls />
+              </ReactFlow>
+            </SubgraphNavigation>
+          </RunLinkProvider>
         </ReadOnlyProvider>
       </div>
     </div>

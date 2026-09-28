@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
+import { useRunLink } from '@/components/node-editor/run-link-context'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -36,6 +37,7 @@ export function BatchItems({
 }) {
   const t = useTranslations('editor.foreach')
   const [open, setOpen] = useState(false)
+  const runLink = useRunLink()
   const [offset, setOffset] = useState(0)
   const items = useQuery({
     queryKey: ['foreach-items', runUid, nodeUid, offset],
@@ -76,7 +78,7 @@ export function BatchItems({
           {items.data?.data.map((item) => (
             <Link
               key={item.key}
-              href={`/workflow/${item.run_uid}`}
+              href={runLink(item.run_uid)}
               className='flex justify-between rounded border p-2 hover:bg-accent'
             >
               <span>{item.name}</span>

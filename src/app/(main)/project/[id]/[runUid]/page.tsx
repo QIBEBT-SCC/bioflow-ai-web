@@ -125,6 +125,10 @@ function RunFlowContent({
     }
   }, [run?.settled, run?.generation, refreshFiles])
   const isOpen = useChatSidebarStore((s) => s.isOpen)
+  const runLink = useCallback(
+    (childRunUid: string) => `/project/${projectId}/${childRunUid}`,
+    [projectId],
+  )
   const { visibleRun, labels, enter, navigate } = useSubgraphRun(run)
   const { flowNodes, edges, handleNodesChange } = useRunFlow(visibleRun)
   const [panel, dispatchPanel] = useReducer(panelReducer, {
@@ -380,7 +384,7 @@ function RunFlowContent({
         projectId={projectId}
         runUid={runUid}
         projectName={project?.name}
-        runName={run?.name}
+        run={run}
       />
 
       {/* 主内容区：左侧面板 + 右侧选项卡区域 */}
@@ -416,6 +420,7 @@ function RunFlowContent({
           >
             <RunFlowCanvas
               viewKey={visibleRun?.uid}
+              runLink={runLink}
               labels={labels}
               graphInterface={visibleRun?.interface}
               onEnterSubgraph={(id) => {
@@ -489,7 +494,7 @@ export default function ProjectRunDetailPage({
   const { id, runUid } = use(params)
   return (
     <ReactFlowProvider>
-      <RunFlowContent projectId={id} runUid={runUid} />
+      <RunFlowContent key={runUid} projectId={id} runUid={runUid} />
     </ReactFlowProvider>
   )
 }
