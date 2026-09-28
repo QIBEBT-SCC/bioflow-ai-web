@@ -5,6 +5,7 @@ import type {
   SimpleWorkflowInfo,
   Workflow,
   WorkflowDefinition,
+  WorkflowSearchResult,
   WorkflowType,
 } from '@/types/workflow'
 
@@ -15,12 +16,14 @@ export async function getWorkflows(
   offset: number = 0,
   limit: number = 8,
   wfType?: WorkflowType,
+  query: string = '',
 ): Promise<PaginatedWorkflows> {
   return await clientFetch<PaginatedWorkflows>('/workflows', {
     params: {
       offset: String(offset),
       limit: String(limit),
       ...(wfType !== undefined ? { wf_type: String(wfType) } : {}),
+      ...(query ? { q: query } : {}),
     },
   })
 }
@@ -31,6 +34,15 @@ export async function searchSubgraphs(
 ): Promise<SimpleWorkflowInfo[]> {
   return await clientFetch<SimpleWorkflowInfo[]>('/workflows/search', {
     params: { q: query, limit: String(limit) },
+  })
+}
+
+export async function searchWorkflows(
+  query: string,
+  wfType: WorkflowType | 'all',
+): Promise<WorkflowSearchResult[]> {
+  return await clientFetch<WorkflowSearchResult[]>('/workflows/search', {
+    params: { q: query, wf_type: String(wfType), limit: '20' },
   })
 }
 

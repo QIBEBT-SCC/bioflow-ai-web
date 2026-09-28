@@ -1,4 +1,26 @@
 {
+  "WorkflowSearch": {
+    "mode": "搜索模式",
+    "name": "名称",
+    "semantic": "语义",
+    "search": "搜索",
+    "semanticPlaceholder": "描述工作流要完成的任务…",
+    "submitTitle": "按语义搜索",
+    "submitHint": "按回车或点击搜索，按功能查找工作流",
+    "editedHint": "内容已修改，按回车重新搜索",
+    "scoreHint": "相关性仅表示相对排序，并非准确率",
+    "relevance": "相关性",
+    "retry": "重试",
+    "loading": "搜索中…",
+    "total": "共 {count} 个结果",
+    "pagedTotal": "共 {count} 个结果 · 第 {page} / {pages} 页",
+    "semanticSummary": "与“{query}”最相关的 {count} 个结果",
+    "previousPage": "上一页",
+    "nextPage": "下一页",
+    "noDescription": "暂无描述",
+    "namePlaceholder": "按名称搜索工作流…",
+    "noMatches": "没有匹配的工作流"
+  },
   "Language": {
     "language": "语言"
   },

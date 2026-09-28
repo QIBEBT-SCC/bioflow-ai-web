@@ -1,4 +1,26 @@
 {
+  "WorkflowSearch": {
+    "mode": "Search mode",
+    "name": "Name",
+    "semantic": "Semantic",
+    "search": "Search",
+    "semanticPlaceholder": "Describe what the workflow should do…",
+    "submitTitle": "Search by meaning",
+    "submitHint": "Press Enter or click Search to find workflows by what they do",
+    "editedHint": "Query changed — press Enter to search again",
+    "scoreHint": "Relevance is relative ranking, not accuracy",
+    "relevance": "Relevance",
+    "retry": "Retry",
+    "loading": "Searching…",
+    "total": "{count} results",
+    "pagedTotal": "{count} results · page {page} / {pages}",
+    "semanticSummary": "Top {count} matches for “{query}”",
+    "previousPage": "Previous page",
+    "nextPage": "Next page",
+    "noDescription": "No description",
+    "namePlaceholder": "Search workflows by name…",
+    "noMatches": "No matching workflows"
+  },
   "Language": {
     "language": "Language"
   },

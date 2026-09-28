@@ -1,10 +1,9 @@
 'use client'
 
-import { LayersIcon, Loader2, PlusIcon, Search } from 'lucide-react'
+import { LayersIcon, Loader2, PlusIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { ImagePagination } from '@/components/image/image-pagination'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -17,12 +16,18 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import {
+  relevanceOf,
+  WorkflowLibrarySearch,
+  WorkflowRelevanceBadge,
+  WorkflowSearchFooter,
+  WorkflowSearchResults,
+} from '@/components/workflow/workflow-library-search'
 import { useAddWorkflowToProject } from '@/hooks/use-project-workflow'
-import { useWorkflows } from '@/hooks/use-workflow'
+import { useWorkflowLibrarySearch } from '@/hooks/use-workflow-library-search'
 import { cn } from '@/lib/utils'
-import { ExecutionScope } from '@/types/workflow'
+import { ExecutionScope, WorkflowType } from '@/types/workflow'
 
 interface ImportWorkflowDialogProps {
   projectId: string
@@ -32,36 +37,17 @@ export function ImportWorkflowDialog({ projectId }: ImportWorkflowDialogProps) {
   const t = useTranslations('Project.workflow.import')
   const tWorkflow = useTranslations('Project.workflow')
   const [open, setOpen] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [currentPage, setCurrentPage] = useState(1)
   const [selectedWorkflows, setSelectedWorkflows] = useState<Set<string>>(
     new Set(),
   )
   const pageSize = 20
-  const offset = (currentPage - 1) * pageSize
-
-  const { data: workflowsPage, isLoading } = useWorkflows(offset, pageSize)
-  const workflows = workflowsPage?.data ?? []
-  const totalCount = workflowsPage?.total ?? 0
-  const totalPages = Math.ceil(totalCount / pageSize)
+  const search = useWorkflowLibrarySearch(open, pageSize, WorkflowType.TEMPLATE)
+  const workflows = search.results
   const addWorkflowMutation = useAddWorkflowToProject()
-  const normalizedSearchQuery = searchQuery.trim().toLowerCase()
 
-  const filteredWorkflows = normalizedSearchQuery
-    ? workflows.filter((wf) => {
-        const name = wf.name.toLowerCase()
-        const description = wf.description.toLowerCase()
-
-        return (
-          name.includes(normalizedSearchQuery) ||
-          description.includes(normalizedSearchQuery)
-        )
-      })
-    : workflows
-
-  const handleSearchChange = (value: string) => {
-    setSearchQuery(value)
-    setCurrentPage(1)
+  const handleOpenChange = (next: boolean) => {
+    search.reset()
+    setOpen(next)
   }
 
   // 切换工作流选择
@@ -97,7 +83,7 @@ export function ImportWorkflowDialog({ projectId }: ImportWorkflowDialogProps) {
 
       toast.success(t('importSuccess', { count: selectedWorkflows.size }))
       setSelectedWorkflows(new Set())
-      setOpen(false)
+      handleOpenChange(false)
     } catch (error) {
       // 错误处理已在 mutation 中完成
       if (error instanceof Error) {
@@ -111,7 +97,7 @@ export function ImportWorkflowDialog({ projectId }: ImportWorkflowDialogProps) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button>
           <PlusIcon className='size-4' />
@@ -124,33 +110,25 @@ export function ImportWorkflowDialog({ projectId }: ImportWorkflowDialogProps) {
           <DialogDescription>{t('description')}</DialogDescription>
         </DialogHeader>
 
-        {/* 搜索框 */}
-        <div className='relative min-w-0'>
-          <Search className='absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground' />
-          <Input
-            placeholder={t('searchPlaceholder')}
-            value={searchQuery}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            className='pl-9'
-          />
-        </div>
+        <WorkflowLibrarySearch
+          search={search}
+          placeholder={t('searchPlaceholder')}
+        />
 
         {/* 工作流列表 */}
-        <ScrollArea className='h-100 w-full rounded-md border p-4'>
-          {isLoading ? (
-            <div className='flex items-center justify-center py-12'>
-              <Loader2 className='size-8 animate-spin text-muted-foreground' />
-            </div>
-          ) : filteredWorkflows.length === 0 ? (
-            <div className='text-center py-12 text-muted-foreground'>
-              {searchQuery ? t('noMatches') : t('empty')}
-            </div>
-          ) : (
+        <ScrollArea className='h-100 w-full rounded-lg border p-3'>
+          <WorkflowSearchResults
+            search={search}
+            emptyLabel={t('empty')}
+            noMatchesLabel={t('noMatches')}
+            skeletonRows={5}
+          >
             <div className='min-w-0 space-y-2'>
-              {filteredWorkflows.map((workflow) => {
+              {workflows.map((workflow) => {
                 const isSelected = selectedWorkflows.has(workflow.uid)
                 const isProjectLevel =
                   workflow.execution_scope === ExecutionScope.PROJECT_LEVEL
+                const relevance = relevanceOf(workflow)
 
                 return (
                   <div
@@ -179,20 +157,25 @@ export function ImportWorkflowDialog({ projectId }: ImportWorkflowDialogProps) {
                         >
                           {workflow.name}
                         </h4>
-                        <Badge
-                          variant='outline'
-                          className={cn(
-                            'h-5 max-w-full gap-1 rounded px-1.5 text-[11px]',
-                            isProjectLevel
-                              ? 'border-info/30 bg-info/10 text-info'
-                              : 'border-teal-200 bg-teal-50 text-teal-700',
+                        <div className='flex flex-wrap items-center gap-1.5'>
+                          <Badge
+                            variant='outline'
+                            className={cn(
+                              'h-5 max-w-full gap-1 rounded px-1.5 text-[11px]',
+                              isProjectLevel
+                                ? 'border-info/30 bg-info/10 text-info'
+                                : 'border-teal-200 bg-teal-50 text-teal-700',
+                            )}
+                          >
+                            <LayersIcon className='size-3' />
+                            {isProjectLevel
+                              ? tWorkflow('projectLevel')
+                              : tWorkflow('sampleLevel')}
+                          </Badge>
+                          {relevance !== undefined && (
+                            <WorkflowRelevanceBadge score={relevance} />
                           )}
-                        >
-                          <LayersIcon className='size-3' />
-                          {isProjectLevel
-                            ? tWorkflow('projectLevel')
-                            : tWorkflow('sampleLevel')}
-                        </Badge>
+                        </div>
                       </div>
                       <p className='line-clamp-2 wrap-break-word text-xs text-muted-foreground'>
                         {workflow.description || t('noDescription')}
@@ -202,19 +185,13 @@ export function ImportWorkflowDialog({ projectId }: ImportWorkflowDialogProps) {
                 )
               })}
             </div>
-          )}
+          </WorkflowSearchResults>
         </ScrollArea>
 
-        {totalPages > 1 && (
-          <ImagePagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
-        )}
+        <WorkflowSearchFooter search={search} pageSize={pageSize} />
 
         <DialogFooter>
-          <Button variant='outline' onClick={() => setOpen(false)}>
+          <Button variant='outline' onClick={() => handleOpenChange(false)}>
             {t('cancel')}
           </Button>
           <Button
