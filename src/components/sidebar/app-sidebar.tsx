@@ -29,7 +29,7 @@ function SidebarLogo() {
         src={collapsed ? '/logo_only.svg' : '/logo_and_text.svg'}
         alt='BioFlow AI'
         width={collapsed ? 32 : 140}
-        height={32}
+        height={collapsed ? 31 : 63}
         className='w-[80%] h-auto'
         priority
       />

@@ -14,7 +14,7 @@ export default function LoginPage() {
           <Image
             src='/logo_and_text.svg'
             alt='BioFlow AI'
-            width={180}
+            width={88}
             height={40}
             className='h-10 w-auto'
             priority
