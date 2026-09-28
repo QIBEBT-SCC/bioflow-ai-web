@@ -1,7 +1,9 @@
 'use client'
 
 import type { Connection, Edge, EdgeChange, NodeChange } from '@xyflow/react'
+import { useTranslations } from 'next-intl'
 import { useState } from 'react'
+import { toast } from 'sonner'
 import {
   connectInterface,
   disconnectInterface,
@@ -10,11 +12,39 @@ import {
 import { useNodeEditorStore } from '@/stores/nodeviewStore'
 
 export function useSubgraphInterface() {
+  const t = useTranslations('editor.subgraph')
   const store = useNodeEditorStore()
   const view = interfaceView(store.getGraph())
   const [selectedEdges, setSelectedEdges] = useState<string[]>([])
   const isBoundary = (id: string) => id === view.inputId || id === view.outputId
   const isValidConnection = (connection: Connection | Edge) => {
+    const source = store.nodes.find((node) => node.id === connection.source)
+    const target = store.nodes.find((node) => node.id === connection.target)
+    if (source?.type === 'collect_file_collection') {
+      if (
+        target?.type !== 'subgraph' ||
+        connection.sourceHandle !== `${source.id}-out-collection` ||
+        store.edges.some(
+          (edge) =>
+            edge.source === source.id ||
+            (edge.target === target.id &&
+              store.nodes.some(
+                (node) =>
+                  node.id === edge.source &&
+                  node.type === 'collect_file_collection',
+              )),
+        )
+      )
+        return false
+    }
+    if (
+      store.edges.some(
+        (edge) =>
+          edge.target === connection.target &&
+          edge.targetHandle === connection.targetHandle,
+      )
+    )
+      return false
     if (isBoundary(connection.source) || isBoundary(connection.target))
       return (
         connectInterface(store.getGraph(), {
@@ -44,8 +74,38 @@ export function useSubgraphInterface() {
         !isBoundary(connection.source) &&
         !isBoundary(connection.target) &&
         isValidConnection(connection)
-      )
+      ) {
+        const source = store.nodes.find((node) => node.id === connection.source)
+        if (source?.type === 'collect_file_collection') {
+          const obsolete = store.edges.filter(
+            (edge) =>
+              edge.source === connection.target &&
+              edge.sourceHandle !== `${connection.target}-out-results_folder`,
+          )
+          const exposed =
+            store.graphInterface?.outputs.filter(
+              (port) =>
+                port.source.node_id === connection.target &&
+                port.source.handle !== 'results_folder',
+            ) ?? []
+          if (obsolete.length || exposed.length) {
+            store.setEdges((edges) =>
+              edges.filter(
+                (edge) => !obsolete.some((old) => old.id === edge.id),
+              ),
+            )
+            if (store.graphInterface)
+              store.setInterface({
+                ...store.graphInterface,
+                outputs: store.graphInterface.outputs.filter(
+                  (port) => !exposed.includes(port),
+                ),
+              })
+            toast.info(t('batch_reconnect'))
+          }
+        }
         store.onConnect(connection)
+      }
     },
     onNodesChange: (changes: NodeChange[]) =>
       store.onNodesChange(

@@ -117,6 +117,7 @@ export function RunTaskList({
                 <div className='min-w-0 pr-4'>
                   <p className='truncate font-medium'>{task.name}</p>
                   <p className='mt-0.5 truncate text-xs text-muted-foreground'>
+                    {task.item_name ? `${task.item_name} · ` : ''}
                     {task.node_type} · {task.definition_node_id}
                   </p>
                 </div>

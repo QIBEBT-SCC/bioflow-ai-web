@@ -23,8 +23,10 @@ import {
   FolderOutputIcon,
   GroupIcon,
   PenToolIcon,
+  RepeatIcon,
   StickyNoteIcon,
   TagIcon,
+  WorkflowIcon,
 } from 'lucide-react'
 import type React from 'react'
 import {
@@ -33,6 +35,7 @@ import {
   PythonCodeNode,
   RCodeNode,
 } from '@/components/node-editor/node/code-node'
+import { CollectionNode } from '@/components/node-editor/node/collection-node'
 import {
   BindParamNode,
   CollectMountDirNode,
@@ -46,6 +49,8 @@ import {
   SampleMarkNode,
   SelectFileInFolderNode,
 } from '@/components/node-editor/node/data-node'
+import { ForeachInputNode } from '@/components/node-editor/node/foreach-input-node'
+import { ForeachNode } from '@/components/node-editor/node/foreach-node'
 import {
   DBInputNode,
   FileInputNode,
@@ -69,6 +74,9 @@ import { ToolNode } from '@/components/node-editor/node/tool-node'
 export const nodeTypes: Record<string, React.ComponentType<any>> = {
   tool: ToolNode,
   subgraph: SubgraphNode,
+  foreach: ForeachNode,
+  resource_frozen_path: ForeachInputNode,
+  collect_file_collection: CollectionNode,
   subgraph_interface: SubgraphInterfaceNode,
   // resource / input
   value_string: StringInputNode,
@@ -108,6 +116,7 @@ export const nodeTypes: Record<string, React.ComponentType<any>> = {
 // ─────────────────────────────────────────────
 export const nodeDefaultData: Record<string, Record<string, unknown>> = {
   tool: { tool_uid: '' },
+  collect_file_collection: { pattern: '', subfolder_prefix: 'item' },
   value_string: { value: '' },
   resource_file: { file_path: '' },
   resource_sample_mark_collection: {
@@ -142,7 +151,7 @@ export const nodeDefaultData: Record<string, Record<string, unknown>> = {
 // 3. menuData — 右键菜单结构，供 PanelMenu 使用
 //    labelKey 对应 messages/{zh,en}/editor.json 中 editor.menu.* 的键
 // ─────────────────────────────────────────────
-type SubMenuType = 'subgraph-modal' | 'inline' | 'tool-modal' | 'db-modal'
+type SubMenuType = 'inline' | 'tool-modal' | 'db-modal'
 
 export interface MenuItem {
   type: string
@@ -159,12 +168,6 @@ export interface MenuGroup {
 }
 
 export const menuData: Record<string, MenuGroup> = {
-  subgraph: {
-    labelKey: 'subgraphs',
-    Icon: GroupIcon,
-    submenuType: 'subgraph-modal',
-    items: [],
-  },
   analysis: {
     labelKey: 'analysis_tools',
     Icon: PenToolIcon,
@@ -253,6 +256,19 @@ export const menuData: Record<string, MenuGroup> = {
         type: 'collect_mount_dirs',
         labelKey: 'collect_mount_dirs',
         Icon: GroupIcon,
+      },
+    ],
+  },
+  orchestration: {
+    labelKey: 'orchestration',
+    Icon: WorkflowIcon,
+    submenuType: 'inline',
+    items: [
+      { type: '__subgraph__', labelKey: 'subgraphs', Icon: GroupIcon },
+      {
+        type: 'collect_file_collection',
+        labelKey: 'foreach',
+        Icon: RepeatIcon,
       },
     ],
   },

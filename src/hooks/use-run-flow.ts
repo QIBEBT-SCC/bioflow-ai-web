@@ -2,11 +2,14 @@
 
 import { useQueries } from '@tanstack/react-query'
 import type { Edge, Node as FlowNode, NodeChange } from '@xyflow/react'
-import { useNodesState } from '@xyflow/react'
+import { useNodesInitialized, useNodesState, useReactFlow } from '@xyflow/react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { getToolArg } from '@/app/actions/tool'
-import { useInitialWorkflowLayout } from '@/hooks/use-initial-workflow-layout'
-import { prepareWorkflowNodes } from '@/lib/workflow-layout'
+import { runInterfaceView } from '@/lib/run-interface'
+import {
+  layoutWorkflowNodes,
+  prepareWorkflowNodes,
+} from '@/lib/workflow-layout'
 import type { WorkflowNode } from '@/types/workflow'
 import {
   type NodeRunDataV2,
@@ -18,7 +21,10 @@ function getTopologyKey(run: WorkflowRunV2): string {
   return [
     run.uid,
     ...run.nodes.map((node) => `${node.id}:${node.type}`),
-    ...run.edges.map((edge) => `${edge.source}>${edge.target}`),
+    ...run.edges.map(
+      (edge) =>
+        `${edge.source}:${edge.sourceHandle}>${edge.target}:${edge.targetHandle}`,
+    ),
   ].join('|')
 }
 
@@ -45,13 +51,23 @@ function mergeRunNodes(
 }
 
 export function useRunFlow(run: WorkflowRunV2 | null) {
+  const displayRun = useMemo(
+    () => (run ? { ...run, ...runInterfaceView(run) } : null),
+    [run],
+  )
   const [flowNodes, setFlowNodes, onNodesChange] = useNodesState<FlowNode>([])
+  const { fitView, getNodes } = useReactFlow()
+  const nodesInitialized = useNodesInitialized()
   const topologyKeyRef = useRef<string | null>(null)
+  const completedLayoutKeyRef = useRef<string | null>(null)
   const [initialLayoutKey, setInitialLayoutKey] = useState<string | null>(null)
-  const topologyKey = useMemo(() => (run ? getTopologyKey(run) : null), [run])
+  const topologyKey = useMemo(
+    () => (displayRun ? getTopologyKey(displayRun) : null),
+    [displayRun],
+  )
 
   useEffect(() => {
-    if (!run || !topologyKey) {
+    if (!displayRun || !topologyKey) {
       topologyKeyRef.current = null
       setInitialLayoutKey(null)
       setFlowNodes([])
@@ -59,15 +75,17 @@ export function useRunFlow(run: WorkflowRunV2 | null) {
     }
 
     if (topologyKeyRef.current !== topologyKey) {
-      const prepared = prepareWorkflowNodes(run.nodes)
+      const prepared = prepareWorkflowNodes(displayRun.nodes)
       topologyKeyRef.current = topologyKey
       setFlowNodes(prepared.nodes)
       setInitialLayoutKey(prepared.needsLayout ? topologyKey : null)
       return
     }
 
-    setFlowNodes((currentNodes) => mergeRunNodes(currentNodes, run.nodes))
-  }, [run, setFlowNodes, topologyKey])
+    setFlowNodes((currentNodes) =>
+      mergeRunNodes(currentNodes, displayRun.nodes),
+    )
+  }, [displayRun, setFlowNodes, topologyKey])
 
   const handleNodesChange = useCallback(
     (changes: NodeChange<FlowNode>[]) => {
@@ -82,13 +100,13 @@ export function useRunFlow(run: WorkflowRunV2 | null) {
   const toolUids = useMemo(
     () => [
       ...new Set(
-        run?.nodes
+        displayRun?.nodes
           ?.filter((n) => n.type === 'tool')
           .map((n) => n.data?.tool_uid as string)
           .filter(Boolean) ?? [],
       ),
     ],
-    [run?.nodes],
+    [displayRun?.nodes],
   )
 
   const toolQueries = useQueries({
@@ -100,10 +118,10 @@ export function useRunFlow(run: WorkflowRunV2 | null) {
   })
 
   // 只有当 run 已加载，并且所有 tool 节点的参数都请求成功后，才认为 handles 就绪。
-  const hasToolNodes = !!run?.nodes?.some((n) => n.type === 'tool')
+  const hasToolNodes = !!displayRun?.nodes?.some((n) => n.type === 'tool')
   const allToolsLoaded = hasToolNodes
     ? toolQueries.length > 0 && toolQueries.every((q) => q.isSuccess)
-    : !!run?.nodes
+    : !!displayRun?.nodes
 
   // 延迟到下一帧再放行 edges，确保 ToolNode 重新渲染并把真实 handles commit 到 DOM。
   const [edgesReady, setEdgesReady] = useState(false)
@@ -119,16 +137,44 @@ export function useRunFlow(run: WorkflowRunV2 | null) {
     return () => cancelAnimationFrame(raf1)
   }, [allToolsLoaded])
 
-  useInitialWorkflowLayout({
-    edges: run?.edges ?? [],
-    layoutKey: initialLayoutKey,
-    nodesReady: allToolsLoaded,
-    setNodes: setFlowNodes,
-  })
+  useEffect(() => {
+    if (
+      !initialLayoutKey ||
+      completedLayoutKeyRef.current === initialLayoutKey ||
+      !allToolsLoaded ||
+      !nodesInitialized ||
+      !displayRun
+    )
+      return
+    let fitFrame: number | undefined
+    const layoutFrame = requestAnimationFrame(() => {
+      setFlowNodes(
+        layoutWorkflowNodes(getNodes(), displayRun.edges, {
+          initialLayout: true,
+        }),
+      )
+      fitFrame = requestAnimationFrame(() => {
+        completedLayoutKeyRef.current = initialLayoutKey
+        void fitView({ padding: 0.15, duration: 500 })
+      })
+    })
+    return () => {
+      cancelAnimationFrame(layoutFrame)
+      if (fitFrame !== undefined) cancelAnimationFrame(fitFrame)
+    }
+  }, [
+    allToolsLoaded,
+    displayRun,
+    fitView,
+    getNodes,
+    initialLayoutKey,
+    nodesInitialized,
+    setFlowNodes,
+  ])
 
   const edges = useMemo<Edge[]>(() => {
-    if (!run?.edges || !run?.nodes || !edgesReady) return []
-    const nodeMap = new Map(run.nodes.map((n) => [n.id, n]))
+    if (!displayRun?.edges || !displayRun?.nodes || !edgesReady) return []
+    const nodeMap = new Map(displayRun.nodes.map((n) => [n.id, n]))
     const withAnimate = [
       NodeRunStatusV2.PENDING,
       NodeRunStatusV2.READY,
@@ -136,13 +182,15 @@ export function useRunFlow(run: WorkflowRunV2 | null) {
       NodeRunStatusV2.RUNNING,
       undefined,
     ]
-    return run.edges.map((e) => {
+    return displayRun.edges.map((e) => {
       const sourceNode = nodeMap.get(e.source)
-      const runData = sourceNode?.data?.run_data as NodeRunDataV2 | undefined
+      const runData = (e.data?.run_data ?? sourceNode?.data?.run_data) as
+        | NodeRunDataV2
+        | undefined
       const status = runData?.status
       return { ...e, animated: withAnimate.includes(status) }
     })
-  }, [run?.edges, run?.nodes, edgesReady])
+  }, [displayRun?.edges, displayRun?.nodes, edgesReady])
 
   return { flowNodes, edges, handleNodesChange }
 }

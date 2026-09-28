@@ -185,17 +185,24 @@ export function disconnectInterface(
 }
 
 /** Layout boundary projections with ordinary nodes, retaining only their positions. */
-export function layoutSubgraph(graph: WorkflowDefinition) {
-  const view = interfaceView(graph)
+export function layoutSubgraph(
+  graph: WorkflowDefinition,
+  options: { initialLayout?: boolean } = {},
+) {
+  const realNodes = graph.nodes.filter(
+    (node) => node.type !== 'subgraph_interface',
+  )
+  const view = interfaceView({ ...graph, nodes: realNodes })
   const nodes = layoutWorkflowNodes(
     [
-      ...graph.nodes.map((node) => ({
+      ...realNodes.map((node) => ({
         ...node,
         position: node.position ?? { x: 0, y: 0 },
       })),
       ...view.nodes,
     ],
     [...graph.edges, ...view.edges],
+    options,
   )
   const input = nodes.find((node) => node.id === view.inputId)
   const output = nodes.find((node) => node.id === view.outputId)

@@ -7,7 +7,8 @@ import {
   useReactFlow,
 } from '@xyflow/react'
 import { useEffect, useRef } from 'react'
-import { layoutWorkflowNodes } from '@/lib/workflow-layout'
+import { layoutSubgraph } from '@/lib/subgraph-interface'
+import { useNodeEditorStore } from '@/stores/nodeviewStore'
 
 interface UseInitialWorkflowLayoutOptions {
   edges: Edge[]
@@ -42,7 +43,13 @@ export function useInitialWorkflowLayout({
 
     let fitViewFrame: number | undefined
     const layoutFrame = requestAnimationFrame(() => {
-      setNodes(layoutWorkflowNodes(getNodes(), edges, { initialLayout: true }))
+      const store = useNodeEditorStore.getState()
+      const layouted = layoutSubgraph(
+        { ...store.getGraph(), nodes: getNodes(), edges },
+        { initialLayout: true },
+      )
+      setNodes(layouted.nodes)
+      if (layouted.interface) store.setInterface(layouted.interface)
 
       fitViewFrame = requestAnimationFrame(() => {
         completedLayoutKey.current = layoutKey

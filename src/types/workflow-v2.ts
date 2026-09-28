@@ -1,5 +1,5 @@
 import type { Edge } from '@xyflow/react'
-import type { WorkflowNode } from '@/types/workflow'
+import type { WorkflowInterface, WorkflowNode } from '@/types/workflow'
 
 export enum WorkflowRunStatusV2 {
   PENDING = 'pending',
@@ -39,7 +39,9 @@ export interface WorkflowRunStatisticsV2 {
 
 export interface NodeRunDataV2 {
   uid?: string
+  run_uid?: string | null
   status: NodeRunStatusV2
+  item_statistics?: Record<string, number> | null
   create_time?: string | null
   start_time?: string | null
   end_time?: string | null
@@ -53,6 +55,12 @@ export interface WorkflowRunV2 {
   project_id: number | null
   workflow_uid: string | null
   sample_uid: string | null
+  parent_node_uid?: string | null
+  parent_run_uid?: string | null
+  parent_run_name?: string | null
+  parent_node_name?: string | null
+  item_key?: string | null
+  item_name?: string | null
   base_dir: string
   status: WorkflowRunStatusV2
   settled: boolean
@@ -61,6 +69,7 @@ export interface WorkflowRunV2 {
   end_time: string | null
   nodes: WorkflowNode[]
   edges: Edge[]
+  interface?: WorkflowInterface | null
   node_statistics: NodeRunStatisticsV2
 }
 
@@ -91,6 +100,8 @@ export interface NodeRunRecordV2 {
   project_id: number | null
   workflow_uid: string | null
   sample_uid: string | null
+  parent_node_uid?: string | null
+  item_name?: string | null
   create_time: string | null
   start_time: string | null
   end_time: string | null

@@ -195,7 +195,10 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({
   const handleItemClick = (key: string, itemType?: string) => {
     const group = menuData[key]
     if (itemType) {
-      if (itemType === 'resource_db') {
+      if (itemType === '__subgraph__') {
+        dispatch({ type: 'SET_SUBGRAPH_OPEN', open: true })
+        onClose()
+      } else if (itemType === 'resource_db') {
         dispatch({ type: 'OPEN_DB' })
         onClose()
       } else if (itemType === '__existing_code__') {
@@ -206,10 +209,6 @@ export const PanelMenu: React.FC<PanelMenuProps> = ({
         onClose()
       }
     } else {
-      if (group.submenuType === 'subgraph-modal') {
-        dispatch({ type: 'SET_SUBGRAPH_OPEN', open: true })
-        onClose()
-      }
       if (group.submenuType === 'tool-modal') {
         dispatch({ type: 'OPEN_ANALYSIS' })
         onClose()

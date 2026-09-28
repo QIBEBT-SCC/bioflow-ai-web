@@ -177,7 +177,7 @@ function parseDefinition(value: unknown, depth = 0): WorkflowDefinition {
   }
 
   for (const node of value.nodes) {
-    if (node.type === 'subgraph')
+    if (node.type === 'subgraph' || node.type === 'foreach')
       node.data.workflow = parseDefinition(node.data.workflow, depth + 1)
   }
   return cleanGraph({
