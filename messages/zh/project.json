@@ -152,7 +152,7 @@
       "noDocuments": "尚未生成计划或样本摘要。",
       "noRecords": "尚未生成诊断报告或更新日志。",
       "emptyTitle": "暂无智能体文件",
-      "emptyDescription": "运行样本管理、工作流构建、诊断或修复智能体后，相关文件会显示在这里。",
+      "emptyDescription": "相关文件会在样本管理、工作流构建或修复后显示；工作流助手生成的诊断报告也会显示在这里。",
       "loading": "正在加载文件…",
       "retry": "重试",
       "preview": "预览",
@@ -177,7 +177,7 @@
       },
       "agents": {
         "workflow-builder": "工作流构建助手",
-        "workflow-diagnoser": "工作流诊断助手",
+        "workflow-assistant": "工作流助手",
         "workflow-fixer": "工作流修复助手",
         "sample-manager": "样本管理助手",
         "tool-generator": "工具生成助手"

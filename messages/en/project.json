@@ -152,7 +152,7 @@
       "noDocuments": "No plan or sample summary has been generated yet.",
       "noRecords": "No diagnosis report or update log has been generated yet.",
       "emptyTitle": "No agent files",
-      "emptyDescription": "Files will appear here after sample management, workflow building, diagnosis, or repair agents run.",
+      "emptyDescription": "Files appear here after sample management, workflow building, or repair, including diagnosis reports produced by the workflow assistant.",
       "loading": "Loading files…",
       "retry": "Retry",
       "preview": "Preview",
@@ -177,7 +177,7 @@
       },
       "agents": {
         "workflow-builder": "Workflow builder",
-        "workflow-diagnoser": "Workflow diagnoser",
+        "workflow-assistant": "Workflow assistant",
         "workflow-fixer": "Workflow fixer",
         "sample-manager": "Sample manager",
         "tool-generator": "Tool generator"

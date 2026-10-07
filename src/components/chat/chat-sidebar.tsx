@@ -4,11 +4,11 @@ import {
   FlaskConicalIcon,
   HammerIcon,
   Loader2Icon,
+  MessageSquareTextIcon,
   PlusIcon,
   RotateCcwIcon,
   SendIcon,
   SquareIcon,
-  StethoscopeIcon,
   TestTubeDiagonalIcon,
   WrenchIcon,
 } from 'lucide-react'
@@ -63,6 +63,7 @@ import {
 } from '@/hooks/use-agent'
 import type { Locale } from '@/i18n/config'
 import { parseAgentQuestionAnswers } from '@/lib/agent-questions'
+import { getSuggestedWorkflowAgent } from '@/lib/workflow-agent-suggestions'
 import { useChatSidebarStore } from '@/stores/chat-sidebar-store'
 import {
   ACTIVE_AGENT_STATUSES,
@@ -81,8 +82,8 @@ const CHAT_COMMANDS: Pick<AgentSlashCommand, 'key' | 'icon'>[] = [
     icon: FlaskConicalIcon,
   },
   {
-    key: 'workflow-diagnoser',
-    icon: StethoscopeIcon,
+    key: 'workflow-assistant',
+    icon: MessageSquareTextIcon,
   },
   {
     key: 'workflow-fixer',
@@ -104,30 +105,6 @@ function parseAgentCommand(value: string, commands: AgentSlashCommand[]) {
   const command = commands.find((candidate) => candidate.key === match[1])
   if (!command) return null
   return { command, prompt: match[2] ?? '' }
-}
-
-type WorkflowSuggestionAgent = Extract<
-  AgentName,
-  'workflow-diagnoser' | 'workflow-fixer'
->
-
-// New conversation → diagnose; diagnosed → fix; fixed → nothing left to suggest.
-function getSuggestedAgent(
-  runs: AgentRun[],
-  sourceRunUid: string,
-): WorkflowSuggestionAgent | null {
-  const completedAgents = new Set(
-    runs
-      .filter(
-        (run) =>
-          run.status === 'completed' &&
-          (run.result_payload?.source_run_uid ?? sourceRunUid) === sourceRunUid,
-      )
-      .map((run) => run.agent_name),
-  )
-  if (completedAgents.has('workflow-fixer')) return null
-  if (completedAgents.has('workflow-diagnoser')) return 'workflow-fixer'
-  return 'workflow-diagnoser'
 }
 
 function ChatMessage({ message }: { message: AgentMessage }) {
@@ -200,7 +177,7 @@ function ChatSidebarInner({
       scope.scope === 'project'
         ? CHAT_COMMANDS.filter((command) => {
             if (
-              command.key === 'workflow-diagnoser' ||
+              command.key === 'workflow-assistant' ||
               command.key === 'workflow-fixer'
             ) {
               return Boolean(sourceRunUid)
@@ -230,13 +207,13 @@ function ChatSidebarInner({
 
   const workflowSuggestions = useMemo(() => {
     if (!sourceRunUid) return []
-    const agentName = getSuggestedAgent(displayRuns, sourceRunUid)
+    const agentName = getSuggestedWorkflowAgent(displayRuns, sourceRunUid)
     if (!agentName) return []
     return [
       {
         agentName,
         label: t(
-          agentName === 'workflow-diagnoser'
+          agentName === 'workflow-assistant'
             ? 'suggestions.diagnose'
             : 'suggestions.fix',
         ),
@@ -301,7 +278,7 @@ function ChatSidebarInner({
       return
     }
     const requiresSourceRun =
-      parsedCommand.command.key === 'workflow-diagnoser' ||
+      parsedCommand.command.key === 'workflow-assistant' ||
       parsedCommand.command.key === 'workflow-fixer'
     if (requiresSourceRun && !sourceRunUid) {
       setLocalError(t('run_context_required'))

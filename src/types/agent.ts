@@ -1,6 +1,6 @@
 export type AgentName =
   | 'workflow-builder'
-  | 'workflow-diagnoser'
+  | 'workflow-assistant'
   | 'workflow-fixer'
   | 'sample-manager'
   | 'tool-generator'
