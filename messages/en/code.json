@@ -112,8 +112,6 @@
       "unsaved": "Unsaved",
       "saved": "Saved",
       "nodeInfo": "Node info",
-      "agentProvider": "Coding agent",
-      "aiCoding": "AI coding",
       "reviewingChanges": "Reviewing changes",
       "saveCode": "Save",
       "pythonEnvironment": "Python environment",
@@ -149,86 +147,6 @@
       "create": "Create code",
       "save": "Save changes"
     },
-    "Agent": {
-      "title": "AI coding",
-      "empty": "Describe the code you want to create or change. The agent edits a temporary workspace; nothing is saved automatically.",
-      "starting": "Starting isolated Codex session...",
-      "connecting": "Waiting for the coding-agent worker...",
-      "running": "Codex is working...",
-      "failed": "The coding turn failed.",
-      "closed": "The temporary session has closed.",
-      "plan": "Plan",
-      "activity": "Activity",
-      "taskRunning": "Working · {count} steps",
-      "taskDetails": "Task details · {count} steps",
-      "thinking": "Thinking and planning",
-      "thought": "Thought and planned",
-      "activityLabels": {
-        "read": {
-          "running": "Reading",
-          "completed": "Read",
-          "failed": "Read failed"
-        },
-        "edit": {
-          "running": "Editing",
-          "completed": "Edited",
-          "failed": "Edit failed"
-        },
-        "delete": {
-          "running": "Deleting",
-          "completed": "Deleted",
-          "failed": "Delete failed"
-        },
-        "move": {
-          "running": "Moving",
-          "completed": "Moved",
-          "failed": "Move failed"
-        },
-        "search": {
-          "running": "Searching",
-          "completed": "Searched",
-          "failed": "Search failed"
-        },
-        "execute": {
-          "running": "Running",
-          "completed": "Ran",
-          "failed": "Command failed"
-        },
-        "think": {
-          "running": "Thinking",
-          "completed": "Thought",
-          "failed": "Thinking failed"
-        },
-        "fetch": {
-          "running": "Fetching",
-          "completed": "Fetched",
-          "failed": "Fetch failed"
-        },
-        "other": {
-          "running": "Working",
-          "completed": "Completed",
-          "failed": "Failed"
-        }
-      },
-      "terminal": "Terminal output",
-      "proposal": "Review proposed changes",
-      "reviewInEditor": "The proposed changes are shown as a diff in the code editor on the left.",
-      "toggleProposal": "Expand or collapse the proposed changes",
-      "manualSave": "Accepting updates this form only. Use Save to persist the CODE definition.",
-      "noChanges": "No source or dependency changes.",
-      "accept": "Accept all",
-      "reject": "Discard all",
-      "applied": "Changes applied to the unsaved form",
-      "placeholder": "Ask Codex to write, explain, or revise this code...",
-      "enterHint": "Enter to send · Shift+Enter for a new line",
-      "send": "Send",
-      "stop": "Stop",
-      "resize": "Resize AI coding sidebar",
-      "model": "Model",
-      "reasoning": "Reasoning",
-      "contextUsage": "Context",
-      "activityStopped": "Ended"
-    },
     "Toast": {
       "createSuccess": "CODE node created",
       "createError": "Failed to create CODE node: {message}",
@@ -237,6 +155,41 @@
       "updateError": "Failed to update CODE node: {message}",
       "deleteSuccess": "CODE node deleted",
       "deleteError": "Failed to delete CODE node: {message}"
+    },
+    "Agent": {
+      "title": "Coding assistant",
+      "settings": "Model settings",
+      "configure": "Configure Coding model",
+      "close": "Close conversation",
+      "resize": "Resize coding sidebar",
+      "temporary": "Closing this sidebar or leaving the page discards the conversation.",
+      "model": "Coding model: {name}",
+      "unconfigured": "No Coding model is configured.",
+      "opening": "Opening conversation…",
+      "empty": "Describe what you want to create or change. Each request uses the current editor content.",
+      "reconnecting": "Reconnecting…",
+      "review": "Review changes in the editor",
+      "acceptHint": "Accept updates the form. Use Save code to persist your changes.",
+      "accept": "Accept changes",
+      "reject": "Discard changes",
+      "editorChanged": "The editor changed. Discard this proposal and submit the latest content.",
+      "placeholder": "Describe your code changes… (Ctrl / ⌘ + Enter to send)",
+      "stop": "Stop",
+      "send": "Send",
+      "tool": {
+        "running": "Running",
+        "completed": "Completed",
+        "failed": "Failed",
+        "cancelled": "Stopped"
+      },
+      "status": {
+        "ready": "Ready",
+        "queued": "Queued",
+        "running": "Editing…",
+        "cancelling": "Stopping…",
+        "proposal": "Awaiting review",
+        "closed": "Conversation closed. Reopen the sidebar to start again."
+      }
     }
   }
 }

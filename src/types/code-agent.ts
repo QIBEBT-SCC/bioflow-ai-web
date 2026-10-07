@@ -1,92 +1,55 @@
 import type { CodeNodeType } from '@/types/code'
 
-export type CodingAgentProvider = 'codex' | 'opencode'
-
-export interface CodingAgentProviderAvailability {
-  provider: CodingAgentProvider
-  name: string
-  available: boolean
-}
-
-export interface CodingAgentAvailability {
-  available: boolean
-  provider: 'codex'
-  name: 'Codex'
-  providers?: CodingAgentProviderAvailability[]
-}
-
-export interface CodexLogin {
-  id: string
-  status: 'starting' | 'waiting' | 'completed' | 'failed' | 'cancelled'
-}
-
-export interface CodeAgentSession {
-  id: string
-  status: 'starting' | 'ready' | 'running' | 'proposal' | 'closed' | 'failed'
-}
-
-export interface CodeAgentTurn {
-  prompt: string
-  source: string
-  dependencies: string[]
-}
-
+export type CodeAgentStatus =
+  | 'ready'
+  | 'queued'
+  | 'running'
+  | 'cancelling'
+  | 'proposal'
+  | 'closed'
 export interface CodeAgentProposal {
   id: string
-  base_hash: string
+  turn_id: string
+  baseline_hash: string
   source: string
   dependencies: string[]
   diff: string
   warnings: string[]
 }
-
-export interface CodeAgentSessionCreate {
-  node_type: CodeNodeType
-  provider?: CodingAgentProvider
+export interface CodeAgentMessage {
+  role: 'user' | 'assistant'
+  text: string
+  turn_id: string
 }
-
-export interface CodexAgentSettings {
-  sandbox_mode: 'read-only' | 'workspace-write' | 'danger-full-access'
-  web_search: 'live' | 'cached' | 'disabled'
-  network_access: boolean
-}
-
-export type OpenCodeModelProvider =
-  | 'opencode-go'
-  | 'opencode'
-  | 'anthropic'
-  | 'openai'
-  | 'google'
-  | 'openrouter'
-  | 'deepseek'
-  | 'custom'
-
-export interface OpenCodeAgentSettings {
-  configured: boolean
-  model_provider: OpenCodeModelProvider
-  base_url: string | null
-  model_id: string | null
-}
-
-export interface OpenCodeCredentialsInput {
-  api_key: string
-  model_provider: OpenCodeModelProvider
-  base_url?: string
-  model_id?: string
-}
-
-export interface CodeAgentConfigChoice {
-  value: string
+export interface CodeAgentTool {
+  call_id: string
+  turn_id: string
   name: string
+  status: 'running' | 'completed' | 'failed' | 'cancelled'
+  detail: string
+  output: string
 }
-
-export interface CodeAgentConfigOption {
+export interface CodeAgentSession {
   id: string
-  name: string
-  category?: string
+  node_type: CodeNodeType
+  status: CodeAgentStatus
+  turn_id: string | null
+  transcript: CodeAgentMessage[]
+  tools: CodeAgentTool[]
+  proposal: CodeAgentProposal | null
+  error: string | null
+  last_event_id: string
+}
+export interface CodeAgentEvent {
+  id: string
   type: string
-  currentValue: string
-  options: Array<
-    CodeAgentConfigChoice | { name: string; options: CodeAgentConfigChoice[] }
-  >
+  data: Record<string, unknown>
+}
+export interface CodeAgentBaseline {
+  source: string
+  dependencies: string[]
+}
+export interface CodeAgentAvailability {
+  available: boolean
+  model_name: string | null
 }

@@ -11,9 +11,9 @@ import {
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import {
+  type Dispatch,
   type FormEvent,
   type ReactNode,
-  useCallback,
   useReducer,
   useState,
 } from 'react'
@@ -34,13 +34,6 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset } from '@/components/ui/sidebar'
 import { Textarea } from '@/components/ui/textarea'
@@ -50,9 +43,8 @@ import {
   useGenerateCodeMetadata,
   useUpdateCode,
 } from '@/hooks/use-code'
-import { useCodeAgentAvailability } from '@/hooks/use-code-agent'
+import { useCodeAgent } from '@/hooks/use-code-agent'
 import type { CodeInfo, CodeNodeType } from '@/types/code'
-import type { CodeAgentProposal, CodingAgentProvider } from '@/types/code-agent'
 
 interface CodeWorkspaceFormSharedProps {
   onComplete: (uid: string) => void
@@ -82,6 +74,7 @@ interface WorkspaceState {
 }
 
 type WorkspaceAction =
+  | { type: 'applyProposal'; source: string; dependencies: string[] }
   | { type: 'setSource'; value: string }
   | { type: 'setDependencies'; value: string[] }
   | { type: 'setName'; value: string }
@@ -106,6 +99,12 @@ function workspaceReducer(
   action: WorkspaceAction,
 ): WorkspaceState {
   switch (action.type) {
+    case 'applyProposal':
+      return {
+        ...state,
+        source: action.source,
+        dependencies: action.dependencies,
+      }
     case 'setSource':
       return { ...state, source: action.value }
     case 'setDependencies':
@@ -132,30 +131,155 @@ function sameDependencies(left: string[], right: string[]): boolean {
   )
 }
 
+function CodeMetadataDialog({
+  workspace,
+  dispatch,
+  nodeType,
+  mode,
+  generateMetadata,
+  submitMetadata,
+  isGenerating,
+  isSaving,
+  canSave,
+  locked,
+}: {
+  workspace: WorkspaceState
+  dispatch: Dispatch<WorkspaceAction>
+  nodeType: CodeNodeType
+  mode: 'create' | 'edit'
+  generateMetadata: () => void
+  submitMetadata: (event: FormEvent<HTMLFormElement>) => void
+  isGenerating: boolean
+  isSaving: boolean
+  canSave: boolean
+  locked: boolean
+}) {
+  const t = useTranslations('code.Workspace')
+  const { source, dependencies, name, description, metadataOpen } = workspace
+  const isPython = nodeType === 'code_python'
+  const isR = nodeType === 'code_R'
+  return (
+    <Dialog
+      open={metadataOpen}
+      onOpenChange={(open) =>
+        dispatch({ type: 'setMetadataOpen', value: open })
+      }
+    >
+      <DialogContent className='sm:max-w-2xl'>
+        <form onSubmit={submitMetadata} className='grid gap-5'>
+          <div className='flex flex-col justify-between gap-3 pr-7 sm:flex-row sm:items-start'>
+            <DialogHeader>
+              <DialogTitle>{t('detailsTitle')}</DialogTitle>
+              <DialogDescription>{t('detailsDescription')}</DialogDescription>
+            </DialogHeader>
+            <Button
+              type='button'
+              variant='outline'
+              size='sm'
+              onClick={generateMetadata}
+              disabled={!source.trim() || isGenerating}
+            >
+              {isGenerating ? (
+                <Loader2Icon className='size-4 animate-spin' />
+              ) : (
+                <SparklesIcon className='size-4 text-violet-500' />
+              )}
+              {isGenerating
+                ? t('generating')
+                : name || description
+                  ? t('regenerateMetadata')
+                  : t('generateMetadata')}
+            </Button>
+          </div>
+
+          <div className='grid gap-5'>
+            <div className='space-y-2'>
+              <Label htmlFor='code-name'>{t('name')}</Label>
+              <Input
+                id='code-name'
+                value={name}
+                onChange={(event) =>
+                  dispatch({
+                    type: 'setName',
+                    value: event.target.value,
+                  })
+                }
+                maxLength={100}
+                placeholder={t('namePlaceholder')}
+                required
+                autoFocus
+              />
+            </div>
+            <div className='space-y-2'>
+              <Label htmlFor='code-description'>{t('description')}</Label>
+              <Textarea
+                id='code-description'
+                value={description}
+                onChange={(event) =>
+                  dispatch({
+                    type: 'setDescription',
+                    value: event.target.value,
+                  })
+                }
+                className='min-h-36 resize-y'
+                placeholder={t('descriptionPlaceholder')}
+                required
+              />
+              <p className='text-xs text-muted-foreground'>
+                {t('descriptionHint')}
+              </p>
+            </div>
+          </div>
+
+          <div className='flex flex-wrap gap-x-6 gap-y-2 rounded-lg bg-muted px-4 py-3 text-xs text-muted-foreground'>
+            <span>
+              {t('language')}: {isPython ? 'Python' : isR ? 'R' : 'Bash'}
+            </span>
+            <span>
+              {t('lines')}: {Math.max(1, source.split('\n').length)}
+            </span>
+            {isPython && (
+              <span>
+                {t('dependencies')}: {dependencies.length}
+              </span>
+            )}
+          </div>
+
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type='button' variant='outline'>
+                {t('cancel')}
+              </Button>
+            </DialogClose>
+            <Button type='submit' disabled={!canSave || isSaving || locked}>
+              {isSaving ? (
+                <Loader2Icon className='size-4 animate-spin' />
+              ) : mode === 'create' ? (
+                <CheckIcon className='size-4' />
+              ) : (
+                <SaveIcon className='size-4' />
+              )}
+              {isSaving
+                ? t('saving')
+                : mode === 'create'
+                  ? t('create')
+                  : t('save')}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 export function CodeWorkspaceForm(props: CodeWorkspaceFormProps) {
   const t = useTranslations('code.Workspace')
+  const agentT = useTranslations('code.Agent')
+  const [agentOpen, setAgentOpen] = useState(false)
+  const { chatSidebarWidth, handleChatResizeStart } = useChatSidebarResize()
   const createMutation = useCreateCode()
   const updateMutation = useUpdateCode()
   const metadataMutation = useGenerateCodeMetadata()
-  const { data: agentAvailability } = useCodeAgentAvailability()
-  const [selectedProvider, setSelectedProvider] =
-    useState<CodingAgentProvider>('codex')
-  const providers =
-    agentAvailability?.providers ??
-    (agentAvailability ? [agentAvailability] : [])
-  const availableProviders = providers.filter((provider) => provider.available)
-  const agentProvider =
-    availableProviders.find((item) => item.provider === selectedProvider)
-      ?.provider ??
-    availableProviders[0]?.provider ??
-    'codex'
-  const [agentOpen, setAgentOpen] = useState(false)
-  const [agentLocked, setAgentLocked] = useState(false)
-  const [agentProposal, setAgentProposal] = useState<CodeAgentProposal>()
-  const {
-    chatSidebarWidth: agentSidebarWidth,
-    handleChatResizeStart: handleAgentResizeStart,
-  } = useChatSidebarResize(384)
   const initialCode = props.mode === 'edit' ? props.code : undefined
   const nodeType = props.mode === 'edit' ? props.code.node_type : props.nodeType
   const [workspace, dispatch] = useReducer(
@@ -163,7 +287,19 @@ export function CodeWorkspaceForm(props: CodeWorkspaceFormProps) {
     initialCode,
     initializeWorkspace,
   )
-  const { source, dependencies, name, description, metadataOpen } = workspace
+  const { source, dependencies, name, description } = workspace
+  const agent = useCodeAgent({
+    enabled: agentOpen,
+    nodeType,
+    source,
+    dependencies,
+    onApply: (proposal) =>
+      dispatch({
+        type: 'applyProposal',
+        source: proposal.source,
+        dependencies: proposal.dependencies,
+      }),
+  })
   const isPython = nodeType === 'code_python'
   const isR = nodeType === 'code_R'
   const supportsDependencies = isPython || isR
@@ -207,7 +343,7 @@ export function CodeWorkspaceForm(props: CodeWorkspaceFormProps) {
   }
 
   const saveCode = () => {
-    if (!canSave || isSaving) return
+    if (!canSave || isSaving || agent.locked) return
     const payload = {
       name: name.trim(),
       description: description.trim(),
@@ -235,37 +371,23 @@ export function CodeWorkspaceForm(props: CodeWorkspaceFormProps) {
   }
 
   const returnHref = props.mode === 'edit' ? `/code/${props.code.uid}` : '/code'
-  const handleAgentLockedChange = useCallback(
-    (locked: boolean) => setAgentLocked(locked),
-    [],
-  )
-  const applyAgentProposal = useCallback(
-    (nextSource: string, nextDependencies: string[]) => {
-      dispatch({ type: 'setSource', value: nextSource })
-      dispatch({ type: 'setDependencies', value: nextDependencies })
-    },
-    [],
-  )
-  const handleAgentProposalChange = useCallback(
-    (proposal: CodeAgentProposal | undefined) => setAgentProposal(proposal),
-    [],
-  )
-  const agentToggle = agentAvailability?.available ? (
-    <div className='ml-auto shrink-0'>
-      <ChatSidebarToggleButton
-        type='button'
-        onClick={() => setAgentOpen((open) => !open)}
-        title={t('aiCoding')}
-        aria-label={t('aiCoding')}
-        aria-pressed={agentOpen}
-      />
-    </div>
-  ) : null
 
   return (
     <SidebarInset className='flex h-screen flex-row overflow-hidden'>
       <div className='flex min-h-0 min-w-0 flex-1 flex-col'>
-        <PageTopbar actions={agentToggle}>{props.children}</PageTopbar>
+        <PageTopbar
+          actions={
+            <ChatSidebarToggleButton
+              onClick={() => setAgentOpen((open) => !open)}
+              title={agentT('title')}
+              aria-label={agentT('title')}
+              aria-pressed={agentOpen}
+              disabled={isSaving}
+            />
+          }
+        >
+          {props.children}
+        </PageTopbar>
         <div className='flex min-h-0 flex-1 flex-col bg-background'>
           <div className='flex h-12 shrink-0 items-center justify-between gap-3 border-b bg-background px-3'>
             <div className='flex min-w-0 items-center gap-2'>
@@ -317,9 +439,9 @@ export function CodeWorkspaceForm(props: CodeWorkspaceFormProps) {
                   saveCode()
                 }}
                 disabled={
-                  agentLocked ||
                   !source.trim() ||
                   isSaving ||
+                  agent.locked ||
                   (props.mode === 'edit' && !isDirty)
                 }
               >
@@ -330,183 +452,54 @@ export function CodeWorkspaceForm(props: CodeWorkspaceFormProps) {
                 )}
                 {isSaving ? t('saving') : t('saveCode')}
               </Button>
-              {availableProviders.length > 0 && (
-                <Select
-                  value={agentProvider}
-                  disabled={agentOpen || agentLocked}
-                  onValueChange={(value) =>
-                    setSelectedProvider(value as CodingAgentProvider)
-                  }
-                >
-                  <SelectTrigger
-                    className='w-32'
-                    aria-label={t('agentProvider')}
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {providers.map((item) => (
-                      <SelectItem
-                        key={item.provider}
-                        value={item.provider}
-                        disabled={!item.available}
-                      >
-                        {item.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
             </div>
           </div>
 
           <div className='min-h-0 flex-1'>
             <CodeSourceEditor
-              nodeType={nodeType}
-              code={source}
-              dependencies={dependencies}
+              disabled={isSaving || agent.locked}
               review={
-                agentProposal
+                agent.session?.proposal
                   ? {
-                      code: agentProposal.source,
-                      dependencies: agentProposal.dependencies,
+                      code: agent.session.proposal.source,
+                      dependencies: agent.session.proposal.dependencies,
                     }
                   : undefined
               }
-              onCodeChange={(value) => dispatch({ type: 'setSource', value })}
-              onDependenciesChange={(value) =>
-                dispatch({ type: 'setDependencies', value })
-              }
-              disabled={agentLocked}
+              nodeType={nodeType}
+              code={source}
+              dependencies={dependencies}
+              onCodeChange={(value) => {
+                if (!isSaving && !agent.locked)
+                  dispatch({ type: 'setSource', value })
+              }}
+              onDependenciesChange={(value) => {
+                if (!isSaving && !agent.locked)
+                  dispatch({ type: 'setDependencies', value })
+              }}
             />
           </div>
 
-          <Dialog
-            open={metadataOpen}
-            onOpenChange={(open) =>
-              dispatch({ type: 'setMetadataOpen', value: open })
-            }
-          >
-            <DialogContent className='sm:max-w-2xl'>
-              <form onSubmit={submitMetadata} className='grid gap-5'>
-                <div className='flex flex-col justify-between gap-3 pr-7 sm:flex-row sm:items-start'>
-                  <DialogHeader>
-                    <DialogTitle>{t('detailsTitle')}</DialogTitle>
-                    <DialogDescription>
-                      {t('detailsDescription')}
-                    </DialogDescription>
-                  </DialogHeader>
-                  <Button
-                    type='button'
-                    variant='outline'
-                    size='sm'
-                    onClick={generateMetadata}
-                    disabled={!source.trim() || metadataMutation.isPending}
-                  >
-                    {metadataMutation.isPending ? (
-                      <Loader2Icon className='size-4 animate-spin' />
-                    ) : (
-                      <SparklesIcon className='size-4 text-violet-500' />
-                    )}
-                    {metadataMutation.isPending
-                      ? t('generating')
-                      : name || description
-                        ? t('regenerateMetadata')
-                        : t('generateMetadata')}
-                  </Button>
-                </div>
-
-                <div className='grid gap-5'>
-                  <div className='space-y-2'>
-                    <Label htmlFor='code-name'>{t('name')}</Label>
-                    <Input
-                      id='code-name'
-                      value={name}
-                      onChange={(event) =>
-                        dispatch({
-                          type: 'setName',
-                          value: event.target.value,
-                        })
-                      }
-                      maxLength={100}
-                      placeholder={t('namePlaceholder')}
-                      required
-                      autoFocus
-                    />
-                  </div>
-                  <div className='space-y-2'>
-                    <Label htmlFor='code-description'>{t('description')}</Label>
-                    <Textarea
-                      id='code-description'
-                      value={description}
-                      onChange={(event) =>
-                        dispatch({
-                          type: 'setDescription',
-                          value: event.target.value,
-                        })
-                      }
-                      className='min-h-36 resize-y'
-                      placeholder={t('descriptionPlaceholder')}
-                      required
-                    />
-                    <p className='text-xs text-muted-foreground'>
-                      {t('descriptionHint')}
-                    </p>
-                  </div>
-                </div>
-
-                <div className='flex flex-wrap gap-x-6 gap-y-2 rounded-lg bg-muted px-4 py-3 text-xs text-muted-foreground'>
-                  <span>
-                    {t('language')}: {isPython ? 'Python' : isR ? 'R' : 'Bash'}
-                  </span>
-                  <span>
-                    {t('lines')}: {Math.max(1, source.split('\n').length)}
-                  </span>
-                  {isPython && (
-                    <span>
-                      {t('dependencies')}: {dependencies.length}
-                    </span>
-                  )}
-                </div>
-
-                <DialogFooter>
-                  <DialogClose asChild>
-                    <Button type='button' variant='outline'>
-                      {t('cancel')}
-                    </Button>
-                  </DialogClose>
-                  <Button type='submit' disabled={!canSave || isSaving}>
-                    {isSaving ? (
-                      <Loader2Icon className='size-4 animate-spin' />
-                    ) : props.mode === 'create' ? (
-                      <CheckIcon className='size-4' />
-                    ) : (
-                      <SaveIcon className='size-4' />
-                    )}
-                    {isSaving
-                      ? t('saving')
-                      : props.mode === 'create'
-                        ? t('create')
-                        : t('save')}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
+          <CodeMetadataDialog
+            workspace={workspace}
+            dispatch={dispatch}
+            nodeType={nodeType}
+            mode={props.mode}
+            generateMetadata={generateMetadata}
+            submitMetadata={submitMetadata}
+            isGenerating={metadataMutation.isPending}
+            isSaving={isSaving}
+            canSave={canSave}
+            locked={agent.locked}
+          />
         </div>
       </div>
-      {agentOpen && agentAvailability?.available && (
+      {agentOpen && (
         <CodeAgentPanel
-          key={agentProvider}
-          provider={agentProvider}
-          nodeType={nodeType}
-          source={source}
-          dependencies={dependencies}
-          onApply={applyAgentProposal}
-          onLockedChange={handleAgentLockedChange}
-          onProposalChange={handleAgentProposalChange}
-          width={agentSidebarWidth}
-          onResizeStartAction={handleAgentResizeStart}
+          agent={agent}
+          width={chatSidebarWidth}
+          onResizeStart={handleChatResizeStart}
+          onClose={() => setAgentOpen(false)}
         />
       )}
     </SidebarInset>
