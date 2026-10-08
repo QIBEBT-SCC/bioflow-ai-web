@@ -1,10 +1,10 @@
 import type { AgentName, AgentStatus } from '@/types/agent'
 
-export type AgentFileKind = 'plan' | 'samples' | 'diagnosis' | 'update'
+export type AgentArtifactKind = 'plan' | 'samples' | 'diagnosis' | 'update'
 
-export interface AgentFile {
+export interface AgentArtifact {
   id: string
-  kind: AgentFileKind
+  kind: AgentArtifactKind
   name: string
   project_id: number
   run_uid: string | null

@@ -8,7 +8,7 @@ import {
 } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { ProjectAgentFiles } from '@/components/agent-file/project-agent-files'
+import { ProjectAgentArtifacts } from '@/components/agent-artifact/project-agent-artifacts'
 import { ChatSidebar } from '@/components/chat/chat-sidebar'
 import { ChatSidebarToggle } from '@/components/chat/chat-sidebar-toggle'
 import { PageTopbar } from '@/components/layout/page-shell'
@@ -85,7 +85,7 @@ export default function ProjectDetailPageClient({
               </TabsTrigger>
               <TabsTrigger value='agent-files'>
                 <FilesIcon className='size-4' />
-                {t('tabs.agentFiles')}
+                {t('tabs.agentArtifacts')}
               </TabsTrigger>
             </TabsList>
 
@@ -117,7 +117,7 @@ export default function ProjectDetailPageClient({
               value='agent-files'
               className='mt-4 lg:min-h-0 lg:overflow-y-auto lg:pr-2 lg:overscroll-contain lg:[scrollbar-gutter:stable]'
             >
-              <ProjectAgentFiles projectId={projectId} />
+              <ProjectAgentArtifacts projectId={projectId} />
             </TabsContent>
           </Tabs>
         </div>

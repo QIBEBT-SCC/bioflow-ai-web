@@ -10,7 +10,7 @@ import {
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { getAgentFileDownload } from '@/app/actions/agent-file'
+import { getAgentArtifactDownload } from '@/app/actions/agent-artifact'
 import { MessageResponse } from '@/components/ai-elements/message'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -25,24 +25,27 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import { Textarea } from '@/components/ui/textarea'
-import { useAgentFileContent, useUpdateAgentFile } from '@/hooks/use-agent-file'
+import {
+  useAgentArtifactContent,
+  useUpdateAgentArtifact,
+} from '@/hooks/use-agent-artifact'
 import { ClientApiError } from '@/lib/api-client'
-import type { AgentFile } from '@/types/agent-file'
+import type { AgentArtifact } from '@/types/agent-artifact'
 
 type ViewMode = 'preview' | 'source'
 
-interface AgentFileSheetProps {
-  file: AgentFile
+interface AgentArtifactSheetProps {
+  file: AgentArtifact
   open: boolean
   onOpenChange: (open: boolean) => void
 }
 
-export function AgentFileSheet({
+export function AgentArtifactSheet({
   file,
   open,
   onOpenChange,
-}: AgentFileSheetProps) {
-  const t = useTranslations('Project.agentFiles')
+}: AgentArtifactSheetProps) {
+  const t = useTranslations('Project.agentArtifacts')
   const [currentFile, setCurrentFile] = useState(file)
   const [draft, setDraft] = useState('')
   const [editing, setEditing] = useState(false)
@@ -52,8 +55,8 @@ export function AgentFileSheet({
     isLoading,
     error,
     refetch,
-  } = useAgentFileContent(currentFile, open)
-  const updateMutation = useUpdateAgentFile()
+  } = useAgentArtifactContent(currentFile, open)
+  const updateMutation = useUpdateAgentArtifact()
   const dirty = editing && content !== undefined && draft !== content
 
   useEffect(() => {
@@ -79,7 +82,7 @@ export function AgentFileSheet({
 
   const download = async () => {
     try {
-      const blob = await getAgentFileDownload(
+      const blob = await getAgentArtifactDownload(
         currentFile.project_id,
         currentFile.id,
       )

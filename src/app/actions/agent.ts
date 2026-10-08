@@ -2,6 +2,7 @@ import type { Locale } from '@/i18n/config'
 import { clientFetch } from '@/lib/api-client'
 import type {
   AgentEvent,
+  AgentImagePart,
   AgentMessage,
   AgentName,
   AgentRun,
@@ -67,6 +68,7 @@ export async function createAgentRun(
   text: string,
   language?: Locale,
   sourceRunUid?: string,
+  images: AgentImagePart[] = [],
 ) {
   return await clientFetch<AgentRun>(`/agent-sessions/${sessionId}/runs`, {
     method: 'POST',
@@ -75,6 +77,7 @@ export async function createAgentRun(
       text,
       language: language ?? null,
       source_run_uid: sourceRunUid ?? null,
+      images,
     }),
   })
 }

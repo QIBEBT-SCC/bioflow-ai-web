@@ -30,7 +30,21 @@ export interface AgentTextPart {
   text: string
 }
 
-export type AgentMessagePart = AgentTextPart
+export interface AgentImagePart {
+  type: 'image'
+  id: string
+  url: string
+  media_type: 'image/png' | 'image/jpeg' | 'image/webp'
+  filename: string
+  width: number
+  height: number
+  source_format: 'PNG' | 'JPEG' | 'WEBP' | 'TIFF' | 'SVG'
+  page: number
+  page_count: number
+  conversion_note: string | null
+}
+
+export type AgentMessagePart = AgentTextPart | AgentImagePart
 
 export interface AgentMessage {
   uid: string

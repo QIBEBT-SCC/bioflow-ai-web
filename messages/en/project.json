@@ -135,7 +135,7 @@
         "samples": "Samples",
         "fileMappings": "Global Files",
         "workflows": "Workflows",
-        "agentFiles": "Agent Files"
+        "agentArtifacts": "Agent Documents"
       },
       "card": {
         "favorite": "Favorite",
@@ -144,7 +144,7 @@
         "lastUpdated": "Last Updated"
       }
     },
-    "agentFiles": {
+    "agentArtifacts": {
       "documentsTitle": "Project Documents",
       "documentsDescription": "Future workflow agent runs read these project-level documents.",
       "recordsTitle": "Diagnosis and Update Records",

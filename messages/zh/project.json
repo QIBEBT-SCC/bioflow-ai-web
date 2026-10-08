@@ -135,7 +135,7 @@
         "samples": "样本",
         "fileMappings": "全局文件",
         "workflows": "工作流",
-        "agentFiles": "智能体文件"
+        "agentArtifacts": "智能体文档"
       },
       "card": {
         "favorite": "收藏",
@@ -144,7 +144,7 @@
         "lastUpdated": "最后更新"
       }
     },
-    "agentFiles": {
+    "agentArtifacts": {
       "documentsTitle": "项目文档",
       "documentsDescription": "工作流智能体后续运行会读取这些项目级文档。",
       "recordsTitle": "诊断与更新记录",

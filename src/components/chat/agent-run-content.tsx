@@ -17,7 +17,7 @@ import {
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { AgentFileCard } from '@/components/agent-file/agent-file-card'
+import { AgentArtifactCard } from '@/components/agent-artifact/agent-artifact-card'
 import {
   ChainOfThought,
   ChainOfThoughtContent,
@@ -41,7 +41,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
-import { useAgentRunArtifacts } from '@/hooks/use-agent-file'
+import { useAgentRunArtifacts } from '@/hooks/use-agent-artifact'
 import { useTool } from '@/hooks/use-tool'
 import { useWorkflow } from '@/hooks/use-workflow'
 import { parseAgentQuestionAnswers } from '@/lib/agent-questions'
@@ -892,7 +892,7 @@ export function AgentRunArtifacts({ run }: { run: AgentRun }) {
         <WorkflowArtifactCard key={uid} uid={uid} projectId={null} subgraph />
       ))}
       {fileArtifacts.map((file) => (
-        <AgentFileCard key={file.id} file={file} compact />
+        <AgentArtifactCard key={file.id} file={file} compact />
       ))}
     </div>
   )

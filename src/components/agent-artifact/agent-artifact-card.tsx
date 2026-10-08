@@ -10,30 +10,30 @@ import {
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
-import { AgentFileSheet } from '@/components/agent-file/agent-file-sheet'
+import { AgentArtifactSheet } from '@/components/agent-artifact/agent-artifact-sheet'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import type { AgentFile, AgentFileKind } from '@/types/agent-file'
+import type { AgentArtifact, AgentArtifactKind } from '@/types/agent-artifact'
 
-const icons: Record<AgentFileKind, typeof FileClockIcon> = {
+const icons: Record<AgentArtifactKind, typeof FileClockIcon> = {
   plan: ClipboardListIcon,
   samples: FileCheck2Icon,
   diagnosis: FileSearchIcon,
   update: FileClockIcon,
 }
 
-interface AgentFileCardProps {
-  file: AgentFile
+interface AgentArtifactCardProps {
+  file: AgentArtifact
   compact?: boolean
   className?: string
 }
 
-export function AgentFileCard({
+export function AgentArtifactCard({
   file,
   compact = false,
   className,
-}: AgentFileCardProps) {
-  const t = useTranslations('Project.agentFiles')
+}: AgentArtifactCardProps) {
+  const t = useTranslations('Project.agentArtifacts')
   const [open, setOpen] = useState(false)
   const Icon = icons[file.kind]
 
@@ -83,7 +83,7 @@ export function AgentFileCard({
           </span>
         </span>
       </button>
-      <AgentFileSheet file={file} open={open} onOpenChange={setOpen} />
+      <AgentArtifactSheet file={file} open={open} onOpenChange={setOpen} />
     </>
   )
 }

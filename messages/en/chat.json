@@ -188,6 +188,20 @@
       "diagnose": "Diagnose this run",
       "fix": "Repair current workflow"
     },
-    "title": "AI Chat"
+    "title": "AI Chat",
+    "images": {
+      "add": "Attach images",
+      "attachments": "Image attachments",
+      "preparing": "Preparing image…",
+      "preview": "Preview {name}",
+      "remove": "Remove {name}",
+      "pages": "Page {page} of {count}",
+      "normalized": "Normalized to 8-bit display intensity",
+      "too_many": "A message can contain at most 4 images.",
+      "too_large": "Each image must be no larger than 20 MiB.",
+      "unsupported": "Supported formats: PNG, JPEG, WebP, TIFF and SVG.",
+      "failed": "Unable to prepare the image.",
+      "load_failed": "Unable to display the image."
+    }
   }
 }

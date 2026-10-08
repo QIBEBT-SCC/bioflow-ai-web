@@ -5,6 +5,7 @@ import {
   HammerIcon,
   Loader2Icon,
   MessageSquareTextIcon,
+  PaperclipIcon,
   PlusIcon,
   RotateCcwIcon,
   SendIcon,
@@ -30,6 +31,7 @@ import {
   MessageResponse,
 } from '@/components/ai-elements/message'
 import { Suggestion, Suggestions } from '@/components/ai-elements/suggestion'
+import { AgentImage, DraftImages } from '@/components/chat/agent-image'
 import {
   AgentRunArtifacts,
   AgentRunProgress,
@@ -61,6 +63,10 @@ import {
   useResumeAgentRun,
   useRetryAgentRun,
 } from '@/hooks/use-agent'
+import {
+  IMAGE_ATTACHMENT_ACCEPT,
+  useChatAttachments,
+} from '@/hooks/use-chat-attachment'
 import type { Locale } from '@/i18n/config'
 import { parseAgentQuestionAnswers } from '@/lib/agent-questions'
 import { getSuggestedWorkflowAgent } from '@/lib/workflow-agent-suggestions'
@@ -111,11 +117,15 @@ function ChatMessage({ message }: { message: AgentMessage }) {
   return (
     <Message from={message.role}>
       <MessageContent>
-        {message.parts.map((part) => (
-          <MessageResponse key={`${part.type}-${part.text}`}>
-            {part.text}
-          </MessageResponse>
-        ))}
+        {message.parts.map((part) =>
+          part.type === 'image' ? (
+            <AgentImage key={part.id} image={part} />
+          ) : (
+            <MessageResponse key={`${message.uid}-${part.text}`}>
+              {part.text}
+            </MessageResponse>
+          ),
+        )}
       </MessageContent>
     </Message>
   )
@@ -153,6 +163,8 @@ function ChatSidebarInner({
   const [feedback, setFeedback] = useState('')
   const [localError, setLocalError] = useState<string | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const attachments = useChatAttachments()
   const { mutateAsync: createSession, isPending: isCreating } =
     useCreateAgentSession()
   const { mutateAsync: createRun, isPending: isSubmitting } =
@@ -200,7 +212,13 @@ function ChatSidebarInner({
     () => parseAgentCommand(text, availableCommands),
     [availableCommands, text],
   )
-  const canSubmit = Boolean(parsedCommand?.prompt.trim())
+  const canSubmit = Boolean(
+    parsedCommand &&
+      !attachments.blocked &&
+      (parsedCommand.prompt.trim() ||
+        (attachments.images.length > 0 &&
+          parsedCommand.command.key !== 'workflow-fixer')),
+  )
   const isBusy = Boolean(run && ACTIVE_AGENT_STATUSES.includes(run.status))
   const inputDisabled =
     !sessionId || isSessionLoading || isMessagesLoading || isRunsLoading
@@ -234,6 +252,7 @@ function ChatSidebarInner({
       setSessionId(scopeKey, created.uid)
       setRunId(null)
       setText('')
+      attachments.clear()
     } catch (error) {
       setLocalError(error instanceof Error ? error.message : String(error))
     }
@@ -267,13 +286,18 @@ function ChatSidebarInner({
   }
 
   const submit = async () => {
-    if (!sessionId || isBusy) return
+    if (!sessionId || isBusy || isSubmitting) return
     if (!parsedCommand) {
       setLocalError(t('command_required'))
       return
     }
     const prompt = parsedCommand.prompt.trim()
-    if (!prompt) {
+    if (attachments.blocked) return
+    if (
+      !prompt &&
+      (attachments.images.length === 0 ||
+        parsedCommand.command.key === 'workflow-fixer')
+    ) {
       setLocalError(t('command_prompt_required'))
       return
     }
@@ -290,11 +314,13 @@ function ChatSidebarInner({
         sessionId,
         agentName: parsedCommand.command.key,
         text: prompt,
+        images: attachments.images,
         language,
         sourceRunUid: requiresSourceRun ? sourceRunUid : undefined,
       })
       setRunId(created.uid)
       slashCommand.onValueChange('')
+      attachments.clear()
     } catch (error) {
       setLocalError(error instanceof Error ? error.message : String(error))
     }
@@ -390,7 +416,9 @@ function ChatSidebarInner({
                     (message, index) => ({
                       message,
                       questionAnswers:
-                        index > 0 && message.parts.length === 1
+                        index > 0 &&
+                        message.parts.length === 1 &&
+                        message.parts[0].type === 'text'
                           ? parseAgentQuestionAnswers(message.parts[0].text)
                           : undefined,
                     }),
@@ -513,6 +541,11 @@ function ChatSidebarInner({
                 <AlertDescription>{localError}</AlertDescription>
               </Alert>
             )}
+            {attachments.error && (
+              <Alert variant='destructive'>
+                <AlertDescription>{attachments.error}</AlertDescription>
+              </Alert>
+            )}
           </ConversationContent>
           <ConversationScrollButton />
         </Conversation>
@@ -563,7 +596,39 @@ function ChatSidebarInner({
                 })}
               </SlashCommandMenu>
             )}
-            <div className='group rounded-2xl border border-border/80 bg-card/95 shadow-[0_8px_28px_-16px_rgb(0_0_0/0.45)] ring-1 ring-black/2.5 transition-[border-color,box-shadow] focus-within:border-primary/45 focus-within:shadow-[0_12px_36px_-18px_rgb(0_0_0/0.5)] focus-within:ring-4 focus-within:ring-primary/10 dark:bg-card/90 dark:ring-white/4'>
+            <fieldset
+              aria-label={t('images.attachments')}
+              onDragOver={(event) => {
+                if (event.dataTransfer.types.includes('Files'))
+                  event.preventDefault()
+              }}
+              onDrop={(event) => {
+                if (event.dataTransfer.files.length === 0) return
+                event.preventDefault()
+                if (!inputDisabled && !isBusy && !isSubmitting)
+                  attachments.addFiles(Array.from(event.dataTransfer.files))
+              }}
+              className='group rounded-2xl border border-border/80 bg-card/95 shadow-[0_8px_28px_-16px_rgb(0_0_0/0.45)] ring-1 ring-black/2.5 transition-[border-color,box-shadow] focus-within:border-primary/45 focus-within:shadow-[0_12px_36px_-18px_rgb(0_0_0/0.5)] focus-within:ring-4 focus-within:ring-primary/10 dark:bg-card/90 dark:ring-white/4'
+            >
+              <DraftImages
+                drafts={attachments.drafts}
+                onRemove={attachments.remove}
+                disabled={isSubmitting || isBusy}
+              />
+              <input
+                ref={fileInputRef}
+                type='file'
+                accept={IMAGE_ATTACHMENT_ACCEPT}
+                multiple
+                className='sr-only'
+                tabIndex={-1}
+                aria-label={t('images.add')}
+                disabled={inputDisabled || isBusy || isSubmitting}
+                onChange={(event) => {
+                  attachments.addFiles(Array.from(event.target.files ?? []))
+                  event.target.value = ''
+                }}
+              />
               <div className='relative'>
                 {parsedCommand && (
                   <div
@@ -584,6 +649,13 @@ function ChatSidebarInner({
                   onChange={(event) =>
                     slashCommand.onValueChange(event.target.value)
                   }
+                  onPaste={(event) => {
+                    const files = Array.from(event.clipboardData.files)
+                    if (files.length === 0) return
+                    event.preventDefault()
+                    if (!inputDisabled && !isBusy && !isSubmitting)
+                      attachments.addFiles(files)
+                  }}
                   onKeyDown={(event) => {
                     slashCommand.onKeyDown(event)
                     if (event.defaultPrevented) return
@@ -598,11 +670,27 @@ function ChatSidebarInner({
                       ? t('input_unavailable')
                       : t('command_placeholder')
                   }
-                  disabled={inputDisabled || isBusy}
+                  disabled={inputDisabled || isBusy || isSubmitting}
                   className={`relative min-h-20 resize-none border-0 bg-transparent px-3 shadow-none focus-visible:ring-0 dark:bg-transparent ${parsedCommand ? 'text-transparent caret-foreground selection:bg-primary/20' : ''}`}
                 />
               </div>
-              <div className='flex items-center justify-end px-2 pb-2'>
+              <div className='flex items-center justify-between px-2 pb-2'>
+                <Button
+                  type='button'
+                  size='icon'
+                  variant='ghost'
+                  disabled={
+                    inputDisabled ||
+                    isBusy ||
+                    isSubmitting ||
+                    attachments.drafts.length >= 4
+                  }
+                  aria-label={t('images.add')}
+                  title={t('images.add')}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <PaperclipIcon className='size-4' />
+                </Button>
                 {isBusy && run ? (
                   <Button
                     type='button'
@@ -630,7 +718,7 @@ function ChatSidebarInner({
                   </Button>
                 )}
               </div>
-            </div>
+            </fieldset>
           </div>
         </div>
       </div>

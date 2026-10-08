@@ -2,13 +2,17 @@
 
 import { FileTextIcon, Loader2Icon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { AgentFileCard } from '@/components/agent-file/agent-file-card'
+import { AgentArtifactCard } from '@/components/agent-artifact/agent-artifact-card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { useProjectAgentFiles } from '@/hooks/use-agent-file'
+import { useProjectAgentArtifacts } from '@/hooks/use-agent-artifact'
 
-export function ProjectAgentFiles({ projectId }: { projectId: string }) {
-  const t = useTranslations('Project.agentFiles')
-  const { data: files = [], isLoading, error } = useProjectAgentFiles(projectId)
+export function ProjectAgentArtifacts({ projectId }: { projectId: string }) {
+  const t = useTranslations('Project.agentArtifacts')
+  const {
+    data: files = [],
+    isLoading,
+    error,
+  } = useProjectAgentArtifacts(projectId)
   const documents = files.filter((file) =>
     ['plan', 'samples'].includes(file.kind),
   )
@@ -57,7 +61,7 @@ export function ProjectAgentFiles({ projectId }: { projectId: string }) {
         {documents.length > 0 ? (
           <div className='flex flex-col items-start gap-3'>
             {documents.map((file) => (
-              <AgentFileCard
+              <AgentArtifactCard
                 key={file.id}
                 file={file}
                 className='w-full max-w-3xl'
@@ -81,7 +85,7 @@ export function ProjectAgentFiles({ projectId }: { projectId: string }) {
         {records.length > 0 ? (
           <div className='flex flex-col items-start gap-3'>
             {records.map((file) => (
-              <AgentFileCard
+              <AgentArtifactCard
                 key={file.id}
                 file={file}
                 className='w-full max-w-3xl'

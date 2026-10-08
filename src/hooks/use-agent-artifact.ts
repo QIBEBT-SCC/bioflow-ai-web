@@ -2,18 +2,18 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
-  getAgentFileContent,
+  getAgentArtifactContent,
   getAgentRunArtifacts,
-  getProjectAgentFiles,
-  updateAgentFile,
-} from '@/app/actions/agent-file'
-import type { AgentFile } from '@/types/agent-file'
+  getProjectAgentArtifacts,
+  updateAgentArtifact,
+} from '@/app/actions/agent-artifact'
+import type { AgentArtifact } from '@/types/agent-artifact'
 
-export const agentFileQueryKeys = {
+export const agentArtifactQueryKeys = {
   project: (projectId: string) =>
     ['projects', projectId, 'agent-files'] as const,
   run: (runId: string) => ['agent-runs', runId, 'artifacts'] as const,
-  content: (file: AgentFile) =>
+  content: (file: AgentArtifact) =>
     [
       'projects',
       String(file.project_id),
@@ -23,10 +23,10 @@ export const agentFileQueryKeys = {
     ] as const,
 }
 
-export function useProjectAgentFiles(projectId: string) {
+export function useProjectAgentArtifacts(projectId: string) {
   return useQuery({
-    queryKey: agentFileQueryKeys.project(projectId),
-    queryFn: () => getProjectAgentFiles(projectId),
+    queryKey: agentArtifactQueryKeys.project(projectId),
+    queryFn: () => getProjectAgentArtifacts(projectId),
     enabled: Boolean(projectId),
     staleTime: 10_000,
   })
@@ -34,40 +34,42 @@ export function useProjectAgentFiles(projectId: string) {
 
 export function useAgentRunArtifacts(runId: string, enabled = true) {
   return useQuery({
-    queryKey: agentFileQueryKeys.run(runId),
+    queryKey: agentArtifactQueryKeys.run(runId),
     queryFn: () => getAgentRunArtifacts(runId),
     enabled: Boolean(runId) && enabled,
     staleTime: 10_000,
   })
 }
 
-export function useAgentFileContent(file: AgentFile, enabled = true) {
+export function useAgentArtifactContent(file: AgentArtifact, enabled = true) {
   return useQuery({
-    queryKey: agentFileQueryKeys.content(file),
-    queryFn: () => getAgentFileContent(file.project_id, file.id),
+    queryKey: agentArtifactQueryKeys.content(file),
+    queryFn: () => getAgentArtifactContent(file.project_id, file.id),
     enabled,
     staleTime: Number.POSITIVE_INFINITY,
   })
 }
 
-export function useUpdateAgentFile() {
+export function useUpdateAgentArtifact() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ file, content }: { file: AgentFile; content: string }) =>
-      updateAgentFile(file.project_id, file.id, content, file.revision),
+    mutationFn: ({ file, content }: { file: AgentArtifact; content: string }) =>
+      updateAgentArtifact(file.project_id, file.id, content, file.revision),
     onSuccess: (updated, variables) => {
       queryClient.setQueryData(
-        agentFileQueryKeys.content(updated),
+        agentArtifactQueryKeys.content(updated),
         variables.content,
       )
       queryClient.invalidateQueries({
-        queryKey: agentFileQueryKeys.project(String(updated.project_id)),
+        queryKey: agentArtifactQueryKeys.project(String(updated.project_id)),
       })
       queryClient.invalidateQueries({ queryKey: ['agent-runs'] })
     },
     onError: (_error, variables) => {
       queryClient.invalidateQueries({
-        queryKey: agentFileQueryKeys.project(String(variables.file.project_id)),
+        queryKey: agentArtifactQueryKeys.project(
+          String(variables.file.project_id),
+        ),
       })
       queryClient.invalidateQueries({ queryKey: ['agent-runs'] })
     },

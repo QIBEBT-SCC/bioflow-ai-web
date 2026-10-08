@@ -25,10 +25,11 @@ import {
   streamAgentEvents,
   updateAgentSession,
 } from '@/app/actions/agent'
-import { agentFileQueryKeys } from '@/hooks/use-agent-file'
+import { agentArtifactQueryKeys } from '@/hooks/use-agent-artifact'
 import type { Locale } from '@/i18n/config'
 import type {
   AgentEvent,
+  AgentImagePart,
   AgentName,
   AgentRun,
   AgentSessionPage,
@@ -220,11 +221,11 @@ export function useAgentRunEvents(
       ) {
         queryClient.invalidateQueries({ queryKey: agentQueryKeys.all })
         queryClient.invalidateQueries({
-          queryKey: agentFileQueryKeys.run(runId),
+          queryKey: agentArtifactQueryKeys.run(runId),
         })
         if (projectId !== null && projectId !== undefined) {
           queryClient.invalidateQueries({
-            queryKey: agentFileQueryKeys.project(String(projectId)),
+            queryKey: agentArtifactQueryKeys.project(String(projectId)),
           })
         }
       }
@@ -300,12 +301,12 @@ function useInvalidateAgentData() {
     if (runId) {
       queryClient.invalidateQueries({ queryKey: agentQueryKeys.run(runId) })
       queryClient.invalidateQueries({
-        queryKey: agentFileQueryKeys.run(runId),
+        queryKey: agentArtifactQueryKeys.run(runId),
       })
     }
     if (projectId !== null && projectId !== undefined) {
       queryClient.invalidateQueries({
-        queryKey: agentFileQueryKeys.project(String(projectId)),
+        queryKey: agentArtifactQueryKeys.project(String(projectId)),
       })
     }
   }
@@ -345,13 +346,23 @@ export function useCreateAgentRun() {
       text,
       language,
       sourceRunUid,
+      images,
     }: {
       sessionId: string
       agentName: AgentName
       text: string
       language: Locale
       sourceRunUid?: string
-    }) => createAgentRun(sessionId, agentName, text, language, sourceRunUid),
+      images?: AgentImagePart[]
+    }) =>
+      createAgentRun(
+        sessionId,
+        agentName,
+        text,
+        language,
+        sourceRunUid,
+        images,
+      ),
     onSuccess: (run) => invalidate(run.session_uid, run.uid, run.project_id),
   })
 }
