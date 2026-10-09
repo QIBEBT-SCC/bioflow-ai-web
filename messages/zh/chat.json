@@ -190,18 +190,21 @@
     },
     "title": "AI 对话",
     "images": {
-      "add": "添加图片",
-      "attachments": "图片附件",
+      "add": "添加图片或 PDF",
+      "attachments": "对话附件",
       "preparing": "正在准备图片…",
       "preview": "预览 {name}",
       "remove": "移除 {name}",
       "pages": "第 {page} 页／共 {count} 页",
       "normalized": "已转换为 8 位显示强度",
-      "too_many": "每条消息最多添加 4 张图片。",
-      "too_large": "每张原图片不得超过 20 MiB。",
-      "unsupported": "支持 PNG、JPEG、WebP、TIFF 和 SVG。",
-      "failed": "图片准备失败。",
-      "load_failed": "图片无法显示。"
+      "too_many": "每条消息最多添加 4 个附件。",
+      "too_large": "每个原始附件不得超过 20 MiB。",
+      "unsupported": "支持 PNG、JPEG、WebP、TIFF、SVG 和 PDF。",
+      "failed": "附件准备失败。",
+      "load_failed": "图片无法显示。",
+      "retry": "重试",
+      "pdf_ready": "PDF · 文本已准备",
+      "pdf_parsing": "正在解析 PDF…"
     }
   }
 }

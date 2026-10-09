@@ -44,7 +44,14 @@ export interface AgentImagePart {
   conversion_note: string | null
 }
 
-export type AgentMessagePart = AgentTextPart | AgentImagePart
+export interface AgentPDFPart {
+  type: 'pdf'
+  id: number
+  file_id: string
+  filename: string
+}
+
+export type AgentMessagePart = AgentTextPart | AgentImagePart | AgentPDFPart
 
 export interface AgentMessage {
   uid: string

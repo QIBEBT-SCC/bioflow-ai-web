@@ -31,6 +31,7 @@ import type {
   AgentEvent,
   AgentImagePart,
   AgentName,
+  AgentPDFPart,
   AgentRun,
   AgentSessionPage,
 } from '@/types/agent'
@@ -347,6 +348,7 @@ export function useCreateAgentRun() {
       language,
       sourceRunUid,
       images,
+      pdfs,
     }: {
       sessionId: string
       agentName: AgentName
@@ -354,6 +356,7 @@ export function useCreateAgentRun() {
       language: Locale
       sourceRunUid?: string
       images?: AgentImagePart[]
+      pdfs?: AgentPDFPart[]
     }) =>
       createAgentRun(
         sessionId,
@@ -362,6 +365,7 @@ export function useCreateAgentRun() {
         language,
         sourceRunUid,
         images,
+        pdfs,
       ),
     onSuccess: (run) => invalidate(run.session_uid, run.uid, run.project_id),
   })

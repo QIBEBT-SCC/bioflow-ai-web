@@ -190,18 +190,21 @@
     },
     "title": "AI Chat",
     "images": {
-      "add": "Attach images",
-      "attachments": "Image attachments",
+      "add": "Add images or PDFs",
+      "attachments": "Chat attachments",
       "preparing": "Preparing image…",
       "preview": "Preview {name}",
       "remove": "Remove {name}",
       "pages": "Page {page} of {count}",
       "normalized": "Normalized to 8-bit display intensity",
-      "too_many": "A message can contain at most 4 images.",
-      "too_large": "Each image must be no larger than 20 MiB.",
-      "unsupported": "Supported formats: PNG, JPEG, WebP, TIFF and SVG.",
-      "failed": "Unable to prepare the image.",
-      "load_failed": "Unable to display the image."
+      "too_many": "Each message can contain at most 4 attachments.",
+      "too_large": "Each original attachment must be no larger than 20 MiB.",
+      "unsupported": "Supported formats: PNG, JPEG, WebP, TIFF, SVG and PDF.",
+      "failed": "Attachment preparation failed.",
+      "load_failed": "Unable to display the image.",
+      "retry": "Retry",
+      "pdf_ready": "PDF · Text ready",
+      "pdf_parsing": "Parsing PDF…"
     }
   }
 }

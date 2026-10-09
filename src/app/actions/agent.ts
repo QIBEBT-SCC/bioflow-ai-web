@@ -5,6 +5,7 @@ import type {
   AgentImagePart,
   AgentMessage,
   AgentName,
+  AgentPDFPart,
   AgentRun,
   AgentSession,
   AgentSessionPage,
@@ -69,6 +70,7 @@ export async function createAgentRun(
   language?: Locale,
   sourceRunUid?: string,
   images: AgentImagePart[] = [],
+  pdfs: AgentPDFPart[] = [],
 ) {
   return await clientFetch<AgentRun>(`/agent-sessions/${sessionId}/runs`, {
     method: 'POST',
@@ -78,6 +80,7 @@ export async function createAgentRun(
       language: language ?? null,
       source_run_uid: sourceRunUid ?? null,
       images,
+      pdfs,
     }),
   })
 }

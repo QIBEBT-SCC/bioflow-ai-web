@@ -31,12 +31,14 @@ import {
   MessageResponse,
 } from '@/components/ai-elements/message'
 import { Suggestion, Suggestions } from '@/components/ai-elements/suggestion'
-import { AgentImage, DraftImages } from '@/components/chat/agent-image'
+import { AgentImage } from '@/components/chat/agent-image'
+import { AgentPDF } from '@/components/chat/agent-pdf'
 import {
   AgentRunArtifacts,
   AgentRunProgress,
 } from '@/components/chat/agent-run-content'
 import { SidebarHistoryMenu } from '@/components/chat/chat-history-menu'
+import { DraftAttachments } from '@/components/chat/draft-attachments'
 import { PlanApproval } from '@/components/chat/plan-approval'
 import { QuestionApproval } from '@/components/chat/question-approval'
 import {
@@ -64,7 +66,7 @@ import {
   useRetryAgentRun,
 } from '@/hooks/use-agent'
 import {
-  IMAGE_ATTACHMENT_ACCEPT,
+  CHAT_ATTACHMENT_ACCEPT,
   useChatAttachments,
 } from '@/hooks/use-chat-attachment'
 import type { Locale } from '@/i18n/config'
@@ -117,9 +119,11 @@ function ChatMessage({ message }: { message: AgentMessage }) {
   return (
     <Message from={message.role}>
       <MessageContent>
-        {message.parts.map((part) =>
+        {message.parts.map((part, index) =>
           part.type === 'image' ? (
             <AgentImage key={part.id} image={part} />
+          ) : part.type === 'pdf' ? (
+            <AgentPDF key={`pdf-${part.id}-${index}`} pdf={part} />
           ) : (
             <MessageResponse key={`${message.uid}-${part.text}`}>
               {part.text}
@@ -164,7 +168,7 @@ function ChatSidebarInner({
   const [localError, setLocalError] = useState<string | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const attachments = useChatAttachments()
+  const attachments = useChatAttachments(sessionId)
   const { mutateAsync: createSession, isPending: isCreating } =
     useCreateAgentSession()
   const { mutateAsync: createRun, isPending: isSubmitting } =
@@ -216,7 +220,7 @@ function ChatSidebarInner({
     parsedCommand &&
       !attachments.blocked &&
       (parsedCommand.prompt.trim() ||
-        (attachments.images.length > 0 &&
+        (attachments.images.length + attachments.pdfs.length > 0 &&
           parsedCommand.command.key !== 'workflow-fixer')),
   )
   const isBusy = Boolean(run && ACTIVE_AGENT_STATUSES.includes(run.status))
@@ -295,7 +299,7 @@ function ChatSidebarInner({
     if (attachments.blocked) return
     if (
       !prompt &&
-      (attachments.images.length === 0 ||
+      (attachments.images.length + attachments.pdfs.length === 0 ||
         parsedCommand.command.key === 'workflow-fixer')
     ) {
       setLocalError(t('command_prompt_required'))
@@ -315,6 +319,7 @@ function ChatSidebarInner({
         agentName: parsedCommand.command.key,
         text: prompt,
         images: attachments.images,
+        pdfs: attachments.pdfs,
         language,
         sourceRunUid: requiresSourceRun ? sourceRunUid : undefined,
       })
@@ -610,15 +615,16 @@ function ChatSidebarInner({
               }}
               className='group rounded-2xl border border-border/80 bg-card/95 shadow-[0_8px_28px_-16px_rgb(0_0_0/0.45)] ring-1 ring-black/2.5 transition-[border-color,box-shadow] focus-within:border-primary/45 focus-within:shadow-[0_12px_36px_-18px_rgb(0_0_0/0.5)] focus-within:ring-4 focus-within:ring-primary/10 dark:bg-card/90 dark:ring-white/4'
             >
-              <DraftImages
+              <DraftAttachments
                 drafts={attachments.drafts}
                 onRemove={attachments.remove}
+                onRetry={attachments.retry}
                 disabled={isSubmitting || isBusy}
               />
               <input
                 ref={fileInputRef}
                 type='file'
-                accept={IMAGE_ATTACHMENT_ACCEPT}
+                accept={CHAT_ATTACHMENT_ACCEPT}
                 multiple
                 className='sr-only'
                 tabIndex={-1}
