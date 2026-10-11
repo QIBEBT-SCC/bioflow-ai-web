@@ -1,50 +1,53 @@
 'use client'
 
 import {
+  ArrowLeftRightIcon,
   ArrowUpRightIcon,
+  BookOpenIcon,
   CheckCircle2Icon,
   ChevronDownIcon,
+  CircleDotIcon,
   DatabaseIcon,
+  FilePenLineIcon,
+  FolderOpenIcon,
+  HammerIcon,
+  ListIcon,
   ListTodoIcon,
   type LucideIcon,
+  MessageCircleQuestionIcon,
+  PencilLineIcon,
+  PlusIcon,
+  SaveIcon,
   SearchIcon,
   ShieldCheckIcon,
-  SparklesIcon,
   TerminalIcon,
+  Trash2Icon,
   WaypointsIcon,
   WrenchIcon,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import { AgentArtifactCard } from '@/components/agent-artifact/agent-artifact-card'
 import {
-  ChainOfThought,
-  ChainOfThoughtContent,
-  ChainOfThoughtHeader,
-  ChainOfThoughtStep,
-} from '@/components/ai-elements/chain-of-thought'
-import {
-  Queue,
   QueueItem,
   QueueItemContent,
   QueueItemIndicator,
   type QueueItemStatus,
   QueueList,
-  QueueSection,
-  QueueSectionContent,
-  QueueSectionLabel,
-  QueueSectionTrigger,
 } from '@/components/ai-elements/queue'
+import { Shimmer } from '@/components/ai-elements/shimmer'
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
+import { Progress } from '@/components/ui/progress'
 import { useAgentRunArtifacts } from '@/hooks/use-agent-artifact'
 import { useTool } from '@/hooks/use-tool'
 import { useWorkflow } from '@/hooks/use-workflow'
 import { parseAgentQuestionAnswers } from '@/lib/agent-questions'
+import { cn } from '@/lib/utils'
 import type {
   AgentEvent,
   AgentQuestionAnswer,
@@ -207,17 +210,17 @@ function CommandActivity({
   active: boolean
 }) {
   const preview = detailPreview(command)
-  if (!preview) return label
+  if (!preview) return <TraceLabel label={label} active={active} />
 
   return (
     <Collapsible defaultOpen={active}>
-      <CollapsibleTrigger className='group/command flex w-full items-center justify-between gap-2 text-left'>
-        <span>{label}</span>
-        <ChevronDownIcon className='size-3.5 shrink-0 transition-transform group-data-[state=open]/command:rotate-180' />
+      <CollapsibleTrigger className='group/command flex max-w-full items-center gap-1 text-left transition-colors hover:text-foreground'>
+        <TraceLabel label={label} active={active} />
+        <ChevronDownIcon className='size-3.5 shrink-0 -rotate-90 transition-transform group-data-[state=open]/command:rotate-0' />
       </CollapsibleTrigger>
       <CollapsibleContent>
         <code
-          className='mt-1.5 block font-mono text-[11px] text-foreground/70'
+          className='mt-1 block break-all rounded-md bg-muted px-2 py-1 font-mono text-[11px] text-foreground/80'
           title={command}
         >
           {preview}
@@ -227,34 +230,94 @@ function CommandActivity({
   )
 }
 
+const OPERATION_ICONS: Record<string, LucideIcon> = {
+  search: SearchIcon,
+  inspect: BookOpenIcon,
+  list: ListIcon,
+  add: PlusIcon,
+  create: PlusIcon,
+  delete: Trash2Icon,
+  switch: ArrowLeftRightIcon,
+  save: SaveIcon,
+  fix: HammerIcon,
+  update: PencilLineIcon,
+}
+
 function activityIcon(activity: ProgressActivity): LucideIcon {
   const text = activity.message.toLowerCase()
   if (activity.kind === 'workflow_phase') {
     if (activity.phase === 'sample_manager') return DatabaseIcon
     if (activity.phase === 'workflow_planner') return ListTodoIcon
-    return WrenchIcon
+    return WaypointsIcon
   }
   if (activity.kind === 'workflow_manager_action') {
-    if (activity.manager === 'resource_node') return DatabaseIcon
-    if (activity.manager === 'workflow' || activity.manager === 'subgraph')
-      return WaypointsIcon
-    if (activity.manager === 'tool_node') return WrenchIcon
-    return SparklesIcon
+    return OPERATION_ICONS[activity.operation ?? 'update'] ?? PencilLineIcon
   }
   if (activity.kind === 'sample_run_command') return TerminalIcon
-  if (activity.kind === 'sample_set_base_dir') return SearchIcon
-  if (
-    activity.kind === 'sample_list_project_samples' ||
-    activity.kind.startsWith('sample_add_')
-  ) {
-    return DatabaseIcon
-  }
-  if (activity.kind === 'sample_ask_human') return ShieldCheckIcon
+  if (activity.kind === 'sample_set_base_dir') return FolderOpenIcon
+  if (activity.kind === 'sample_list_project_samples') return ListIcon
+  if (activity.kind.startsWith('sample_add_')) return DatabaseIcon
+  if (activity.kind === 'sample_write_conclusion') return FilePenLineIcon
+  if (activity.kind === 'sample_ask_human') return MessageCircleQuestionIcon
   if (activity.kind === 'validation') return ShieldCheckIcon
-  if (/search|find|look/.test(text)) return SearchIcon
-  if (/save|database/.test(text)) return DatabaseIcon
-  if (/create|generat|prepar|config/.test(text)) return WrenchIcon
-  return SparklesIcon
+  if (/search|find|grep|look/.test(text)) return SearchIcon
+  if (/read|inspect|view|load|open|check/.test(text)) return BookOpenIcon
+  if (/list/.test(text)) return ListIcon
+  if (/writ|save|report/.test(text)) return FilePenLineIcon
+  if (/run|exec|command/.test(text)) return TerminalIcon
+  if (/database|sample/.test(text)) return DatabaseIcon
+  if (/create|generat|prepar|config|build/.test(text)) return WrenchIcon
+  return CircleDotIcon
+}
+
+/** One flat trace line: muted icon + single-line label, Codex style. */
+function TraceRow({
+  icon: Icon,
+  active,
+  children,
+  detail,
+}: {
+  icon: LucideIcon
+  active: boolean
+  children: ReactNode
+  detail?: ReactNode
+}) {
+  return (
+    <li
+      className={cn(
+        'flex min-w-0 items-start gap-2.5 py-1 text-sm',
+        active ? 'text-foreground' : 'text-muted-foreground',
+      )}
+    >
+      <Icon className='mt-0.5 size-4 shrink-0 opacity-70' />
+      <div className='min-w-0 flex-1'>
+        {children}
+        {detail}
+      </div>
+    </li>
+  )
+}
+
+function TraceLabel({ label, active }: { label: string; active: boolean }) {
+  return active ? (
+    <Shimmer as='span' className='block max-w-full truncate'>
+      {label}
+    </Shimmer>
+  ) : (
+    <span className='block truncate' title={label}>
+      {label}
+    </span>
+  )
+}
+
+/** Keeps a scrolling trace pinned to its newest row while the run streams. */
+function useFollowLatest(active: boolean, latestId: number | undefined) {
+  const ref = useRef<HTMLUListElement>(null)
+  useEffect(() => {
+    if (!active || latestId === undefined || !ref.current) return
+    ref.current.scrollTop = ref.current.scrollHeight
+  }, [active, latestId])
+  return ref
 }
 
 function queueStatus(status: TodoActivityItem['status']): QueueItemStatus {
@@ -274,46 +337,42 @@ function ActivityStep({
     (active ? activity.message : activity.completeMessage) ||
     activity.message ||
     fallbackLabel
-  const detail = detailPreview(
-    activity.kind === 'sample_set_base_dir' ? activity.path : undefined,
-  )
+  const path =
+    activity.kind === 'sample_set_base_dir'
+      ? detailPreview(activity.path)
+      : undefined
 
   return (
-    <ChainOfThoughtStep
+    <TraceRow
       icon={activityIcon(activity)}
-      label={
-        activity.kind === 'sample_ask_human' &&
-        activity.questionAnswers?.length ? (
-          <QuestionAnswerActivity
-            answers={activity.questionAnswers}
-            label={label}
-          />
-        ) : activity.kind === 'sample_run_command' ? (
-          <CommandActivity
-            label={label}
-            command={activity.command}
-            active={active}
-          />
-        ) : (
-          label
-        )
-      }
-      description={
-        detail ? (
+      active={active}
+      detail={
+        path ? (
           <code
-            className='block font-mono text-[11px] text-foreground/70'
-            title={
-              activity.kind === 'sample_run_command'
-                ? activity.command
-                : activity.path
-            }
+            className='mt-0.5 block truncate font-mono text-[11px] text-muted-foreground'
+            title={activity.path}
           >
-            {detail}
+            {path}
           </code>
         ) : undefined
       }
-      status={active ? 'active' : 'complete'}
-    />
+    >
+      {activity.kind === 'sample_ask_human' &&
+      activity.questionAnswers?.length ? (
+        <QuestionAnswerActivity
+          answers={activity.questionAnswers}
+          label={label}
+        />
+      ) : activity.kind === 'sample_run_command' ? (
+        <CommandActivity
+          label={label}
+          command={activity.command}
+          active={active}
+        />
+      ) : (
+        <TraceLabel label={label} active={active} />
+      )}
+    </TraceRow>
   )
 }
 
@@ -328,12 +387,12 @@ function QuestionAnswerActivity({
 
   return (
     <Collapsible>
-      <CollapsibleTrigger className='group/question-answer flex w-full items-center justify-between gap-2 text-left'>
-        <span>{label}</span>
-        <ChevronDownIcon className='size-3.5 shrink-0 transition-transform group-data-[state=open]/question-answer:rotate-180' />
+      <CollapsibleTrigger className='group/question-answer flex max-w-full items-center gap-1 text-left transition-colors hover:text-foreground'>
+        <span className='truncate'>{label}</span>
+        <ChevronDownIcon className='size-3.5 shrink-0 -rotate-90 transition-transform group-data-[state=open]/question-answer:rotate-0' />
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <div className='mt-2 space-y-3 rounded-lg border bg-muted/30 p-3'>
+        <div className='mt-1.5 space-y-3 rounded-lg bg-muted/50 p-3'>
           {answers.map((answer, index) => (
             <div key={`${index}-${answer.question}`}>
               <p className='whitespace-pre-wrap font-medium text-foreground text-xs leading-relaxed'>
@@ -365,55 +424,46 @@ function TodoActivityGroup({
   label: string
 }) {
   const [expanded, setExpanded] = useState(false)
-  const activityListRef = useRef<HTMLDivElement>(null)
   const open = active || expanded
-  const latestActivityId = activities.at(-1)?.id
-
-  useEffect(() => {
-    if (!active || latestActivityId === undefined || !activityListRef.current)
-      return
-    activityListRef.current.scrollTop = activityListRef.current.scrollHeight
-  }, [active, latestActivityId])
+  const listRef = useFollowLatest(active, activities.at(-1)?.id)
 
   return (
-    <Collapsible
-      open={open}
-      onOpenChange={(nextOpen) => {
-        if (!active) setExpanded(nextOpen)
-      }}
-      className='ml-6'
-    >
-      <CollapsibleTrigger className='group/todo-activity flex w-[calc(100%-1.5rem)] items-center gap-2 text-left text-sm transition-colors hover:text-foreground'>
-        <ListTodoIcon className='size-4 shrink-0' />
-        <span className='min-w-0 flex-1 truncate' title={label}>
-          {label}
-        </span>
-        <span className='shrink-0 text-xs tabular-nums'>
-          {activities.length}
-        </span>
-        <ChevronDownIcon className='size-3.5 shrink-0 transition-transform group-data-[state=open]/todo-activity:rotate-180' />
-      </CollapsibleTrigger>
-      <CollapsibleContent>
-        <div
-          ref={activityListRef}
-          className='mt-2 ml-2 max-h-40 space-y-3 overflow-y-auto border-l pl-4 pr-2'
-        >
-          {activities.map((activity, index) => {
-            const isActivityActive = activity.toolStatus
-              ? active && activity.toolStatus === 'running'
-              : active && index === activities.length - 1
-            return (
-              <ActivityStep
-                key={`${activity.id}-${isActivityActive ? 'active' : 'complete'}`}
-                activity={activity}
-                active={isActivityActive}
-                fallbackLabel={fallbackLabel}
-              />
-            )
-          })}
-        </div>
-      </CollapsibleContent>
-    </Collapsible>
+    <TraceRow icon={ListTodoIcon} active={active}>
+      <Collapsible
+        open={open}
+        onOpenChange={(nextOpen) => {
+          if (!active) setExpanded(nextOpen)
+        }}
+      >
+        <CollapsibleTrigger className='group/todo-activity flex max-w-full items-center gap-1 text-left transition-colors hover:text-foreground'>
+          <TraceLabel label={label} active={active} />
+          <span className='shrink-0 text-xs tabular-nums opacity-70'>
+            {activities.length}
+          </span>
+          <ChevronDownIcon className='size-3.5 shrink-0 -rotate-90 transition-transform group-data-[state=open]/todo-activity:rotate-0' />
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <ul
+            ref={listRef}
+            className='mt-1 max-h-40 overflow-y-auto border-l pl-3'
+          >
+            {activities.map((activity, index) => {
+              const isActivityActive = activity.toolStatus
+                ? active && activity.toolStatus === 'running'
+                : active && index === activities.length - 1
+              return (
+                <ActivityStep
+                  key={`${activity.id}-${isActivityActive ? 'active' : 'complete'}`}
+                  activity={activity}
+                  active={isActivityActive}
+                  fallbackLabel={fallbackLabel}
+                />
+              )
+            })}
+          </ul>
+        </CollapsibleContent>
+      </Collapsible>
+    </TraceRow>
   )
 }
 
@@ -596,6 +646,68 @@ function useProgressActivities(events: AgentEvent[]) {
   }, [events, t])
 }
 
+function TodoPlan({
+  todo,
+  total,
+  items,
+  active,
+}: {
+  todo: ProgressActivity
+  total: number
+  items: TodoActivityItem[]
+  active: boolean
+}) {
+  const t = useTranslations('Chat.progress')
+  const completed = Math.min(todo.completed ?? 0, total)
+
+  return (
+    <Collapsible
+      defaultOpen={active}
+      className='rounded-lg border bg-muted/30 px-3 py-2'
+    >
+      <CollapsibleTrigger className='group/plan flex w-full items-center gap-2 text-left text-muted-foreground text-sm transition-colors hover:text-foreground'>
+        <ListTodoIcon className='size-4 shrink-0' />
+        <span className='min-w-0 flex-1 truncate'>
+          {todo.current || t('todo_complete')}
+        </span>
+        <span className='shrink-0 text-xs tabular-nums'>
+          {completed}/{total}
+        </span>
+        <ChevronDownIcon className='size-4 shrink-0 transition-transform group-data-[state=open]/plan:rotate-180' />
+      </CollapsibleTrigger>
+      <Progress
+        value={total > 0 ? (completed / total) * 100 : 0}
+        aria-label={t('todo_title', {
+          completed,
+          total,
+          current: todo.current ?? '',
+        })}
+        className='mt-2 h-1 bg-muted'
+      />
+      <CollapsibleContent>
+        <QueueList className='mt-2 mb-0'>
+          {items.map((item) => {
+            const status = queueStatus(item.status)
+            return (
+              <QueueItem
+                key={`${item.index ?? 'todo'}-${item.content}`}
+                className='px-1 hover:bg-transparent'
+              >
+                <div className='flex items-start gap-2'>
+                  <QueueItemIndicator status={status} className='mt-1' />
+                  <QueueItemContent status={status}>
+                    {item.content}
+                  </QueueItemContent>
+                </div>
+              </QueueItem>
+            )
+          })}
+        </QueueList>
+      </CollapsibleContent>
+    </Collapsible>
+  )
+}
+
 export function AgentRunProgress({
   events,
   run,
@@ -642,148 +754,163 @@ export function AgentRunProgress({
   const trailingActivities = isActive ? [] : builderPhaseActivities
   const historyItemCount = standaloneActivities.length + groupedTodoItems.length
 
-  if (!current) return null
+  const traceRef = useFollowLatest(isActive, current?.id)
+
+  if (!current) {
+    return isActive ? (
+      <Shimmer as='span' className='text-sm'>
+        {t('fallback_activity')}
+      </Shimmer>
+    ) : null
+  }
+
+  const currentLabel = current.message || t('fallback_activity')
 
   return (
-    <div className='space-y-3'>
+    <>
       {(currentInfo || groupedTodoItems.length > 0) && (
-        <ChainOfThought defaultOpen={isActive}>
-          <ChainOfThoughtHeader aria-live='polite'>
-            {isActive
-              ? t('running')
-              : t('history_count', { count: historyItemCount })}
-          </ChainOfThoughtHeader>
-          <ChainOfThoughtContent>
-            {leadingActivities.map((activity, index) => {
-              const active = activity.toolStatus
-                ? isActive && activity.toolStatus === 'running'
-                : isActive && index === leadingActivities.length - 1
-              return (
+        <Collapsible defaultOpen={isActive} className='group/trace'>
+          <CollapsibleTrigger
+            aria-live='polite'
+            className='flex max-w-full items-center gap-1 text-left text-muted-foreground text-sm transition-colors hover:text-foreground'
+          >
+            {isActive ? (
+              <Shimmer as='span' className='block max-w-full truncate'>
+                {currentLabel}
+              </Shimmer>
+            ) : (
+              <span className='truncate'>
+                {t('history_count', { count: historyItemCount })}
+              </span>
+            )}
+            <ChevronDownIcon className='size-3.5 shrink-0 -rotate-90 transition-transform group-data-[state=open]/trace:rotate-0' />
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <ul ref={traceRef} className='mt-1 max-h-64 overflow-y-auto pr-1'>
+              {leadingActivities.map((activity, index) => {
+                const active = activity.toolStatus
+                  ? isActive && activity.toolStatus === 'running'
+                  : isActive && index === leadingActivities.length - 1
+                return (
+                  <ActivityStep
+                    key={`${activity.id}-${active ? 'active' : 'complete'}`}
+                    activity={activity}
+                    active={active}
+                    fallbackLabel={t('fallback_activity')}
+                  />
+                )
+              })}
+              {groupedTodoItems.map(({ item, activities: todoActivities }) => {
+                const todoActive = item.status === 'in_progress' && isActive
+                return (
+                  <TodoActivityGroup
+                    key={`${item.index ?? 'todo'}-${item.content}`}
+                    activities={todoActivities}
+                    active={todoActive}
+                    fallbackLabel={t('fallback_activity')}
+                    label={t(
+                      todoActive
+                        ? 'todo_activity_active'
+                        : 'todo_activity_complete',
+                      {
+                        index: (item.index ?? 0) + 1,
+                        total: todo?.total ?? visibleTodoItems.length,
+                        task: item.content,
+                      },
+                    )}
+                  />
+                )
+              })}
+              {trailingActivities.map((activity, index) => (
                 <ActivityStep
-                  key={`${activity.id}-${active ? 'active' : 'complete'}`}
+                  key={`${activity.id}-complete-${index}`}
                   activity={activity}
-                  active={active}
+                  active={false}
                   fallbackLabel={t('fallback_activity')}
                 />
-              )
-            })}
-            {groupedTodoItems.map(({ item, activities: todoActivities }) => {
-              const todoActive = item.status === 'in_progress' && isActive
-              const position = (item.index ?? 0) + 1
-              return (
-                <TodoActivityGroup
-                  key={`${item.index ?? 'todo'}-${item.content}`}
-                  activities={todoActivities}
-                  active={todoActive}
-                  fallbackLabel={t('fallback_activity')}
-                  label={t(
-                    todoActive
-                      ? 'todo_activity_active'
-                      : 'todo_activity_complete',
-                    {
-                      index: position,
-                      total: todo?.total ?? visibleTodoItems.length,
-                      task: item.content,
-                    },
-                  )}
-                />
-              )
-            })}
-            {trailingActivities.map((activity, index) => (
-              <ActivityStep
-                key={`${activity.id}-complete-${index}`}
-                activity={activity}
-                active={false}
-                fallbackLabel={t('fallback_activity')}
-              />
-            ))}
-          </ChainOfThoughtContent>
-        </ChainOfThought>
+              ))}
+            </ul>
+          </CollapsibleContent>
+        </Collapsible>
       )}
 
       {todo && todo.total !== undefined && (
-        <Queue>
-          <QueueSection defaultOpen={isActive}>
-            <QueueSectionTrigger>
-              <QueueSectionLabel
-                icon={<ListTodoIcon className='size-4' />}
-                label={
-                  todo.current
-                    ? t('todo_title', {
-                        completed: todo.completed ?? 0,
-                        total: todo.total,
-                        current: todo.current,
-                      })
-                    : t('todo_complete')
-                }
-              />
-            </QueueSectionTrigger>
-            <QueueSectionContent>
-              <QueueList>
-                {visibleTodoItems.map((item) => {
-                  const status = queueStatus(item.status)
-                  return (
-                    <QueueItem key={`${item.index ?? 'todo'}-${item.content}`}>
-                      <div className='flex items-start gap-2'>
-                        <QueueItemIndicator status={status} />
-                        <QueueItemContent status={status}>
-                          {item.content}
-                        </QueueItemContent>
-                        {item.index !== undefined && (
-                          <span className='shrink-0 text-xs text-muted-foreground tabular-nums'>
-                            {item.index + 1}/{todo.total}
-                          </span>
-                        )}
-                      </div>
-                    </QueueItem>
-                  )
-                })}
-              </QueueList>
-            </QueueSectionContent>
-          </QueueSection>
-        </Queue>
+        <TodoPlan
+          todo={todo}
+          total={todo.total}
+          items={visibleTodoItems}
+          active={isActive}
+        />
       )}
-    </div>
+    </>
+  )
+}
+
+function ArtifactLinkCard({
+  href,
+  title,
+  icon: Icon,
+  eyebrow,
+  name,
+  description,
+  action,
+}: {
+  href: string
+  title: string
+  icon: LucideIcon
+  eyebrow: string
+  name: string
+  description?: string | null
+  action: string
+}) {
+  return (
+    <Link
+      href={href}
+      title={title}
+      className='group block rounded-xl border bg-card p-3 shadow-xs transition-[border-color,box-shadow] hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+    >
+      <div className='flex items-start gap-3'>
+        <span className='flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary'>
+          <Icon className='size-4' />
+        </span>
+        <div className='min-w-0 flex-1'>
+          <p className='flex items-center gap-1 text-success text-xs'>
+            <CheckCircle2Icon className='size-3.5' />
+            <span className='truncate'>{eyebrow}</span>
+          </p>
+          <p className='mt-0.5 truncate font-medium text-sm group-hover:text-primary'>
+            {name}
+          </p>
+          {description && (
+            <p className='mt-1 line-clamp-2 text-muted-foreground text-xs leading-relaxed'>
+              {description}
+            </p>
+          )}
+        </div>
+        <ArrowUpRightIcon
+          aria-hidden='true'
+          className='size-4 shrink-0 text-muted-foreground group-hover:text-primary'
+        />
+      </div>
+      <span className='sr-only'>{action}</span>
+    </Link>
   )
 }
 
 function ToolArtifactCard({ artifact }: { artifact: AgentToolArtifact }) {
   const t = useTranslations('Chat.artifact')
   const { data: tool } = useTool(artifact.uid)
-  const name = tool?.name || artifact.name || t('tool_fallback')
-  const description = tool?.description || artifact.description
 
   return (
-    <Link
+    <ArtifactLinkCard
       href={`/tool/${artifact.uid}`}
       title={artifact.uid}
-      className='group relative block overflow-hidden rounded-xl border border-border bg-card p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:border-foreground/30 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
-    >
-      <span className='absolute inset-y-0 left-0 w-1 bg-success' />
-      <div className='flex items-start gap-3 pl-1'>
-        <span className='flex size-10 shrink-0 items-center justify-center rounded-lg bg-foreground text-background shadow-sm'>
-          <WrenchIcon className='size-5' />
-        </span>
-        <div className='min-w-0 flex-1'>
-          <p className='flex items-center gap-1.5 font-semibold text-[11px] text-foreground uppercase tracking-wide'>
-            <CheckCircle2Icon className='size-3.5 text-success' />
-            <span>{t('tool_created')}</span>
-          </p>
-          <p className='mt-1 truncate font-semibold text-sm'>{name}</p>
-          {description && (
-            <p className='mt-1.5 line-clamp-2 text-foreground/70 text-xs leading-relaxed'>
-              {description}
-            </p>
-          )}
-        </div>
-      </div>
-      <div className='mt-3 flex items-center justify-between border-t pl-1 pt-2.5'>
-        <span className='font-medium text-foreground text-xs'>
-          {t('open_tool')}
-        </span>
-        <ArrowUpRightIcon className='size-4 text-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5' />
-      </div>
-    </Link>
+      icon={WrenchIcon}
+      eyebrow={t('tool_created')}
+      name={tool?.name || artifact.name || t('tool_fallback')}
+      description={tool?.description || artifact.description}
+      action={t('open_tool')}
+    />
   )
 }
 
@@ -798,44 +925,21 @@ function WorkflowArtifactCard({
 }) {
   const t = useTranslations('Chat.artifact')
   const { data: workflow } = useWorkflow(uid)
-  const href =
-    projectId && !subgraph
-      ? `/editor?workflowUid=${uid}&projectId=${projectId}`
-      : `/editor?workflowUid=${uid}`
 
   return (
-    <Link
-      href={href}
+    <ArtifactLinkCard
+      href={
+        projectId && !subgraph
+          ? `/editor?workflowUid=${uid}&projectId=${projectId}`
+          : `/editor?workflowUid=${uid}`
+      }
       title={uid}
-      className='group relative block overflow-hidden rounded-xl border border-border bg-card p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:border-foreground/30 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
-    >
-      <span className='absolute inset-y-0 left-0 w-1 bg-info' />
-      <div className='flex items-start gap-3 pl-1'>
-        <span className='flex size-10 shrink-0 items-center justify-center rounded-lg bg-info text-white shadow-sm'>
-          <WaypointsIcon className='size-5' />
-        </span>
-        <div className='min-w-0 flex-1'>
-          <p className='flex items-center gap-1.5 font-semibold text-[11px] text-foreground uppercase tracking-wide'>
-            <CheckCircle2Icon className='size-3.5 text-info' />
-            <span>{t(subgraph ? 'subgraph_created' : 'workflow_created')}</span>
-          </p>
-          <p className='mt-1 truncate font-semibold text-sm'>
-            {workflow?.name || t('workflow_fallback')}
-          </p>
-          {workflow?.description && (
-            <p className='mt-1.5 line-clamp-2 text-foreground/70 text-xs leading-relaxed'>
-              {workflow.description}
-            </p>
-          )}
-        </div>
-      </div>
-      <div className='mt-3 flex items-center justify-between border-t pl-1 pt-2.5'>
-        <span className='font-medium text-foreground text-xs'>
-          {t('edit_workflow')}
-        </span>
-        <ArrowUpRightIcon className='size-4 text-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5' />
-      </div>
-    </Link>
+      icon={WaypointsIcon}
+      eyebrow={t(subgraph ? 'subgraph_created' : 'workflow_created')}
+      name={workflow?.name || t('workflow_fallback')}
+      description={workflow?.description}
+      action={t('edit_workflow')}
+    />
   )
 }
 

@@ -47,7 +47,6 @@
     "input_unavailable": "Create or load a conversation to start chatting",
     "new_conversation": "New Conversation",
     "no_history": "No chat history yet",
-    "placeholder": "Type / to choose an assistant…",
     "plan_approval_prompt": "The workflow plan is ready. Review it, then approve it or send feedback for revision.",
     "plan_title": "Workflow plan review",
     "plan_unavailable": "The plan content is unavailable. Please retry this run before approving it.",
@@ -115,7 +114,7 @@
           }
         }
       },
-      "history_count": "Run history ({count})",
+      "history_count": "Ran {count, plural, one {# step} other {# steps}}",
       "phase": {
         "sample_manager": {
           "active": "Preparing project samples",
@@ -132,7 +131,6 @@
           "reused": "Loaded the existing workflow plan"
         }
       },
-      "running": "Agent is running",
       "sample": {
         "add_project_file": {
           "active": "Registering proj:{keyword}",
@@ -172,18 +170,12 @@
       "todo_activity_complete": "Completed {index}/{total} · {task}",
       "todo_title": "{completed}/{total} · {current}"
     },
-    "progress_updates": "{count, plural, one {# progress update} other {# progress updates}}",
     "rename": "Rename",
     "resize": "Resize chat sidebar",
     "retry": "Retry",
     "send": "Send",
     "send_feedback": "Send feedback",
     "submit_answers": "Submit answers",
-    "status": {
-      "cancel_requested": "Cancelling",
-      "queued": "Queued",
-      "running": "Running"
-    },
     "suggestions": {
       "diagnose": "Diagnose this run",
       "fix": "Repair current workflow"
@@ -211,6 +203,9 @@
       "retry": "Retry",
       "pdf_ready": "PDF · Text ready",
       "pdf_parsing": "Parsing PDF…"
-    }
+    },
+    "loading": "Loading conversation…",
+    "empty_no_session": "Start a new conversation to work with an assistant.",
+    "choose_assistant": "Assistants"
   }
 }

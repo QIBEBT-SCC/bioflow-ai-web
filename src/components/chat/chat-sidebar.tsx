@@ -1,42 +1,31 @@
 'use client'
 
 import {
-  FlaskConicalIcon,
-  HammerIcon,
+  ArrowUpIcon,
+  BotIcon,
   Loader2Icon,
-  MessageSquareTextIcon,
   PaperclipIcon,
   PlusIcon,
-  RotateCcwIcon,
-  SendIcon,
+  SparklesIcon,
   SquareIcon,
-  TestTubeDiagonalIcon,
-  WrenchIcon,
 } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import type React from 'react'
-import { Fragment, useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import type { AgentScope } from '@/app/actions/agent'
 import {
   Conversation,
   ConversationContent,
-  ConversationEmptyState,
   ConversationScrollButton,
 } from '@/components/ai-elements/conversation'
-import { Loader } from '@/components/ai-elements/loader'
-import {
-  Message,
-  MessageContent,
-  MessageResponse,
-} from '@/components/ai-elements/message'
+import { Message, MessageResponse } from '@/components/ai-elements/message'
 import { Suggestion, Suggestions } from '@/components/ai-elements/suggestion'
 import { AgentImage } from '@/components/chat/agent-image'
+import { AGENT_ICONS, AGENT_NAMES } from '@/components/chat/agent-meta'
 import { AgentPDF } from '@/components/chat/agent-pdf'
-import {
-  AgentRunArtifacts,
-  AgentRunProgress,
-} from '@/components/chat/agent-run-content'
+import { AgentRunArtifacts } from '@/components/chat/agent-run-content'
+import { AgentRunTrace } from '@/components/chat/agent-run-trace'
 import { AgentWorkflowNode } from '@/components/chat/agent-workflow-node'
 import { SidebarHistoryMenu } from '@/components/chat/chat-history-menu'
 import { DraftAttachments } from '@/components/chat/draft-attachments'
@@ -52,6 +41,7 @@ import {
 } from '@/components/chat/slash-commannd'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Textarea } from '@/components/ui/textarea'
 import {
   useAgentMessages,
@@ -72,11 +62,13 @@ import {
 } from '@/hooks/use-chat-attachment'
 import type { Locale } from '@/i18n/config'
 import { parseAgentQuestionAnswers } from '@/lib/agent-questions'
+import { cn } from '@/lib/utils'
 import { getSuggestedWorkflowAgent } from '@/lib/workflow-agent-suggestions'
 import { useChatSidebarStore } from '@/stores/chat-sidebar-store'
 import {
   ACTIVE_AGENT_STATUSES,
   type AgentMessage,
+  type AgentMessagePart,
   type AgentName,
   type AgentRun,
   type AgentWorkflowNodePart,
@@ -94,29 +86,6 @@ type AgentSlashCommand = SlashCommand & {
   key: AgentName
 }
 
-const CHAT_COMMANDS: Pick<AgentSlashCommand, 'key' | 'icon'>[] = [
-  {
-    key: 'workflow-builder',
-    icon: FlaskConicalIcon,
-  },
-  {
-    key: 'workflow-assistant',
-    icon: MessageSquareTextIcon,
-  },
-  {
-    key: 'workflow-fixer',
-    icon: HammerIcon,
-  },
-  {
-    key: 'sample-manager',
-    icon: TestTubeDiagonalIcon,
-  },
-  {
-    key: 'tool-generator',
-    icon: WrenchIcon,
-  },
-]
-
 function parseAgentCommand(value: string, commands: AgentSlashCommand[]) {
   const match = /^\/([\w-]+)(?:\s+([\s\S]*))?$/.exec(value)
   if (!match) return null
@@ -125,28 +94,82 @@ function parseAgentCommand(value: string, commands: AgentSlashCommand[]) {
   return { command, prompt: match[2] ?? '' }
 }
 
+function MessageAttachment({ part }: { part: AgentMessagePart }) {
+  if (part.type === 'image') return <AgentImage image={part} />
+  if (part.type === 'pdf') return <AgentPDF pdf={part} />
+  if (part.type === 'workflow_node') return <AgentWorkflowNode node={part} />
+  return null
+}
+
+function attachmentKey(part: AgentMessagePart) {
+  if (part.type === 'image') return `image-${part.id}`
+  if (part.type === 'pdf') return `pdf-${part.id}`
+  if (part.type === 'workflow_node')
+    return `node-${part.run_uid}-${part.node_id}`
+  return `text-${part.text}`
+}
+
 function ChatMessage({ message }: { message: AgentMessage }) {
+  const isUser = message.role === 'user'
+  const attachments = message.parts.filter((part) => part.type !== 'text')
+  const texts = message.parts.flatMap((part) =>
+    part.type === 'text' && part.text.trim() ? [part.text] : [],
+  )
   return (
-    <Message from={message.role}>
-      <MessageContent>
-        {message.parts.map((part, index) =>
-          part.type === 'image' ? (
-            <AgentImage key={part.id} image={part} />
-          ) : part.type === 'pdf' ? (
-            <AgentPDF key={`pdf-${part.id}-${index}`} pdf={part} />
-          ) : part.type === 'workflow_node' ? (
-            <AgentWorkflowNode
-              key={`node-${part.run_uid}-${part.node_id}`}
-              node={part}
-            />
-          ) : (
-            <MessageResponse key={`${message.uid}-${part.text}`}>
-              {part.text}
-            </MessageResponse>
-          ),
-        )}
-      </MessageContent>
+    <Message
+      from={message.role}
+      className={cn(isUser ? 'max-w-[88%] items-end' : 'max-w-full')}
+    >
+      {attachments.length > 0 && (
+        <div className={cn('flex flex-wrap gap-2', isUser && 'justify-end')}>
+          {attachments.map((part) => (
+            <MessageAttachment key={attachmentKey(part)} part={part} />
+          ))}
+        </div>
+      )}
+      {texts.map((text) =>
+        isUser ? (
+          <div
+            key={`${message.uid}-${text}`}
+            className='w-fit max-w-full rounded-2xl rounded-br-md bg-primary/10 px-3.5 py-2.5 text-foreground text-sm'
+          >
+            <MessageResponse>{text}</MessageResponse>
+          </div>
+        ) : (
+          <MessageResponse
+            key={`${message.uid}-${text}`}
+            className='text-sm leading-relaxed'
+          >
+            {text}
+          </MessageResponse>
+        ),
+      )}
     </Message>
+  )
+}
+
+function ConversationSkeleton({ label }: { label: string }) {
+  return (
+    <div aria-busy='true' className='flex flex-col gap-4'>
+      <span className='sr-only'>{label}</span>
+      <Skeleton className='ml-auto h-10 w-3/5 rounded-2xl' />
+      <Skeleton className='h-14 w-full rounded-xl' />
+      <div className='space-y-2'>
+        <Skeleton className='h-4 w-11/12' />
+        <Skeleton className='h-4 w-4/5' />
+        <Skeleton className='h-4 w-2/3' />
+      </div>
+    </div>
+  )
+}
+
+function ActiveAgentPill({ command }: { command: AgentSlashCommand }) {
+  const Icon = command.icon ?? SparklesIcon
+  return (
+    <span className='flex h-6 min-w-0 items-center gap-1.5 rounded-full bg-primary/10 px-2 text-primary text-xs'>
+      <Icon className='size-3.5 shrink-0' />
+      <span className='truncate'>{command.label}</span>
+    </span>
   )
 }
 
@@ -209,22 +232,19 @@ function ChatSidebarInner({
   }, [run, storedRuns])
 
   const availableCommands = useMemo(() => {
-    const commands =
+    const names =
       scope.scope === 'project'
-        ? CHAT_COMMANDS.filter((command) => {
-            if (
-              command.key === 'workflow-assistant' ||
-              command.key === 'workflow-fixer'
-            ) {
-              return Boolean(sourceRunUid)
-            }
-            return true
-          })
-        : CHAT_COMMANDS.filter((command) => command.key === 'tool-generator')
-    return commands.map<AgentSlashCommand>((command) => ({
-      ...command,
-      label: t(`assistants.${command.key}.label`),
-      description: t(`assistants.${command.key}.description`),
+        ? AGENT_NAMES.filter(
+            (name) =>
+              Boolean(sourceRunUid) ||
+              (name !== 'workflow-assistant' && name !== 'workflow-fixer'),
+          )
+        : AGENT_NAMES.filter((name) => name === 'tool-generator')
+    return names.map<AgentSlashCommand>((name) => ({
+      key: name,
+      icon: AGENT_ICONS[name],
+      label: t(`assistants.${name}.label`),
+      description: t(`assistants.${name}.description`),
     }))
   }, [scope.scope, sourceRunUid, t])
   const slashCommand = useSlashCommand({
@@ -385,9 +405,28 @@ function ChatSidebarInner({
     }
   }
 
-  const progressEvents = events.filter(
-    (event) => event.event_type === 'run.progress',
-  )
+  const retry = async (failedRun: AgentRun) => {
+    setLocalError(null)
+    try {
+      const retried = await retryRun({ runId: failedRun.uid, language })
+      setRunId(retried.uid)
+    } catch (error) {
+      setLocalError(error instanceof Error ? error.message : String(error))
+    }
+  }
+
+  const chooseCommand = (command: AgentSlashCommand) => {
+    slashCommand.select(command)
+    requestAnimationFrame(() => textareaRef.current?.focus())
+  }
+
+  const openCommandMenu = () => {
+    slashCommand.onValueChange('/')
+    requestAnimationFrame(() => textareaRef.current?.focus())
+  }
+
+  const isLoading = isSessionLoading || isMessagesLoading || isRunsLoading
+  const inputLocked = inputDisabled || isBusy || isSubmitting
   const isPlanApproval = run?.interrupt_payload?.kind === 'plan_approval'
   const questions =
     run?.interrupt_payload?.kind === 'questions' &&
@@ -405,15 +444,30 @@ function ChatSidebarInner({
         type='button'
         aria-label={t('resize')}
         onMouseDown={onResizeStart}
-        className='w-1 shrink-0 cursor-col-resize border-l bg-background p-0 hover:bg-primary/40'
+        className='w-1 shrink-0 cursor-col-resize border-l bg-background p-0 transition-colors hover:bg-primary/40'
       />
       <div
         className='flex h-full flex-col overflow-hidden bg-background'
         style={{ width }}
       >
-        <div className='flex h-12 items-center justify-between border-b px-3'>
-          <span className='text-sm font-medium'>{t('title')}</span>
-          <div className='flex items-center gap-1'>
+        <header className='flex h-12 shrink-0 items-center gap-2.5 border-b px-3'>
+          <span className='flex size-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary'>
+            <SparklesIcon className='size-4' />
+          </span>
+          <div className='min-w-0 flex-1'>
+            <h2 className='truncate font-medium text-sm leading-tight'>
+              {t('title')}
+            </h2>
+            {session?.title && (
+              <p
+                className='truncate text-muted-foreground text-xs leading-tight'
+                title={session.title}
+              >
+                {session.title}
+              </p>
+            )}
+          </div>
+          <div className='flex shrink-0 items-center gap-0.5'>
             <Button
               variant='ghost'
               size='icon'
@@ -421,6 +475,7 @@ function ChatSidebarInner({
               onClick={() => void newChat()}
               disabled={isCreating}
               title={t('new_conversation')}
+              aria-label={t('new_conversation')}
             >
               {isCreating ? (
                 <Loader2Icon className='size-4 animate-spin' />
@@ -435,17 +490,71 @@ function ChatSidebarInner({
               onDeleteActive={() => clearSession(scopeKey)}
             />
           </div>
-        </div>
+        </header>
 
         <Conversation className='min-h-0 flex-1'>
-          <ConversationContent className='px-3'>
-            {isSessionLoading || isMessagesLoading || isRunsLoading ? (
-              <Loader />
+          <ConversationContent className='gap-6 px-3 py-4'>
+            {isLoading ? (
+              <ConversationSkeleton label={t('loading')} />
             ) : messages.length === 0 && displayRuns.length === 0 ? (
-              <ConversationEmptyState
-                title={t('assistant')}
-                description={t('empty_description')}
-              />
+              <div className='flex flex-col gap-5 py-6'>
+                <div className='flex flex-col items-center gap-2 text-center'>
+                  <span className='flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary'>
+                    <SparklesIcon className='size-5' />
+                  </span>
+                  <h3 className='font-semibold text-base'>{t('assistant')}</h3>
+                  <p className='max-w-72 text-muted-foreground text-sm'>
+                    {sessionId ? t('empty_description') : t('empty_no_session')}
+                  </p>
+                </div>
+                {sessionId ? (
+                  <ul className='flex flex-col gap-2'>
+                    {availableCommands.map((command) => {
+                      const Icon = command.icon ?? SparklesIcon
+                      return (
+                        <li key={command.key}>
+                          <button
+                            type='button'
+                            disabled={inputLocked}
+                            onClick={() => chooseCommand(command)}
+                            className='group flex w-full items-start gap-3 rounded-xl border bg-card p-3 text-left shadow-xs transition-[border-color,box-shadow] hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50'
+                          >
+                            <span className='flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary'>
+                              <Icon className='size-4' />
+                            </span>
+                            <span className='min-w-0 flex-1'>
+                              <span className='flex items-baseline gap-2'>
+                                <span className='truncate font-medium text-sm group-hover:text-primary'>
+                                  {command.label}
+                                </span>
+                                <code className='shrink-0 font-mono text-muted-foreground text-xs'>
+                                  /{command.key}
+                                </code>
+                              </span>
+                              <span className='mt-0.5 line-clamp-2 text-muted-foreground text-xs leading-relaxed'>
+                                {command.description}
+                              </span>
+                            </span>
+                          </button>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                ) : (
+                  <Button
+                    className='self-center'
+                    onClick={() => void newChat()}
+                    disabled={isCreating}
+                  >
+                    {isCreating ? (
+                      <Loader2Icon className='animate-spin' />
+                    ) : (
+                      <PlusIcon />
+                    )}
+                    {t('new_conversation')}
+                  </Button>
+                )}
+              </div>
             ) : (
               <>
                 {displayRuns.map((displayRun: AgentRun) => {
@@ -455,20 +564,14 @@ function ChatSidebarInner({
                   const userMessages = runMessages.filter(
                     (message) => message.role === 'user',
                   )
-                  const parsedUserMessages = userMessages.map(
-                    (message, index) => ({
-                      message,
-                      questionAnswers:
+                  const visibleUserMessages = userMessages.filter(
+                    (message, index) =>
+                      !(
                         index > 0 &&
                         message.parts.length === 1 &&
-                        message.parts[0].type === 'text'
-                          ? parseAgentQuestionAnswers(message.parts[0].text)
-                          : undefined,
-                    }),
-                  )
-                  const visibleUserMessages = parsedUserMessages.flatMap(
-                    ({ message, questionAnswers }) =>
-                      questionAnswers ? [] : [message],
+                        message.parts[0].type === 'text' &&
+                        parseAgentQuestionAnswers(message.parts[0].text)
+                      ),
                   )
                   const assistantMessages = runMessages.filter(
                     (message) => message.role === 'assistant',
@@ -477,18 +580,28 @@ function ChatSidebarInner({
                     displayRun.uid === runId && events.length > 0
                       ? events
                       : (eventHistory[displayRun.uid] ?? [])
+                  const isCurrentRun = displayRun.uid === run?.uid
 
                   return (
-                    <Fragment key={displayRun.uid}>
+                    <div key={displayRun.uid} className='flex flex-col gap-3'>
                       {visibleUserMessages.map((message) => (
                         <ChatMessage key={message.uid} message={message} />
                       ))}
-                      <AgentRunProgress events={runEvents} run={displayRun} />
+                      <AgentRunTrace
+                        run={displayRun}
+                        events={runEvents}
+                        onRetry={
+                          isCurrentRun
+                            ? () => void retry(displayRun)
+                            : undefined
+                        }
+                        isRetrying={isRetrying}
+                      />
                       {assistantMessages.map((message) => (
                         <ChatMessage key={message.uid} message={message} />
                       ))}
                       <AgentRunArtifacts run={displayRun} />
-                    </Fragment>
+                    </div>
                   )
                 })}
                 {unmatchedMessages.map((message) => (
@@ -497,16 +610,6 @@ function ChatSidebarInner({
               </>
             )}
 
-            {run &&
-              progressEvents.length === 0 &&
-              ['queued', 'running', 'cancel_requested'].includes(
-                run.status,
-              ) && (
-                <div className='flex items-center gap-2 text-muted-foreground text-sm'>
-                  <Loader />
-                  <span>{t(`status.${run.status}`)}</span>
-                </div>
-              )}
             {run?.status === 'waiting_input' &&
               (isPlanApproval ? (
                 <PlanApproval
@@ -524,7 +627,7 @@ function ChatSidebarInner({
                   onSubmit={(response) => void resume(false, response)}
                 />
               ) : (
-                <Alert>
+                <Alert variant='warning'>
                   <AlertDescription className='space-y-3'>
                     <MessageResponse>
                       {typeof run.interrupt_payload?.question === 'string'
@@ -537,6 +640,7 @@ function ChatSidebarInner({
                       value={feedback}
                       onChange={(event) => setFeedback(event.target.value)}
                       placeholder={t('feedback_placeholder')}
+                      className='bg-background'
                     />
                     <div className='flex gap-2'>
                       <Button
@@ -558,61 +662,29 @@ function ChatSidebarInner({
                   </AlertDescription>
                 </Alert>
               ))}
-            {run?.status === 'failed' && (
-              <Alert variant='destructive'>
-                <AlertDescription className='space-y-2'>
-                  <p>{run.error_message || t('failed')}</p>
-                  <Button
-                    size='sm'
-                    variant='outline'
-                    onClick={async () => {
-                      setLocalError(null)
-                      try {
-                        const retried = await retryRun({
-                          runId: run.uid,
-                          language,
-                        })
-                        setRunId(retried.uid)
-                      } catch (error) {
-                        setLocalError(
-                          error instanceof Error
-                            ? error.message
-                            : String(error),
-                        )
-                      }
-                    }}
-                    disabled={isRetrying}
-                  >
-                    <RotateCcwIcon className='size-3' /> {t('retry')}
-                  </Button>
-                </AlertDescription>
-              </Alert>
-            )}
-            {localError && (
-              <Alert variant='destructive'>
-                <AlertDescription>{localError}</AlertDescription>
-              </Alert>
-            )}
-            {attachments.error && (
-              <Alert variant='destructive'>
-                <AlertDescription>{attachments.error}</AlertDescription>
-              </Alert>
-            )}
           </ConversationContent>
-          <ConversationScrollButton />
+          <ConversationScrollButton className='bottom-3 size-8 shadow-sm' />
         </Conversation>
 
-        <div className='border-t bg-linear-to-t from-muted/45 via-background to-background px-3 pt-3 pb-3'>
+        <div className='shrink-0 space-y-2 px-3 pt-1 pb-3'>
+          {(localError || attachments.error) && (
+            <Alert variant='destructive' className='py-2'>
+              <AlertDescription className='text-xs'>
+                {localError ?? attachments.error}
+              </AlertDescription>
+            </Alert>
+          )}
           {workflowSuggestions.length > 0 && !isBusy && !nodeAttachment && (
-            <Suggestions className='mb-2'>
+            <Suggestions>
               {workflowSuggestions.map((suggestion) => (
                 <Suggestion
                   key={suggestion.agentName}
                   suggestion={suggestion.prompt}
                   onClick={() => void runWorkflowSuggestion(suggestion)}
                   disabled={isCreating || isSubmitting}
-                  className='border-primary/35 bg-primary/4 text-primary shadow-none hover:bg-primary/4 hover:text-primary dark:border-primary/40 dark:bg-primary/[0.07] dark:hover:bg-primary/[0.07]'
+                  className='h-7 gap-1.5 border-primary/30 px-3 text-primary text-xs shadow-none hover:bg-primary/5 hover:text-primary'
                 >
+                  <SparklesIcon className='size-3.5' />
                   {suggestion.label}
                 </Suggestion>
               ))}
@@ -628,12 +700,7 @@ function ChatSidebarInner({
                       key={command.key}
                       active={index === slashCommand.activeIndex}
                       onMouseDown={(event) => event.preventDefault()}
-                      onClick={() => {
-                        slashCommand.select(command)
-                        requestAnimationFrame(() =>
-                          textareaRef.current?.focus(),
-                        )
-                      }}
+                      onClick={() => chooseCommand(command)}
                       onMouseEnter={() => slashCommand.setActiveIndex(index)}
                     >
                       {Icon && <Icon className='size-4 shrink-0' />}
@@ -657,10 +724,10 @@ function ChatSidebarInner({
               onDrop={(event) => {
                 if (event.dataTransfer.files.length === 0) return
                 event.preventDefault()
-                if (!inputDisabled && !isBusy && !isSubmitting)
+                if (!inputLocked)
                   attachments.addFiles(Array.from(event.dataTransfer.files))
               }}
-              className='group rounded-2xl border border-border/80 bg-card/95 shadow-[0_8px_28px_-16px_rgb(0_0_0/0.45)] ring-1 ring-black/2.5 transition-[border-color,box-shadow] focus-within:border-primary/45 focus-within:shadow-[0_12px_36px_-18px_rgb(0_0_0/0.5)] focus-within:ring-4 focus-within:ring-primary/10 dark:bg-card/90 dark:ring-white/4'
+              className='rounded-xl border bg-card shadow-sm transition-[border-color,box-shadow] focus-within:border-primary/50 focus-within:ring-3 focus-within:ring-primary/10'
             >
               <DraftAttachments
                 drafts={attachments.drafts}
@@ -671,7 +738,7 @@ function ChatSidebarInner({
                 onRemoveNode={onRemoveNodeAction}
               />
               {nodeError && (
-                <output className='block px-3 pt-2 text-xs text-destructive'>
+                <output className='block px-3 pt-2 text-destructive text-xs'>
                   {nodeError}
                 </output>
               )}
@@ -683,7 +750,7 @@ function ChatSidebarInner({
                 className='sr-only'
                 tabIndex={-1}
                 aria-label={t('images.add')}
-                disabled={inputDisabled || isBusy || isSubmitting}
+                disabled={inputLocked}
                 onChange={(event) => {
                   attachments.addFiles(Array.from(event.target.files ?? []))
                   event.target.value = ''
@@ -693,9 +760,9 @@ function ChatSidebarInner({
                 {parsedCommand && (
                   <div
                     aria-hidden='true'
-                    className='pointer-events-none absolute inset-x-0 top-0 min-h-20 whitespace-pre-wrap wrap-break-word px-3 py-2 text-base md:text-sm'
+                    className='pointer-events-none absolute inset-x-0 top-0 min-h-16 whitespace-pre-wrap wrap-break-word px-3 py-2 text-base md:text-sm'
                   >
-                    <span className='text-primary [-webkit-text-stroke:0.25px_currentColor]'>
+                    <span className='rounded-sm bg-primary/10 text-primary'>
                       /{parsedCommand.command.key}
                     </span>
                     <span className='text-foreground'>
@@ -713,8 +780,7 @@ function ChatSidebarInner({
                     const files = Array.from(event.clipboardData.files)
                     if (files.length === 0) return
                     event.preventDefault()
-                    if (!inputDisabled && !isBusy && !isSubmitting)
-                      attachments.addFiles(files)
+                    if (!inputLocked) attachments.addFiles(files)
                   }}
                   onKeyDown={(event) => {
                     slashCommand.onKeyDown(event)
@@ -730,50 +796,72 @@ function ChatSidebarInner({
                       ? t('input_unavailable')
                       : t('command_placeholder')
                   }
-                  disabled={inputDisabled || isBusy || isSubmitting}
-                  className={`relative min-h-20 resize-none border-0 bg-transparent px-3 shadow-none focus-visible:ring-0 dark:bg-transparent ${parsedCommand ? 'text-transparent caret-foreground selection:bg-primary/20' : ''}`}
+                  disabled={inputLocked}
+                  className={cn(
+                    'relative max-h-60 min-h-16 resize-none border-0 bg-transparent px-3 shadow-none focus-visible:ring-0 dark:bg-transparent',
+                    parsedCommand &&
+                      'text-transparent caret-foreground selection:bg-primary/20',
+                  )}
                 />
               </div>
-              <div className='flex items-center justify-between px-2 pb-2'>
+              <div className='flex items-center gap-1 px-2 pb-2'>
                 <Button
                   type='button'
-                  size='icon'
+                  size='icon-sm'
                   variant='ghost'
-                  disabled={
-                    inputDisabled ||
-                    isBusy ||
-                    isSubmitting ||
-                    attachments.drafts.length >= 4
-                  }
+                  className='text-muted-foreground'
+                  disabled={inputLocked || attachments.drafts.length >= 4}
                   aria-label={t('images.add')}
                   title={t('images.add')}
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <PaperclipIcon className='size-4' />
                 </Button>
+                {parsedCommand ? (
+                  <ActiveAgentPill command={parsedCommand.command} />
+                ) : (
+                  !text && (
+                    <Button
+                      type='button'
+                      size='sm'
+                      variant='ghost'
+                      className='h-8 gap-1 px-2 text-muted-foreground text-xs'
+                      disabled={inputLocked}
+                      onClick={openCommandMenu}
+                    >
+                      <BotIcon className='size-3.5' />
+                      {t('choose_assistant')}
+                    </Button>
+                  )
+                )}
+                <div className='flex-1' />
                 {isBusy && run ? (
                   <Button
                     type='button'
-                    size='icon'
-                    variant='ghost'
+                    size='icon-sm'
+                    variant='outline'
+                    className='rounded-lg'
                     onClick={() => void cancelRun(run.uid)}
                     disabled={isCancelling || run.status === 'cancel_requested'}
                     aria-label={t('cancel')}
+                    title={t('cancel')}
                   >
-                    <SquareIcon className='size-4' />
+                    <SquareIcon className='size-3.5 fill-current' />
                   </Button>
                 ) : (
                   <Button
                     type='button'
-                    size='icon'
+                    size='icon-sm'
+                    className='rounded-lg'
                     disabled={inputDisabled || !canSubmit || isSubmitting}
                     aria-label={t('send')}
+                    title={t('send')}
                     onClick={() => void submit()}
                   >
                     {isSubmitting ? (
                       <Loader2Icon className='size-4 animate-spin' />
                     ) : (
-                      <SendIcon className='size-4' />
+                      <ArrowUpIcon className='size-4' />
                     )}
                   </Button>
                 )}

@@ -47,7 +47,6 @@
     "input_unavailable": "请先创建或载入一个对话",
     "new_conversation": "新建对话",
     "no_history": "暂无对话历史",
-    "placeholder": "输入 / 选择助手…",
     "plan_approval_prompt": "工作流计划已经生成。请检查计划后批准，或发送反馈让智能体继续修改。",
     "plan_title": "确认工作流计划",
     "plan_unavailable": "暂时无法读取计划内容，请重试本次任务后再批准。",
@@ -115,7 +114,7 @@
           }
         }
       },
-      "history_count": "运行轨迹（{count}）",
+      "history_count": "执行了 {count} 个步骤",
       "phase": {
         "sample_manager": {
           "active": "正在准备项目样本",
@@ -132,7 +131,6 @@
           "reused": "已加载现有工作流计划"
         }
       },
-      "running": "智能体正在运行",
       "sample": {
         "add_project_file": {
           "active": "正在注册 proj:{keyword}",
@@ -172,18 +170,12 @@
       "todo_activity_complete": "已完成 {index}/{total} · {task}",
       "todo_title": "{completed}/{total} · {current}"
     },
-    "progress_updates": "{count} 条进度更新",
     "rename": "重命名",
     "resize": "调整对话侧栏宽度",
     "retry": "重试",
     "send": "发送",
     "send_feedback": "发送反馈",
     "submit_answers": "提交回答",
-    "status": {
-      "cancel_requested": "正在取消",
-      "queued": "排队中",
-      "running": "运行中"
-    },
     "suggestions": {
       "diagnose": "诊断本次运行",
       "fix": "修复当前工作流"
@@ -211,6 +203,9 @@
       "retry": "重试",
       "pdf_ready": "PDF · 文本已准备",
       "pdf_parsing": "正在解析 PDF…"
-    }
+    },
+    "loading": "正在加载对话…",
+    "empty_no_session": "新建对话后即可与助手协作。",
+    "choose_assistant": "选择助手"
   }
 }

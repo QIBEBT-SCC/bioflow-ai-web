@@ -5,15 +5,71 @@ import {
   ImageIcon,
   Loader2Icon,
   RotateCcwIcon,
-  XIcon,
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { AgentImage } from '@/components/chat/agent-image'
 import { AgentPDF } from '@/components/chat/agent-pdf'
 import { AgentWorkflowNode } from '@/components/chat/agent-workflow-node'
+import {
+  AttachmentChip,
+  AttachmentRemoveButton,
+} from '@/components/chat/attachment-chip'
 import { Button } from '@/components/ui/button'
 import type { ChatAttachmentDraft } from '@/hooks/use-chat-attachment'
 import type { AgentWorkflowNodePart } from '@/types/agent'
+
+function PendingDraft({
+  draft,
+  disabled,
+  onRetry,
+}: {
+  draft: ChatAttachmentDraft
+  disabled: boolean
+  onRetry: (id: string) => void
+}) {
+  const t = useTranslations('Chat.images')
+  const isPDF = /\.pdf$/i.test(draft.filename)
+  const Icon = isPDF ? FileTextIcon : ImageIcon
+
+  if (draft.error) {
+    return (
+      <AttachmentChip
+        icon={<Icon />}
+        iconClassName='bg-destructive/10 text-destructive'
+        title={draft.filename}
+        meta={draft.error}
+        metaClassName='text-destructive'
+        className='border-destructive/30'
+        action={
+          draft.file && (
+            <Button
+              type='button'
+              variant='ghost'
+              size='icon-xs'
+              disabled={disabled}
+              aria-label={t('retry')}
+              title={t('retry')}
+              onClick={() => onRetry(draft.id)}
+            >
+              <RotateCcwIcon />
+            </Button>
+          )
+        }
+      />
+    )
+  }
+
+  return (
+    <div aria-live='polite'>
+      <AttachmentChip
+        icon={<Loader2Icon className='animate-spin' />}
+        iconClassName='bg-muted text-muted-foreground'
+        title={draft.filename}
+        meta={t(isPDF ? 'pdf_parsing' : 'preparing')}
+      />
+    </div>
+  )
+}
 
 export function DraftAttachments({
   drafts,
@@ -33,88 +89,36 @@ export function DraftAttachments({
   const t = useTranslations('Chat.images')
   if (drafts.length === 0 && !node) return null
   return (
-    <fieldset
-      className='flex flex-wrap gap-2 px-3 pt-3'
+    <ul
+      className='flex flex-wrap items-center gap-2.5 px-3 pt-3'
       aria-label={t('attachments')}
     >
       {node && (
-        <div className='relative max-w-full pr-7'>
+        <li className='relative max-w-full'>
           <AgentWorkflowNode node={node} />
-          <Button
-            type='button'
-            size='icon'
-            variant='ghost'
-            className='absolute top-0 right-0 size-6'
+          <AttachmentRemoveButton
+            label={t('remove', { name: node.name })}
             disabled={disabled}
-            aria-label={t('remove', { name: node.name })}
             onClick={() => onRemoveNode?.()}
-          >
-            <XIcon className='size-3' />
-          </Button>
-        </div>
+          />
+        </li>
       )}
       {drafts.map((draft) => (
-        <div key={draft.id} className='relative max-w-full pr-7'>
+        <li key={draft.id} className='relative max-w-full'>
           {draft.image ? (
-            <AgentImage image={draft.image} />
+            <AgentImage image={draft.image} variant='thumb' />
           ) : draft.pdf ? (
             <AgentPDF pdf={draft.pdf} />
           ) : (
-            <div
-              className='flex max-w-60 items-center gap-2 rounded-lg border bg-muted/30 p-2 text-xs'
-              aria-live='polite'
-            >
-              {draft.error ? (
-                /\.pdf$/i.test(draft.filename) ? (
-                  <FileTextIcon className='size-4 shrink-0' />
-                ) : (
-                  <ImageIcon className='size-4 shrink-0' />
-                )
-              ) : (
-                <Loader2Icon className='size-4 shrink-0 animate-spin' />
-              )}
-              <div className='min-w-0'>
-                <p className='truncate'>{draft.filename}</p>
-                <p
-                  className={
-                    draft.error ? 'text-destructive' : 'text-muted-foreground'
-                  }
-                >
-                  {draft.error ??
-                    t(
-                      /\.pdf$/i.test(draft.filename)
-                        ? 'pdf_parsing'
-                        : 'preparing',
-                    )}
-                </p>
-                {draft.error && draft.file && (
-                  <Button
-                    type='button'
-                    variant='ghost'
-                    size='sm'
-                    disabled={disabled}
-                    onClick={() => onRetry(draft.id)}
-                  >
-                    <RotateCcwIcon className='size-3' />
-                    {t('retry')}
-                  </Button>
-                )}
-              </div>
-            </div>
+            <PendingDraft draft={draft} disabled={disabled} onRetry={onRetry} />
           )}
-          <Button
-            type='button'
-            size='icon'
-            variant='ghost'
-            className='absolute top-0 right-0 size-6'
+          <AttachmentRemoveButton
+            label={t('remove', { name: draft.filename })}
             disabled={disabled}
-            aria-label={t('remove', { name: draft.filename })}
             onClick={() => onRemove(draft.id)}
-          >
-            <XIcon className='size-3' />
-          </Button>
-        </div>
+          />
+        </li>
       ))}
-    </fieldset>
+    </ul>
   )
 }
