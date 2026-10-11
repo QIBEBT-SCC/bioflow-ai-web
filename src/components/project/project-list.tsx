@@ -120,84 +120,84 @@ function ProjectTable({
 
   return (
     <>
-      <div
-        className={
-          viewMode === 'grid'
-            ? 'grid gap-4 sm:grid-cols-2 xl:grid-cols-3'
-            : 'hidden'
-        }
-      >
-        {projects.length === 0 ? (
-          <Card className='gap-0 py-0'>
-            <CardContent className='py-10 text-center text-muted-foreground'>
-              {tActions('empty')}
-            </CardContent>
-          </Card>
-        ) : (
-          projects.map((project) => (
-            <Card
-              key={project.id}
-              className='gap-0 py-0 transition-[border-color,box-shadow] hover:border-primary/40 hover:shadow-md'
-            >
-              <CardContent className='space-y-3 p-4'>
-                <div className='flex items-start gap-2'>
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    className={
-                      project.starred ? 'text-warning' : 'text-muted-foreground'
-                    }
-                    onClick={() => handleStar(project)}
-                    disabled={isStarPending && pendingId === String(project.id)}
-                  >
-                    <StarIcon
-                      className='size-4'
-                      fill={project.starred ? 'currentColor' : 'none'}
-                    />
-                    <span className='sr-only'>{t('favorite')}</span>
-                  </Button>
-                  <div className='min-w-0 flex-1'>
-                    <Link
-                      href={getProjectDetailHref(project.id, projectListHref)}
-                      className='block truncate font-semibold hover:text-primary'
-                    >
-                      {project.name}
-                    </Link>
-                    <p className='mt-1 line-clamp-2 text-sm text-muted-foreground'>
-                      {project.description || '-'}
-                    </p>
-                  </div>
-                  <ProjectActions
-                    project={project}
-                    onEdit={setEditingProject}
-                    onDelete={setDeletingProject}
-                    t={tActions}
-                  />
-                </div>
-                <div className='flex flex-wrap gap-1'>
-                  {project.tags.map((tag) => (
-                    <Badge
-                      key={tag.id}
-                      className={`${colorClassMap[tag.color]} border-0`}
-                    >
-                      {tag.name}
-                    </Badge>
-                  ))}
-                </div>
-                <div className='flex flex-wrap justify-between gap-x-4 gap-y-1 text-xs text-muted-foreground'>
-                  <span>{project.owner.username}</span>
-                  <span>{formatDateTime(project.update_time, locale)}</span>
-                </div>
+      <div className={viewMode === 'grid' ? '@container' : 'hidden'}>
+        <div className='grid grid-cols-1 gap-4 @xl:grid-cols-2 @4xl:grid-cols-3'>
+          {projects.length === 0 ? (
+            <Card className='gap-0 py-0'>
+              <CardContent className='py-10 text-center text-muted-foreground'>
+                {tActions('empty')}
               </CardContent>
             </Card>
-          ))
-        )}
+          ) : (
+            projects.map((project) => (
+              <Card
+                key={project.id}
+                className='gap-0 py-0 transition-[border-color,box-shadow] hover:border-primary/40 hover:shadow-md'
+              >
+                <CardContent className='space-y-3 p-4'>
+                  <div className='flex items-start gap-2'>
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      className={
+                        project.starred
+                          ? 'text-warning'
+                          : 'text-muted-foreground'
+                      }
+                      onClick={() => handleStar(project)}
+                      disabled={
+                        isStarPending && pendingId === String(project.id)
+                      }
+                    >
+                      <StarIcon
+                        className='size-4'
+                        fill={project.starred ? 'currentColor' : 'none'}
+                      />
+                      <span className='sr-only'>{t('favorite')}</span>
+                    </Button>
+                    <div className='min-w-0 flex-1'>
+                      <Link
+                        href={getProjectDetailHref(project.id, projectListHref)}
+                        className='block truncate font-semibold hover:text-primary'
+                      >
+                        {project.name}
+                      </Link>
+                      <p className='mt-1 line-clamp-2 text-sm text-muted-foreground'>
+                        {project.description || '-'}
+                      </p>
+                    </div>
+                    <ProjectActions
+                      project={project}
+                      onEdit={setEditingProject}
+                      onDelete={setDeletingProject}
+                      t={tActions}
+                    />
+                  </div>
+                  <div className='flex flex-wrap gap-1'>
+                    {project.tags.map((tag) => (
+                      <Badge
+                        key={tag.id}
+                        className={`${colorClassMap[tag.color]} border-0`}
+                      >
+                        {tag.name}
+                      </Badge>
+                    ))}
+                  </div>
+                  <div className='flex flex-wrap justify-between gap-x-4 gap-y-1 text-xs text-muted-foreground'>
+                    <span>{project.owner.username}</span>
+                    <span>{formatDateTime(project.update_time, locale)}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
       </div>
 
       <div
         className={
           viewMode === 'list'
-            ? 'overflow-hidden rounded-xl border bg-card'
+            ? '@container overflow-hidden rounded-xl border bg-card'
             : 'hidden'
         }
       >
@@ -205,23 +205,25 @@ function ProjectTable({
           <TableHeader>
             <TableRow>
               <TableHead className='h-10 px-4'>{t('projectName')}</TableHead>
-              <TableHead className='hidden h-10 w-[18%] px-4 xl:table-cell'>
+              <TableHead className='hidden h-10 w-[22%] px-4 @5xl:table-cell'>
                 {t('description')}
               </TableHead>
-              <TableHead className='h-10 w-36 px-4'>{t('tags')}</TableHead>
-              <TableHead className='hidden h-10 w-24 text-right lg:table-cell'>
+              <TableHead className='hidden h-10 w-40 px-4 @2xl:table-cell'>
+                {t('tags')}
+              </TableHead>
+              <TableHead className='hidden h-10 w-28 text-right @4xl:table-cell'>
                 <div className='flex items-center justify-end'>
                   <UserIcon className='mr-1 size-3' />
                   {t('owner')}
                 </div>
               </TableHead>
-              <TableHead className='h-10 w-44 text-right'>
+              <TableHead className='hidden h-10 w-44 text-right @lg:table-cell'>
                 <div className='flex items-center justify-end'>
                   <ClockIcon className='mr-1 size-3' />
                   {t('lastUpdated')}
                 </div>
               </TableHead>
-              <TableHead className='w-14'>
+              <TableHead className='w-12'>
                 <span className='sr-only'>{tActions('label')}</span>
               </TableHead>
             </TableRow>
@@ -240,7 +242,7 @@ function ProjectTable({
               projects.map((project) => (
                 <TableRow key={project.id}>
                   <TableCell className='whitespace-normal'>
-                    <div className='flex items-center gap-2'>
+                    <div className='flex items-start gap-2'>
                       <Button
                         variant='ghost'
                         size='icon'
@@ -260,15 +262,33 @@ function ProjectTable({
                         />
                         <span className='sr-only'>{t('favorite')}</span>
                       </Button>
-                      <Link
-                        href={getProjectDetailHref(project.id, projectListHref)}
-                        className='min-w-0 font-medium [overflow-wrap:anywhere] hover:text-primary'
-                      >
-                        {project.name}
-                      </Link>
+                      <div className='min-w-0 flex-1 py-1.5'>
+                        <Link
+                          href={getProjectDetailHref(
+                            project.id,
+                            projectListHref,
+                          )}
+                          className='block font-medium [overflow-wrap:anywhere] hover:text-primary'
+                        >
+                          {project.name}
+                        </Link>
+                        <div className='mt-1 flex flex-wrap items-center gap-1 text-muted-foreground text-xs @2xl:hidden'>
+                          {project.tags.map((tag) => (
+                            <Badge
+                              key={tag.id}
+                              className={`${colorClassMap[tag.color]} border-0`}
+                            >
+                              {tag.name}
+                            </Badge>
+                          ))}
+                          <span className='tabular-nums @lg:hidden'>
+                            {formatDateTime(project.update_time, locale)}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </TableCell>
-                  <TableCell className='hidden whitespace-normal xl:table-cell'>
+                  <TableCell className='hidden whitespace-normal @5xl:table-cell'>
                     <div
                       className='line-clamp-2 text-muted-foreground'
                       title={project.description || undefined}
@@ -276,7 +296,7 @@ function ProjectTable({
                       {project.description || '-'}
                     </div>
                   </TableCell>
-                  <TableCell className='whitespace-normal'>
+                  <TableCell className='hidden whitespace-normal @2xl:table-cell'>
                     <div className='flex flex-wrap gap-1'>
                       {project.tags.map((tag) => (
                         <Badge
@@ -288,10 +308,10 @@ function ProjectTable({
                       ))}
                     </div>
                   </TableCell>
-                  <TableCell className='hidden truncate text-right lg:table-cell'>
+                  <TableCell className='hidden truncate text-right @4xl:table-cell'>
                     {project.owner.username}
                   </TableCell>
-                  <TableCell className='text-right tabular-nums text-muted-foreground'>
+                  <TableCell className='hidden text-right tabular-nums text-muted-foreground @lg:table-cell'>
                     {formatDateTime(project.update_time, locale)}
                   </TableCell>
                   <TableCell>
