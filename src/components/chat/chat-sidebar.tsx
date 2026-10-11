@@ -37,6 +37,7 @@ import {
   AgentRunArtifacts,
   AgentRunProgress,
 } from '@/components/chat/agent-run-content'
+import { AgentWorkflowNode } from '@/components/chat/agent-workflow-node'
 import { SidebarHistoryMenu } from '@/components/chat/chat-history-menu'
 import { DraftAttachments } from '@/components/chat/draft-attachments'
 import { PlanApproval } from '@/components/chat/plan-approval'
@@ -78,7 +79,16 @@ import {
   type AgentMessage,
   type AgentName,
   type AgentRun,
+  type AgentWorkflowNodePart,
 } from '@/types/agent'
+
+interface NodeAttachmentProps {
+  nodeAttachment?: AgentWorkflowNodePart | null
+  sourceGeneration?: number
+  onRemoveNodeAction?: () => void
+  onNodeSentAction?: (node: AgentWorkflowNodePart) => void
+  onSessionCreatedAction?: (sessionId: string) => void
+}
 
 type AgentSlashCommand = SlashCommand & {
   key: AgentName
@@ -124,6 +134,11 @@ function ChatMessage({ message }: { message: AgentMessage }) {
             <AgentImage key={part.id} image={part} />
           ) : part.type === 'pdf' ? (
             <AgentPDF key={`pdf-${part.id}-${index}`} pdf={part} />
+          ) : part.type === 'workflow_node' ? (
+            <AgentWorkflowNode
+              key={`node-${part.run_uid}-${part.node_id}`}
+              node={part}
+            />
           ) : (
             <MessageResponse key={`${message.uid}-${part.text}`}>
               {part.text}
@@ -141,13 +156,18 @@ function ChatSidebarInner({
   sourceRunUid,
   width,
   onResizeStart,
+  nodeAttachment,
+  sourceGeneration,
+  onRemoveNodeAction,
+  onNodeSentAction,
+  onSessionCreatedAction,
 }: {
   scope: AgentScope
   scopeKey: string
   sourceRunUid?: string
   width: number
   onResizeStart: (event: React.MouseEvent) => void
-}) {
+} & NodeAttachmentProps) {
   const t = useTranslations('Chat')
   const language = useLocale() as Locale
   const { sessions, setSessionId, clearSession } = useChatSidebarStore()
@@ -216,11 +236,21 @@ function ChatSidebarInner({
     () => parseAgentCommand(text, availableCommands),
     [availableCommands, text],
   )
+  const nodeError = nodeAttachment
+    ? nodeAttachment.run_uid !== sourceRunUid ||
+      nodeAttachment.generation !== sourceGeneration
+      ? t('node.stale')
+      : parsedCommand && parsedCommand.command.key !== 'workflow-assistant'
+        ? t('node.assistant_required')
+        : null
+    : null
   const canSubmit = Boolean(
     parsedCommand &&
       !attachments.blocked &&
+      !nodeError &&
       (parsedCommand.prompt.trim() ||
-        (attachments.images.length + attachments.pdfs.length > 0 &&
+        ((attachments.images.length + attachments.pdfs.length > 0 ||
+          nodeAttachment) &&
           parsedCommand.command.key !== 'workflow-fixer')),
   )
   const isBusy = Boolean(run && ACTIVE_AGENT_STATUSES.includes(run.status))
@@ -253,6 +283,7 @@ function ChatSidebarInner({
     setLocalError(null)
     try {
       const created = await createSession(scope)
+      if (!sessionId) onSessionCreatedAction?.(created.uid)
       setSessionId(scopeKey, created.uid)
       setRunId(null)
       setText('')
@@ -297,9 +328,14 @@ function ChatSidebarInner({
     }
     const prompt = parsedCommand.prompt.trim()
     if (attachments.blocked) return
+    if (nodeError) {
+      setLocalError(nodeError)
+      return
+    }
     if (
       !prompt &&
-      (attachments.images.length + attachments.pdfs.length === 0 ||
+      ((!nodeAttachment &&
+        attachments.images.length + attachments.pdfs.length === 0) ||
         parsedCommand.command.key === 'workflow-fixer')
     ) {
       setLocalError(t('command_prompt_required'))
@@ -320,12 +356,14 @@ function ChatSidebarInner({
         text: prompt,
         images: attachments.images,
         pdfs: attachments.pdfs,
+        node: nodeAttachment ?? undefined,
         language,
         sourceRunUid: requiresSourceRun ? sourceRunUid : undefined,
       })
       setRunId(created.uid)
       slashCommand.onValueChange('')
       attachments.clear()
+      if (nodeAttachment) onNodeSentAction?.(nodeAttachment)
     } catch (error) {
       setLocalError(error instanceof Error ? error.message : String(error))
     }
@@ -528,11 +566,20 @@ function ChatSidebarInner({
                     size='sm'
                     variant='outline'
                     onClick={async () => {
-                      const retried = await retryRun({
-                        runId: run.uid,
-                        language,
-                      })
-                      setRunId(retried.uid)
+                      setLocalError(null)
+                      try {
+                        const retried = await retryRun({
+                          runId: run.uid,
+                          language,
+                        })
+                        setRunId(retried.uid)
+                      } catch (error) {
+                        setLocalError(
+                          error instanceof Error
+                            ? error.message
+                            : String(error),
+                        )
+                      }
                     }}
                     disabled={isRetrying}
                   >
@@ -556,7 +603,7 @@ function ChatSidebarInner({
         </Conversation>
 
         <div className='border-t bg-linear-to-t from-muted/45 via-background to-background px-3 pt-3 pb-3'>
-          {workflowSuggestions.length > 0 && !isBusy && (
+          {workflowSuggestions.length > 0 && !isBusy && !nodeAttachment && (
             <Suggestions className='mb-2'>
               {workflowSuggestions.map((suggestion) => (
                 <Suggestion
@@ -620,7 +667,14 @@ function ChatSidebarInner({
                 onRemove={attachments.remove}
                 onRetry={attachments.retry}
                 disabled={isSubmitting || isBusy}
+                node={nodeAttachment}
+                onRemoveNode={onRemoveNodeAction}
               />
+              {nodeError && (
+                <output className='block px-3 pt-2 text-xs text-destructive'>
+                  {nodeError}
+                </output>
+              )}
               <input
                 ref={fileInputRef}
                 type='file'
@@ -737,12 +791,13 @@ export function ChatSidebar({
   runUid,
   width,
   onResizeStartAction,
+  ...nodeProps
 }: {
   projectId?: string
   runUid?: string
   width: number
   onResizeStartAction: (event: React.MouseEvent) => void
-}) {
+} & NodeAttachmentProps) {
   const params = useParams<{ runUid?: string }>()
   const sourceRunUid = runUid ?? params.runUid
   const scope: AgentScope = projectId
@@ -759,6 +814,7 @@ export function ChatSidebar({
       sourceRunUid={sourceRunUid}
       width={width}
       onResizeStart={onResizeStartAction}
+      {...nodeProps}
     />
   )
 }

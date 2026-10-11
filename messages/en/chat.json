@@ -189,6 +189,12 @@
       "fix": "Repair current workflow"
     },
     "title": "AI Chat",
+    "node": {
+      "add": "Add to Chat",
+      "type": "Node · {type}",
+      "assistant_required": "Select /workflow-assistant to send a node attachment.",
+      "stale": "The run has been re-executed. Remove this node attachment and add it again."
+    },
     "images": {
       "add": "Add images or PDFs",
       "attachments": "Chat attachments",
@@ -197,7 +203,7 @@
       "remove": "Remove {name}",
       "pages": "Page {page} of {count}",
       "normalized": "Normalized to 8-bit display intensity",
-      "too_many": "Each message can contain at most 4 attachments.",
+      "too_many": "Each message can contain at most 4 image or PDF attachments.",
       "too_large": "Each original attachment must be no larger than 20 MiB.",
       "unsupported": "Supported formats: PNG, JPEG, WebP, TIFF, SVG and PDF.",
       "failed": "Attachment preparation failed.",

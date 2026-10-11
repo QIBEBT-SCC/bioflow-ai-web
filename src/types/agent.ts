@@ -51,7 +51,25 @@ export interface AgentPDFPart {
   filename: string
 }
 
-export type AgentMessagePart = AgentTextPart | AgentImagePart | AgentPDFPart
+export interface AgentWorkflowNodeReference {
+  run_uid: string
+  generation: number
+  subgraph_path: string[]
+  node_id: string
+}
+
+export interface AgentWorkflowNodePart extends AgentWorkflowNodeReference {
+  type: 'workflow_node'
+  name: string
+  node_type: string
+  subgraph_labels: string[]
+}
+
+export type AgentMessagePart =
+  | AgentTextPart
+  | AgentImagePart
+  | AgentPDFPart
+  | AgentWorkflowNodePart
 
 export interface AgentMessage {
   uid: string

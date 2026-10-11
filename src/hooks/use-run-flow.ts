@@ -192,5 +192,9 @@ export function useRunFlow(run: WorkflowRunV2 | null) {
     })
   }, [displayRun?.edges, displayRun?.nodes, edgesReady])
 
-  return { flowNodes, edges, handleNodesChange }
+  const toolNames = new Map(
+    toolUids.map((uid, index) => [uid, toolQueries[index]?.data?.name]),
+  )
+
+  return { flowNodes, edges, handleNodesChange, toolNames }
 }

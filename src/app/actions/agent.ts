@@ -9,6 +9,7 @@ import type {
   AgentRun,
   AgentSession,
   AgentSessionPage,
+  AgentWorkflowNodeReference,
 } from '@/types/agent'
 
 export type AgentScope =
@@ -71,6 +72,7 @@ export async function createAgentRun(
   sourceRunUid?: string,
   images: AgentImagePart[] = [],
   pdfs: AgentPDFPart[] = [],
+  node?: AgentWorkflowNodeReference,
 ) {
   return await clientFetch<AgentRun>(`/agent-sessions/${sessionId}/runs`, {
     method: 'POST',
@@ -81,6 +83,7 @@ export async function createAgentRun(
       source_run_uid: sourceRunUid ?? null,
       images,
       pdfs,
+      node: node ?? null,
     }),
   })
 }

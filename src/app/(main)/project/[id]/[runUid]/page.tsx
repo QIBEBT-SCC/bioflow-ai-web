@@ -31,6 +31,7 @@ import { useProject } from '@/hooks/use-project'
 import { useRunFiles, useRunStream } from '@/hooks/use-run'
 import { useRunFlow } from '@/hooks/use-run-flow'
 import { useSubgraphRun } from '@/hooks/use-subgraph-run'
+import { useWorkflowNodeAttachment } from '@/hooks/use-workflow-node-attachment'
 import { cn } from '@/lib/utils'
 import { useChatSidebarStore } from '@/stores/chat-sidebar-store'
 import { type NodeRunDataV2, NodeRunStatusV2 } from '@/types/workflow-v2'
@@ -125,12 +126,24 @@ function RunFlowContent({
     }
   }, [run?.settled, run?.generation, refreshFiles])
   const isOpen = useChatSidebarStore((s) => s.isOpen)
+  const openChat = useChatSidebarStore((s) => s.open)
+  const chatSessionId = useChatSidebarStore(
+    (s) => s.sessions[`project:${projectId}`] ?? null,
+  )
+  const nodeAttachment = useWorkflowNodeAttachment(chatSessionId)
   const runLink = useCallback(
     (childRunUid: string) => `/project/${projectId}/${childRunUid}`,
     [projectId],
   )
-  const { visibleRun, labels, enter, navigate } = useSubgraphRun(run)
-  const { flowNodes, edges, handleNodesChange } = useRunFlow(visibleRun)
+  const {
+    visibleRun,
+    path: subgraphPath,
+    labels,
+    enter,
+    navigate,
+  } = useSubgraphRun(run)
+  const { flowNodes, edges, handleNodesChange, toolNames } =
+    useRunFlow(visibleRun)
   const [panel, dispatchPanel] = useReducer(panelReducer, {
     leftPanelOpen: true,
     leftPanelWidth: 288,
@@ -424,7 +437,7 @@ function RunFlowContent({
             )}
           >
             <RunFlowCanvas
-              viewKey={visibleRun?.uid}
+              viewKey={`${visibleRun?.uid}:${run?.generation}`}
               runLink={runLink}
               graphInterface={visibleRun?.interface}
               onEnterSubgraph={(id) => {
@@ -436,6 +449,27 @@ function RunFlowContent({
               onNodesChange={handleNodesChange}
               onNodeClick={handleNodeClick}
               onPaneClick={handlePaneClick}
+              canAttachNode={(node) =>
+                Boolean(visibleRun?.nodes.some((saved) => saved.id === node.id))
+              }
+              onAddNodeToChat={(node) => {
+                if (!run) return
+                nodeAttachment.add({
+                  type: 'workflow_node',
+                  run_uid: run.uid,
+                  generation: run.generation,
+                  subgraph_path: [...subgraphPath],
+                  node_id: node.id,
+                  name: String(
+                    node.data.name ||
+                      toolNames.get(String(node.data.tool_uid)) ||
+                      node.id,
+                  ),
+                  node_type: node.type ?? '',
+                  subgraph_labels: [...labels],
+                })
+                openChat()
+              }}
             />
 
             <RunTerminal
@@ -479,6 +513,11 @@ function RunFlowContent({
             runUid={runUid}
             width={chatSidebarWidth}
             onResizeStartAction={handleChatResizeStart}
+            nodeAttachment={nodeAttachment.node}
+            sourceGeneration={run?.generation}
+            onRemoveNodeAction={nodeAttachment.clear}
+            onNodeSentAction={nodeAttachment.clear}
+            onSessionCreatedAction={nodeAttachment.adoptFirstSession}
           />
         )}
       </div>

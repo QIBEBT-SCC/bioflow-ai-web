@@ -189,6 +189,12 @@
       "fix": "修复当前工作流"
     },
     "title": "AI 对话",
+    "node": {
+      "add": "添加到聊天",
+      "type": "节点 · {type}",
+      "assistant_required": "节点附件需要使用 /workflow-assistant 工作流助手发送。",
+      "stale": "运行已重新执行，请移除此节点附件并重新添加。"
+    },
     "images": {
       "add": "添加图片或 PDF",
       "attachments": "对话附件",
@@ -197,7 +203,7 @@
       "remove": "移除 {name}",
       "pages": "第 {page} 页／共 {count} 页",
       "normalized": "已转换为 8 位显示强度",
-      "too_many": "每条消息最多添加 4 个附件。",
+      "too_many": "每条消息最多添加 4 个图片或 PDF 附件。",
       "too_large": "每个原始附件不得超过 20 MiB。",
       "unsupported": "支持 PNG、JPEG、WebP、TIFF、SVG 和 PDF。",
       "failed": "附件准备失败。",

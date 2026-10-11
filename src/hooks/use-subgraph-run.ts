@@ -7,16 +7,17 @@ const ROOT_PATH: string[] = []
 function descend(
   graph: WorkflowDefinition,
   path: string[],
-): { graph: WorkflowDefinition; labels: string[] } {
-  if (!path.length) return { graph, labels: [] }
+): { graph: WorkflowDefinition; labels: string[]; path: string[] } {
+  if (!path.length) return { graph, labels: [], path: ROOT_PATH }
   const node = graph.nodes.find(
     (node) => node.id === path[0] && node.type === 'subgraph',
   )
-  if (!node) return { graph, labels: [] }
+  if (!node) return { graph, labels: [], path: ROOT_PATH }
   const child = descend(node.data.workflow as WorkflowDefinition, path.slice(1))
   return {
     graph: child.graph,
     labels: [String(node.data.name || node.id), ...child.labels],
+    path: [node.id, ...child.path],
   }
 }
 
@@ -26,8 +27,13 @@ export function useSubgraphRun(run: WorkflowRunV2 | null | undefined) {
     runUid?: string
     path: string[]
   }>({ path: ROOT_PATH })
-  const path = navigation.runUid === run?.uid ? navigation.path : ROOT_PATH
-  const resolved = useMemo(() => (run ? descend(run, path) : null), [run, path])
+  const requestedPath =
+    navigation.runUid === run?.uid ? navigation.path : ROOT_PATH
+  const resolved = useMemo(
+    () => (run ? descend(run, requestedPath) : null),
+    [run, requestedPath],
+  )
+  const path = resolved?.path ?? ROOT_PATH
   const visibleRun = useMemo(
     () =>
       run && resolved
@@ -45,5 +51,11 @@ export function useSubgraphRun(run: WorkflowRunV2 | null | undefined) {
     setNavigation({ runUid: run?.uid, path: path.slice(0, depth) })
   const enter = (id: string) =>
     setNavigation({ runUid: run?.uid, path: [...path, id] })
-  return { visibleRun, labels: resolved?.labels ?? ROOT_PATH, enter, navigate }
+  return {
+    visibleRun,
+    path,
+    labels: resolved?.labels ?? ROOT_PATH,
+    enter,
+    navigate,
+  }
 }

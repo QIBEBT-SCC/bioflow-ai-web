@@ -10,27 +10,49 @@ import {
 import { useTranslations } from 'next-intl'
 import { AgentImage } from '@/components/chat/agent-image'
 import { AgentPDF } from '@/components/chat/agent-pdf'
+import { AgentWorkflowNode } from '@/components/chat/agent-workflow-node'
 import { Button } from '@/components/ui/button'
 import type { ChatAttachmentDraft } from '@/hooks/use-chat-attachment'
+import type { AgentWorkflowNodePart } from '@/types/agent'
 
 export function DraftAttachments({
   drafts,
   onRemove,
   onRetry,
   disabled,
+  node,
+  onRemoveNode,
 }: {
   drafts: ChatAttachmentDraft[]
   onRemove: (id: string) => void
   onRetry: (id: string) => void
   disabled: boolean
+  node?: AgentWorkflowNodePart | null
+  onRemoveNode?: () => void
 }) {
   const t = useTranslations('Chat.images')
-  if (drafts.length === 0) return null
+  if (drafts.length === 0 && !node) return null
   return (
     <fieldset
       className='flex flex-wrap gap-2 px-3 pt-3'
       aria-label={t('attachments')}
     >
+      {node && (
+        <div className='relative max-w-full pr-7'>
+          <AgentWorkflowNode node={node} />
+          <Button
+            type='button'
+            size='icon'
+            variant='ghost'
+            className='absolute top-0 right-0 size-6'
+            disabled={disabled}
+            aria-label={t('remove', { name: node.name })}
+            onClick={() => onRemoveNode?.()}
+          >
+            <XIcon className='size-3' />
+          </Button>
+        </div>
+      )}
       {drafts.map((draft) => (
         <div key={draft.id} className='relative max-w-full pr-7'>
           {draft.image ? (

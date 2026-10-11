@@ -34,6 +34,7 @@ import type {
   AgentPDFPart,
   AgentRun,
   AgentSessionPage,
+  AgentWorkflowNodeReference,
 } from '@/types/agent'
 import { STREAMING_AGENT_STATUSES } from '@/types/agent'
 
@@ -349,6 +350,7 @@ export function useCreateAgentRun() {
       sourceRunUid,
       images,
       pdfs,
+      node,
     }: {
       sessionId: string
       agentName: AgentName
@@ -357,6 +359,7 @@ export function useCreateAgentRun() {
       sourceRunUid?: string
       images?: AgentImagePart[]
       pdfs?: AgentPDFPart[]
+      node?: AgentWorkflowNodeReference
     }) =>
       createAgentRun(
         sessionId,
@@ -366,6 +369,7 @@ export function useCreateAgentRun() {
         sourceRunUid,
         images,
         pdfs,
+        node,
       ),
     onSuccess: (run) => invalidate(run.session_uid, run.uid, run.project_id),
   })
