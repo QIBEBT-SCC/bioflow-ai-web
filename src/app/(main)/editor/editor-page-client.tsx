@@ -12,13 +12,7 @@ import {
   useReactFlow,
   type XYPosition,
 } from '@xyflow/react'
-import {
-  LogOutIcon,
-  PlayIcon,
-  SaveIcon,
-  UnlinkIcon,
-  WandSparklesIcon,
-} from 'lucide-react'
+import { LogOutIcon, PlayIcon, SaveIcon, UnlinkIcon } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import type React from 'react'
@@ -28,6 +22,7 @@ import { useShallow } from 'zustand/react/shallow'
 import { getToolArg } from '@/app/actions/tool'
 import { ChatSidebar } from '@/components/chat/chat-sidebar'
 import { ChatSidebarToggle } from '@/components/chat/chat-sidebar-toggle'
+import { AutoLayoutMenu } from '@/components/node-editor/auto-layout-menu'
 import { EditorTopbar } from '@/components/node-editor/editor-topbar'
 import { LoadWorkflowDialog } from '@/components/node-editor/load-workflow-dialog'
 import { PanelMenu } from '@/components/node-editor/menu/panel-menu'
@@ -50,7 +45,10 @@ import { useSubgraphInterface } from '@/hooks/use-subgraph-interface'
 import { useUpdateWorkflow, useWorkflow } from '@/hooks/use-workflow'
 import { generateLetterId } from '@/lib/id-generator'
 import { layoutSubgraph } from '@/lib/subgraph-interface'
-import { prepareWorkflowNodes } from '@/lib/workflow-layout'
+import {
+  prepareWorkflowNodes,
+  type WorkflowLayoutMode,
+} from '@/lib/workflow-layout'
 import { useChatSidebarStore } from '@/stores/chat-sidebar-store'
 import { useNodeEditorStore } from '@/stores/nodeviewStore'
 import type { CodeInfo } from '@/types/code'
@@ -286,17 +284,20 @@ function FlowContent() {
     runMutation.mutate({ workflow, template_name })
   }, [workflowData?.name, runMutation])
 
-  const onAutoLayout = useCallback(() => {
-    const store = useNodeEditorStore.getState()
-    const layouted = layoutSubgraph(store.getGraph())
-    store.setNodes(layouted.nodes)
-    if (layouted.interface) store.setInterface(layouted.interface)
-    toast.success(t('layout_complete'))
+  const onAutoLayout = useCallback(
+    (mode: WorkflowLayoutMode) => {
+      const store = useNodeEditorStore.getState()
+      const layouted = layoutSubgraph(store.getGraph(), { mode })
+      store.setNodes(layouted.nodes)
+      if (layouted.interface) store.setInterface(layouted.interface)
+      toast.success(t('layout_complete'))
 
-    requestAnimationFrame(() => {
-      void fitView({ padding: 0.15, duration: 500 })
-    })
-  }, [fitView, t])
+      requestAnimationFrame(() => {
+        void fitView({ padding: 0.15, duration: 500 })
+      })
+    },
+    [fitView, t],
+  )
 
   const onCleanDirtyEdges = useCallback(() => {
     const nodeIds = new Set(nodes.map((node) => node.id))
@@ -389,15 +390,10 @@ function FlowContent() {
                     {updateWorkflowMutation.isPending ? t('saving') : t('save')}
                   </Button>
 
-                  <Button
-                    variant='ghost'
-                    size='sm'
-                    onClick={onAutoLayout}
+                  <AutoLayoutMenu
+                    onLayout={onAutoLayout}
                     disabled={nodes.length === 0}
-                  >
-                    <WandSparklesIcon className='size-4' />
-                    {t('auto_layout')}
-                  </Button>
+                  />
 
                   <Button
                     variant='ghost'
@@ -440,15 +436,10 @@ function FlowContent() {
                     {updateWorkflowMutation.isPending ? t('saving') : t('save')}
                   </Button>
 
-                  <Button
-                    variant='ghost'
-                    size='sm'
-                    onClick={onAutoLayout}
+                  <AutoLayoutMenu
+                    onLayout={onAutoLayout}
                     disabled={nodes.length === 0}
-                  >
-                    <WandSparklesIcon className='size-4' />
-                    {t('auto_layout')}
-                  </Button>
+                  />
 
                   <Button
                     variant='ghost'

@@ -4,10 +4,21 @@ import type { WorkflowNode } from '@/types/workflow'
 
 const DEFAULT_NODE_WIDTH = 300
 const DEFAULT_NODE_HEIGHT = 200
-const NODE_GAP = 80
-const RANK_GAP = 140
-const SECTION_GAP = 120
 const MIN_ISOLATED_ROW_WIDTH = 1200
+const COMPACT_ASPECT_RATIO = 16 / 9
+
+export type WorkflowLayoutMode = 'standard' | 'compact'
+
+interface LayoutSpacing {
+  nodeGap: number
+  rankGap: number
+  sectionGap: number
+}
+
+const LAYOUT_SPACING: Record<WorkflowLayoutMode, LayoutSpacing> = {
+  standard: { nodeGap: 80, rankGap: 140, sectionGap: 120 },
+  compact: { nodeGap: 32, rankGap: 72, sectionGap: 64 },
+}
 
 interface NodeSize {
   width: number
@@ -16,6 +27,12 @@ interface NodeSize {
 
 interface WorkflowLayoutOptions {
   initialLayout?: boolean
+  mode?: WorkflowLayoutMode
+}
+
+interface LayoutBlock extends NodeSize {
+  /** Node positions relative to the block's top-left corner. */
+  positions: Map<string, XYPosition>
 }
 
 interface PreparedWorkflowNodes {
@@ -77,6 +94,7 @@ function placeInitialNotes(
   nodes: Node[],
   positions: Map<string, Node['position']>,
   sizes: Map<string, NodeSize>,
+  { nodeGap, sectionGap }: LayoutSpacing,
 ): void {
   const notes = nodes.filter((node) => node.type === 'note')
   if (notes.length === 0) {
@@ -107,14 +125,14 @@ function placeInitialNotes(
     const noteSize = sizes.get(note.id) ?? getNodeSize(note)
     const candidate: NodeRect = {
       x: anchorPosition.x,
-      y: anchorPosition.y + anchorSize.height + NODE_GAP,
+      y: anchorPosition.y + anchorSize.height + nodeGap,
       ...noteSize,
     }
 
     let collisions = occupied.filter((rect) => overlaps(candidate, rect))
     while (collisions.length > 0) {
       candidate.y =
-        Math.max(...collisions.map((rect) => rect.y + rect.height)) + NODE_GAP
+        Math.max(...collisions.map((rect) => rect.y + rect.height)) + nodeGap
       collisions = occupied.filter((rect) => overlaps(candidate, rect))
     }
 
@@ -135,44 +153,232 @@ function placeInitialNotes(
   const maxY =
     occupied.length > 0
       ? Math.max(...occupied.map((rect) => rect.y + rect.height))
-      : -SECTION_GAP
+      : -sectionGap
   const rowEndX = minX + Math.max(maxX - minX, MIN_ISOLATED_ROW_WIDTH)
 
   let x = minX
-  let y = maxY + SECTION_GAP
+  let y = maxY + sectionGap
   let rowHeight = 0
 
   for (const note of globalNotes) {
     const size = sizes.get(note.id) ?? getNodeSize(note)
     if (x > minX && x + size.width > rowEndX) {
       x = minX
-      y += rowHeight + NODE_GAP
+      y += rowHeight + nodeGap
       rowHeight = 0
     }
 
     positions.set(note.id, { x, y })
-    x += size.width + NODE_GAP
+    x += size.width + nodeGap
     rowHeight = Math.max(rowHeight, size.height)
   }
 }
 
-/**
- * Arrange executable workflow nodes from left to right.
- *
- * Notes anchored to an executable node follow that node by the same displacement.
- * Global notes remain in place. Other disconnected nodes are placed below the
- * connected graph so they remain easy to find.
- */
-export function layoutWorkflowNodes(
+function layoutDagreBlock(
   nodes: Node[],
   edges: Edge[],
-  options: WorkflowLayoutOptions = {},
-): Node[] {
-  const layoutableNodes = nodes.filter((node) => node.type !== 'note')
-  if (layoutableNodes.length === 0 && !options.initialLayout) {
-    return nodes
+  sizes: Map<string, NodeSize>,
+  { nodeGap, rankGap }: LayoutSpacing,
+): LayoutBlock {
+  const nodeIds = new Set(nodes.map((node) => node.id))
+  const graph = new Graph()
+    .setDefaultEdgeLabel(() => ({}))
+    .setGraph({
+      rankdir: 'LR',
+      nodesep: nodeGap,
+      ranksep: rankGap,
+      marginx: 0,
+      marginy: 0,
+    })
+
+  for (const node of nodes) {
+    graph.setNode(node.id, sizes.get(node.id))
   }
 
+  for (const edge of edges) {
+    if (nodeIds.has(edge.source) && nodeIds.has(edge.target)) {
+      graph.setEdge(edge.source, edge.target)
+    }
+  }
+
+  layout(graph)
+
+  const positions = new Map<string, XYPosition>()
+  let minX = Number.POSITIVE_INFINITY
+  let minY = Number.POSITIVE_INFINITY
+  let maxX = Number.NEGATIVE_INFINITY
+  let maxY = Number.NEGATIVE_INFINITY
+
+  for (const node of nodes) {
+    const graphNode = graph.node(node.id)
+    const size = sizes.get(node.id) ?? getNodeSize(node)
+    const position = {
+      x: graphNode.x - size.width / 2,
+      y: graphNode.y - size.height / 2,
+    }
+
+    positions.set(node.id, position)
+    minX = Math.min(minX, position.x)
+    minY = Math.min(minY, position.y)
+    maxX = Math.max(maxX, position.x + size.width)
+    maxY = Math.max(maxY, position.y + size.height)
+  }
+
+  for (const position of positions.values()) {
+    position.x -= minX
+    position.y -= minY
+  }
+
+  return { positions, width: maxX - minX, height: maxY - minY }
+}
+
+/** Group nodes into weakly connected components, preserving input order. */
+function findComponents(nodes: Node[], edges: Edge[]): Node[][] {
+  const parent = new Map(nodes.map((node) => [node.id, node.id]))
+  const find = (id: string): string => {
+    let root = id
+    while (parent.get(root) !== root) {
+      root = parent.get(root) as string
+    }
+    parent.set(id, root)
+    return root
+  }
+
+  for (const edge of edges) {
+    if (parent.has(edge.source) && parent.has(edge.target)) {
+      parent.set(find(edge.source), find(edge.target))
+    }
+  }
+
+  const components = new Map<string, Node[]>()
+  for (const node of nodes) {
+    const root = find(node.id)
+    const component = components.get(root)
+    if (component) {
+      component.push(node)
+    } else {
+      components.set(root, [node])
+    }
+  }
+
+  return [...components.values()]
+}
+
+interface ShelfPacking extends NodeSize {
+  offsets: XYPosition[]
+}
+
+/**
+ * Pack blocks (sorted by descending height) into rows. Each row's first block
+ * sets the row height; later blocks stack in columns while they fit beneath
+ * the previous block, otherwise they open a new column or a new row.
+ */
+function shelfPack(
+  blocks: LayoutBlock[],
+  rowWidth: number,
+  gap: number,
+): ShelfPacking {
+  const offsets: XYPosition[] = []
+  let rowY = 0
+  let rowHeight = 0
+  let rowX = 0
+  let column = { x: 0, width: 0, bottom: 0 }
+  let width = 0
+
+  for (const block of blocks) {
+    const fitsInColumn =
+      offsets.length > 0 &&
+      block.width <= column.width &&
+      column.bottom + gap + block.height <= rowY + rowHeight
+
+    if (fitsInColumn) {
+      offsets.push({ x: column.x, y: column.bottom + gap })
+      column.bottom += gap + block.height
+      continue
+    }
+
+    if (offsets.length > 0 && rowX + block.width > rowWidth) {
+      rowY += rowHeight + gap
+      rowHeight = 0
+      rowX = 0
+    }
+
+    offsets.push({ x: rowX, y: rowY })
+    column = { x: rowX, width: block.width, bottom: rowY + block.height }
+    rowHeight = Math.max(rowHeight, block.height)
+    width = Math.max(width, rowX + block.width)
+    rowX += block.width + gap
+  }
+
+  return { offsets, width, height: rowY + rowHeight }
+}
+
+/**
+ * Size of the packing once fitted into a 16:9 viewport; smaller means the
+ * nodes render larger after fitView.
+ */
+function fittedExtent({ width, height }: NodeSize): number {
+  return Math.max(width, height * COMPACT_ASPECT_RATIO)
+}
+
+/**
+ * Shelf-pack blocks, trying every meaningful row width and keeping the packing
+ * that renders largest in a 16:9 viewport (ties broken by smaller area).
+ *
+ * Taller blocks are placed first so the main workflow stays at the top-left.
+ */
+function packBlocks(
+  blocks: LayoutBlock[],
+  { sectionGap }: LayoutSpacing,
+): Map<string, XYPosition> {
+  const sorted = [...blocks].sort(
+    (a, b) => b.height - a.height || b.width - a.width,
+  )
+  const candidateWidths = new Set<number>()
+  let rowWidth = 0
+  for (const block of sorted) {
+    candidateWidths.add(block.width)
+    rowWidth += block.width
+    candidateWidths.add(rowWidth)
+    rowWidth += sectionGap
+  }
+
+  let best: ShelfPacking | undefined
+  for (const candidate of candidateWidths) {
+    const packing = shelfPack(sorted, candidate, sectionGap)
+    const extent = fittedExtent(packing)
+    const bestExtent = best ? fittedExtent(best) : Number.POSITIVE_INFINITY
+    if (
+      extent < bestExtent ||
+      (best &&
+        extent === bestExtent &&
+        packing.width * packing.height < best.width * best.height)
+    ) {
+      best = packing
+    }
+  }
+
+  const positions = new Map<string, XYPosition>()
+  sorted.forEach((block, index) => {
+    const offset = best?.offsets[index] ?? { x: 0, y: 0 }
+    for (const [id, position] of block.positions) {
+      positions.set(id, { x: offset.x + position.x, y: offset.y + position.y })
+    }
+  })
+
+  return positions
+}
+
+/**
+ * Standard mode: one dagre graph for all connected nodes, with disconnected
+ * nodes in rows below it.
+ */
+function layoutStandard(
+  layoutableNodes: Node[],
+  edges: Edge[],
+  sizes: Map<string, NodeSize>,
+  spacing: LayoutSpacing,
+): Map<string, XYPosition> {
   const layoutableNodeIds = new Set(layoutableNodes.map((node) => node.id))
   const connectedNodeIds = new Set<string>()
 
@@ -192,95 +398,93 @@ export function layoutWorkflowNodes(
   const isolatedNodes = layoutableNodes.filter(
     (node) => !connectedNodeIds.has(node.id),
   )
-  const positions = new Map<string, Node['position']>()
-  const originalPositions = new Map(
-    layoutableNodes.map((node) => [node.id, node.position]),
-  )
-  const sizes = new Map(nodes.map((node) => [node.id, getNodeSize(node)]))
+  const positions = new Map<string, XYPosition>()
 
-  let connectedMinX = 0
-  let connectedMaxX = 0
-  let connectedMaxY = 0
+  let connectedWidth = 0
+  let connectedHeight = 0
 
   if (connectedNodes.length > 0) {
-    const graph = new Graph()
-      .setDefaultEdgeLabel(() => ({}))
-      .setGraph({
-        rankdir: 'LR',
-        nodesep: NODE_GAP,
-        ranksep: RANK_GAP,
-        marginx: 0,
-        marginy: 0,
-      })
-
-    for (const node of connectedNodes) {
-      graph.setNode(node.id, sizes.get(node.id))
+    const block = layoutDagreBlock(connectedNodes, edges, sizes, spacing)
+    for (const [id, position] of block.positions) {
+      positions.set(id, position)
     }
-
-    for (const edge of edges) {
-      if (
-        connectedNodeIds.has(edge.source) &&
-        connectedNodeIds.has(edge.target)
-      ) {
-        graph.setEdge(edge.source, edge.target)
-      }
-    }
-
-    layout(graph)
-
-    connectedMinX = Number.POSITIVE_INFINITY
-    for (const node of connectedNodes) {
-      const graphNode = graph.node(node.id)
-      const size = sizes.get(node.id) ?? {
-        width: DEFAULT_NODE_WIDTH,
-        height: DEFAULT_NODE_HEIGHT,
-      }
-      const position = {
-        x: graphNode.x - size.width / 2,
-        y: graphNode.y - size.height / 2,
-      }
-
-      positions.set(node.id, position)
-      connectedMinX = Math.min(connectedMinX, position.x)
-      connectedMaxX = Math.max(connectedMaxX, position.x + size.width)
-      connectedMaxY = Math.max(connectedMaxY, position.y + size.height)
-    }
+    connectedWidth = block.width
+    connectedHeight = block.height
   }
 
   if (isolatedNodes.length > 0) {
-    const rowStartX = connectedNodes.length > 0 ? connectedMinX : 0
     const rowStartY =
-      connectedNodes.length > 0 ? connectedMaxY + SECTION_GAP : 0
-    const rowWidth =
-      connectedNodes.length > 0
-        ? Math.max(connectedMaxX - connectedMinX, MIN_ISOLATED_ROW_WIDTH)
-        : MIN_ISOLATED_ROW_WIDTH
-    const rowEndX = rowStartX + rowWidth
+      connectedNodes.length > 0 ? connectedHeight + spacing.sectionGap : 0
+    const rowEndX = Math.max(connectedWidth, MIN_ISOLATED_ROW_WIDTH)
 
-    let x = rowStartX
+    let x = 0
     let y = rowStartY
     let rowHeight = 0
 
     for (const node of isolatedNodes) {
-      const size = sizes.get(node.id) ?? {
-        width: DEFAULT_NODE_WIDTH,
-        height: DEFAULT_NODE_HEIGHT,
-      }
+      const size = sizes.get(node.id) ?? getNodeSize(node)
 
-      if (x > rowStartX && x + size.width > rowEndX) {
-        x = rowStartX
-        y += rowHeight + NODE_GAP
+      if (x > 0 && x + size.width > rowEndX) {
+        x = 0
+        y += rowHeight + spacing.nodeGap
         rowHeight = 0
       }
 
       positions.set(node.id, { x, y })
-      x += size.width + NODE_GAP
+      x += size.width + spacing.nodeGap
       rowHeight = Math.max(rowHeight, size.height)
     }
   }
 
+  return positions
+}
+
+/**
+ * Compact mode: lay out each connected component independently with tighter
+ * spacing, then pack components and isolated nodes into a near-16:9 area.
+ */
+function layoutCompact(
+  layoutableNodes: Node[],
+  edges: Edge[],
+  sizes: Map<string, NodeSize>,
+  spacing: LayoutSpacing,
+): Map<string, XYPosition> {
+  const blocks = findComponents(layoutableNodes, edges).map((component) =>
+    layoutDagreBlock(component, edges, sizes, spacing),
+  )
+  return packBlocks(blocks, spacing)
+}
+
+/**
+ * Arrange executable workflow nodes from left to right.
+ *
+ * Notes anchored to an executable node follow that node by the same displacement.
+ * Global notes remain in place. In standard mode, disconnected nodes are placed
+ * below the connected graph; compact mode packs every component tightly.
+ */
+export function layoutWorkflowNodes(
+  nodes: Node[],
+  edges: Edge[],
+  options: WorkflowLayoutOptions = {},
+): Node[] {
+  const layoutableNodes = nodes.filter((node) => node.type !== 'note')
+  if (layoutableNodes.length === 0 && !options.initialLayout) {
+    return nodes
+  }
+
+  const mode = options.mode ?? 'standard'
+  const spacing = LAYOUT_SPACING[mode]
+  const originalPositions = new Map(
+    layoutableNodes.map((node) => [node.id, node.position]),
+  )
+  const sizes = new Map(nodes.map((node) => [node.id, getNodeSize(node)]))
+  const positions =
+    mode === 'compact'
+      ? layoutCompact(layoutableNodes, edges, sizes, spacing)
+      : layoutStandard(layoutableNodes, edges, sizes, spacing)
+
   if (options.initialLayout) {
-    placeInitialNotes(nodes, positions, sizes)
+    placeInitialNotes(nodes, positions, sizes, spacing)
   }
 
   return nodes.map((node) => {

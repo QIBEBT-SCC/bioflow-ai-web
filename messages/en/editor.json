@@ -113,6 +113,16 @@
       "subgraphs": "Subgraphs"
     },
     "auto_layout": "Auto Layout",
+    "layout_modes": {
+      "standard": {
+        "label": "Standard",
+        "description": "Spacious left-to-right flow; unconnected nodes go below"
+      },
+      "compact": {
+        "label": "Compact",
+        "description": "Tighter spacing; branches and loose nodes are packed together"
+      }
+    },
     "clean_dirty_edges": "Clean Dirty Edges",
     "dirty_edges_removed": "Removed {count} dirty edges",
     "exit": "Exit",

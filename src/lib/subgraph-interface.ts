@@ -1,5 +1,8 @@
 import type { Connection, Edge, Node } from '@xyflow/react'
-import { layoutWorkflowNodes } from '@/lib/workflow-layout'
+import {
+  layoutWorkflowNodes,
+  type WorkflowLayoutMode,
+} from '@/lib/workflow-layout'
 import type {
   PortTarget,
   WorkflowDefinition,
@@ -187,7 +190,7 @@ export function disconnectInterface(
 /** Layout boundary projections with ordinary nodes, retaining only their positions. */
 export function layoutSubgraph(
   graph: WorkflowDefinition,
-  options: { initialLayout?: boolean } = {},
+  options: { initialLayout?: boolean; mode?: WorkflowLayoutMode } = {},
 ) {
   const realNodes = graph.nodes.filter(
     (node) => node.type !== 'subgraph_interface',

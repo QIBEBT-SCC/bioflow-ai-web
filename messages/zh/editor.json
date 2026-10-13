@@ -113,6 +113,16 @@
       "subgraphs": "子图"
     },
     "auto_layout": "自动排版",
+    "layout_modes": {
+      "standard": {
+        "label": "标准",
+        "description": "宽松的从左到右布局，未连接节点放在下方"
+      },
+      "compact": {
+        "label": "紧凑",
+        "description": "更小的间距，分支与独立节点紧密排列"
+      }
+    },
     "clean_dirty_edges": "清理脏边",
     "dirty_edges_removed": "已清理 {count} 条脏边",
     "exit": "退出",
