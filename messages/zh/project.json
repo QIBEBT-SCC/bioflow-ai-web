@@ -200,6 +200,9 @@
     "runDetail": {
       "fileViewer": {
         "loading": "加载中...",
+        "originalText": "原始文本",
+        "advancedVisualization": "高级可视化",
+        "backToText": "返回原文",
         "pagination": {
           "summary": "共 {count} 个项目，第 {current} / {total} 页",
           "previous": "上一页",

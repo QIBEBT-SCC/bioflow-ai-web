@@ -57,6 +57,24 @@ const TEXT_EXTS = new Set([
   'py',
   'r',
 ])
+const TEXT_PREVIEW_TYPES = new Set<FileType>([
+  'text',
+  'newick',
+  'msa',
+  'gfa',
+  'table',
+  'vcf',
+  'bedgraph',
+  'wig',
+  'bed',
+  'gff',
+  'gtf',
+])
+
+export function usesRunTextPreview(name: string, fileType: FileType): boolean {
+  if (name.toLowerCase().endsWith('.gz')) return false
+  return TEXT_PREVIEW_TYPES.has(fileType)
+}
 
 export function getRunFileType(name: string): FileType {
   const lowerName = name.toLowerCase()

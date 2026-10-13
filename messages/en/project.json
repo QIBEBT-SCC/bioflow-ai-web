@@ -200,6 +200,9 @@
     "runDetail": {
       "fileViewer": {
         "loading": "Loading...",
+        "originalText": "Original text",
+        "advancedVisualization": "Advanced visualization",
+        "backToText": "Back to text",
         "pagination": {
           "summary": "{count} projects · Page {current} of {total}",
           "previous": "Previous page",
