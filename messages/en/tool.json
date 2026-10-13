@@ -179,6 +179,9 @@
         "outputDir": "Built-in output folder",
         "sampleName": "Built-in sample name",
         "fileMount": "File-mount variable",
+        "inputName": "Input filename including extension",
+        "inputStem": "Input filename without its last extension",
+        "inputSuffix": "Last input extension including the dot",
         "optionalParams": "Optional and static parameters",
         "positionParams": "Positional parameters"
       }
