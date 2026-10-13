@@ -10,6 +10,7 @@ import {
   Columns3,
   Filter,
   Loader2,
+  SearchX,
   X,
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
@@ -19,6 +20,16 @@ import {
   getRunTablePreviewPage,
   getRunTablePreviewProfile,
 } from '@/app/actions/run'
+import {
+  PreviewEmpty,
+  PreviewError,
+  PreviewFooter,
+  PreviewLoading,
+  PreviewProgress,
+  PreviewStat,
+} from '@/components/project/run/preview-chrome'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -265,31 +276,10 @@ export function TablePreview({
     if (selectedColumn === name) setSelectedColumn(next[0] ?? '')
   }
 
-  if (metaLoading && !meta) {
-    return (
-      <div className='flex size-full items-center justify-center text-muted-foreground'>
-        <Loader2 className='mr-2 size-4 animate-spin' />
-        <span className='text-sm'>{t('loading')}</span>
-      </div>
-    )
-  }
-
-  if (error && !meta) {
-    return (
-      <div className='flex size-full flex-col items-center justify-center gap-2 p-6 text-destructive'>
-        <AlertCircle className='size-8' />
-        <p className='max-w-lg text-center text-sm'>{error}</p>
-      </div>
-    )
-  }
-
-  if (!meta || meta.columns.length === 0) {
-    return (
-      <div className='flex size-full items-center justify-center text-sm text-muted-foreground'>
-        {t('empty')}
-      </div>
-    )
-  }
+  if (metaLoading && !meta) return <PreviewLoading label={t('loading')} />
+  if (error && !meta) return <PreviewError message={error} />
+  if (!meta || meta.columns.length === 0)
+    return <PreviewEmpty title={t('empty')} />
 
   const rowStart = data && data.rows.length > 0 ? data.offset + 1 : 0
   const rowEnd = data ? data.offset + data.rows.length : 0
@@ -306,27 +296,54 @@ export function TablePreview({
   return (
     <div className='flex size-full min-h-0 flex-col bg-background'>
       <div className='shrink-0 space-y-2 border-b bg-muted/20 px-3 py-2'>
-        <div className='flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground'>
-          <span className='font-medium text-foreground'>
+        <div className='flex flex-wrap items-center gap-x-4 gap-y-1 text-xs'>
+          <Badge variant='secondary' className='font-normal'>
             {meta.kind.toUpperCase()}
-          </span>
-          <span>{formatBytes(meta.file_size)}</span>
-          <span>{t('rowCount', { count: meta.row_count })}</span>
-          <span>{t('columnCount', { count: meta.columns.length })}</span>
-          <span>
+          </Badge>
+          <PreviewStat
+            label={t('rows')}
+            value={meta.row_count.toLocaleString()}
+          />
+          <PreviewStat
+            label={t('columns')}
+            value={meta.columns.length.toLocaleString()}
+          />
+          <PreviewStat label={t('size')} value={formatBytes(meta.file_size)} />
+          <span className='text-muted-foreground'>
             {t(meta.kind === 'csv' ? 'commaDelimiter' : 'tabDelimiter')}
           </span>
-          {filters.length > 0 && (
-            <span className='rounded bg-primary/10 px-1.5 py-0.5 text-primary'>
-              {t('filterActive')}
-            </span>
-          )}
+          {filters.map((filter) => (
+            <Badge
+              key={filter.column}
+              variant='outline'
+              className='gap-1 border-primary/30 bg-primary/5 pr-0.5 font-normal text-primary'
+            >
+              <Filter className='size-3' />
+              <span className='font-medium'>{filter.column}</span>
+              {t(`operators.${filter.operator}`)}
+              {filter.value !== undefined && (
+                <span className='font-mono'>{String(filter.value)}</span>
+              )}
+              <button
+                type='button'
+                aria-label={t('clear')}
+                onClick={clearFilter}
+                className='rounded-sm p-0.5 hover:bg-primary/10'
+              >
+                <X className='size-3' />
+              </button>
+            </Badge>
+          ))}
         </div>
 
         <div className='flex flex-wrap items-center gap-2'>
           <Filter className='size-3.5 text-muted-foreground' />
           <Select value={filterColumn} onValueChange={changeFilterColumn}>
-            <SelectTrigger size='sm' className='max-w-48'>
+            <SelectTrigger
+              size='sm'
+              aria-label={t('filterColumn')}
+              className='max-w-48 bg-background'
+            >
               <SelectValue placeholder={t('filterColumn')} />
             </SelectTrigger>
             <SelectContent>
@@ -343,7 +360,11 @@ export function TablePreview({
               setFilterOperator(value as TableFilterOperator)
             }
           >
-            <SelectTrigger size='sm'>
+            <SelectTrigger
+              size='sm'
+              aria-label={t('filterOperator')}
+              className='bg-background'
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -358,13 +379,14 @@ export function TablePreview({
           </Select>
           {filterNeedsValue && (
             <Input
+              aria-label={t('filterValue')}
               value={filterValue}
               onChange={(event) => setFilterValue(event.target.value)}
               onKeyDown={(event) => {
                 if (event.key === 'Enter') applyFilter()
               }}
               placeholder={t('filterValue')}
-              className='h-8 w-44 text-xs'
+              className='h-8 w-44 bg-background text-xs'
             />
           )}
           <Button
@@ -392,7 +414,7 @@ export function TablePreview({
                 type='button'
                 size='sm'
                 variant='outline'
-                className='ml-auto'
+                className='ml-auto bg-background'
               >
                 <Columns3 />
                 {t('visibleColumns', {
@@ -428,6 +450,7 @@ export function TablePreview({
         </div>
 
         <div className='flex min-h-6 flex-wrap items-center gap-x-4 gap-y-1 text-xs'>
+          <span className='text-muted-foreground'>{t('columnProfile')}</span>
           <span className='font-medium'>{selectedColumn}</span>
           {profileLoading && (
             <Loader2 className='size-3 animate-spin text-muted-foreground' />
@@ -437,21 +460,35 @@ export function TablePreview({
               <span className='rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground'>
                 {profile.dtype}
               </span>
-              <span>{t('count', { count: profile.count })}</span>
-              <span>{t('nullCount', { count: profile.null_count })}</span>
-              <span>{t('uniqueCount', { count: profile.unique_count })}</span>
+              <PreviewStat
+                label={t('profileCount')}
+                value={profile.count.toLocaleString()}
+              />
+              <PreviewStat
+                label={t('profileNull')}
+                value={profile.null_count.toLocaleString()}
+              />
+              <PreviewStat
+                label={t('profileUnique')}
+                value={profile.unique_count.toLocaleString()}
+              />
               {profile.minimum !== undefined && (
-                <span>
-                  {t('minimum', { value: formatCell(profile.minimum) })}
-                </span>
+                <PreviewStat
+                  label={t('profileMin')}
+                  value={formatCell(profile.minimum)}
+                />
               )}
               {profile.maximum !== undefined && (
-                <span>
-                  {t('maximum', { value: formatCell(profile.maximum) })}
-                </span>
+                <PreviewStat
+                  label={t('profileMax')}
+                  value={formatCell(profile.maximum)}
+                />
               )}
               {profile.mean !== undefined && profile.mean !== null && (
-                <span>{t('mean', { value: profile.mean.toPrecision(5) })}</span>
+                <PreviewStat
+                  label={t('profileMean')}
+                  value={profile.mean.toPrecision(5)}
+                />
               )}
             </>
           )}
@@ -459,16 +496,12 @@ export function TablePreview({
       </div>
 
       <div className='relative min-h-0 flex-1 overflow-auto'>
-        {dataLoading && (
-          <div className='absolute inset-x-0 top-0 z-30 flex h-1 overflow-hidden bg-muted'>
-            <div className='h-full w-1/3 animate-pulse bg-primary' />
-          </div>
-        )}
+        <PreviewProgress active={dataLoading} />
         {error && (
-          <div className='m-3 flex items-center gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive'>
-            <AlertCircle className='size-4 shrink-0' />
-            {error}
-          </div>
+          <Alert variant='destructive' className='m-3 w-auto'>
+            <AlertCircle />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
         {data && data.rows.length > 0 ? (
           <table className='w-max min-w-full border-separate border-spacing-0 text-xs'>
@@ -485,7 +518,8 @@ export function TablePreview({
                       key={name}
                       className={cn(
                         'sticky top-0 z-10 min-w-36 max-w-80 border-r border-b bg-muted px-2 py-1.5 text-left font-medium',
-                        isSelected && 'bg-primary/10',
+                        isSelected &&
+                          'bg-[color-mix(in_oklch,var(--primary)_10%,var(--muted))]',
                       )}
                     >
                       <button
@@ -541,15 +575,16 @@ export function TablePreview({
           </table>
         ) : (
           !dataLoading && (
-            <div className='flex h-full items-center justify-center text-sm text-muted-foreground'>
-              {t(filters.length > 0 ? 'noMatches' : 'empty')}
-            </div>
+            <PreviewEmpty
+              icon={filters.length > 0 ? <SearchX /> : undefined}
+              title={t(filters.length > 0 ? 'noMatches' : 'empty')}
+            />
           )
         )}
       </div>
 
-      <div className='flex h-10 shrink-0 items-center justify-between border-t px-3 text-xs text-muted-foreground'>
-        <span>
+      <PreviewFooter>
+        <span className='tabular-nums'>
           {t('rowRange', {
             start: rowStart,
             end: rowEnd,
@@ -567,7 +602,9 @@ export function TablePreview({
           >
             <ChevronLeft />
           </Button>
-          <span>{t('page', { page: page + 1, total: pageCount })}</span>
+          <span className='tabular-nums'>
+            {t('page', { page: page + 1, total: pageCount })}
+          </span>
           <Button
             type='button'
             size='icon-xs'
@@ -579,7 +616,7 @@ export function TablePreview({
             <ChevronRight />
           </Button>
         </div>
-      </div>
+      </PreviewFooter>
     </div>
   )
 }

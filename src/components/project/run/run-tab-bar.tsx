@@ -1,5 +1,6 @@
-import { FileText, Workflow, X } from 'lucide-react'
+import { Loader2, Workflow, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { RUN_FILE_ICONS } from '@/components/project/run/file-type'
 import { cn } from '@/lib/utils'
 
 export const CANVAS_TAB_ID = '__canvas__'
@@ -55,10 +56,15 @@ export function RunTabBar({
   const isCanvasActive = activeTabId === CANVAS_TAB_ID
 
   return (
-    <div className='flex h-9 shrink-0 items-end overflow-x-auto border-b bg-muted/30 px-2 gap-0.5 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-none]'>
+    <div
+      role='tablist'
+      className='flex h-9 shrink-0 items-end overflow-x-auto border-b bg-muted/30 px-2 gap-0.5 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-none]'
+    >
       {/* 工作流 tab（不可关闭） */}
       <button
         type='button'
+        role='tab'
+        aria-selected={isCanvasActive}
         onClick={() => onTabSelect(CANVAS_TAB_ID)}
         className={cn(
           'flex h-8 items-center gap-1.5 rounded-t-md px-3 text-xs transition-colors shrink-0',
@@ -74,32 +80,49 @@ export function RunTabBar({
       {/* 文件选项卡 */}
       {openTabs.map((tab) => {
         const isActive = activeTabId === tab.id
+        const Icon = tab.loading ? Loader2 : RUN_FILE_ICONS[tab.fileType]
         return (
           <div
             key={tab.id}
+            title={tab.path}
+            onAuxClick={(e) => {
+              if (e.button !== 1) return
+              e.preventDefault()
+              onTabClose(tab.id)
+            }}
             className={cn(
-              'group flex h-8 items-center gap-1 rounded-t-md px-2.5 text-xs transition-colors shrink-0 max-w-45',
+              'group flex h-8 items-center gap-1 rounded-t-md px-2.5 text-xs transition-colors shrink-0 max-w-52',
               isActive
-                ? 'border border-b-background bg-background -mb-px'
+                ? 'border border-b-background bg-background -mb-px text-foreground'
                 : 'text-muted-foreground hover:bg-muted/60',
             )}
           >
             <button
               type='button'
+              role='tab'
+              aria-selected={isActive}
               onClick={() => onTabSelect(tab.id)}
               className='flex min-w-0 items-center gap-1.5'
             >
-              <FileText className='size-3.5 shrink-0' />
-              <span className='max-w-30 truncate'>{tab.name}</span>
+              <Icon
+                className={cn(
+                  'size-3.5 shrink-0',
+                  isActive && 'text-primary',
+                  tab.loading && 'animate-spin',
+                  tab.error && 'text-destructive',
+                )}
+              />
+              <span className='max-w-36 truncate'>{tab.name}</span>
             </button>
             <button
               type='button'
+              aria-label={t('close', { name: tab.name })}
               onClick={(e) => {
                 e.stopPropagation()
                 onTabClose(tab.id)
               }}
               className={cn(
-                'ml-0.5 shrink-0 rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-muted',
+                'ml-0.5 shrink-0 rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 hover:bg-muted',
                 isActive && 'opacity-60 hover:opacity-100',
               )}
             >

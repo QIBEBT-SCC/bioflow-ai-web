@@ -11,6 +11,19 @@ import {
   type MsaSequence,
   parseMsa,
 } from '@/components/project/run/msa'
+import {
+  PreviewError,
+  PreviewFooter,
+  PreviewHint,
+  PreviewHoverCard,
+  PreviewSearch,
+  PreviewStat,
+  PreviewSwitch,
+  PreviewToolbar,
+  readCssColor,
+  ZoomControls,
+} from '@/components/project/run/preview-chrome'
+import { Button } from '@/components/ui/button'
 
 const LABEL_WIDTH = 220
 const RULER_HEIGHT = 34
@@ -70,6 +83,7 @@ function drawAlignment({
   consensusLabel,
   consensus,
   height,
+  highlightColumn,
   scrollLeft,
   scrollTop,
   sequences,
@@ -83,6 +97,7 @@ function drawAlignment({
   consensusLabel: string
   consensus: string
   height: number
+  highlightColumn: number | null
   scrollLeft: number
   scrollTop: number
   sequences: MsaSequence[]
@@ -149,6 +164,14 @@ function drawAlignment({
     }
   }
 
+  if (highlightColumn !== null) {
+    const x = LABEL_WIDTH + highlightColumn * cellWidth - scrollLeft
+    context.fillStyle = readCssColor(canvas, '--primary', '#175b97')
+    context.globalAlpha = 0.18
+    context.fillRect(x, RULER_HEIGHT, cellWidth, height - RULER_HEIGHT)
+    context.globalAlpha = 1
+  }
+
   context.fillStyle = '#ffffff'
   context.fillRect(0, 0, LABEL_WIDTH, height)
   context.strokeStyle = '#cbd5e1'
@@ -191,14 +214,30 @@ function drawAlignment({
   }
 }
 
-export function MsaPreview({ content }: { content: string }) {
+type Hover = {
+  x: number
+  y: number
+  column: number
+  name: string
+  residue: string
+}
+
+export function MsaPreview({
+  content,
+  onShowText,
+}: {
+  content: string
+  onShowText?: () => void
+}) {
   const t = useTranslations('Project.runDetail.msaPreview')
+  const tViewer = useTranslations('Project.runDetail.fileViewer')
   const parsed = useMemo(() => parseResult(content), [content])
   const [search, setSearch] = useState('')
   const [showConsensus, setShowConsensus] = useState(true)
   const [cellWidth, setCellWidth] = useState(13)
   const [viewport, setViewport] = useState({ width: 640, height: 360 })
   const [scroll, setScroll] = useState({ left: 0, top: 0 })
+  const [hover, setHover] = useState<Hover | null>(null)
   const viewportRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const alignment = parsed.alignment
@@ -217,10 +256,11 @@ export function MsaPreview({ content }: { content: string }) {
     () => (alignment ? buildMsaConsensus(alignment.sequences) : ''),
     [alignment],
   )
+  const hasSequences = sequences.length > 0
 
   useEffect(() => {
     const element = viewportRef.current
-    if (!element) return
+    if (!element || !hasSequences) return
     const resize = () => {
       const bounds = element.getBoundingClientRect()
       setViewport({
@@ -232,7 +272,7 @@ export function MsaPreview({ content }: { content: string }) {
     const observer = new ResizeObserver(resize)
     observer.observe(element)
     return () => observer.disconnect()
-  }, [])
+  }, [hasSequences])
 
   useEffect(() => {
     const element = viewportRef.current
@@ -241,6 +281,7 @@ export function MsaPreview({ content }: { content: string }) {
     setScroll((value) => ({ ...value, top: 0 }))
   }, [normalizedSearch])
 
+  const highlightColumn = hover?.column ?? null
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas || !alignment || !sequences.length) return
@@ -251,6 +292,7 @@ export function MsaPreview({ content }: { content: string }) {
       consensusLabel: t('consensus'),
       consensus,
       height: viewport.height,
+      highlightColumn,
       scrollLeft: scroll.left,
       scrollTop: scroll.top,
       sequences,
@@ -262,6 +304,7 @@ export function MsaPreview({ content }: { content: string }) {
     alignment,
     cellWidth,
     consensus,
+    highlightColumn,
     scroll,
     sequences,
     showConsensus,
@@ -275,14 +318,17 @@ export function MsaPreview({ content }: { content: string }) {
         ? parsed.error.code
         : 'unsupportedFormat'
     return (
-      <div className='h-full overflow-auto p-4'>
-        <p
-          role='alert'
-          className='rounded border border-destructive/40 p-3 text-sm text-destructive'
-        >
-          {t(`errors.${ERROR_KEYS[code]}`)}
-        </p>
-      </div>
+      <PreviewError
+        title={t('parseFailed')}
+        message={t(`errors.${ERROR_KEYS[code]}`)}
+        action={
+          onShowText && (
+            <Button variant='outline' size='sm' onClick={onShowText}>
+              {tViewer('viewOriginalText')}
+            </Button>
+          )
+        }
+      />
     )
   }
 
@@ -291,88 +337,123 @@ export function MsaPreview({ content }: { content: string }) {
   const totalRows = sequences.length + (showConsensus ? 1 : 0)
   const totalHeight = RULER_HEIGHT + totalRows * ROW_HEIGHT
 
+  const updateHover = (event: React.PointerEvent<HTMLDivElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect()
+    const x = event.clientX - rect.left
+    const y = event.clientY - rect.top
+    const column = Math.floor((x - LABEL_WIDTH + scroll.left) / cellWidth)
+    const row = Math.floor((y - RULER_HEIGHT + scroll.top) / ROW_HEIGHT)
+    if (
+      x < LABEL_WIDTH ||
+      y < RULER_HEIGHT ||
+      column < 0 ||
+      column >= alignment.length ||
+      row < 0 ||
+      row >= totalRows
+    ) {
+      setHover(null)
+      return
+    }
+    const isConsensus = showConsensus && row === 0
+    const sequence = isConsensus
+      ? null
+      : sequences[row - (showConsensus ? 1 : 0)]
+    setHover({
+      x,
+      y,
+      column,
+      name: isConsensus ? t('consensus') : (sequence?.name ?? ''),
+      residue: (isConsensus ? consensus : (sequence?.sequence ?? ''))[column],
+    })
+  }
+
   return (
     <div className='flex h-full flex-col overflow-hidden text-sm'>
-      <div className='flex flex-wrap items-center gap-2 border-b p-3'>
-        <input
-          aria-label={t('search')}
+      <PreviewToolbar>
+        <PreviewSearch
           value={search}
-          onChange={(event) => setSearch(event.target.value)}
+          onChange={setSearch}
           placeholder={t('search')}
-          className='h-8 w-52 rounded border bg-background px-2'
         />
-        <label className='flex h-8 items-center gap-1.5 rounded border px-2'>
-          <input
-            type='checkbox'
-            checked={showConsensus}
-            onChange={(event) => setShowConsensus(event.target.checked)}
-          />
-          {t('consensus')}
-        </label>
-        <button
-          type='button'
-          aria-label={t('zoomOut')}
-          title={t('zoomOut')}
-          onClick={() =>
-            setCellWidth((value) => Math.max(MIN_CELL_WIDTH, value - 2))
-          }
-          className='size-8 rounded border hover:bg-muted'
-        >
-          −
-        </button>
-        <button
-          type='button'
-          aria-label={t('zoomIn')}
-          title={t('zoomIn')}
-          onClick={() =>
+        <ZoomControls
+          onZoomIn={() =>
             setCellWidth((value) => Math.min(MAX_CELL_WIDTH, value + 2))
           }
-          className='size-8 rounded border hover:bg-muted'
-        >
-          +
-        </button>
-        <span className='text-xs text-muted-foreground'>
-          {t('summary', {
-            sequences: alignment.sequences.length,
-            columns: alignment.length,
-            format: t(`formats.${alignment.format}`),
-            alphabet: t(`alphabets.${alignment.alphabet}`),
-          })}
-        </span>
-        {normalizedSearch && (
-          <span className='text-xs text-muted-foreground'>
-            {t('matches', { count: sequences.length })}
-          </span>
-        )}
-      </div>
-      {sequences.length ? (
-        <div
-          ref={viewportRef}
-          onScroll={(event) =>
-            setScroll({
-              left: event.currentTarget.scrollLeft,
-              top: event.currentTarget.scrollTop,
-            })
+          onZoomOut={() =>
+            setCellWidth((value) => Math.max(MIN_CELL_WIDTH, value - 2))
           }
-          className='relative min-h-0 flex-1 overflow-auto bg-background text-foreground'
-        >
-          <div style={{ width: totalWidth, height: totalHeight }} />
-          <canvas
-            ref={canvasRef}
-            role='img'
-            aria-label={t('graphic')}
-            className='pointer-events-none absolute'
-            style={{ left: scroll.left, top: scroll.top }}
+          zoomInLabel={t('zoomIn')}
+          zoomOutLabel={t('zoomOut')}
+          canZoomIn={cellWidth < MAX_CELL_WIDTH}
+          canZoomOut={cellWidth > MIN_CELL_WIDTH}
+        />
+        <PreviewSwitch
+          id='msa-consensus'
+          label={t('consensus')}
+          checked={showConsensus}
+          onCheckedChange={setShowConsensus}
+        />
+        <PreviewHint>{t('hint')}</PreviewHint>
+        <div className='ml-auto flex flex-wrap items-center gap-x-3 text-xs'>
+          <PreviewStat
+            label={t('sequences')}
+            value={alignment.sequences.length}
           />
+          <PreviewStat label={t('columns')} value={alignment.length} />
+          <span className='text-muted-foreground'>
+            {t(`formats.${alignment.format}`)} ·{' '}
+            {t(`alphabets.${alignment.alphabet}`)}
+          </span>
+        </div>
+      </PreviewToolbar>
+      {sequences.length ? (
+        <div className='relative min-h-0 flex-1'>
+          <div
+            ref={viewportRef}
+            onScroll={(event) => {
+              setHover(null)
+              setScroll({
+                left: event.currentTarget.scrollLeft,
+                top: event.currentTarget.scrollTop,
+              })
+            }}
+            onPointerMove={updateHover}
+            onPointerLeave={() => setHover(null)}
+            className='absolute inset-0 overflow-auto bg-background text-foreground'
+          >
+            <div style={{ width: totalWidth, height: totalHeight }} />
+            <canvas
+              ref={canvasRef}
+              role='img'
+              aria-label={t('graphic')}
+              className='pointer-events-none absolute'
+              style={{ left: scroll.left, top: scroll.top }}
+            />
+          </div>
+          {hover && (
+            <PreviewHoverCard x={hover.x} y={hover.y} bounds={viewport}>
+              <div className='truncate font-medium'>{hover.name}</div>
+              <div className='text-muted-foreground tabular-nums'>
+                {t('position', { column: hover.column + 1 })} ·{' '}
+                <span className='font-mono text-foreground'>
+                  {hover.residue}
+                </span>
+              </div>
+            </PreviewHoverCard>
+          )}
         </div>
       ) : (
         <div className='flex min-h-0 flex-1 items-center justify-center text-muted-foreground'>
           {t('noMatches')}
         </div>
       )}
-      <div className='border-t px-3 py-1.5 text-xs text-muted-foreground'>
-        {t('hint')}
-      </div>
+      <PreviewFooter>
+        <span>
+          {normalizedSearch
+            ? t('matches', { count: sequences.length })
+            : t('consensusLegend')}
+        </span>
+      </PreviewFooter>
     </div>
   )
 }

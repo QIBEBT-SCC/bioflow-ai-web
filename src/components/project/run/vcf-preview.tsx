@@ -1,21 +1,24 @@
 'use client'
 
-import {
-  AlertCircle,
-  ChevronLeft,
-  ChevronRight,
-  Dna,
-  Loader2,
-  Search,
-  X,
-} from 'lucide-react'
+import { ChevronLeft, ChevronRight, Dna, SearchX, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   getRunVcfPreviewDetail,
   getRunVcfPreviewMeta,
   getRunVcfPreviewPage,
 } from '@/app/actions/run'
+import {
+  PreviewEmpty,
+  PreviewError,
+  PreviewFooter,
+  PreviewLoading,
+  PreviewProgress,
+  PreviewSearch,
+  PreviewStat,
+  PreviewToolbar,
+} from '@/components/project/run/preview-chrome'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -25,6 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import type {
   VcfFilterStatus,
@@ -37,6 +41,7 @@ import type {
 } from '@/types/run'
 
 const PAGE_SIZE = 50
+const SKELETON_ROWS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
 const VARIANT_TYPES: VcfVariantType[] = [
   'snp',
   'mnv',
@@ -94,6 +99,28 @@ function variantTone(type: VcfVariantType): string {
   }
 }
 
+function FilterValue({ value }: { value: string }) {
+  if (value === 'PASS')
+    return (
+      <Badge
+        variant='outline'
+        className='border-success/30 bg-success/10 px-1.5 py-0 text-[10px] text-success'
+      >
+        PASS
+      </Badge>
+    )
+  if (value === '.' || value === '')
+    return <span className='text-muted-foreground'>.</span>
+  return (
+    <Badge
+      variant='outline'
+      className='max-w-40 border-warning/30 bg-warning/10 px-1.5 py-0 text-[10px] text-warning'
+    >
+      <span className='truncate'>{value}</span>
+    </Badge>
+  )
+}
+
 function DensityChart({
   contig,
   label,
@@ -104,14 +131,14 @@ function DensityChart({
   const maximum = Math.max(...contig.bins, 1)
   return (
     <figure className='min-w-64 flex-1' aria-label={label}>
-      <div className='flex h-12 items-end gap-px overflow-hidden rounded-sm bg-muted/40 px-1 pt-1'>
+      <div className='flex h-12 items-end gap-px overflow-hidden rounded-md bg-muted/40 px-1 pt-1'>
         {contig.bins.map((count, index) => (
           <div
             // Density bins have stable positions and can legitimately share counts.
             key={`${contig.name}-${index}`}
-            className='min-h-px flex-1 rounded-t-sm bg-primary/65'
+            className='min-h-px flex-1 rounded-t-sm bg-primary/65 transition-colors hover:bg-primary'
             style={{ height: `${Math.max(2, (count / maximum) * 100)}%` }}
-            title={`${count}`}
+            title={`${formatPosition(Math.floor((index / contig.bins.length) * contig.length) + 1)}–${formatPosition(Math.floor(((index + 1) / contig.bins.length) * contig.length))}: ${count.toLocaleString()}`}
           />
         ))}
       </div>
@@ -156,30 +183,31 @@ function Summary({
     meta.contigs.find((candidate) => candidate.name === densityContig) ??
     meta.contigs[0]
   return (
-    <div className='shrink-0 space-y-3 border-b bg-muted/15 px-4 py-3'>
-      <div className='flex flex-wrap items-center gap-x-4 gap-y-2'>
-        <div className='flex items-center gap-2 font-medium'>
+    <div className='shrink-0 space-y-3 border-b px-4 py-3'>
+      <div className='flex flex-wrap items-center gap-x-4 gap-y-2 text-xs'>
+        <div className='flex items-center gap-2 text-sm font-medium'>
           <Dna className='size-4 text-primary' />
           <span>{meta.version}</span>
-          <span className='text-xs font-normal text-muted-foreground'>
+          <Badge variant='secondary' className='font-normal'>
             {meta.kind.toUpperCase()}
-          </span>
+          </Badge>
         </div>
-        <span className='text-xs text-muted-foreground'>
-          {t('variantCount', { count: meta.record_count })}
-        </span>
-        <span className='text-xs text-muted-foreground'>
-          {t('sampleCount', { count: meta.sample_count })}
-        </span>
-        <span className='text-xs text-muted-foreground'>
-          {t('contigCount', { count: meta.contigs.length })}
-        </span>
-        <span className='text-xs text-muted-foreground'>
-          {t('tsTv', {
-            value:
-              meta.ts_tv_ratio === null ? '—' : meta.ts_tv_ratio.toFixed(2),
-          })}
-        </span>
+        <PreviewStat
+          label={t('variants')}
+          value={meta.record_count.toLocaleString()}
+        />
+        <PreviewStat
+          label={t('samples')}
+          value={meta.sample_count.toLocaleString()}
+        />
+        <PreviewStat
+          label={t('contigs')}
+          value={meta.contigs.length.toLocaleString()}
+        />
+        <PreviewStat
+          label='Ts/Tv'
+          value={meta.ts_tv_ratio === null ? '—' : meta.ts_tv_ratio.toFixed(2)}
+        />
         <div className='flex flex-wrap gap-1.5'>
           {VARIANT_TYPES.map((type) =>
             meta.type_counts[type] > 0 ? (
@@ -193,7 +221,11 @@ function Summary({
       {contig && (
         <div className='flex items-center gap-3'>
           <Select value={contig.name} onValueChange={onDensityContigChange}>
-            <SelectTrigger size='sm' className='w-44 shrink-0'>
+            <SelectTrigger
+              size='sm'
+              aria-label={t('densityContig')}
+              className='w-44 shrink-0'
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -226,8 +258,13 @@ function RecordDetail({
   const t = useTranslations('Project.runDetail.vcfPreview')
   if (loading && !detail) {
     return (
-      <aside className='flex w-105 shrink-0 items-center justify-center border-l text-muted-foreground'>
-        <Loader2 className='size-4 animate-spin' />
+      <aside
+        aria-busy='true'
+        className='flex w-105 max-w-[48%] shrink-0 flex-col gap-3 border-l bg-muted/10 p-3'
+      >
+        <Skeleton className='h-10 w-2/3' />
+        <Skeleton className='h-20' />
+        <Skeleton className='h-40' />
       </aside>
     )
   }
@@ -264,10 +301,10 @@ function RecordDetail({
           <dt className='text-muted-foreground'>{t('quality')}</dt>
           <dd>{formatQuality(detail.qual)}</dd>
           <dt className='text-muted-foreground'>{t('filter')}</dt>
-          <dd>
+          <dd className='flex flex-wrap gap-1'>
             {detail.filters.map((filter) => (
               <span key={filter.id} title={filter.description ?? undefined}>
-                {filter.id}{' '}
+                <FilterValue value={filter.id} />
               </span>
             ))}
           </dd>
@@ -282,7 +319,7 @@ function RecordDetail({
               {detail.info.map((item) => (
                 <div
                   key={item.key}
-                  className='rounded border bg-background p-2'
+                  className='rounded-lg border bg-background p-2'
                 >
                   <div className='flex gap-2'>
                     <dt className='font-mono font-semibold'>{item.key}</dt>
@@ -304,21 +341,26 @@ function RecordDetail({
         {detail.samples.length > 0 && (
           <section>
             <h4 className='mb-2 text-xs font-semibold'>{t('genotypes')}</h4>
-            <div className='mb-2 grid grid-cols-2 gap-1 text-[11px]'>
+            <div className='mb-2 grid grid-cols-2 gap-1.5 text-[11px]'>
               {(['hom_ref', 'het', 'hom_alt', 'missing'] as const).map(
                 (category) => (
-                  <div key={category} className='rounded bg-muted px-2 py-1'>
-                    {t(`genotypeLabels.${category}`)}{' '}
-                    <span className='font-semibold'>
+                  <div
+                    key={category}
+                    className='flex items-center justify-between gap-2 rounded-md bg-muted px-2 py-1'
+                  >
+                    <span className='text-muted-foreground'>
+                      {t(`genotypeLabels.${category}`)}
+                    </span>
+                    <span className='font-semibold tabular-nums'>
                       {detail.genotype_counts[category]}
                     </span>
                   </div>
                 ),
               )}
             </div>
-            <div className='overflow-auto rounded border bg-background'>
+            <div className='overflow-auto rounded-lg border bg-background'>
               <table className='w-full border-collapse text-left'>
-                <thead className='bg-muted/70'>
+                <thead className='bg-muted/40 text-muted-foreground'>
                   <tr>
                     <th className='px-2 py-1.5 font-medium'>{t('sample')}</th>
                     {detail.format.map((field) => (
@@ -359,32 +401,41 @@ function RecordsTable({
   data,
   loading,
   selectedRecord,
+  hasFilters,
   onSelect,
 }: {
   data: VcfPreviewPage | null
   loading: boolean
   selectedRecord: number | null
+  hasFilters: boolean
   onSelect: (row: VcfPreviewRow) => void
 }) {
   const t = useTranslations('Project.runDetail.vcfPreview')
   if (loading && !data) {
     return (
-      <div className='flex flex-1 items-center justify-center text-muted-foreground'>
-        <Loader2 className='size-4 animate-spin' />
+      <div aria-busy='true' className='flex flex-1 flex-col gap-2 p-3'>
+        <span className='sr-only'>{t('loading')}</span>
+        {SKELETON_ROWS.map((row) => (
+          <Skeleton key={row} className='h-7' />
+        ))}
       </div>
     )
   }
   if (!data || data.rows.length === 0) {
     return (
-      <div className='flex flex-1 items-center justify-center text-sm text-muted-foreground'>
-        {t('noMatches')}
-      </div>
+      <PreviewEmpty
+        className='flex-1'
+        icon={<SearchX />}
+        title={t('noMatches')}
+        description={hasFilters ? t('noMatchesHint') : undefined}
+      />
     )
   }
   return (
-    <div className='min-h-0 flex-1 overflow-auto'>
+    <div className='relative min-h-0 flex-1 overflow-auto'>
+      <PreviewProgress active={loading} />
       <table className='w-full min-w-212.5 border-collapse text-left text-xs'>
-        <thead className='sticky top-0 z-10 bg-muted/95 shadow-[0_1px_0_hsl(var(--border))]'>
+        <thead className='sticky top-0 z-10 bg-muted text-muted-foreground shadow-[0_1px_0_var(--border)]'>
           <tr>
             {(
               [
@@ -404,18 +455,29 @@ function RecordsTable({
             ))}
           </tr>
         </thead>
-        <tbody className={cn(loading && 'opacity-55')}>
+        <tbody className={cn('transition-opacity', loading && 'opacity-55')}>
           {data.rows.map((row) => (
             <tr
               key={row.record_index}
+              tabIndex={0}
+              aria-selected={selectedRecord === row.record_index}
               className={cn(
-                'cursor-pointer border-b hover:bg-muted/50',
-                selectedRecord === row.record_index && 'bg-primary/8',
+                'cursor-pointer border-b outline-none hover:bg-muted/50 focus-visible:bg-muted/60',
+                selectedRecord === row.record_index &&
+                  'bg-primary/8 shadow-[inset_2px_0_0_var(--primary)] hover:bg-primary/10',
               )}
               onClick={() => onSelect(row)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault()
+                  onSelect(row)
+                }
+              }}
             >
               <td className='px-3 py-2 font-medium'>{row.chrom}</td>
-              <td className='px-3 py-2 font-mono'>{formatPosition(row.pos)}</td>
+              <td className='px-3 py-2 font-mono tabular-nums'>
+                {formatPosition(row.pos)}
+              </td>
               <td className='max-w-36 truncate px-3 py-2 font-mono'>
                 {row.id}
               </td>
@@ -425,8 +487,12 @@ function RecordsTable({
               <td className='max-w-48 truncate px-3 py-2 font-mono'>
                 {row.alt}
               </td>
-              <td className='px-3 py-2 font-mono'>{formatQuality(row.qual)}</td>
-              <td className='px-3 py-2'>{row.filter}</td>
+              <td className='px-3 py-2 font-mono tabular-nums'>
+                {formatQuality(row.qual)}
+              </td>
+              <td className='px-3 py-2'>
+                <FilterValue value={row.filter} />
+              </td>
               <td className='px-3 py-2'>
                 <VariantBadge type={row.type}>
                   {t(`types.${row.type}`)}
@@ -437,6 +503,212 @@ function RecordsTable({
         </tbody>
       </table>
     </div>
+  )
+}
+
+function hasActiveFilters(query: ActiveQuery): boolean {
+  return (
+    query.contig !== INITIAL_QUERY.contig ||
+    query.variantType !== INITIAL_QUERY.variantType ||
+    query.filterStatus !== INITIAL_QUERY.filterStatus ||
+    query.search !== '' ||
+    query.minQual !== null
+  )
+}
+
+function parseMinQual(value: string): number | null {
+  return value.trim() === '' ? null : Number(value)
+}
+
+function VcfFilterBar({
+  contigs,
+  query,
+  error,
+  onChange,
+  onClear,
+}: {
+  contigs: VcfPreviewContig[]
+  query: ActiveQuery
+  error: string
+  onChange: (changes: Partial<ActiveQuery>) => void
+  onClear: () => void
+}) {
+  const t = useTranslations('Project.runDetail.vcfPreview')
+  // Drafts start empty: the bar mounts with the preview, before any query.
+  const [search, setSearch] = useState('')
+  const [minQual, setMinQual] = useState('')
+  const hasFilters = hasActiveFilters(query)
+  const textDirty =
+    search.trim() !== query.search || parseMinQual(minQual) !== query.minQual
+
+  const applyTextFilters = () => {
+    const parsed = parseMinQual(minQual)
+    if (parsed !== null && !Number.isFinite(parsed)) return
+    onChange({ search: search.trim(), minQual: parsed })
+  }
+
+  const clear = () => {
+    setSearch('')
+    setMinQual('')
+    onClear()
+  }
+
+  return (
+    <PreviewToolbar>
+      <Select
+        value={query.contig}
+        onValueChange={(value) => onChange({ contig: value })}
+      >
+        <SelectTrigger
+          size='sm'
+          aria-label={t('contig')}
+          className='w-40 bg-background'
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value='all'>{t('allContigs')}</SelectItem>
+          {contigs.map((contig) => (
+            <SelectItem key={contig.name} value={contig.name}>
+              {contig.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select
+        value={query.variantType}
+        onValueChange={(value) =>
+          onChange({ variantType: value as ActiveQuery['variantType'] })
+        }
+      >
+        <SelectTrigger
+          size='sm'
+          aria-label={t('variantType')}
+          className='w-32 bg-background'
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value='all'>{t('allTypes')}</SelectItem>
+          {VARIANT_TYPES.map((type) => (
+            <SelectItem key={type} value={type}>
+              {t(`types.${type}`)}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select
+        value={query.filterStatus}
+        onValueChange={(value) =>
+          onChange({ filterStatus: value as ActiveQuery['filterStatus'] })
+        }
+      >
+        <SelectTrigger
+          size='sm'
+          aria-label={t('filterStatus')}
+          className='w-32 bg-background'
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value='all'>{t('allFilters')}</SelectItem>
+          {FILTER_STATUSES.map((status) => (
+            <SelectItem key={status} value={status}>
+              {t(`statuses.${status}`)}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <PreviewSearch
+        value={search}
+        onChange={setSearch}
+        onSubmit={applyTextFilters}
+        placeholder={t('search')}
+      />
+      <Input
+        aria-label={t('minQual')}
+        type='number'
+        value={minQual}
+        onChange={(event) => setMinQual(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') applyTextFilters()
+        }}
+        placeholder={t('minQual')}
+        className='h-8 w-28 bg-background text-xs'
+      />
+      <Button
+        type='button'
+        size='sm'
+        variant={textDirty ? 'default' : 'outline'}
+        onClick={applyTextFilters}
+      >
+        {t('apply')}
+      </Button>
+      {hasFilters && (
+        <Button type='button' size='sm' variant='ghost' onClick={clear}>
+          <X />
+          {t('clear')}
+        </Button>
+      )}
+      {error && (
+        <span role='alert' className='text-xs text-destructive'>
+          {error}
+        </span>
+      )}
+    </PreviewToolbar>
+  )
+}
+
+function VcfPager({
+  data,
+  page,
+  pageCount,
+  loading,
+  onPageChange,
+}: {
+  data: VcfPreviewPage | null
+  page: number
+  pageCount: number
+  loading: boolean
+  onPageChange: (page: number) => void
+}) {
+  const t = useTranslations('Project.runDetail.vcfPreview')
+  const hasRows = data !== null && data.rows.length > 0
+  return (
+    <PreviewFooter>
+      <span className='tabular-nums'>
+        {t('rowRange', {
+          start: hasRows ? data.offset + 1 : 0,
+          end: hasRows ? data.offset + data.rows.length : 0,
+          total: data?.total ?? 0,
+        })}
+      </span>
+      <div className='flex items-center gap-2'>
+        <Button
+          type='button'
+          size='icon-xs'
+          variant='outline'
+          disabled={page === 0 || loading}
+          onClick={() => onPageChange(Math.max(0, page - 1))}
+          aria-label={t('previous')}
+        >
+          <ChevronLeft />
+        </Button>
+        <span className='tabular-nums'>
+          {t('page', { page: page + 1, total: pageCount })}
+        </span>
+        <Button
+          type='button'
+          size='icon-xs'
+          variant='outline'
+          disabled={!data?.has_more || loading}
+          onClick={() => onPageChange(page + 1)}
+          aria-label={t('next')}
+        >
+          <ChevronRight />
+        </Button>
+      </div>
+    </PreviewFooter>
   )
 }
 
@@ -458,8 +730,6 @@ export function VcfPreview({
   const [query, setQuery] = useState<ActiveQuery>(INITIAL_QUERY)
   const [page, setPage] = useState(0)
   const [densityContig, setDensityContig] = useState('')
-  const [search, setSearch] = useState('')
-  const [minQual, setMinQual] = useState('')
   const [selectedRecord, setSelectedRecord] = useState<number | null>(null)
   const [metaLoading, setMetaLoading] = useState(false)
   const [dataLoading, setDataLoading] = useState(false)
@@ -548,10 +818,6 @@ export function VcfPreview({
     1,
     Math.ceil((data?.total ?? meta?.record_count ?? 0) / PAGE_SIZE),
   )
-  const range = useMemo(() => {
-    if (!data || data.rows.length === 0) return { start: 0, end: 0 }
-    return { start: data.offset + 1, end: data.offset + data.rows.length }
-  }, [data])
 
   const changeQuery = (changes: Partial<ActiveQuery>) => {
     setQuery((current) => ({ ...current, ...changes }))
@@ -560,38 +826,17 @@ export function VcfPreview({
     setDetail(null)
   }
 
-  const applyTextFilters = () => {
-    const parsed = minQual.trim() === '' ? null : Number(minQual)
-    if (parsed !== null && !Number.isFinite(parsed)) return
-    changeQuery({ search: search.trim(), minQual: parsed })
-  }
-
   const clearFilters = () => {
-    setSearch('')
-    setMinQual('')
     setQuery(INITIAL_QUERY)
     setPage(0)
     setSelectedRecord(null)
     setDetail(null)
   }
 
-  if (metaLoading && !meta) {
-    return (
-      <div className='flex size-full items-center justify-center text-muted-foreground'>
-        <Loader2 className='mr-2 size-4 animate-spin' />
-        <span className='text-sm'>{t('loading')}</span>
-      </div>
-    )
-  }
-  if (error && !meta) {
-    return (
-      <div className='flex size-full flex-col items-center justify-center gap-2 p-6 text-destructive'>
-        <AlertCircle className='size-8' />
-        <p className='max-w-lg text-center text-sm'>{error}</p>
-      </div>
-    )
-  }
+  if (metaLoading && !meta) return <PreviewLoading label={t('loading')} />
+  if (error && !meta) return <PreviewError message={error} />
   if (!meta) return null
+  const hasFilters = hasActiveFilters(query)
 
   return (
     <div className='flex size-full min-h-0 flex-col bg-background'>
@@ -600,89 +845,13 @@ export function VcfPreview({
         densityContig={densityContig}
         onDensityContigChange={setDensityContig}
       />
-      <div className='flex shrink-0 flex-wrap items-center gap-2 border-b px-3 py-2'>
-        <Select
-          value={query.contig}
-          onValueChange={(value) => changeQuery({ contig: value })}
-        >
-          <SelectTrigger size='sm' className='w-40'>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value='all'>{t('allContigs')}</SelectItem>
-            {meta.contigs.map((contig) => (
-              <SelectItem key={contig.name} value={contig.name}>
-                {contig.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select
-          value={query.variantType}
-          onValueChange={(value) =>
-            changeQuery({ variantType: value as ActiveQuery['variantType'] })
-          }
-        >
-          <SelectTrigger size='sm' className='w-32'>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value='all'>{t('allTypes')}</SelectItem>
-            {VARIANT_TYPES.map((type) => (
-              <SelectItem key={type} value={type}>
-                {t(`types.${type}`)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select
-          value={query.filterStatus}
-          onValueChange={(value) =>
-            changeQuery({ filterStatus: value as ActiveQuery['filterStatus'] })
-          }
-        >
-          <SelectTrigger size='sm' className='w-32'>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value='all'>{t('allFilters')}</SelectItem>
-            {FILTER_STATUSES.map((status) => (
-              <SelectItem key={status} value={status}>
-                {t(`statuses.${status}`)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <div className='relative w-48'>
-          <Search className='absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground' />
-          <Input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') applyTextFilters()
-            }}
-            placeholder={t('search')}
-            className='h-8 pl-8 text-xs'
-          />
-        </div>
-        <Input
-          type='number'
-          value={minQual}
-          onChange={(event) => setMinQual(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter') applyTextFilters()
-          }}
-          placeholder={t('minQual')}
-          className='h-8 w-28 text-xs'
-        />
-        <Button type='button' size='sm' onClick={applyTextFilters}>
-          {t('apply')}
-        </Button>
-        <Button type='button' size='sm' variant='ghost' onClick={clearFilters}>
-          {t('clear')}
-        </Button>
-        {error && <span className='text-xs text-destructive'>{error}</span>}
-      </div>
+      <VcfFilterBar
+        contigs={meta.contigs}
+        query={query}
+        error={error}
+        onChange={changeQuery}
+        onClear={clearFilters}
+      />
 
       <div className='flex min-h-0 flex-1'>
         <div className='flex min-w-0 flex-1 flex-col'>
@@ -690,43 +859,19 @@ export function VcfPreview({
             data={data}
             loading={dataLoading}
             selectedRecord={selectedRecord}
+            hasFilters={hasFilters}
             onSelect={(row) => {
               setSelectedRecord(row.record_index)
               setDetail(null)
             }}
           />
-          <div className='flex shrink-0 items-center justify-between border-t px-3 py-2 text-xs text-muted-foreground'>
-            <span>
-              {t('rowRange', {
-                start: range.start,
-                end: range.end,
-                total: data?.total ?? 0,
-              })}
-            </span>
-            <div className='flex items-center gap-2'>
-              <span>{t('page', { page: page + 1, total: pageCount })}</span>
-              <Button
-                type='button'
-                size='icon-sm'
-                variant='outline'
-                disabled={page === 0 || dataLoading}
-                onClick={() => setPage((current) => Math.max(0, current - 1))}
-                aria-label={t('previous')}
-              >
-                <ChevronLeft className='size-4' />
-              </Button>
-              <Button
-                type='button'
-                size='icon-sm'
-                variant='outline'
-                disabled={!data?.has_more || dataLoading}
-                onClick={() => setPage((current) => current + 1)}
-                aria-label={t('next')}
-              >
-                <ChevronRight className='size-4' />
-              </Button>
-            </div>
-          </div>
+          <VcfPager
+            data={data}
+            page={page}
+            pageCount={pageCount}
+            loading={dataLoading}
+            onPageChange={setPage}
+          />
         </div>
         <RecordDetail
           detail={detail}

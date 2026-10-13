@@ -1,4 +1,45 @@
+import {
+  AudioWaveform,
+  ChartGantt,
+  Dna,
+  File,
+  FileCode,
+  FileImage,
+  FileJson,
+  FileText,
+  FileType as FileTypeIcon,
+  Grid3x3,
+  type LucideIcon,
+  Network,
+  Rows3,
+  Sheet,
+  Waypoints,
+} from 'lucide-react'
 import type { FileType } from '@/components/project/run/run-tab-bar'
+
+export const RUN_FILE_ICONS: Record<FileType, LucideIcon> = {
+  text: FileText,
+  json: FileJson,
+  newick: Network,
+  msa: Rows3,
+  gfa: Waypoints,
+  table: Sheet,
+  vcf: Dna,
+  html: FileCode,
+  image: FileImage,
+  pdf: FileTypeIcon,
+  bigwig: AudioWaveform,
+  bedgraph: AudioWaveform,
+  wig: AudioWaveform,
+  bigbed: ChartGantt,
+  bed: ChartGantt,
+  gff: ChartGantt,
+  gtf: ChartGantt,
+  hic: Grid3x3,
+  cool: Grid3x3,
+  mcool: Grid3x3,
+  unknown: File,
+}
 
 const IMAGE_EXTS = new Set([
   'png',

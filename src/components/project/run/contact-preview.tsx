@@ -1,18 +1,74 @@
 'use client'
 
+import { AlertCircle, CornerDownLeft } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import type React from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   getRunContactPreviewRegion,
   getRunFilePreviewMeta,
 } from '@/app/actions/run'
 import { parseLocus } from '@/components/project/run/genome-locus'
+import {
+  formatBasePairs,
+  PreviewEmpty,
+  PreviewError,
+  PreviewFooter,
+  PreviewHint,
+  PreviewHoverCard,
+  PreviewLoading,
+  PreviewProgress,
+  PreviewStat,
+  PreviewToolbar,
+  readCssColor,
+  ZoomControls,
+} from '@/components/project/run/preview-chrome'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  InputGroupText,
+} from '@/components/ui/input-group'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { cn } from '@/lib/utils'
 import type { ContactRegion, PreviewMeta } from '@/types/run'
 
 type Locus = { chrom: string; start: number; end: number }
+type Hover = {
+  x: number
+  y: number
+  first: string
+  second: string
+  value: number
+}
+
+const MARGIN_LEFT = 54
+const MARGIN_TOP = 12
+const AUTO_RESOLUTION = 'auto'
 
 function formatLocus(locus: Locus): string {
   return `${locus.chrom}:${(locus.start + 1).toLocaleString('en-US')}-${locus.end.toLocaleString('en-US')}`
+}
+
+/** Sequential warm colormap on log(1 + count); data colors, not tokens. */
+function heatColor(strength: number): string {
+  return `hsl(${29 - strength * 25} 95% ${94 - strength * 57}%)`
+}
+
+const LEGEND_GRADIENT = `linear-gradient(to top, ${[0, 0.25, 0.5, 0.75, 1]
+  .map(heatColor)
+  .join(', ')})`
+
+function extentFor(size: number): number {
+  return size - MARGIN_LEFT - 8
 }
 
 function drawHeatmap(
@@ -27,11 +83,12 @@ function drawHeatmap(
   canvas.style.height = `${size}px`
   const context = canvas.getContext('2d')
   if (!context) return
+  const muted = readCssColor(canvas, '--muted-foreground', '#64748b')
+  const border = readCssColor(canvas, '--border', '#e2e8f0')
+  const empty = readCssColor(canvas, '--muted', '#f8fafc')
   context.scale(ratio, ratio)
   context.clearRect(0, 0, size, size)
-  const left = 54
-  const top = 20
-  const extent = size - 84
+  const extent = extentFor(size)
   const cellWidth = extent / region.width
   const cellHeight = extent / region.height
   const max = Math.max(0, ...region.values)
@@ -40,38 +97,170 @@ function drawHeatmap(
     const x = index % region.width
     const y = Math.floor(index / region.width)
     const strength = Math.log1p(Math.max(0, value)) / denominator
-    context.fillStyle =
-      value > 0
-        ? `hsl(${29 - strength * 25} 95% ${94 - strength * 57}%)`
-        : '#f8fafc'
+    context.fillStyle = value > 0 ? heatColor(strength) : empty
     context.fillRect(
-      left + x * cellWidth,
-      top + y * cellHeight,
+      MARGIN_LEFT + x * cellWidth,
+      MARGIN_TOP + y * cellHeight,
       Math.ceil(cellWidth + 0.3),
       Math.ceil(cellHeight + 0.3),
     )
   })
-  context.strokeStyle = '#94a3b8'
-  context.strokeRect(left, top, extent, extent)
-  context.fillStyle = '#475569'
-  context.font = '11px sans-serif'
+  context.strokeStyle = border
+  context.strokeRect(MARGIN_LEFT + 0.5, MARGIN_TOP + 0.5, extent, extent)
+  context.fillStyle = muted
+  context.font = '11px ui-sans-serif, system-ui, sans-serif'
+  context.textBaseline = 'top'
   context.fillText(
     `${region.chrom}:${(region.start + 1).toLocaleString('en-US')}`,
-    left,
-    size - 15,
+    MARGIN_LEFT,
+    MARGIN_TOP + extent + 10,
   )
   context.textAlign = 'right'
-  context.fillText(region.end.toLocaleString('en-US'), left + extent, size - 15)
+  context.fillText(
+    region.end.toLocaleString('en-US'),
+    MARGIN_LEFT + extent,
+    MARGIN_TOP + extent + 10,
+  )
   context.save()
-  context.translate(13, top + extent)
+  context.translate(MARGIN_LEFT - 12, MARGIN_TOP + extent)
   context.rotate(-Math.PI / 2)
   context.textAlign = 'left'
+  context.textBaseline = 'bottom'
   context.fillText(
     `${region.chrom2}:${(region.start2 + 1).toLocaleString('en-US')}`,
     0,
     0,
   )
+  context.textAlign = 'right'
+  context.fillText(region.end2.toLocaleString('en-US'), extent, 0)
   context.restore()
+}
+
+function ContactHeatmap({
+  region,
+  loading,
+  positive,
+  maximum,
+}: {
+  region: ContactRegion
+  loading: boolean
+  positive: number
+  maximum: number
+}) {
+  const t = useTranslations('Project.runDetail.contactPreview')
+  const [size, setSize] = useState(520)
+  const [hover, setHover] = useState<Hover | null>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const wrapperRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!wrapperRef.current) return
+    const observer = new ResizeObserver((entries) => {
+      const bounds = entries[0].contentRect
+      setSize(
+        Math.max(
+          280,
+          Math.min(720, Math.floor(Math.min(bounds.width, bounds.height))),
+        ),
+      )
+    })
+    observer.observe(wrapperRef.current)
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    if (canvasRef.current) drawHeatmap(canvasRef.current, region, size)
+  }, [region, size])
+
+  const extent = extentFor(size)
+  const updateHover = (event: React.MouseEvent<HTMLCanvasElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect()
+    const px = event.clientX - rect.left
+    const py = event.clientY - rect.top
+    const x = Math.floor(((px - MARGIN_LEFT) / extent) * region.width)
+    const y = Math.floor(((py - MARGIN_TOP) / extent) * region.height)
+    if (x < 0 || x >= region.width || y < 0 || y >= region.height) {
+      setHover(null)
+      return
+    }
+    const firstBin =
+      (Math.floor(region.start / region.resolution) + x) * region.resolution
+    const secondBin =
+      (Math.floor(region.start2 / region.resolution) + y) * region.resolution
+    setHover({
+      x: px,
+      y: py,
+      first: `${region.chrom}:${(firstBin + 1).toLocaleString('en-US')}`,
+      second: `${region.chrom2}:${(secondBin + 1).toLocaleString('en-US')}`,
+      value: region.values[y * region.width + x],
+    })
+  }
+
+  return (
+    <div className='flex min-h-0 flex-1 items-start justify-center gap-4'>
+      <div
+        ref={wrapperRef}
+        className='flex h-full max-w-180 min-w-0 flex-1 items-start justify-center'
+      >
+        <div className='relative' style={{ width: size, height: size }}>
+          <canvas
+            ref={canvasRef}
+            aria-label={t('heatmap')}
+            className={cn(
+              'block cursor-crosshair transition-opacity',
+              loading && 'opacity-60',
+            )}
+            onMouseMove={updateHover}
+            onMouseLeave={() => setHover(null)}
+          />
+          {positive === 0 && !loading && (
+            <div
+              className='pointer-events-none absolute flex items-center justify-center'
+              style={{
+                left: MARGIN_LEFT,
+                top: MARGIN_TOP,
+                width: extent,
+                height: extent,
+              }}
+            >
+              <span className='rounded-md border bg-background/90 px-3 py-1.5 text-xs text-muted-foreground shadow-sm'>
+                {t('emptyRegion')}
+              </span>
+            </div>
+          )}
+          {hover && (
+            <PreviewHoverCard
+              x={hover.x}
+              y={hover.y}
+              bounds={{ width: size, height: size }}
+            >
+              <div className='font-mono text-muted-foreground'>
+                X {hover.first}
+              </div>
+              <div className='font-mono text-muted-foreground'>
+                Y {hover.second}
+              </div>
+              <div className='mt-0.5 font-medium tabular-nums'>
+                {t('contacts', { count: hover.value })}
+              </div>
+            </PreviewHoverCard>
+          )}
+        </div>
+      </div>
+      <figure
+        className='flex shrink-0 flex-col items-center gap-1.5 text-xs text-muted-foreground'
+        style={{ height: extent, marginTop: MARGIN_TOP }}
+      >
+        <span className='tabular-nums'>{maximum.toLocaleString('en-US')}</span>
+        <div
+          className='w-3 flex-1 rounded-sm border'
+          style={{ backgroundImage: LEGEND_GRADIENT }}
+        />
+        <span className='tabular-nums'>0</span>
+        <figcaption className='sr-only'>{t('legend')}</figcaption>
+      </figure>
+    </div>
+  )
 }
 
 export function ContactPreview({
@@ -94,11 +283,8 @@ export function ContactPreview({
   const [resolution, setResolution] = useState<number | null>(null)
   const [region, setRegion] = useState<ContactRegion | null>(null)
   const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [size, setSize] = useState(520)
-  const [hover, setHover] = useState<string>('')
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const wrapperRef = useRef<HTMLDivElement>(null)
+  const [metaLoading, setMetaLoading] = useState(false)
+  const [regionLoading, setRegionLoading] = useState(false)
   const cache = useRef(new Map<string, ContactRegion>())
   const firstRef = useRef(first)
   firstRef.current = first
@@ -111,15 +297,13 @@ export function ContactPreview({
       timedOut = true
       controller.abort()
     }, 2500)
-    setLoading(true)
+    setMetaLoading(true)
     setError('')
     getRunFilePreviewMeta(runUid, generation, path, '', controller.signal)
       .then((data) => {
         if (controller.signal.aborted) return
         setMeta(data)
-        if (!data.supported) {
-          setError(data.reason ?? t('unsupported'))
-        } else if (!firstRef.current && data.default_chromosome) {
+        if (data.supported && !firstRef.current && data.default_chromosome) {
           const chrom = data.chromosomes.find(
             (item) => item.name === data.default_chromosome,
           )
@@ -136,7 +320,7 @@ export function ContactPreview({
             setSecondText(formatLocus(initial))
           }
         }
-        setLoading(false)
+        setMetaLoading(false)
       })
       .catch((cause: unknown) => {
         if (controller.signal.aborted && !timedOut) return
@@ -147,7 +331,7 @@ export function ContactPreview({
               ? cause.message
               : String(cause),
         )
-        setLoading(false)
+        setMetaLoading(false)
       })
     return () => {
       window.clearTimeout(timer)
@@ -162,7 +346,7 @@ export function ContactPreview({
     if (cached) {
       setRegion(cached)
       setError('')
-      setLoading(false)
+      setRegionLoading(false)
       return
     }
     const controller = new AbortController()
@@ -171,8 +355,7 @@ export function ContactPreview({
       timedOut = true
       controller.abort()
     }, 2500)
-    setRegion(null)
-    setLoading(true)
+    setRegionLoading(true)
     setError('')
     getRunContactPreviewRegion(
       runUid,
@@ -191,7 +374,7 @@ export function ContactPreview({
           if (oldest !== undefined) cache.current.delete(oldest)
         }
         setRegion(data)
-        setLoading(false)
+        setRegionLoading(false)
       })
       .catch((cause: unknown) => {
         if (controller.signal.aborted && !timedOut) return
@@ -202,27 +385,13 @@ export function ContactPreview({
               ? cause.message
               : String(cause),
         )
-        setLoading(false)
+        setRegionLoading(false)
       })
     return () => {
       window.clearTimeout(timer)
       controller.abort()
     }
   }, [active, runUid, generation, path, meta, first, second, resolution, t])
-
-  useEffect(() => {
-    if (!wrapperRef.current) return
-    const observer = new ResizeObserver((entries) =>
-      setSize(Math.max(320, Math.min(600, entries[0].contentRect.width - 16))),
-    )
-    observer.observe(wrapperRef.current)
-    return () => observer.disconnect()
-  }, [])
-
-  useEffect(() => {
-    if (region && canvasRef.current)
-      drawHeatmap(canvasRef.current, region, size)
-  }, [region, size])
 
   const submit = () => {
     const nextFirst = parseLocus(firstText)
@@ -234,11 +403,11 @@ export function ContactPreview({
       nextSecond.end - nextSecond.start > 10_000_000
     ) {
       setError(t('invalidLocus'))
-      setRegion(null)
       return
     }
     setFirst(nextFirst)
     setSecond(nextSecond)
+    setSecondText(formatLocus(nextSecond))
     setError('')
   }
 
@@ -276,138 +445,146 @@ export function ContactPreview({
     [region],
   )
 
+  if (!meta && metaLoading) return <PreviewLoading label={t('loadingMeta')} />
+  if (!meta && error) return <PreviewError message={error} />
+  if (!meta) return null
+  if (!meta.supported) {
+    return (
+      <PreviewEmpty
+        title={t('unsupported')}
+        description={meta.reason ?? undefined}
+      />
+    )
+  }
+  if (!meta.default_chromosome) return <PreviewEmpty title={t('emptyFile')} />
+
   return (
-    <div className='h-full space-y-3 overflow-auto p-4 text-sm'>
-      <form
-        className='flex flex-wrap items-end gap-2'
-        onSubmit={(event) => {
-          event.preventDefault()
-          submit()
-        }}
-      >
-        <label className='flex flex-col gap-1'>
-          <span>{t('firstLocus')}</span>
-          <input
-            aria-label={t('firstLocus')}
-            value={firstText}
-            onChange={(event) => setFirstText(event.target.value)}
-            placeholder='chr1:1-100000'
-            className='h-8 w-52 rounded border bg-background px-2 font-mono'
-          />
-        </label>
-        <label className='flex flex-col gap-1'>
-          <span>{t('secondLocus')}</span>
-          <input
-            aria-label={t('secondLocus')}
-            value={secondText}
-            onChange={(event) => setSecondText(event.target.value)}
-            placeholder='chr1:1-100000'
-            className='h-8 w-52 rounded border bg-background px-2 font-mono'
-          />
-        </label>
-        <label className='flex flex-col gap-1'>
-          <span>{t('resolution')}</span>
-          <select
+    <div className='flex size-full min-h-0 flex-col bg-background text-sm'>
+      <PreviewToolbar>
+        <form
+          className='flex flex-wrap items-center gap-2'
+          onSubmit={(event) => {
+            event.preventDefault()
+            submit()
+          }}
+        >
+          <InputGroup className='h-8 w-64 bg-background'>
+            <InputGroupAddon>
+              <InputGroupText className='text-xs'>X</InputGroupText>
+            </InputGroupAddon>
+            <InputGroupInput
+              aria-label={t('firstLocus')}
+              title={t('firstLocus')}
+              value={firstText}
+              onChange={(event) => setFirstText(event.target.value)}
+              placeholder='chr1:1-100000'
+              className='font-mono text-xs'
+            />
+          </InputGroup>
+          <InputGroup className='h-8 w-64 bg-background'>
+            <InputGroupAddon>
+              <InputGroupText className='text-xs'>Y</InputGroupText>
+            </InputGroupAddon>
+            <InputGroupInput
+              aria-label={t('secondLocus')}
+              title={t('secondLocus')}
+              value={secondText}
+              onChange={(event) => setSecondText(event.target.value)}
+              placeholder={t('sameAsX')}
+              className='font-mono text-xs'
+            />
+          </InputGroup>
+          <Button type='submit' size='sm'>
+            {t('show')}
+            <CornerDownLeft />
+          </Button>
+        </form>
+        <Select
+          value={resolution === null ? AUTO_RESOLUTION : String(resolution)}
+          onValueChange={(value) =>
+            setResolution(value === AUTO_RESOLUTION ? null : Number(value))
+          }
+        >
+          <SelectTrigger
+            size='sm'
             aria-label={t('resolution')}
-            value={resolution ?? ''}
-            onChange={(event) =>
-              setResolution(
-                event.target.value ? Number(event.target.value) : null,
-              )
-            }
-            className='h-8 rounded border bg-background px-2'
+            className='w-36 bg-background'
           >
-            <option value=''>{t('autoResolution')}</option>
-            {meta?.resolutions?.map((value) => (
-              <option key={value} value={value}>
-                {value.toLocaleString('en-US')} bp
-              </option>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={AUTO_RESOLUTION}>
+              {t('autoResolution')}
+            </SelectItem>
+            {meta.resolutions?.map((value) => (
+              <SelectItem key={value} value={String(value)}>
+                {formatBasePairs(value)}
+              </SelectItem>
             ))}
-          </select>
-        </label>
-        <button
-          type='submit'
-          className='h-8 rounded border px-3 hover:bg-muted'
-        >
-          {t('show')}
-        </button>
-        <button
-          type='button'
-          onClick={() => zoom(0.5)}
+          </SelectContent>
+        </Select>
+        <ZoomControls
+          onZoomIn={() => zoom(0.5)}
+          onZoomOut={() => zoom(2)}
+          zoomInLabel={t('zoomIn')}
+          zoomOutLabel={t('zoomOut')}
           disabled={!first}
-          className='h-8 rounded border px-3 hover:bg-muted disabled:opacity-50'
-        >
-          {t('zoomIn')}
-        </button>
-        <button
-          type='button'
-          onClick={() => zoom(2)}
-          disabled={!first}
-          className='h-8 rounded border px-3 hover:bg-muted disabled:opacity-50'
-        >
-          {t('zoomOut')}
-        </button>
-      </form>
-      <p className='text-xs text-muted-foreground'>{t('coordinates')}</p>
-      {error && (
-        <p
-          role='alert'
-          className='rounded border border-destructive/40 p-3 text-destructive'
-        >
-          {error}
-        </p>
-      )}
-      {loading && <p className='text-muted-foreground'>{t('loading')}</p>}
-      {meta?.supported && !meta.default_chromosome && <p>{t('emptyFile')}</p>}
-      {region && (
-        <p className='text-xs text-muted-foreground'>
-          {t('details', {
-            resolution: region.resolution.toLocaleString('en-US'),
-            count: positive,
-            max: maximum.toLocaleString('en-US'),
-          })}
-        </p>
-      )}
-      <div
-        ref={wrapperRef}
-        className='min-w-[320px] overflow-x-auto rounded border bg-background p-2'
-      >
+        />
+        <PreviewHint>{t('coordinates')}</PreviewHint>
+      </PreviewToolbar>
+
+      <div className='relative flex min-h-0 flex-1 flex-col overflow-hidden p-3'>
+        <PreviewProgress active={regionLoading || metaLoading} />
+        {error && (
+          <Alert variant='destructive' className='mb-3 shrink-0'>
+            <AlertCircle />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
         {region ? (
-          <canvas
-            ref={canvasRef}
-            aria-label={t('heatmap')}
-            onMouseMove={(event) => {
-              const rect = event.currentTarget.getBoundingClientRect()
-              const extent = size - 84
-              const x = Math.floor(
-                ((event.clientX - rect.left - 54) / extent) * region.width,
-              )
-              const y = Math.floor(
-                ((event.clientY - rect.top - 20) / extent) * region.height,
-              )
-              const nextHover =
-                x >= 0 && x < region.width && y >= 0 && y < region.height
-                  ? `${region.chrom}:${(Math.floor(region.start / region.resolution) + x) * region.resolution + 1} × ${region.chrom2}:${(Math.floor(region.start2 / region.resolution) + y) * region.resolution + 1} = ${region.values[y * region.width + x].toLocaleString('en-US')}`
-                  : ''
-              setHover((current) =>
-                current === nextHover ? current : nextHover,
-              )
-            }}
-            onMouseLeave={() => setHover('')}
+          <ContactHeatmap
+            region={region}
+            loading={regionLoading}
+            positive={positive}
+            maximum={maximum}
           />
         ) : (
-          !loading &&
           !error && (
-            <p className='p-4 text-muted-foreground'>{t('emptyRegion')}</p>
+            <div
+              aria-busy='true'
+              className='mx-auto aspect-square h-full max-h-130 animate-pulse rounded-xl border bg-muted/40'
+            >
+              <span className='sr-only'>{t('loading')}</span>
+            </div>
           )
         )}
       </div>
-      {hover && (
-        <p className='font-mono text-xs text-muted-foreground'>{hover}</p>
-      )}
-      {region && positive === 0 && (
-        <p className='text-muted-foreground'>{t('emptyRegion')}</p>
-      )}
+
+      <PreviewFooter>
+        {region ? (
+          <div className='flex flex-wrap items-center gap-x-4 gap-y-1'>
+            <PreviewStat
+              label={t('resolution')}
+              value={formatBasePairs(region.resolution)}
+            />
+            <PreviewStat
+              label={t('bins')}
+              value={`${region.width} × ${region.height}`}
+            />
+            <PreviewStat
+              label={t('nonzero')}
+              value={positive.toLocaleString('en-US')}
+            />
+            <PreviewStat
+              label={t('maximum')}
+              value={maximum.toLocaleString('en-US')}
+            />
+          </div>
+        ) : (
+          <span />
+        )}
+        <span className='hidden lg:inline'>{t('logScale')}</span>
+      </PreviewFooter>
     </div>
   )
 }
