@@ -84,18 +84,18 @@ export async function getRunFiles(runUid: string): Promise<RunFileNode[]> {
 
 /**
  * 获取运行实例输出文件内容（文本）
- * clientFetch 会将 application/json 响应自动解析为对象，因此统一序列化为字符串
+ * 直接读取响应文本，保留 JSON 等文件的原始格式。
  */
 export async function getRunFileContent(
   runUid: string,
   path: string,
 ): Promise<string> {
-  const result = await clientFetchV2<unknown>(`/runs/${runUid}/files/content`, {
+  const response = await clientFetchV2(`/runs/${runUid}/files/content`, {
     method: 'POST',
     body: JSON.stringify({ path }),
+    raw: true,
   })
-  if (typeof result === 'string') return result
-  return JSON.stringify(result, null, 2)
+  return response.text()
 }
 
 /**

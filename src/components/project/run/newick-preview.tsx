@@ -1,5 +1,6 @@
 'use client'
 
+import { Download } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
@@ -9,6 +10,24 @@ import {
   type NewickTree,
   parseNewickTrees,
 } from '@/components/project/run/newick'
+import {
+  PreviewError,
+  PreviewFooter,
+  PreviewSearch,
+  PreviewStat,
+  PreviewSwitch,
+  PreviewToolbar,
+  ZoomControls,
+} from '@/components/project/run/preview-chrome'
+import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { cn } from '@/lib/utils'
 
 type LayoutNode = {
   node: NewickNode
@@ -119,11 +138,14 @@ function parseResult(
 export function NewickPreview({
   content,
   fileName,
+  onShowText,
 }: {
   content: string
   fileName: string
+  onShowText?: () => void
 }) {
   const t = useTranslations('Project.runDetail.newickPreview')
+  const tViewer = useTranslations('Project.runDetail.fileViewer')
   const parsed = useMemo(() => parseResult(content), [content])
   const [selectedTree, setSelectedTree] = useState(0)
   const [search, setSearch] = useState('')
@@ -195,14 +217,17 @@ export function NewickPreview({
         ? `${t(`errors.${ERROR_KEYS[parsed.error.code]}`)} ${t('errorPosition', { position: parsed.error.position + 1 })}`
         : t('errors.unexpectedToken')
     return (
-      <div className='h-full overflow-auto p-4'>
-        <p
-          role='alert'
-          className='rounded border border-destructive/40 p-3 text-sm text-destructive'
-        >
-          {detail}
-        </p>
-      </div>
+      <PreviewError
+        title={t('parseFailed')}
+        message={detail}
+        action={
+          onShowText && (
+            <Button variant='outline' size='sm' onClick={onShowText}>
+              {tViewer('viewOriginalText')}
+            </Button>
+          )
+        }
+      />
     )
   }
 
@@ -210,93 +235,75 @@ export function NewickPreview({
 
   return (
     <div className='flex h-full flex-col overflow-hidden text-sm'>
-      <div className='flex flex-wrap items-center gap-2 border-b p-3'>
+      <PreviewToolbar>
         {trees && trees.length > 1 && (
-          <label className='flex items-center gap-2'>
-            <span className='text-muted-foreground'>{t('tree')}</span>
-            <select
+          <Select
+            value={String(treeIndex)}
+            onValueChange={(value) => setSelectedTree(Number(value))}
+          >
+            <SelectTrigger
+              size='sm'
               aria-label={t('tree')}
-              value={treeIndex}
-              onChange={(event) => setSelectedTree(Number(event.target.value))}
-              className='h-8 max-w-56 rounded border bg-background px-2'
+              className='max-w-56 bg-background'
             >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
               {trees.map((item, index) => (
-                <option key={item.root.id} value={index}>
+                <SelectItem key={item.root.id} value={String(index)}>
                   {t('treeOption', {
                     index: index + 1,
                     count: item.leafCount,
                   })}
-                </option>
+                </SelectItem>
               ))}
-            </select>
-          </label>
+            </SelectContent>
+          </Select>
         )}
-        <input
-          aria-label={t('search')}
+        <PreviewSearch
           value={search}
-          onChange={(event) => setSearch(event.target.value)}
+          onChange={setSearch}
           placeholder={t('search')}
-          className='h-8 w-48 rounded border bg-background px-2'
+          className='w-48'
         />
-        <label className='flex h-8 items-center gap-1.5 rounded border px-2'>
-          <input
-            type='checkbox'
-            checked={useBranchLengths}
-            disabled={!tree.hasBranchLengths}
-            onChange={(event) => setUseBranchLengths(event.target.checked)}
-          />
-          {t('branchLengths')}
-        </label>
-        <label className='flex h-8 items-center gap-1.5 rounded border px-2'>
-          <input
-            type='checkbox'
-            checked={showInternalLabels}
-            onChange={(event) => setShowInternalLabels(event.target.checked)}
-          />
-          {t('internalLabels')}
-        </label>
-        <button
+        <ZoomControls
+          onZoomIn={() => setZoom((value) => Math.min(3, value + 0.25))}
+          onZoomOut={() => setZoom((value) => Math.max(0.5, value - 0.25))}
+          onReset={() => setZoom(1)}
+          zoomInLabel={t('zoomIn')}
+          zoomOutLabel={t('zoomOut')}
+          resetLabel={t('resetZoom')}
+          canZoomIn={zoom < 3}
+          canZoomOut={zoom > 0.5}
+        />
+        <PreviewSwitch
+          id='newick-branch-lengths'
+          label={t('branchLengths')}
+          checked={useBranchLengths && tree.hasBranchLengths}
+          disabled={!tree.hasBranchLengths}
+          onCheckedChange={setUseBranchLengths}
+        />
+        <PreviewSwitch
+          id='newick-internal-labels'
+          label={t('internalLabels')}
+          checked={showInternalLabels}
+          onCheckedChange={setShowInternalLabels}
+        />
+        <Button
           type='button'
-          onClick={() => setZoom((value) => Math.min(3, value + 0.25))}
-          className='h-8 rounded border px-3 hover:bg-muted'
-        >
-          {t('zoomIn')}
-        </button>
-        <button
-          type='button'
-          onClick={() => setZoom((value) => Math.max(0.5, value - 0.25))}
-          className='h-8 rounded border px-3 hover:bg-muted'
-        >
-          {t('zoomOut')}
-        </button>
-        <button
-          type='button'
-          onClick={() => setZoom(1)}
-          className='h-8 rounded border px-3 hover:bg-muted'
-        >
-          {t('resetZoom')}
-        </button>
-        <button
-          type='button'
+          variant='outline'
+          size='sm'
+          className='ml-auto bg-background'
           onClick={downloadSvg}
-          className='h-8 rounded border px-3 hover:bg-muted'
         >
+          <Download />
           {t('exportSvg')}
-        </button>
-      </div>
-      <div className='flex flex-wrap gap-x-4 gap-y-1 border-b px-4 py-2 text-xs text-muted-foreground'>
-        <span>
-          {t('summary', {
-            leaves: tree.leafCount,
-            nodes: tree.nodeCount,
-          })}
-        </span>
-        {normalizedSearch && (
-          <span>{t('matches', { count: matches.size })}</span>
-        )}
-        <span>{t('rootingNotice')}</span>
-      </div>
-      <div ref={wrapperRef} className='flex-1 overflow-auto bg-background p-2'>
+        </Button>
+      </PreviewToolbar>
+      <div
+        ref={wrapperRef}
+        className='min-h-0 flex-1 overflow-auto bg-background p-2'
+      >
         <svg
           ref={svgRef}
           role='img'
@@ -343,14 +350,25 @@ export function NewickPreview({
             const showLabel =
               Boolean(node.label) && (isLeaf || showInternalLabels)
             const matched = matches.has(node.id)
+            const dimmed = Boolean(normalizedSearch) && !matched
             return (
               <g key={node.id}>
+                {matched && (
+                  <circle
+                    cx={x}
+                    cy={y}
+                    r={8}
+                    fill='currentColor'
+                    fillOpacity={0.15}
+                    className='fill-primary'
+                  />
+                )}
                 <circle
                   cx={x}
                   cy={y}
                   r={matched ? 4 : isLeaf ? 2.5 : 2}
-                  fill={matched ? '#f97316' : 'currentColor'}
-                  className={matched ? 'fill-orange-500' : 'fill-primary'}
+                  fill='currentColor'
+                  className={matched ? 'fill-primary' : 'fill-muted-foreground'}
                 >
                   {node.label && <title>{node.label}</title>}
                 </circle>
@@ -358,10 +376,11 @@ export function NewickPreview({
                   <text
                     x={x + 7}
                     y={y + (isLeaf ? 4 : -5)}
-                    fill={matched ? '#ea580c' : 'currentColor'}
+                    fill='currentColor'
+                    fillOpacity={dimmed ? 0.35 : 1}
                     className={
                       matched
-                        ? 'fill-orange-600 text-xs font-semibold dark:fill-orange-400'
+                        ? 'fill-primary text-xs font-semibold'
                         : isLeaf
                           ? 'fill-foreground text-xs'
                           : 'fill-muted-foreground text-[10px]'
@@ -375,6 +394,21 @@ export function NewickPreview({
           })}
         </svg>
       </div>
+      <PreviewFooter>
+        <div className='flex flex-wrap items-center gap-x-4 gap-y-1'>
+          <PreviewStat label={t('leaves')} value={tree.leafCount} />
+          <PreviewStat label={t('nodes')} value={tree.nodeCount} />
+          {normalizedSearch && (
+            <span className={cn(matches.size > 0 && 'text-primary')}>
+              {t('matches', { count: matches.size })}
+            </span>
+          )}
+          {zoom !== 1 && (
+            <span className='tabular-nums'>{Math.round(zoom * 100)}%</span>
+          )}
+        </div>
+        <span className='hidden lg:inline'>{t('rootingNotice')}</span>
+      </PreviewFooter>
     </div>
   )
 }

@@ -6,6 +6,7 @@ import type {
   GfaLayout,
   GfaLayoutNode,
 } from '@/components/project/run/gfa-layout'
+import { ZoomControls } from '@/components/project/run/preview-chrome'
 
 type Transform = { x: number; y: number; scale: number }
 
@@ -361,32 +362,15 @@ export function GfaCanvas({
           onSelectAction(node?.segment.name ?? null)
         }}
       />
-      <div className='absolute right-3 bottom-3 flex overflow-hidden rounded border bg-background shadow-sm'>
-        <button
-          type='button'
-          onClick={() => zoom(1.25)}
-          aria-label={zoomInLabel}
-          className='size-8 border-r hover:bg-muted'
-        >
-          +
-        </button>
-        <button
-          type='button'
-          onClick={() => zoom(0.8)}
-          aria-label={zoomOutLabel}
-          className='size-8 border-r hover:bg-muted'
-        >
-          −
-        </button>
-        <button
-          type='button'
-          onClick={fit}
-          aria-label={fitLabel}
-          className='h-8 px-2 text-xs hover:bg-muted'
-        >
-          {fitLabel}
-        </button>
-      </div>
+      <ZoomControls
+        className='absolute right-3 bottom-3 rounded-md shadow-sm'
+        onZoomIn={() => zoom(1.25)}
+        onZoomOut={() => zoom(0.8)}
+        onReset={fit}
+        zoomInLabel={zoomInLabel}
+        zoomOutLabel={zoomOutLabel}
+        resetLabel={fitLabel}
+      />
     </div>
   )
 }

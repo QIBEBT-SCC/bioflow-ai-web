@@ -334,3 +334,12 @@ body,
   overflow: hidden;
   /* 禁止全局滚动条 */
 }
+
+@keyframes preview-progress {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(300%);
+  }
+}

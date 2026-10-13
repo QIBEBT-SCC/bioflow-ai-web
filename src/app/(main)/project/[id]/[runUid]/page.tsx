@@ -13,7 +13,10 @@ import {
 } from 'react'
 import { getRunFileBlobUrl, getRunFileContent } from '@/app/actions/run'
 import { ChatSidebar } from '@/components/chat/chat-sidebar'
-import { getRunFileType } from '@/components/project/run/file-type'
+import {
+  getRunFileType,
+  usesRunTextPreview,
+} from '@/components/project/run/file-type'
 import { FileViewer } from '@/components/project/run/file-viewer'
 import { RunFlowCanvas } from '@/components/project/run/run-flow-canvas'
 import { RunLeftPanel } from '@/components/project/run/run-left-panel'
@@ -298,7 +301,9 @@ function RunFlowContent({
       }
       const requestGeneration = run?.generation
       const fileType = getRunFileType(name)
-      const isDirectPreview = fileType === 'pdf' || fileType === 'html'
+      const textPreview = usesRunTextPreview(name, fileType)
+      const needsContent =
+        textPreview || fileType === 'json' || fileType === 'image'
       dispatchTabs({
         type: 'OPEN_TAB',
         tab: {
@@ -306,44 +311,10 @@ function RunFlowContent({
           path,
           name,
           fileType,
-          loading:
-            !isDirectPreview &&
-            ![
-              'bigwig',
-              'bedgraph',
-              'wig',
-              'bigbed',
-              'bed',
-              'gff',
-              'gtf',
-              'hic',
-              'cool',
-              'mcool',
-              'table',
-              'vcf',
-              'unknown',
-            ].includes(fileType),
+          loading: needsContent,
         },
       })
-      if (
-        isDirectPreview ||
-        [
-          'bigwig',
-          'bedgraph',
-          'wig',
-          'bigbed',
-          'bed',
-          'gff',
-          'gtf',
-          'hic',
-          'cool',
-          'mcool',
-          'table',
-          'vcf',
-          'unknown',
-        ].includes(fileType)
-      )
-        return
+      if (!needsContent) return
       try {
         if (fileType === 'image') {
           const blobUrl = await getRunFileBlobUrl(runUid, path)

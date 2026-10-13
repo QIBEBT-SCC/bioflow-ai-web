@@ -1,4 +1,47 @@
+import {
+  AudioWaveform,
+  Box,
+  ChartGantt,
+  Dna,
+  File,
+  FileCode,
+  FileImage,
+  FileJson,
+  FileText,
+  FileType as FileTypeIcon,
+  Grid3x3,
+  type LucideIcon,
+  Network,
+  Rows3,
+  Sheet,
+  Waypoints,
+} from 'lucide-react'
 import type { FileType } from '@/components/project/run/run-tab-bar'
+
+export const RUN_FILE_ICONS: Record<FileType, LucideIcon> = {
+  text: FileText,
+  json: FileJson,
+  newick: Network,
+  msa: Rows3,
+  gfa: Waypoints,
+  table: Sheet,
+  vcf: Dna,
+  structure: Box,
+  html: FileCode,
+  image: FileImage,
+  pdf: FileTypeIcon,
+  bigwig: AudioWaveform,
+  bedgraph: AudioWaveform,
+  wig: AudioWaveform,
+  bigbed: ChartGantt,
+  bed: ChartGantt,
+  gff: ChartGantt,
+  gtf: ChartGantt,
+  hic: Grid3x3,
+  cool: Grid3x3,
+  mcool: Grid3x3,
+  unknown: File,
+}
 
 const IMAGE_EXTS = new Set([
   'png',
@@ -57,9 +100,37 @@ const TEXT_EXTS = new Set([
   'py',
   'r',
 ])
+const TEXT_PREVIEW_TYPES = new Set<FileType>([
+  'text',
+  'newick',
+  'msa',
+  'gfa',
+  'table',
+  'vcf',
+  'bedgraph',
+  'wig',
+  'bed',
+  'gff',
+  'gtf',
+  'structure',
+])
+
+export function getRunStructureFormat(name: string): 'pdb' | 'mmcif' | null {
+  const baseName = name.toLowerCase().replace(/\.gz$/, '')
+  const ext = baseName.split('.').pop()
+  if (ext === 'pdb' || ext === 'ent') return 'pdb'
+  if (ext === 'cif' || ext === 'mmcif') return 'mmcif'
+  return null
+}
+
+export function usesRunTextPreview(name: string, fileType: FileType): boolean {
+  if (name.toLowerCase().endsWith('.gz')) return false
+  return TEXT_PREVIEW_TYPES.has(fileType)
+}
 
 export function getRunFileType(name: string): FileType {
   const lowerName = name.toLowerCase()
+  if (getRunStructureFormat(lowerName)) return 'structure'
   if (lowerName.endsWith('.vcf') || lowerName.endsWith('.vcf.gz')) return 'vcf'
   if (
     lowerName.endsWith('.gff') ||

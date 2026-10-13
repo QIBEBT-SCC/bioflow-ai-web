@@ -200,13 +200,51 @@
     "runDetail": {
       "fileViewer": {
         "loading": "Loading...",
+        "originalText": "Original text",
         "pagination": {
           "summary": "{count} projects · Page {current} of {total}",
           "previous": "Previous page",
           "next": "Next page"
         },
         "empty": "No content",
-        "unsupported": "Preview is not supported for this file format."
+        "unsupported": "Preview is not supported for this file format.",
+        "visualization": "Visualization",
+        "lineCount": "{count, plural, one {# line} other {# lines}}",
+        "wrap": "Wrap lines",
+        "noWrap": "Don't wrap lines",
+        "copy": "Copy contents",
+        "openInNewTab": "Open in new tab",
+        "download": "Download",
+        "loadFailed": "Couldn't load this file",
+        "unsupportedHint": "Download the file to open it in a dedicated tool.",
+        "pdfUnavailable": "This browser can't display the PDF inline.",
+        "viewOriginalText": "View original text",
+        "clearSearch": "Clear search",
+        "help": "How to use this view",
+        "formats": {
+          "text": "Text",
+          "json": "JSON",
+          "newick": "Newick tree",
+          "msa": "Alignment",
+          "gfa": "GFA graph",
+          "table": "Table",
+          "vcf": "VCF",
+          "html": "HTML",
+          "image": "Image",
+          "pdf": "PDF",
+          "bigwig": "bigWig",
+          "bedgraph": "bedGraph",
+          "wig": "WIG",
+          "bigbed": "bigBed",
+          "bed": "BED",
+          "gff": "GFF",
+          "gtf": "GTF",
+          "hic": "Hi-C",
+          "cool": "Cooler",
+          "mcool": "Multi-res Cooler",
+          "unknown": "File",
+          "structure": "Molecular structure"
+        }
       },
       "leftPanel": {
         "statistics": "Run Statistics",
@@ -226,7 +264,8 @@
         "grid": "Card view"
       },
       "tabs": {
-        "workflow": "Workflow"
+        "workflow": "Workflow",
+        "close": "Close {name}"
       },
       "terminal": {
         "title": "Terminal",
@@ -242,7 +281,7 @@
         "show": "Show",
         "zoomIn": "Zoom in",
         "zoomOut": "Zoom out",
-        "coordinates": "Enter chr1:1-1000. Input is 1-based inclusive; the API uses 0-based half-open coordinates.",
+        "coordinates": "Enter a region like chr1:1-1000. Input is 1-based inclusive; the API uses 0-based half-open coordinates. Drag the track to pan and double-click to zoom in on a point.",
         "timeout": "Preview exceeded 2.5 seconds. Try a smaller region.",
         "invalidLocus": "Invalid region or wider than this track allows.",
         "loading": "Reading the current region…",
@@ -250,7 +289,14 @@
         "emptyRegion": "No data in this region.",
         "track": "Genomic track",
         "searchHint": "Search by name to find more chromosomes.",
-        "featureCount": "{count} features in this region."
+        "featureCount": "{count} features in this region.",
+        "loadingMeta": "Reading track index…",
+        "panLeft": "Move left",
+        "panRight": "Move right",
+        "noValue": "No value",
+        "unnamed": "Unnamed feature",
+        "interactionHint": "Drag to pan · double-click to zoom in",
+        "trackRole": "interactive genome track"
       },
       "contactPreview": {
         "unsupported": "This Hi-C file cannot be previewed.",
@@ -268,7 +314,14 @@
         "emptyFile": "No chromosomes are available in this file.",
         "emptyRegion": "No contacts in this region.",
         "heatmap": "Hi-C contact matrix heatmap",
-        "details": "Resolution {resolution} bp · {count} nonzero cells · maximum count {max}"
+        "loadingMeta": "Reading matrix index…",
+        "sameAsX": "Same as X",
+        "contacts": "{count, plural, one {# contact} other {# contacts}}",
+        "legend": "Contact count color scale (log)",
+        "bins": "Bins",
+        "nonzero": "Nonzero",
+        "maximum": "Max",
+        "logScale": "Color: log(1 + contact count)"
       },
       "newickPreview": {
         "tree": "Tree",
@@ -280,7 +333,6 @@
         "zoomOut": "Zoom out",
         "resetZoom": "Reset zoom",
         "exportSvg": "Export SVG",
-        "summary": "{leaves} leaves · {nodes} total nodes",
         "matches": "{count} matching nodes",
         "rootingNotice": "The drawing orientation does not imply that the tree is biologically rooted.",
         "treeGraphic": "Phylogenetic tree from {fileName}",
@@ -296,7 +348,10 @@
           "unexpectedToken": "The file is not valid Newick",
           "unterminatedComment": "A Newick comment is not closed",
           "unterminatedQuote": "A quoted node label is not closed"
-        }
+        },
+        "parseFailed": "Couldn't read this tree",
+        "leaves": "Leaves",
+        "nodes": "Nodes"
       },
       "msaPreview": {
         "search": "Search sequence names",
@@ -304,11 +359,10 @@
         "consensus": "Consensus",
         "zoomIn": "Widen columns",
         "zoomOut": "Narrow columns",
-        "summary": "{sequences} sequences · {columns} columns · {format} · {alphabet}",
         "matches": "{count} matching sequences",
         "noMatches": "No sequence names match this search.",
         "graphic": "Multiple sequence alignment",
-        "hint": "Scroll to inspect the alignment. Consensus symbols: * fully conserved, : at least 80%, . at least 50% among non-gap residues.",
+        "hint": "Scroll to move through the alignment and hover a residue to see its position.",
         "formats": {
           "fasta": "aligned FASTA",
           "clustal": "Clustal",
@@ -331,7 +385,12 @@
           "tooManyColumns": "The alignment contains more than 100,000 columns",
           "tooManySequences": "The alignment contains more than 2,000 sequences",
           "unsupportedFormat": "Expected aligned FASTA, Clustal, Stockholm, or PHYLIP content"
-        }
+        },
+        "parseFailed": "Couldn't read this alignment",
+        "sequences": "Sequences",
+        "columns": "Columns",
+        "position": "Column {column}",
+        "consensusLegend": "Consensus: * fully conserved · : at least 80% · . at least 50% of non-gap residues"
       },
       "gfaPreview": {
         "search": "Search segment names",
@@ -339,7 +398,6 @@
         "path": "Path",
         "noPath": "No path highlight",
         "pathOption": "{name} · {count} segments",
-        "summary": "{segments} segments · {links} links · {paths} paths · {length} bp known length",
         "matches": "{count} matching segments",
         "graphic": "GFA assembly graph",
         "zoomIn": "Zoom in",
@@ -368,17 +426,21 @@
           "tooManyPaths": "The graph contains more than 200 paths",
           "tooManySegments": "The graph contains more than 1,000 segments",
           "unsupportedVersion": "Only GFA1 files are supported"
-        }
+        },
+        "parseFailed": "Couldn't read this graph",
+        "segments": "Segments",
+        "links": "Links",
+        "paths": "Paths",
+        "knownLength": "Known length",
+        "segmentDetail": "Segment",
+        "interactionHint": "Drag to pan · scroll to zoom · click a segment for details"
       },
       "tablePreview": {
         "loading": "Reading the table schema…",
         "empty": "The table has no data to display.",
         "noMatches": "No rows match the active filter.",
-        "rowCount": "{count} rows",
-        "columnCount": "{count} columns",
         "commaDelimiter": "comma-delimited",
         "tabDelimiter": "tab-delimited",
-        "filterActive": "Filter active",
         "filterColumn": "Filter column",
         "filterValue": "Filter value",
         "apply": "Apply",
@@ -386,12 +448,6 @@
         "visibleColumns": "Columns {visible}/{total}",
         "chooseColumns": "Choose visible columns",
         "sortColumn": "Sort by {column}",
-        "count": "{count} rows",
-        "nullCount": "{count} null",
-        "uniqueCount": "{count} unique",
-        "minimum": "min {value}",
-        "maximum": "max {value}",
-        "mean": "mean {value}",
         "rowRange": "Rows {start}–{end} of {total}",
         "page": "Page {page} of {total}",
         "previous": "Previous page",
@@ -406,14 +462,21 @@
           "lte": "less than or equal",
           "is_null": "is null",
           "is_not_null": "is not null"
-        }
+        },
+        "rows": "Rows",
+        "columns": "Columns",
+        "size": "Size",
+        "filterOperator": "Filter operator",
+        "columnProfile": "Column",
+        "profileCount": "Values",
+        "profileNull": "Null",
+        "profileUnique": "Unique",
+        "profileMin": "Min",
+        "profileMax": "Max",
+        "profileMean": "Mean"
       },
       "vcfPreview": {
         "loading": "Parsing VCF…",
-        "variantCount": "{count} variants",
-        "sampleCount": "{count} samples",
-        "contigCount": "{count} contigs",
-        "tsTv": "Ts/Tv {value}",
         "densityLabel": "Variant density across {contig}",
         "allContigs": "All contigs",
         "allTypes": "All types",
@@ -465,6 +528,48 @@
           "het": "Heterozygous",
           "hom_alt": "Homozygous alternate",
           "missing": "Missing"
+        },
+        "variants": "Variants",
+        "samples": "Samples",
+        "contigs": "Contigs",
+        "densityContig": "Density contig",
+        "noMatchesHint": "Try widening or clearing the filters.",
+        "contig": "Contig",
+        "variantType": "Variant type",
+        "filterStatus": "Filter status"
+      },
+      "proteinPreview": {
+        "loading": "Loading 3D structure…",
+        "failed": "Unable to preview structure",
+        "model": "Model",
+        "modelNumber": "Model {index}",
+        "chain": "Chain",
+        "allChains": "All chains",
+        "chainLabel": "Chain {chain}",
+        "representation": "Representation",
+        "cartoon": "Cartoon",
+        "ballAndStick": "Ball and stick",
+        "ligands": "Ligands / ions",
+        "water": "Water",
+        "resetCamera": "Reset view",
+        "viewport": "Molecular 3D structure",
+        "atoms": "Atoms",
+        "residues": "Polymer residues",
+        "chains": "Chains",
+        "controls": "Drag to rotate · Scroll to zoom · Right-drag to pan",
+        "hint": "Displays the coordinate models in the file, with polymers colored by chain. Hover or click a residue for its name and number. Multi-model files support model switching.",
+        "errors": {
+          "tooLarge": "Structure previews support files up to 10 MiB, including the decoded size of gzip files. Download the file to view it with a dedicated tool.",
+          "tooManyAtoms": "This model exceeds 200,000 atoms. Download it to view with a dedicated tool.",
+          "invalid": "The file is not valid PDB / mmCIF coordinate data, or its gzip data is damaged.",
+          "empty": "The file contains no displayable atomic coordinates.",
+          "compressionUnavailable": "This browser cannot decompress gzip files. Decompress the file before previewing it.",
+          "webglUnavailable": "WebGL could not be initialized. Check whether hardware acceleration is enabled in your browser.",
+          "stale": "The run was restarted. Refresh the file list and reopen the file.",
+          "forbidden": "You cannot access this file. Sign in again and retry.",
+          "missing": "The file was not found. Refresh the file list.",
+          "loadFailed": "The structure could not be loaded. Reopen the file to retry.",
+          "timeout": "Loading exceeded 30 seconds. Reopen the file or download it to view with a dedicated tool."
         }
       }
     },
