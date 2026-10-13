@@ -12,7 +12,7 @@ import {
   XIcon,
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { useReducer, useState } from 'react'
+import { useReducer } from 'react'
 import { toast } from 'sonner'
 import {
   AlertDialog,
@@ -32,7 +32,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog'
 import {
   DropdownMenu,
@@ -126,10 +125,15 @@ function DeleteWorkflowConfirmation({
   )
 }
 
-export function LoadWorkflowDialog() {
+export function LoadWorkflowDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}) {
   const t = useTranslations('editor.load_workflow_dialog')
   const tSearch = useTranslations('WorkflowSearch')
-  const [open, setOpen] = useState(false)
   const pageSize = 8
   const search = useWorkflowLibrarySearch(open, pageSize)
 
@@ -145,7 +149,7 @@ export function LoadWorkflowDialog() {
 
   const handleOpenChange = (next: boolean) => {
     search.reset()
-    setOpen(next)
+    onOpenChange(next)
   }
 
   const handleLoadWorkflow = (uid: string, name: string) => {
@@ -181,12 +185,6 @@ export function LoadWorkflowDialog() {
   return (
     <>
       <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogTrigger asChild>
-          <Button variant='ghost' size='sm'>
-            <FolderOpenIcon className='size-4 mr-2' />
-            {t('trigger')}
-          </Button>
-        </DialogTrigger>
         <DialogContent className='flex flex-col sm:max-w-xl max-h-[80vh]'>
           <DialogHeader className='shrink-0'>
             <div className='flex items-center gap-2'>

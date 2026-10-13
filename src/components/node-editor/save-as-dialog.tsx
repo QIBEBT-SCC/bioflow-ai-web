@@ -7,7 +7,6 @@ import {
   GlobeIcon,
   LayersIcon,
   LockIcon,
-  SaveIcon,
   TypeIcon,
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
@@ -20,7 +19,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -44,7 +42,9 @@ import {
 
 interface SaveAsDialogProps {
   currentWorkflowName?: string
-  disabled?: boolean
+  /** Controlled open state for the toolbar; selection dialogs open on mount. */
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
   selection?: {
     workflow: WorkflowDefinition
     onSaved: (uid: string, name: string, description: string) => void
@@ -94,7 +94,8 @@ function saveReducer(state: SaveState, action: SaveAction): SaveState {
 
 export function SaveAsDialog({
   currentWorkflowName,
-  disabled,
+  open: controlledOpen,
+  onOpenChange,
   selection,
 }: SaveAsDialogProps) {
   const t = useTranslations('editor')
@@ -106,7 +107,23 @@ export function SaveAsDialog({
     ...INITIAL_SAVE,
     workflowType: selection ? WorkflowType.SUBMODULE : WorkflowType.TEMPLATE,
   })
-  const [open, setOpen] = useState(Boolean(selection))
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(Boolean(selection))
+  const open = controlledOpen ?? uncontrolledOpen
+  const [prevOpen, setPrevOpen] = useState(open)
+  if (open !== prevOpen) {
+    setPrevOpen(open)
+    if (open && currentWorkflowName) {
+      dispatch({
+        type: 'RESET',
+        name: `${currentWorkflowName} - ${td('copy_suffix')}`,
+      })
+    }
+  }
+
+  const setOpen = (next: boolean) => {
+    setUncontrolledOpen(next)
+    onOpenChange?.(next)
+  }
 
   const { setCurrentWorkflowUid } = useNodeEditorStore()
   const saveWorkflowMutation = useSaveWorkflow()
@@ -150,26 +167,12 @@ export function SaveAsDialog({
 
   const handleOpenChange = (newOpen: boolean) => {
     if (saveWorkflowMutation.isPending) return
-    if (newOpen && currentWorkflowName) {
-      dispatch({
-        type: 'RESET',
-        name: `${currentWorkflowName} - ${td('copy_suffix')}`,
-      })
-    }
     if (!newOpen) selection?.onClose()
     setOpen(newOpen)
   }
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      {!selection && (
-        <DialogTrigger asChild>
-          <Button variant='ghost' size='sm' disabled={disabled}>
-            <SaveIcon className='size-4 mr-2' />
-            {t('save_as')}
-          </Button>
-        </DialogTrigger>
-      )}
       <DialogContent className='sm:max-w-[425px]'>
         <DialogHeader>
           <div className='flex items-center gap-2'>

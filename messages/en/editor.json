@@ -112,6 +112,10 @@
       "search_prompt": "Search Tools",
       "subgraphs": "Subgraphs"
     },
+    "file_menu": "File",
+    "open_workflow": "Open Workflow",
+    "arrange": "Arrange",
+    "clean_dirty_edges_description": "Remove edges whose node or port no longer exists, and duplicates",
     "auto_layout": "Auto Layout",
     "layout_modes": {
       "standard": {
@@ -181,7 +185,6 @@
       }
     },
     "load_workflow_dialog": {
-      "trigger": "Load",
       "title": "Load Workflow",
       "description": "Select a workflow to load into the editor",
       "empty": "No workflows",

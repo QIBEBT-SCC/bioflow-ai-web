@@ -12,7 +12,7 @@ import {
   useReactFlow,
   type XYPosition,
 } from '@xyflow/react'
-import { LogOutIcon, PlayIcon, SaveIcon, UnlinkIcon } from 'lucide-react'
+import { LogOutIcon, PlayIcon, SaveIcon } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import type React from 'react'
@@ -22,19 +22,16 @@ import { useShallow } from 'zustand/react/shallow'
 import { getToolArg } from '@/app/actions/tool'
 import { ChatSidebar } from '@/components/chat/chat-sidebar'
 import { ChatSidebarToggle } from '@/components/chat/chat-sidebar-toggle'
-import { AutoLayoutMenu } from '@/components/node-editor/auto-layout-menu'
+import { ArrangeMenu } from '@/components/node-editor/arrange-menu'
 import { EditorTopbar } from '@/components/node-editor/editor-topbar'
-import { LoadWorkflowDialog } from '@/components/node-editor/load-workflow-dialog'
 import { PanelMenu } from '@/components/node-editor/menu/panel-menu'
 import {
   nodeDefaultData,
   nodeTypes,
 } from '@/components/node-editor/node-registry'
-import { SaveAsDialog } from '@/components/node-editor/save-as-dialog'
 import { SubgraphNavigation } from '@/components/node-editor/subgraph-context'
 import { SubgraphInterfaceEditor } from '@/components/node-editor/subgraph-interface-editor'
-import { WorkflowJsonActions } from '@/components/node-editor/workflow-json-actions'
-import { WorkflowMetadataDialog } from '@/components/node-editor/workflow-metadata-dialog'
+import { WorkflowFileMenu } from '@/components/node-editor/workflow-file-menu'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset } from '@/components/ui/sidebar'
@@ -371,113 +368,55 @@ function FlowContent() {
             actions={<ChatSidebarToggle />}
           />
 
-          {/* 工具栏 */}
-          <div className='flex h-11 items-center border-b bg-muted/30 px-3'>
-            <div className='flex items-center gap-1'>
+          {/* 工具栏：文档操作 | 画布整理 | 运行/退出 */}
+          <div className='flex h-11 items-center gap-1 border-b bg-muted/30 px-3'>
+            <WorkflowFileMenu
+              workflowName={workflowData?.name}
+              allowLoad={!isProjectMode}
+            />
+            <Button
+              variant='ghost'
+              size='sm'
+              onClick={onSave}
+              disabled={
+                !currentWorkflowUid ||
+                !workflowData?.workflow ||
+                updateWorkflowMutation.isPending
+              }
+            >
+              <SaveIcon className='size-4' />
+              {updateWorkflowMutation.isPending ? t('saving') : t('save')}
+            </Button>
+
+            <Separator orientation='vertical' className='mx-1 h-5!' />
+
+            <ArrangeMenu
+              layoutDisabled={nodes.length === 0}
+              cleanEdgesDisabled={edges.length === 0 || !edgesReady}
+              onLayout={onAutoLayout}
+              onCleanEdges={onCleanDirtyEdges}
+            />
+
+            <div className='ml-auto flex items-center gap-3'>
+              {!isProjectMode && (
+                <span className='hidden text-xs text-muted-foreground lg:inline'>
+                  {t('right_click_to_add')}
+                </span>
+              )}
               {isProjectMode ? (
-                <>
-                  <Button
-                    variant='ghost'
-                    size='sm'
-                    onClick={onSave}
-                    disabled={
-                      !currentWorkflowUid ||
-                      !workflowData?.workflow ||
-                      updateWorkflowMutation.isPending
-                    }
-                  >
-                    <SaveIcon className='size-4' />
-                    {updateWorkflowMutation.isPending ? t('saving') : t('save')}
-                  </Button>
-
-                  <AutoLayoutMenu
-                    onLayout={onAutoLayout}
-                    disabled={nodes.length === 0}
-                  />
-
-                  <Button
-                    variant='ghost'
-                    size='sm'
-                    onClick={onCleanDirtyEdges}
-                    disabled={edges.length === 0 || !edgesReady}
-                  >
-                    <UnlinkIcon className='size-4' />
-                    {t('clean_dirty_edges')}
-                  </Button>
-
-                  <WorkflowJsonActions workflowName={workflowData?.name} />
-
-                  <SaveAsDialog
-                    currentWorkflowName={workflowData?.name}
-                    disabled={nodes.length === 0}
-                  />
-
-                  <WorkflowMetadataDialog />
-                  <Button variant='ghost' size='sm' onClick={onExit}>
-                    <LogOutIcon className='size-4' />
-                    {t('exit')}
-                  </Button>
-                </>
+                <Button variant='outline' size='sm' onClick={onExit}>
+                  <LogOutIcon className='size-4' />
+                  {t('exit')}
+                </Button>
               ) : (
-                <>
-                  <LoadWorkflowDialog />
-
-                  <Button
-                    variant='ghost'
-                    size='sm'
-                    onClick={onSave}
-                    disabled={
-                      !currentWorkflowUid ||
-                      !workflowData?.workflow ||
-                      updateWorkflowMutation.isPending
-                    }
-                  >
-                    <SaveIcon className='size-4' />
-                    {updateWorkflowMutation.isPending ? t('saving') : t('save')}
-                  </Button>
-
-                  <AutoLayoutMenu
-                    onLayout={onAutoLayout}
-                    disabled={nodes.length === 0}
-                  />
-
-                  <Button
-                    variant='ghost'
-                    size='sm'
-                    onClick={onCleanDirtyEdges}
-                    disabled={edges.length === 0 || !edgesReady}
-                  >
-                    <UnlinkIcon className='size-4' />
-                    {t('clean_dirty_edges')}
-                  </Button>
-
-                  <SaveAsDialog
-                    currentWorkflowName={workflowData?.name}
-                    disabled={nodes.length === 0}
-                  />
-
-                  <WorkflowMetadataDialog />
-
-                  <WorkflowJsonActions workflowName={workflowData?.name} />
-
-                  <Separator orientation='vertical' className='mx-2 h-5!' />
-
-                  <Button
-                    variant='ghost'
-                    size='sm'
-                    onClick={onRun}
-                    disabled={runMutation.isPending}
-                  >
-                    <PlayIcon className='size-4 text-success' />
-                    {runMutation.isPending ? t('running') : t('run')}
-                  </Button>
-
-                  <Separator orientation='vertical' className='mx-2 h-5!' />
-
-                  <div className='text-sm text-muted-foreground'>
-                    {t('right_click_to_add')}
-                  </div>
-                </>
+                <Button
+                  size='sm'
+                  onClick={onRun}
+                  disabled={runMutation.isPending}
+                >
+                  <PlayIcon className='size-4' />
+                  {runMutation.isPending ? t('running') : t('run')}
+                </Button>
               )}
             </div>
           </div>

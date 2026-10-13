@@ -1,5 +1,4 @@
 'use client'
-import { InfoIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useId, useState } from 'react'
 import { Button } from '@/components/ui/button'
@@ -9,7 +8,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -94,20 +92,19 @@ function MetadataForm({
   )
 }
 
-export function WorkflowMetadataDialog() {
+export function WorkflowMetadataDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}) {
   const t = useTranslations('editor.subgraph')
   const uid = useNodeEditorStore((state) => state.currentWorkflowUid)
   const { data } = useWorkflow(uid)
-  const [open, setOpen] = useState(false)
   if (!uid || !data) return null
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button size='sm' variant='ghost'>
-          <InfoIcon className='size-4' />
-          {t('metadata')}
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t('metadata')}</DialogTitle>
@@ -118,7 +115,7 @@ export function WorkflowMetadataDialog() {
             key={uid}
             uid={uid}
             initialWorkflow={data}
-            onSaved={() => setOpen(false)}
+            onSaved={() => onOpenChange(false)}
           />
         )}
       </DialogContent>

@@ -1,10 +1,22 @@
 'use client'
 
 import { useReactFlow } from '@xyflow/react'
-import { DownloadIcon, FileJsonIcon, UploadIcon } from 'lucide-react'
+import {
+  ChevronDownIcon,
+  CopyIcon,
+  DownloadIcon,
+  FileJsonIcon,
+  FileTextIcon,
+  FolderOpenIcon,
+  InfoIcon,
+  UploadIcon,
+} from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { type ChangeEvent, useRef, useState } from 'react'
 import { toast } from 'sonner'
+import { LoadWorkflowDialog } from '@/components/node-editor/load-workflow-dialog'
+import { SaveAsDialog } from '@/components/node-editor/save-as-dialog'
+import { WorkflowMetadataDialog } from '@/components/node-editor/workflow-metadata-dialog'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,6 +28,13 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   type ParsedWorkflowJson,
   parseWorkflowJson,
@@ -30,8 +49,12 @@ import { useNodeEditorStore } from '@/stores/nodeviewStore'
 
 const MAX_IMPORT_SIZE = 10 * 1024 * 1024
 
-interface WorkflowJsonActionsProps {
+type FileDialog = 'load' | 'save_as' | 'metadata' | null
+
+interface WorkflowFileMenuProps {
   workflowName?: string
+  /** Offer opening another workflow from the library (standalone editor only). */
+  allowLoad?: boolean
 }
 
 function getExportFilename(name?: string): string {
@@ -43,17 +66,26 @@ function getExportFilename(name?: string): string {
   return `${safeName || 'workflow'}.json`
 }
 
-export function WorkflowJsonActions({
+/** Toolbar "File" menu: library, save-as, JSON import/export and metadata. */
+export function WorkflowFileMenu({
   workflowName,
-}: WorkflowJsonActionsProps) {
+  allowLoad,
+}: WorkflowFileMenuProps) {
   const t = useTranslations('editor')
   const td = useTranslations('editor.workflow_json')
   const inputRef = useRef<HTMLInputElement>(null)
+  const [dialog, setDialog] = useState<FileDialog>(null)
   const [pendingImport, setPendingImport] = useState<ParsedWorkflowJson | null>(
     null,
   )
-  const { nodes, loadGraph, getRootGraph } = useNodeEditorStore()
+  const { nodes, currentWorkflowUid, loadGraph, getRootGraph } =
+    useNodeEditorStore()
   const { fitView } = useReactFlow()
+
+  const dialogProps = (name: Exclude<FileDialog, null>) => ({
+    open: dialog === name,
+    onOpenChange: (open: boolean) => setDialog(open ? name : null),
+  })
 
   const handleExport = () => {
     const content = serializeWorkflowJson(getRootGraph(), workflowName)
@@ -110,24 +142,51 @@ export function WorkflowJsonActions({
 
   return (
     <>
-      <Button
-        variant='ghost'
-        size='sm'
-        onClick={handleExport}
-        disabled={nodes.length === 0}
-      >
-        <DownloadIcon className='size-4 mr-2' />
-        {t('export')}
-      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant='ghost' size='sm'>
+            <FileTextIcon className='size-4' />
+            {t('file_menu')}
+            <ChevronDownIcon className='size-3.5 text-muted-foreground' />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align='start' className='w-52'>
+          {allowLoad && (
+            <DropdownMenuItem onSelect={() => setDialog('load')}>
+              <FolderOpenIcon />
+              {t('open_workflow')}
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuItem
+            disabled={nodes.length === 0}
+            onSelect={() => setDialog('save_as')}
+          >
+            <CopyIcon />
+            {t('save_as')}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onSelect={() => inputRef.current?.click()}>
+            <UploadIcon />
+            {t('import')}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            disabled={nodes.length === 0}
+            onSelect={handleExport}
+          >
+            <DownloadIcon />
+            {t('export')}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            disabled={!currentWorkflowUid}
+            onSelect={() => setDialog('metadata')}
+          >
+            <InfoIcon />
+            {t('subgraph.metadata')}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
-      <Button
-        variant='ghost'
-        size='sm'
-        onClick={() => inputRef.current?.click()}
-      >
-        <UploadIcon className='size-4 mr-2' />
-        {t('import')}
-      </Button>
       <input
         ref={inputRef}
         type='file'
@@ -136,6 +195,13 @@ export function WorkflowJsonActions({
         className='hidden'
         onChange={handleFileChange}
       />
+
+      {allowLoad && <LoadWorkflowDialog {...dialogProps('load')} />}
+      <SaveAsDialog
+        currentWorkflowName={workflowName}
+        {...dialogProps('save_as')}
+      />
+      <WorkflowMetadataDialog {...dialogProps('metadata')} />
 
       <AlertDialog
         open={pendingImport !== null}

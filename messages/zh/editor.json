@@ -112,6 +112,10 @@
       "search_prompt": "搜索工具",
       "subgraphs": "子图"
     },
+    "file_menu": "文件",
+    "open_workflow": "打开工作流",
+    "arrange": "整理",
+    "clean_dirty_edges_description": "移除指向不存在节点或端口的连线及重复连线",
     "auto_layout": "自动排版",
     "layout_modes": {
       "standard": {
@@ -181,7 +185,6 @@
       }
     },
     "load_workflow_dialog": {
-      "trigger": "加载",
       "title": "加载工作流",
       "description": "选择一个工作流加载到编辑器中",
       "empty": "暂无工作流",
