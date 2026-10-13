@@ -170,7 +170,10 @@
       "inputMountPathPlaceholder": "/data/input",
       "outputMountPathPlaceholder": "/data/output",
       "reportFile": "Report File",
-      "logFile": "Log File"
+      "logFile": "Log File",
+      "requiredOutput": "Required output",
+      "requiredOutputHint": "Uncheck only for outputs the tool may validly omit. Downstream use still requires the file to exist.",
+      "optionalOutput": "Optional output"
     },
     "VariableField": {
       "completionHint": "Type {openBrace} to complete a variable",
@@ -208,6 +211,7 @@
       "fileMountsDescription": "Input and output file definitions",
       "inputFiles": "Input files ({count})",
       "outputFiles": "Output files ({count})",
+      "optionalOutput": "Optional output",
       "noFiles": "No files",
       "filePath": "File path",
       "mountPath": "Mount path",

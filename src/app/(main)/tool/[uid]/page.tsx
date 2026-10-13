@@ -155,6 +155,9 @@ function FileMountItem({ file, t }: { file: FileMount; t: DetailT }) {
         <div className='flex gap-1.5'>
           {file.is_log && <Badge variant='secondary'>LOG</Badge>}
           {file.is_report && <Badge variant='secondary'>REPORT</Badge>}
+          {file.file_type === 'OUTPUT' && file.is_required === false && (
+            <Badge variant='secondary'>{t('optionalOutput')}</Badge>
+          )}
         </div>
       </div>
       {file.description && (

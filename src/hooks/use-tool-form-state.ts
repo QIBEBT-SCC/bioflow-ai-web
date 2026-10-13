@@ -34,7 +34,10 @@ export function useToolFormState(
         })),
         immutable_static_params: tool.immutable_static_params ?? null,
         modifiable_static_params: tool.modifiable_static_params ?? null,
-        file_mounts: tool.file_mounts.map((file) => ({ ...file })),
+        file_mounts: tool.file_mounts.map((file) => ({
+          ...file,
+          is_required: file.is_required ?? true,
+        })),
         tags: tool.tags || [],
       })
     }
@@ -119,6 +122,7 @@ export function useToolFormState(
             file_type: 'OUTPUT',
             is_report: false,
             is_log: false,
+            is_required: true,
             mount_path: '/data/output',
           },
         ],

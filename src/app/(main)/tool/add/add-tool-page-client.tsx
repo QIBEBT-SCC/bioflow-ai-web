@@ -211,6 +211,7 @@ function useToolConfigFormActions(
           file_type: 'INPUT',
           is_report: false,
           is_log: false,
+          is_required: true,
           mount_path: '',
         },
       ],

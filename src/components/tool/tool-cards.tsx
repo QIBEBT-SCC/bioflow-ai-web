@@ -258,6 +258,11 @@ export function ToolFileCard({
                   {t('log')}
                 </Badge>
               )}
+              {file.file_type === 'OUTPUT' && file.is_required === false && (
+                <Badge variant='outline' className='ml-2'>
+                  {t('optionalOutput')}
+                </Badge>
+              )}
             </CardTitle>
           </div>
           <Button
@@ -376,7 +381,7 @@ export function ToolFileCard({
           </div>
         </div>
 
-        <div className='flex gap-4'>
+        <div className='flex flex-wrap gap-4'>
           <div className='flex items-center gap-x-2'>
             <Checkbox
               id={`file-report-${index}`}
@@ -397,7 +402,30 @@ export function ToolFileCard({
             />
             <Label htmlFor={`file-log-${index}`}>{t('logFile')}</Label>
           </div>
+          {file.file_type === 'OUTPUT' && (
+            <div className='flex items-center gap-x-2'>
+              <Checkbox
+                id={`file-required-${index}`}
+                checked={file.is_required ?? true}
+                onCheckedChange={(checked) =>
+                  onUpdateAction(index, 'is_required', checked === true)
+                }
+                aria-describedby={`file-required-hint-${index}`}
+              />
+              <Label htmlFor={`file-required-${index}`}>
+                {t('requiredOutput')}
+              </Label>
+            </div>
+          )}
         </div>
+        {file.file_type === 'OUTPUT' && (
+          <p
+            id={`file-required-hint-${index}`}
+            className='mt-2 text-xs text-muted-foreground'
+          >
+            {t('requiredOutputHint')}
+          </p>
+        )}
       </CardContent>
     </Card>
   )

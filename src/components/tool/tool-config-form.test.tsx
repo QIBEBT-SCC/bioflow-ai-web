@@ -88,6 +88,43 @@ function outputField(): HTMLInputElement {
   return screen.getAllByLabelText(/File Path/).at(-1) as HTMLInputElement
 }
 
+describe('required outputs', () => {
+  it('defaults older output definitions to required and allows toggling', () => {
+    render(<Form />)
+    const checkbox = screen.getByRole('checkbox', { name: 'Required output' })
+    expect(checkbox).toBeChecked()
+    fireEvent.click(checkbox)
+    expect(checkbox).not.toBeChecked()
+    expect(screen.getByText('Optional output')).toBeInTheDocument()
+    fireEvent.click(checkbox)
+    expect(checkbox).toBeChecked()
+    expect(screen.queryByText('Optional output')).not.toBeInTheDocument()
+  })
+
+  it('preserves an explicitly optional output', () => {
+    render(
+      <Form
+        mounts={[
+          {
+            ...fileMount('unmapped', 'OUTPUT', '{output_dir}/unmapped.bam'),
+            is_required: false,
+          },
+        ]}
+      />,
+    )
+    expect(
+      screen.getByRole('checkbox', { name: 'Required output' }),
+    ).not.toBeChecked()
+  })
+
+  it('does not expose output requirements on input mounts', () => {
+    render(<Form mounts={[fileMount('fasta')]} />)
+    expect(
+      screen.queryByRole('checkbox', { name: 'Required output' }),
+    ).not.toBeInTheDocument()
+  })
+})
+
 describe('output file path property completion', () => {
   it('offers exactly the three input properties after typing a dot', () => {
     render(<Form />)

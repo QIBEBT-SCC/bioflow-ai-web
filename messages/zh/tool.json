@@ -170,7 +170,10 @@
       "inputMountPathPlaceholder": "/data/input",
       "outputMountPathPlaceholder": "/data/output",
       "reportFile": "报告文件",
-      "logFile": "日志文件"
+      "logFile": "日志文件",
+      "requiredOutput": "必需输出",
+      "requiredOutputHint": "仅对工具允许不生成的输出取消勾选；下游引用时仍会检查文件是否存在。",
+      "optionalOutput": "可选输出"
     },
     "VariableField": {
       "completionHint": "输入 {openBrace} 触发变量补全",
@@ -208,6 +211,7 @@
       "fileMountsDescription": "输入与输出文件定义",
       "inputFiles": "输入文件 ({count})",
       "outputFiles": "输出文件 ({count})",
+      "optionalOutput": "可选输出",
       "noFiles": "暂无文件",
       "filePath": "文件路径",
       "mountPath": "挂载路径",

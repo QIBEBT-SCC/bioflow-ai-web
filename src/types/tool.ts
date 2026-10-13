@@ -112,6 +112,7 @@ export interface FileMount {
   file_type: 'INPUT' | 'OUTPUT'
   is_report: boolean
   is_log: boolean
+  is_required?: boolean
   mount_path: string
 }
 
