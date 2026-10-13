@@ -4,10 +4,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { GripVertical, HelpCircle, Trash2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import {
-  TemplateVariableField,
-  type ToolTemplateVariable,
-} from '@/components/tool/template-variable-field'
+import { TemplateVariableField } from '@/components/tool/template-variable-field'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -27,6 +24,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import type { ToolTemplateVariable } from '@/lib/tool-template'
 import { cn } from '@/lib/utils'
 import type { FileMount, ParamDefine } from '@/types/tool'
 
@@ -187,12 +185,14 @@ export function ToolFileCard({
   id,
   file,
   index,
+  templateVariables,
   onRemoveAction,
   onUpdateAction,
 }: {
   id: string
   file: FileMount
   index: number
+  templateVariables: ToolTemplateVariable[]
   onRemoveAction: (index: number) => void
   onUpdateAction: (
     index: number,
@@ -220,11 +220,11 @@ export function ToolFileCard({
       ref={setNodeRef}
       style={style}
       className={cn(
-        'overflow-hidden border-l-[3px] pt-0',
+        'border-l-[3px] pt-0',
         file.file_type === 'INPUT' ? 'border-l-info/60' : 'border-l-success/60',
       )}
     >
-      <CardHeader className='border-b bg-muted/30 py-3'>
+      <CardHeader className='rounded-t-xl border-b bg-muted/30 py-3'>
         <div className='flex justify-between items-center'>
           <div className='flex items-center gap-2'>
             <button
@@ -329,30 +329,32 @@ export function ToolFileCard({
             <Label htmlFor={`file-path-${index}`}>
               {t('filePath')} <span className='text-destructive'>*</span>
             </Label>
-            <Input
-              id={`file-path-${index}`}
-              value={file.file_path}
-              onChange={(e) =>
-                onUpdateAction(index, 'file_path', e.target.value)
-              }
-              placeholder={
-                file.file_type === 'INPUT'
-                  ? t('inputFilePathPlaceholder', {
-                      variable: `{${file.name || 'input_file'}}`,
-                    })
-                  : t('outputFilePathPlaceholder', {
-                      outputDir: '{output_dir}',
-                      sampleName: '{sample_name}',
-                    })
-              }
-              readOnly={file.file_type === 'INPUT'}
-              className={
-                file.file_type === 'INPUT'
-                  ? 'cursor-not-allowed bg-muted/50 text-muted-foreground'
-                  : undefined
-              }
-              required
-            />
+            {file.file_type === 'INPUT' ? (
+              <Input
+                id={`file-path-${index}`}
+                value={file.file_path}
+                placeholder={t('inputFilePathPlaceholder', {
+                  variable: `{${file.name || 'input_file'}}`,
+                })}
+                readOnly
+                className='cursor-not-allowed bg-muted/50 text-muted-foreground'
+                required
+              />
+            ) : (
+              <TemplateVariableField
+                id={`file-path-${index}`}
+                value={file.file_path}
+                onChange={(nextValue) =>
+                  onUpdateAction(index, 'file_path', nextValue)
+                }
+                variables={templateVariables}
+                placeholder={t('outputFilePathPlaceholder', {
+                  outputDir: '{output_dir}',
+                  sampleName: '{sample_name}',
+                })}
+                required
+              />
+            )}
           </div>
           <div className='space-y-2'>
             <Label htmlFor={`mount-path-${index}`}>

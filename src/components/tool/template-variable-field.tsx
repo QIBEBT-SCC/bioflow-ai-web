@@ -11,73 +11,13 @@ import {
 } from 'react'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  findUnknownTemplateVariables,
+  getTemplateCompletionContext,
+  type TemplateCompletionContext,
+  type ToolTemplateVariable,
+} from '@/lib/tool-template'
 import { cn } from '@/lib/utils'
-
-export type ToolTemplateVariableKind =
-  | 'outputDir'
-  | 'sampleName'
-  | 'fileMount'
-  | 'optionalParams'
-  | 'positionParams'
-
-export interface ToolTemplateVariable {
-  name: string
-  kind: ToolTemplateVariableKind
-}
-
-interface CompletionContext {
-  from: number
-  to: number
-  query: string
-}
-
-export function getTemplateCompletionContext(
-  value: string,
-  cursor: number,
-): CompletionContext | null {
-  const beforeCursor = value.slice(0, cursor)
-  const openBrace = beforeCursor.lastIndexOf('{')
-  const closeBrace = beforeCursor.lastIndexOf('}')
-
-  if (openBrace <= closeBrace) return null
-
-  const query = beforeCursor.slice(openBrace + 1)
-  if (query.includes('{') || query.includes('\n')) return null
-
-  let to = cursor
-  while (to < value.length && !['{', '}', '\n'].includes(value[to])) to += 1
-  if (value[to] === '}') to += 1
-
-  return { from: openBrace, to, query }
-}
-
-export function findUnknownTemplateVariables(
-  value: string,
-  variables: ToolTemplateVariable[],
-): string[] {
-  const knownVariables = new Set(variables.map((variable) => variable.name))
-  const unknownVariables = new Set<string>()
-
-  for (let index = 0; index < value.length; index += 1) {
-    if (value[index] !== '{') continue
-    if (value[index + 1] === '{') {
-      index += 1
-      continue
-    }
-
-    const closeBrace = value.indexOf('}', index + 1)
-    if (closeBrace === -1) break
-
-    const expression = value.slice(index + 1, closeBrace)
-    const variableName = expression.split(/[!:]/, 1)[0]
-    if (variableName && !knownVariables.has(variableName)) {
-      unknownVariables.add(variableName)
-    }
-    index = closeBrace
-  }
-
-  return [...unknownVariables]
-}
 
 interface TemplateVariableFieldProps {
   id: string
@@ -104,7 +44,8 @@ export function TemplateVariableField({
 }: TemplateVariableFieldProps) {
   const t = useTranslations('tool.VariableField')
   const fieldRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null)
-  const [completion, setCompletion] = useState<CompletionContext | null>(null)
+  const [completion, setCompletion] =
+    useState<TemplateCompletionContext | null>(null)
   const [activeIndex, setActiveIndex] = useState(0)
 
   const uniqueVariables = useMemo(() => {
@@ -228,6 +169,12 @@ export function TemplateVariableField({
         return t('descriptions.sampleName')
       case 'fileMount':
         return t('descriptions.fileMount')
+      case 'inputName':
+        return t('descriptions.inputName')
+      case 'inputStem':
+        return t('descriptions.inputStem')
+      case 'inputSuffix':
+        return t('descriptions.inputSuffix')
       case 'optionalParams':
         return t('descriptions.optionalParams')
       case 'positionParams':

@@ -23,10 +23,7 @@ import {
   TerminalHeader,
   TerminalTitle,
 } from '@/components/ai-elements/terminal'
-import {
-  TemplateVariableField,
-  type ToolTemplateVariable,
-} from '@/components/tool/template-variable-field'
+import { TemplateVariableField } from '@/components/tool/template-variable-field'
 import { ToolFileCard, ToolParamCard } from '@/components/tool/tool-cards'
 import { ToolTagBadge } from '@/components/tool/tool-tag-badge'
 import { Badge } from '@/components/ui/badge'
@@ -51,6 +48,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 import { useRunInImage } from '@/hooks/use-tool'
+import type { ToolTemplateVariable } from '@/lib/tool-template'
 import type {
   DockerToolCreate,
   FileMount,
@@ -133,9 +131,26 @@ export function ToolConfigForm({
   const [helpCommandResult, setHelpCommandResult] = useState('')
   const { mutate: runInImage, isPending: isRunning } = useRunInImage()
 
-  const runtimeVariables: ToolTemplateVariable[] = [
+  const inputPathVariables: ToolTemplateVariable[] = value.file_mounts.flatMap(
+    (file) =>
+      file.file_type === 'INPUT' &&
+      file.name.trim() &&
+      !file.file_path.startsWith('value:') &&
+      !file.file_path.startsWith('mountlist:')
+        ? [
+            { name: `${file.name}.name`, kind: 'inputName' as const },
+            { name: `${file.name}.stem`, kind: 'inputStem' as const },
+            { name: `${file.name}.suffix`, kind: 'inputSuffix' as const },
+          ]
+        : [],
+  )
+  const outputTemplateVariables: ToolTemplateVariable[] = [
     { name: 'output_dir', kind: 'outputDir' },
     { name: 'sample_name', kind: 'sampleName' },
+    ...inputPathVariables,
+  ]
+  const runtimeVariables: ToolTemplateVariable[] = [
+    ...outputTemplateVariables,
     ...value.file_mounts.map((file) => ({
       name: file.name,
       kind: 'fileMount' as const,
@@ -307,6 +322,7 @@ export function ToolConfigForm({
         <TabsContent value='files'>
           <FilesConfigTab
             value={value}
+            templateVariables={outputTemplateVariables}
             fileIds={fileIds.current}
             sensors={sensors}
             onAdd={onAddFileMount}
@@ -619,6 +635,7 @@ function ParamsConfigTab({
 
 interface FilesConfigTabProps {
   value: ToolConfigValues
+  templateVariables: ToolTemplateVariable[]
   fileIds: string[]
   sensors: ReturnType<typeof useSensors>
   onAdd: () => void
@@ -633,6 +650,7 @@ interface FilesConfigTabProps {
 
 function FilesConfigTab({
   value,
+  templateVariables,
   fileIds,
   sensors,
   onAdd,
@@ -667,6 +685,7 @@ function FilesConfigTab({
                       id={fileIds[index]}
                       file={file}
                       index={index}
+                      templateVariables={templateVariables}
                       onUpdateAction={onUpdate}
                       onRemoveAction={onRemove}
                     />
