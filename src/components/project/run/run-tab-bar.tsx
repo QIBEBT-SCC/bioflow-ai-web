@@ -13,6 +13,7 @@ export type FileType =
   | 'gfa'
   | 'table'
   | 'vcf'
+  | 'structure'
   | 'html'
   | 'image'
   | 'pdf'

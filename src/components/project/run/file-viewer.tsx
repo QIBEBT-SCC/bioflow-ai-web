@@ -7,6 +7,7 @@ import {
   FileText,
   TextWrap,
 } from 'lucide-react'
+import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 import { type ComponentType, useMemo, useState } from 'react'
@@ -217,6 +218,13 @@ const SERVER_PREVIEWS: Partial<
   mcool: ContactPreview,
   table: TablePreview,
   vcf: VcfPreview,
+  structure: dynamic(
+    () =>
+      import('@/components/project/run/protein-preview').then(
+        (mod) => mod.ProteinPreview,
+      ),
+    { ssr: false },
+  ),
 }
 
 function FilePreview({

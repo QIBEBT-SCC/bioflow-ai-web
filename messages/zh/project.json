@@ -242,7 +242,8 @@
           "hic": "Hi-C",
           "cool": "Cooler",
           "mcool": "多分辨率 Cooler",
-          "unknown": "文件"
+          "unknown": "文件",
+          "structure": "分子结构"
         }
       },
       "leftPanel": {
@@ -536,6 +537,40 @@
         "contig": "序列",
         "variantType": "变异类型",
         "filterStatus": "过滤状态"
+      },
+      "proteinPreview": {
+        "loading": "正在加载三维结构…",
+        "failed": "无法预览该结构",
+        "model": "模型",
+        "modelNumber": "模型 {index}",
+        "chain": "链",
+        "allChains": "所有链",
+        "chainLabel": "链 {chain}",
+        "representation": "显示方式",
+        "cartoon": "带状图",
+        "ballAndStick": "球棍图",
+        "ligands": "配体 / 离子",
+        "water": "水分子",
+        "resetCamera": "重置视角",
+        "viewport": "分子三维结构",
+        "atoms": "原子",
+        "residues": "聚合物残基",
+        "chains": "链",
+        "controls": "拖动旋转 · 滚轮缩放 · 右键拖动平移",
+        "hint": "显示文件中的坐标模型，聚合物按链着色。悬停或点击残基可查看名称和编号；多模型文件可切换模型。",
+        "errors": {
+          "tooLarge": "结构预览支持最大 10 MiB 的文件，gzip 解压后也不能超过此限制。请下载后使用专用工具查看。",
+          "tooManyAtoms": "当前模型超过 200,000 个原子，请下载后使用专用工具查看。",
+          "invalid": "文件不是有效的 PDB / mmCIF 坐标数据，或 gzip 文件已损坏。",
+          "empty": "文件中没有可显示的原子坐标。",
+          "compressionUnavailable": "当前浏览器不支持 gzip 解压，请先解压文件再查看。",
+          "webglUnavailable": "无法初始化 WebGL。请检查浏览器是否启用了硬件加速。",
+          "stale": "运行实例已重新启动，请刷新文件列表后重新打开文件。",
+          "forbidden": "没有权限读取该文件，请重新登录后再试。",
+          "missing": "找不到该文件，请刷新文件列表。",
+          "loadFailed": "结构文件加载失败，请重新打开该文件。",
+          "timeout": "结构加载超过 30 秒，请重新打开文件或下载后使用专用工具查看。"
+        }
       }
     },
     "fileMapping": {

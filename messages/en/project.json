@@ -242,7 +242,8 @@
           "hic": "Hi-C",
           "cool": "Cooler",
           "mcool": "Multi-res Cooler",
-          "unknown": "File"
+          "unknown": "File",
+          "structure": "Molecular structure"
         }
       },
       "leftPanel": {
@@ -536,6 +537,40 @@
         "contig": "Contig",
         "variantType": "Variant type",
         "filterStatus": "Filter status"
+      },
+      "proteinPreview": {
+        "loading": "Loading 3D structure…",
+        "failed": "Unable to preview structure",
+        "model": "Model",
+        "modelNumber": "Model {index}",
+        "chain": "Chain",
+        "allChains": "All chains",
+        "chainLabel": "Chain {chain}",
+        "representation": "Representation",
+        "cartoon": "Cartoon",
+        "ballAndStick": "Ball and stick",
+        "ligands": "Ligands / ions",
+        "water": "Water",
+        "resetCamera": "Reset view",
+        "viewport": "Molecular 3D structure",
+        "atoms": "Atoms",
+        "residues": "Polymer residues",
+        "chains": "Chains",
+        "controls": "Drag to rotate · Scroll to zoom · Right-drag to pan",
+        "hint": "Displays the coordinate models in the file, with polymers colored by chain. Hover or click a residue for its name and number. Multi-model files support model switching.",
+        "errors": {
+          "tooLarge": "Structure previews support files up to 10 MiB, including the decoded size of gzip files. Download the file to view it with a dedicated tool.",
+          "tooManyAtoms": "This model exceeds 200,000 atoms. Download it to view with a dedicated tool.",
+          "invalid": "The file is not valid PDB / mmCIF coordinate data, or its gzip data is damaged.",
+          "empty": "The file contains no displayable atomic coordinates.",
+          "compressionUnavailable": "This browser cannot decompress gzip files. Decompress the file before previewing it.",
+          "webglUnavailable": "WebGL could not be initialized. Check whether hardware acceleration is enabled in your browser.",
+          "stale": "The run was restarted. Refresh the file list and reopen the file.",
+          "forbidden": "You cannot access this file. Sign in again and retry.",
+          "missing": "The file was not found. Refresh the file list.",
+          "loadFailed": "The structure could not be loaded. Reopen the file to retry.",
+          "timeout": "Loading exceeded 30 seconds. Reopen the file or download it to view with a dedicated tool."
+        }
       }
     },
     "fileMapping": {

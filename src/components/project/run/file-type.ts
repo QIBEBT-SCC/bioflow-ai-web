@@ -1,5 +1,6 @@
 import {
   AudioWaveform,
+  Box,
   ChartGantt,
   Dna,
   File,
@@ -25,6 +26,7 @@ export const RUN_FILE_ICONS: Record<FileType, LucideIcon> = {
   gfa: Waypoints,
   table: Sheet,
   vcf: Dna,
+  structure: Box,
   html: FileCode,
   image: FileImage,
   pdf: FileTypeIcon,
@@ -110,7 +112,16 @@ const TEXT_PREVIEW_TYPES = new Set<FileType>([
   'bed',
   'gff',
   'gtf',
+  'structure',
 ])
+
+export function getRunStructureFormat(name: string): 'pdb' | 'mmcif' | null {
+  const baseName = name.toLowerCase().replace(/\.gz$/, '')
+  const ext = baseName.split('.').pop()
+  if (ext === 'pdb' || ext === 'ent') return 'pdb'
+  if (ext === 'cif' || ext === 'mmcif') return 'mmcif'
+  return null
+}
 
 export function usesRunTextPreview(name: string, fileType: FileType): boolean {
   if (name.toLowerCase().endsWith('.gz')) return false
@@ -119,6 +130,7 @@ export function usesRunTextPreview(name: string, fileType: FileType): boolean {
 
 export function getRunFileType(name: string): FileType {
   const lowerName = name.toLowerCase()
+  if (getRunStructureFormat(lowerName)) return 'structure'
   if (lowerName.endsWith('.vcf') || lowerName.endsWith('.vcf.gz')) return 'vcf'
   if (
     lowerName.endsWith('.gff') ||
