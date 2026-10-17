@@ -77,17 +77,6 @@ function imageFormReducer(
   }
 }
 
-function DefaultTrigger() {
-  const t = useTranslations('image.dialog')
-
-  return (
-    <Button>
-      <Plus className='size-4' />
-      {t('newImageBtn')}
-    </Button>
-  )
-}
-
 interface CreateImageDialogProps {
   trigger?: React.ReactNode
 }
@@ -199,7 +188,14 @@ export function CreateImageDialog({ trigger }: CreateImageDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{trigger || <DefaultTrigger />}</DialogTrigger>
+      <DialogTrigger asChild>
+        {trigger || (
+          <Button>
+            <Plus className='size-4' />
+            {t('newImageBtn')}
+          </Button>
+        )}
+      </DialogTrigger>
       <DialogContent className='max-w-2xl max-h-[90vh] overflow-y-auto'>
         <DialogHeader>
           <DialogTitle className='flex items-center gap-2'>
