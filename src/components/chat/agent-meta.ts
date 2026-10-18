@@ -1,9 +1,9 @@
 import {
+  ClipboardListIcon,
   FlaskConicalIcon,
   HammerIcon,
   type LucideIcon,
   MessageSquareTextIcon,
-  TestTubeDiagonalIcon,
   WrenchIcon,
 } from 'lucide-react'
 import type { AgentName } from '@/types/agent'
@@ -13,7 +13,7 @@ export const AGENT_NAMES: AgentName[] = [
   'workflow-builder',
   'workflow-assistant',
   'workflow-fixer',
-  'sample-manager',
+  'project-planner',
   'tool-generator',
 ]
 
@@ -21,6 +21,6 @@ export const AGENT_ICONS: Record<AgentName, LucideIcon> = {
   'workflow-builder': FlaskConicalIcon,
   'workflow-assistant': MessageSquareTextIcon,
   'workflow-fixer': HammerIcon,
-  'sample-manager': TestTubeDiagonalIcon,
+  'project-planner': ClipboardListIcon,
   'tool-generator': WrenchIcon,
 }

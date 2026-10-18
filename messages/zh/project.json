@@ -179,7 +179,7 @@
         "workflow-builder": "工作流构建助手",
         "workflow-assistant": "工作流助手",
         "workflow-fixer": "工作流修复助手",
-        "sample-manager": "样本管理助手",
+        "project-planner": "项目规划助手",
         "tool-generator": "工具生成助手"
       },
       "statuses": {
@@ -193,7 +193,7 @@
       },
       "readOnlyReasons": {
         "active_agent_run": "当前项目有智能体正在运行或等待审批。运行结束或取消后才能编辑计划。",
-        "managed_sample_summary": "样本摘要由样本数据生成。请通过样本管理界面或样本管理助手修改真实数据。",
+        "managed_sample_summary": "样本摘要由样本数据生成。请通过样本管理界面或项目规划助手修改真实数据。",
         "immutable_audit_record": "诊断报告和更新日志是运行审计记录，只能查看和下载。"
       }
     },

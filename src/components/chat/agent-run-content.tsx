@@ -7,9 +7,12 @@ import {
   CheckCircle2Icon,
   ChevronDownIcon,
   CircleDotIcon,
+  ClipboardCheckIcon,
   DatabaseIcon,
   FilePenLineIcon,
+  FileTextIcon,
   FolderOpenIcon,
+  GlobeIcon,
   HammerIcon,
   ListIcon,
   ListTodoIcon,
@@ -246,19 +249,21 @@ const OPERATION_ICONS: Record<string, LucideIcon> = {
 function activityIcon(activity: ProgressActivity): LucideIcon {
   const text = activity.message.toLowerCase()
   if (activity.kind === 'workflow_phase') {
-    if (activity.phase === 'sample_manager') return DatabaseIcon
-    if (activity.phase === 'workflow_planner') return ListTodoIcon
+    if (activity.phase === 'project_planner') return ListTodoIcon
     return WaypointsIcon
   }
   if (activity.kind === 'workflow_manager_action') {
     return OPERATION_ICONS[activity.operation ?? 'update'] ?? PencilLineIcon
   }
-  if (activity.kind === 'sample_run_command') return TerminalIcon
-  if (activity.kind === 'sample_set_base_dir') return FolderOpenIcon
-  if (activity.kind === 'sample_list_project_samples') return ListIcon
-  if (activity.kind.startsWith('sample_add_')) return DatabaseIcon
-  if (activity.kind === 'sample_write_conclusion') return FilePenLineIcon
-  if (activity.kind === 'sample_ask_human') return MessageCircleQuestionIcon
+  if (activity.kind === 'planner_run_command') return TerminalIcon
+  if (activity.kind === 'planner_set_base_dir') return FolderOpenIcon
+  if (activity.kind === 'planner_list_project_samples') return ListIcon
+  if (activity.kind.startsWith('planner_add_')) return DatabaseIcon
+  if (activity.kind === 'planner_ask_human') return MessageCircleQuestionIcon
+  if (activity.kind === 'planner_write_file') return FilePenLineIcon
+  if (activity.kind === 'planner_web_run') return GlobeIcon
+  if (activity.kind === 'planner_view_pdf') return FileTextIcon
+  if (activity.kind === 'planner_confirm_plan') return ClipboardCheckIcon
   if (activity.kind === 'validation') return ShieldCheckIcon
   if (/search|find|grep|look/.test(text)) return SearchIcon
   if (/read|inspect|view|load|open|check/.test(text)) return BookOpenIcon
@@ -337,10 +342,14 @@ function ActivityStep({
     (active ? activity.message : activity.completeMessage) ||
     activity.message ||
     fallbackLabel
-  const path =
-    activity.kind === 'sample_set_base_dir'
-      ? detailPreview(activity.path)
-      : undefined
+  const detail =
+    activity.kind === 'planner_set_base_dir' ||
+    activity.kind === 'planner_write_file'
+      ? activity.path
+      : activity.kind === 'planner_web_run'
+        ? activity.subject
+        : undefined
+  const path = detailPreview(detail)
 
   return (
     <TraceRow
@@ -350,20 +359,20 @@ function ActivityStep({
         path ? (
           <code
             className='mt-0.5 block truncate font-mono text-[11px] text-muted-foreground'
-            title={activity.path}
+            title={detail}
           >
             {path}
           </code>
         ) : undefined
       }
     >
-      {activity.kind === 'sample_ask_human' &&
+      {activity.kind === 'planner_ask_human' &&
       activity.questionAnswers?.length ? (
         <QuestionAnswerActivity
           answers={activity.questionAnswers}
           label={label}
         />
-      ) : activity.kind === 'sample_run_command' ? (
+      ) : activity.kind === 'planner_run_command' ? (
         <CommandActivity
           label={label}
           command={activity.command}
@@ -503,18 +512,12 @@ function useProgressActivities(events: AgentEvent[]) {
       let completeMessage: string | undefined
       switch (activity.kind) {
         case 'workflow_phase':
-          if (activity.phase === 'sample_manager') {
-            message = t('phase.sample_manager.active')
+          if (activity.phase === 'project_planner') {
+            message = t('phase.project_planner.active')
             completeMessage =
               activity.toolStatus === 'skipped'
-                ? t('phase.sample_manager.reused')
-                : t('phase.sample_manager.complete')
-          } else if (activity.phase === 'workflow_planner') {
-            message = t('phase.workflow_planner.active')
-            completeMessage =
-              activity.toolStatus === 'skipped'
-                ? t('phase.workflow_planner.reused')
-                : t('phase.workflow_planner.complete')
+                ? t('phase.project_planner.reused')
+                : t('phase.project_planner.complete')
           } else if (activity.phase === 'workflow_builder') {
             message = t('phase.workflow_builder.active')
             completeMessage = t('phase.workflow_builder.complete')
@@ -577,58 +580,74 @@ function useProgressActivities(events: AgentEvent[]) {
           }
           break
         }
-        case 'sample_list_project_samples':
-          message = t('sample.list_project_samples.active')
-          completeMessage = t('sample.list_project_samples.complete')
+        case 'planner_list_project_samples':
+          message = t('planner.list_project_samples.active')
+          completeMessage = t('planner.list_project_samples.complete')
           break
-        case 'sample_set_base_dir':
-          message = t('sample.set_base_dir.active')
-          completeMessage = t('sample.set_base_dir.complete')
+        case 'planner_set_base_dir':
+          message = t('planner.set_base_dir.active')
+          completeMessage = t('planner.set_base_dir.complete')
           break
-        case 'sample_run_command':
-          message = t('sample.run_command.active')
-          completeMessage = t('sample.run_command.complete')
+        case 'planner_run_command':
+          message = t('planner.run_command.active')
+          completeMessage = t('planner.run_command.complete')
           break
-        case 'sample_add_samples':
-          message = t('sample.add_samples.active', {
+        case 'planner_add_samples':
+          message = t('planner.add_samples.active', {
             count: activity.count ?? 0,
           })
-          completeMessage = t('sample.add_samples.complete', {
+          completeMessage = t('planner.add_samples.complete', {
             count: activity.count ?? 0,
           })
           break
-        case 'sample_add_sample_file':
-          message = t('sample.add_sample_file.active', {
+        case 'planner_add_sample_file':
+          message = t('planner.add_sample_file.active', {
             sample: activity.sample ?? 'sample',
             tag: activity.tag ?? 'file',
           })
-          completeMessage = t('sample.add_sample_file.complete', {
+          completeMessage = t('planner.add_sample_file.complete', {
             sample: activity.sample ?? 'sample',
             tag: activity.tag ?? 'file',
           })
           break
-        case 'sample_add_project_file':
-          message = t('sample.add_project_file.active', {
+        case 'planner_add_project_file':
+          message = t('planner.add_project_file.active', {
             keyword: activity.keyword ?? 'file',
           })
-          completeMessage = t('sample.add_project_file.complete', {
+          completeMessage = t('planner.add_project_file.complete', {
             keyword: activity.keyword ?? 'file',
           })
           break
-        case 'sample_write_conclusion':
-          message = t('sample.write_conclusion.active')
-          completeMessage = t('sample.write_conclusion.complete')
+        case 'planner_ask_human':
+          message = t('planner.ask_human.active')
+          completeMessage = t('planner.ask_human.complete')
           break
-        case 'sample_ask_human':
-          message = t('sample.ask_human.active')
-          completeMessage = t('sample.ask_human.complete')
+        case 'planner_write_file':
+          message = t('planner.write_file.active', {
+            file: activity.path ?? 'file',
+          })
+          completeMessage = t('planner.write_file.complete', {
+            file: activity.path ?? 'file',
+          })
+          break
+        case 'planner_web_run':
+          message = t('planner.web_run.active')
+          completeMessage = t('planner.web_run.complete')
+          break
+        case 'planner_view_pdf':
+          message = t('planner.view_pdf.active')
+          completeMessage = t('planner.view_pdf.complete')
+          break
+        case 'planner_confirm_plan':
+          message = t('planner.confirm_plan.active')
+          completeMessage = t('planner.confirm_plan.complete')
           break
       }
       return { ...activity, message, completeMessage }
     })
 
     return translatedActivities.map((activity) => {
-      if (activity.kind !== 'sample_ask_human') return activity
+      if (activity.kind !== 'planner_ask_human') return activity
 
       const resumeEvent = events.find(
         (event) =>

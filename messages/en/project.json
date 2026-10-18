@@ -179,7 +179,7 @@
         "workflow-builder": "Workflow builder",
         "workflow-assistant": "Workflow assistant",
         "workflow-fixer": "Workflow fixer",
-        "sample-manager": "Sample manager",
+        "project-planner": "Project planner",
         "tool-generator": "Tool generator"
       },
       "statuses": {
@@ -193,7 +193,7 @@
       },
       "readOnlyReasons": {
         "active_agent_run": "An agent is running or waiting for approval in this project. The plan can be edited after it finishes or is cancelled.",
-        "managed_sample_summary": "The sample summary is generated from sample data. Use sample management or the sample manager agent to change the source data.",
+        "managed_sample_summary": "The sample summary is generated from sample data. Use sample management or the project planner agent to change the source data.",
         "immutable_audit_record": "Diagnosis reports and update logs are immutable run audit records. They can only be viewed or downloaded."
       }
     },

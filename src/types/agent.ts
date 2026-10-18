@@ -2,7 +2,7 @@ export type AgentName =
   | 'workflow-builder'
   | 'workflow-assistant'
   | 'workflow-fixer'
-  | 'sample-manager'
+  | 'project-planner'
   | 'tool-generator'
 
 export type AgentStatus =

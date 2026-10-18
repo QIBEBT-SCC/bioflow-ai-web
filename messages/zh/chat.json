@@ -3,9 +3,9 @@
     "approve": "批准",
     "assistant": "AI 助手",
     "assistants": {
-      "sample-manager": {
-        "description": "根据文件或目录初始化当前项目样本",
-        "label": "样本管理助手"
+      "project-planner": {
+        "description": "从原始数据注册项目样本，并制定分析计划供你确认",
+        "label": "项目规划助手"
       },
       "tool-generator": {
         "description": "创建可复用的生物信息学工具",
@@ -116,22 +116,17 @@
       },
       "history_count": "执行了 {count} 个步骤",
       "phase": {
-        "sample_manager": {
-          "active": "正在准备项目样本",
-          "complete": "已完成项目样本准备",
-          "reused": "已加载现有项目样本"
+        "project_planner": {
+          "active": "正在准备样本和分析计划",
+          "complete": "已完成样本准备并确认分析计划",
+          "reused": "已加载现有样本和分析计划"
         },
         "workflow_builder": {
           "active": "正在构建工作流",
           "complete": "已完成工作流构建"
-        },
-        "workflow_planner": {
-          "active": "正在制定工作流计划",
-          "complete": "已制定并确认工作流计划",
-          "reused": "已加载现有工作流计划"
         }
       },
-      "sample": {
+      "planner": {
         "add_project_file": {
           "active": "正在注册 proj:{keyword}",
           "complete": "已注册 proj:{keyword}"
@@ -148,6 +143,10 @@
           "active": "正在等待回答",
           "complete": "已回答问题"
         },
+        "confirm_plan": {
+          "active": "正在等待计划审批",
+          "complete": "已审阅分析计划"
+        },
         "list_project_samples": {
           "active": "正在检查项目已有样本",
           "complete": "已检查项目已有样本"
@@ -160,9 +159,17 @@
           "active": "正在设置数据目录",
           "complete": "已设置数据目录"
         },
-        "write_conclusion": {
-          "active": "正在写入项目样本总结",
-          "complete": "已写入项目样本总结"
+        "view_pdf": {
+          "active": "正在阅读论文",
+          "complete": "已阅读论文"
+        },
+        "web_run": {
+          "active": "正在联网检索",
+          "complete": "已联网检索"
+        },
+        "write_file": {
+          "active": "正在写入 {file}",
+          "complete": "已写入 {file}"
         }
       },
       "todo_complete": "所有计划步骤均已完成",

@@ -3,9 +3,9 @@
     "approve": "Approve",
     "assistant": "AI Assistant",
     "assistants": {
-      "sample-manager": {
-        "description": "Initialize project samples from files or directories",
-        "label": "Sample Manager"
+      "project-planner": {
+        "description": "Register project samples from raw data and draft an analysis plan for approval",
+        "label": "Project Planner"
       },
       "tool-generator": {
         "description": "Create a reusable bioinformatics tool",
@@ -116,22 +116,17 @@
       },
       "history_count": "Ran {count, plural, one {# step} other {# steps}}",
       "phase": {
-        "sample_manager": {
-          "active": "Preparing project samples",
-          "complete": "Prepared project samples",
-          "reused": "Loaded existing project samples"
+        "project_planner": {
+          "active": "Preparing samples and the analysis plan",
+          "complete": "Prepared samples and the approved analysis plan",
+          "reused": "Loaded existing samples and analysis plan"
         },
         "workflow_builder": {
           "active": "Building the workflow",
           "complete": "Built the workflow"
-        },
-        "workflow_planner": {
-          "active": "Preparing the workflow plan",
-          "complete": "Prepared and approved the workflow plan",
-          "reused": "Loaded the existing workflow plan"
         }
       },
-      "sample": {
+      "planner": {
         "add_project_file": {
           "active": "Registering proj:{keyword}",
           "complete": "Registered proj:{keyword}"
@@ -148,6 +143,10 @@
           "active": "Waiting for your answer",
           "complete": "Answered a question"
         },
+        "confirm_plan": {
+          "active": "Waiting for plan approval",
+          "complete": "Reviewed the analysis plan"
+        },
         "list_project_samples": {
           "active": "Checking existing project samples",
           "complete": "Checked existing project samples"
@@ -160,9 +159,17 @@
           "active": "Setting the data directory",
           "complete": "Set the data directory"
         },
-        "write_conclusion": {
-          "active": "Writing the project sample summary",
-          "complete": "Wrote the project sample summary"
+        "view_pdf": {
+          "active": "Reading the paper",
+          "complete": "Read the paper"
+        },
+        "web_run": {
+          "active": "Searching the web",
+          "complete": "Searched the web"
+        },
+        "write_file": {
+          "active": "Writing {file}",
+          "complete": "Wrote {file}"
         }
       },
       "todo_complete": "All planned steps are complete",
