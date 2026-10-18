@@ -12,10 +12,12 @@ import {
   getDBList,
   getDownloadStatus,
   searchDB,
+  updateDB,
 } from '@/app/actions/resource'
 import type {
   BioDbCreate,
   BioDbDownloadStatus,
+  BioDbUpdate,
   PaginatedBioDbSimple,
   PaginatedBioDbs,
 } from '@/types/resource'
@@ -90,6 +92,29 @@ export const useCreateDB = () => {
     onError: (error: Error & { status?: number }) => {
       // 错误由组件处理，这里只记录
       console.error('Create database error:', error)
+    },
+  })
+}
+
+/**
+ * 更新数据库
+ */
+export const useUpdateDB = () => {
+  const t = useTranslations('Toast.database')
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: BioDbUpdate }) =>
+      updateDB(id, data),
+    onSuccess: (database) => {
+      toast.success(t('updateSuccess'))
+      queryClient.setQueryData(['database', database.id], database)
+      queryClient.invalidateQueries({ queryKey: ['databases', 'list'] })
+      queryClient.invalidateQueries({ queryKey: ['databases', 'search'] })
+    },
+    onError: (error: Error & { status?: number }) => {
+      // 错误由组件处理，这里只记录
+      console.error('Update database error:', error)
     },
   })
 }

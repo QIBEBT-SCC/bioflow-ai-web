@@ -4,6 +4,7 @@ import type {
   BioDbCreate,
   BioDbDownloadResponse,
   BioDbDownloadStatusResponse,
+  BioDbUpdate,
   PaginatedBioDbSimple,
   PaginatedBioDbs,
 } from '@/types/resource'
@@ -36,6 +37,16 @@ export async function getDB(id: number): Promise<BioDb> {
 export async function createDB(data: BioDbCreate): Promise<BioDb> {
   return await clientFetch<BioDb>('/bio_dbs', {
     method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+/**
+ * 更新数据库
+ */
+export async function updateDB(id: number, data: BioDbUpdate): Promise<BioDb> {
+  return await clientFetch<BioDb>(`/bio_dbs/${id}`, {
+    method: 'PATCH',
     body: JSON.stringify(data),
   })
 }

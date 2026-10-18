@@ -21,6 +21,7 @@
     },
     "database": {
       "createSuccess": "Database added",
+      "updateSuccess": "Database updated",
       "deleteSuccess": "Database deleted",
       "deleteFailed": "Failed to delete: {message}",
       "deleteFailedGeneric": "Failed to delete",

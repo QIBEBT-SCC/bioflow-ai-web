@@ -7,6 +7,15 @@ export interface BioDbCreate {
   download_image?: string
 }
 
+export interface BioDbUpdate {
+  name?: string
+  description?: string | null
+  path?: string | null
+  last_update?: string | null
+  download_command?: string | null
+  download_image?: string | null
+}
+
 export interface BioDbSimple {
   id: number
   name: string

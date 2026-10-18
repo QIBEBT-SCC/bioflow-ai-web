@@ -21,6 +21,7 @@
     },
     "database": {
       "createSuccess": "数据库添加成功",
+      "updateSuccess": "数据库更新成功",
       "deleteSuccess": "数据库删除成功",
       "deleteFailed": "删除失败: {message}",
       "deleteFailedGeneric": "删除失败",
