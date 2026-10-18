@@ -13,38 +13,58 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
   useCreateNotificationChannel,
   useUpdateNotificationChannel,
 } from '@/hooks/use-notification'
 import type {
+  NotificationChannelConfig,
   NotificationChannelCreate,
   NotificationChannelPublic,
+  WeComChannelConfig,
 } from '@/types/notification'
 
 const DEFAULT_WS_URL = 'wss://openws.work.weixin.qq.com'
+const SUPPORTED_PROVIDERS = ['wecom', 'discord'] as const
+const DISCORD_WEBHOOK_PATTERN =
+  /^https:\/\/(?:(?:ptb|canary)\.)?discord(?:app)?\.com\/api(?:\/v\d+)?\/webhooks\/\d+\/[\w-]+$/
+
+type SupportedProvider = (typeof SUPPORTED_PROVIDERS)[number]
 
 interface ChannelFormState {
+  provider: SupportedProvider
   name: string
   botId: string
   chatId: string
   secret: string
 }
 
-type ChannelField = keyof ChannelFormState
+type ChannelField = Exclude<keyof ChannelFormState, 'provider'>
 
 function channelFormReducer(
   state: ChannelFormState,
-  action: { field: ChannelField; value: string } | { reset: ChannelFormState },
+  action:
+    | { field: keyof ChannelFormState; value: string }
+    | { reset: ChannelFormState },
 ): ChannelFormState {
   if ('reset' in action) return action.reset
   return { ...state, [action.field]: action.value }
 }
 
 function initialState(channel?: NotificationChannelPublic): ChannelFormState {
+  const wecom: Partial<WeComChannelConfig> =
+    channel?.provider === 'wecom' ? (channel.config as WeComChannelConfig) : {}
   return {
+    provider: channel?.provider === 'discord' ? 'discord' : 'wecom',
     name: channel?.name ?? '',
-    botId: channel?.config.bot_id ?? '',
-    chatId: channel?.config.chat_id ?? '',
+    botId: wecom.bot_id ?? '',
+    chatId: wecom.chat_id ?? '',
     secret: '',
   }
 }
@@ -54,8 +74,9 @@ function errorMessage(error: unknown, fallback: string) {
 }
 
 /**
- * WeCom connection settings. Without `channel` it creates a new (enabled)
- * channel; with `channel` it edits in place and only shows actions when dirty.
+ * Provider connection settings. Without `channel` it creates a new (enabled)
+ * channel of the chosen provider; with `channel` it edits in place and only
+ * shows actions when dirty.
  */
 export function NotificationChannelForm({
   channel,
@@ -73,6 +94,8 @@ export function NotificationChannelForm({
   const [submitted, setSubmitted] = useState(false)
   const saving = createChannel.isPending || updateChannel.isPending
   const isCreate = !channel
+  const isWeCom = form.provider === 'wecom'
+  const secret = form.secret.trim()
 
   const baseline = initialState(channel)
   const dirty =
@@ -82,14 +105,20 @@ export function NotificationChannelForm({
     form.chatId !== baseline.chatId ||
     form.secret !== ''
 
-  const errors: Partial<Record<ChannelField, boolean>> = {
-    name: !form.name.trim(),
-    botId: !form.botId.trim(),
-    chatId: !form.chatId.trim(),
-    secret: isCreate && !form.secret.trim(),
+  const required = t('field_required')
+  const errors: Partial<Record<ChannelField, string>> = {
+    name: form.name.trim() ? undefined : required,
+    botId: isWeCom && !form.botId.trim() ? required : undefined,
+    chatId: isWeCom && !form.chatId.trim() ? required : undefined,
+    secret:
+      isCreate && !secret
+        ? required
+        : !isWeCom && secret && !DISCORD_WEBHOOK_PATTERN.test(secret)
+          ? t('webhook_url_invalid')
+          : undefined,
   }
   const hasErrors = Object.values(errors).some(Boolean)
-  const showError = (field: ChannelField) => submitted && errors[field]
+  const showError = (field: ChannelField) => submitted && !!errors[field]
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
@@ -97,11 +126,15 @@ export function NotificationChannelForm({
     setSubmitted(true)
     if (hasErrors) return
 
-    const config = {
-      bot_id: form.botId.trim(),
-      chat_id: form.chatId.trim(),
-      ws_url: channel?.config.ws_url ?? DEFAULT_WS_URL,
-    }
+    const config: NotificationChannelConfig = isWeCom
+      ? {
+          bot_id: form.botId.trim(),
+          chat_id: form.chatId.trim(),
+          ws_url:
+            (channel?.config as WeComChannelConfig | undefined)?.ws_url ??
+            DEFAULT_WS_URL,
+        }
+      : {}
     try {
       if (channel) {
         await updateChannel.mutateAsync({
@@ -109,17 +142,17 @@ export function NotificationChannelForm({
           data: {
             name: form.name.trim(),
             config,
-            ...(form.secret.trim() ? { secret: form.secret } : {}),
+            ...(secret ? { secret } : {}),
           },
         })
         dispatch({ field: 'secret', value: '' })
       } else {
         const created = await createChannel.mutateAsync({
           name: form.name.trim(),
-          provider: 'wecom',
+          provider: form.provider,
           enabled: true,
           config,
-          secret: form.secret,
+          secret,
           event_types: [],
         } satisfies NotificationChannelCreate)
         onCreated?.(created)
@@ -153,7 +186,7 @@ export function NotificationChannelForm({
       />
       {showError(name) && (
         <p id={`${idFor(name)}-error`} className='text-xs text-destructive'>
-          {t('field_required')}
+          {errors[name]}
         </p>
       )}
     </div>
@@ -162,21 +195,49 @@ export function NotificationChannelForm({
   return (
     <form className='space-y-5' onSubmit={handleSubmit} noValidate>
       <div className='grid gap-4 sm:grid-cols-2'>
+        {isCreate && (
+          <div className='space-y-2 sm:col-span-2'>
+            <Label htmlFor={idFor('provider')}>{t('provider')}</Label>
+            <Select
+              value={form.provider}
+              disabled={saving}
+              onValueChange={(value) => dispatch({ field: 'provider', value })}
+            >
+              <SelectTrigger id={idFor('provider')} className='w-full'>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SUPPORTED_PROVIDERS.map((provider) => (
+                  <SelectItem key={provider} value={provider}>
+                    {t(`provider_${provider}`)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
         <div className='sm:col-span-2'>
           {field('name', t('channel_name'), {
             placeholder: t('channel_name_placeholder'),
           })}
         </div>
-        {field('botId', t('bot_id'), { autoComplete: 'off' })}
-        {field('chatId', t('chat_id'), { autoComplete: 'off' })}
+        {isWeCom && field('botId', t('bot_id'), { autoComplete: 'off' })}
+        {isWeCom && field('chatId', t('chat_id'), { autoComplete: 'off' })}
         <div className='sm:col-span-2'>
-          {field('secret', t('secret'), {
+          {field('secret', isWeCom ? t('secret') : t('webhook_url'), {
             type: 'password',
             autoComplete: 'new-password',
             placeholder: channel?.credential_configured
               ? t('secret_configured')
-              : t('secret_placeholder'),
+              : isWeCom
+                ? t('secret_placeholder')
+                : t('webhook_url_placeholder'),
           })}
+          {!isWeCom && (
+            <p className='mt-2 text-xs text-muted-foreground'>
+              {t('webhook_url_help')}
+            </p>
+          )}
         </div>
       </div>
 

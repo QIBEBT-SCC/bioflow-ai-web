@@ -13,11 +13,18 @@ export interface WeComChannelConfig {
   ws_url: string
 }
 
+/** Discord incoming webhooks keep the destination in the secret webhook URL. */
+export type DiscordChannelConfig = Record<string, never>
+
+export type NotificationChannelConfig =
+  | WeComChannelConfig
+  | DiscordChannelConfig
+
 export interface NotificationChannelCreate {
   name: string
   provider: NotificationProvider
   enabled: boolean
-  config: WeComChannelConfig
+  config: NotificationChannelConfig
   secret: string
   event_types: NotificationEventType[]
 }
@@ -25,7 +32,7 @@ export interface NotificationChannelCreate {
 export interface NotificationChannelUpdate {
   name?: string
   enabled?: boolean
-  config?: WeComChannelConfig
+  config?: NotificationChannelConfig
   secret?: string
   event_types?: NotificationEventType[]
 }
@@ -35,7 +42,7 @@ export interface NotificationChannelPublic {
   name: string
   provider: NotificationProvider
   enabled: boolean
-  config: WeComChannelConfig
+  config: NotificationChannelConfig
   credential_configured: boolean
   event_types: NotificationEventType[]
   last_attempt_at: string | null
