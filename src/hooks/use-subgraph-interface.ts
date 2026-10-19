@@ -11,6 +11,9 @@ import {
 } from '@/lib/subgraph-interface'
 import { useNodeEditorStore } from '@/stores/nodeviewStore'
 
+// Node types whose input handles accept several incoming edges.
+const MULTI_INPUT_NODE_TYPES = new Set(['collect_mount_dirs'])
+
 export function useSubgraphInterface() {
   const t = useTranslations('editor.subgraph')
   const store = useNodeEditorStore()
@@ -37,7 +40,9 @@ export function useSubgraphInterface() {
       )
         return false
     }
+    const multiInput = MULTI_INPUT_NODE_TYPES.has(target?.type ?? '')
     if (
+      !multiInput &&
       store.edges.some(
         (edge) =>
           edge.target === connection.target &&
@@ -54,10 +59,13 @@ export function useSubgraphInterface() {
         }) !== null
       )
     // A leaf input cannot be fed by both the parent interface and an internal edge.
-    return !view.edges.some(
-      (edge) =>
-        edge.target === connection.target &&
-        edge.targetHandle === connection.targetHandle,
+    return (
+      multiInput ||
+      !view.edges.some(
+        (edge) =>
+          edge.target === connection.target &&
+          edge.targetHandle === connection.targetHandle,
+      )
     )
   }
   return {
