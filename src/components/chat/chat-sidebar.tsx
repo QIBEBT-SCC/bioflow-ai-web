@@ -25,7 +25,10 @@ import { Suggestion, Suggestions } from '@/components/ai-elements/suggestion'
 import { AgentImage } from '@/components/chat/agent-image'
 import { AGENT_ICONS, AGENT_NAMES } from '@/components/chat/agent-meta'
 import { AgentPDF } from '@/components/chat/agent-pdf'
-import { AgentRunArtifacts } from '@/components/chat/agent-run-content'
+import {
+  AgentRunArtifacts,
+  RunTodoQueue,
+} from '@/components/chat/agent-run-content'
 import { AgentRunTrace } from '@/components/chat/agent-run-trace'
 import { AgentWorkflowNode } from '@/components/chat/agent-workflow-node'
 import { SidebarHistoryMenu } from '@/components/chat/chat-history-menu'
@@ -674,6 +677,14 @@ function ChatSidebarInner({
                 {localError ?? attachments.error}
               </AlertDescription>
             </Alert>
+          )}
+          {run && (
+            <RunTodoQueue
+              run={run}
+              events={
+                events.length > 0 ? events : (eventHistory[run.uid] ?? [])
+              }
+            />
           )}
           {workflowSuggestions.length > 0 && !isBusy && !nodeAttachment && (
             <Suggestions>

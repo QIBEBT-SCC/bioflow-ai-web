@@ -172,10 +172,8 @@
           "complete": "Wrote {file}"
         }
       },
-      "todo_complete": "All planned steps are complete",
-      "todo_activity_active": "Working on {index}/{total} · {task}",
-      "todo_activity_complete": "Completed {index}/{total} · {task}",
-      "todo_title": "{completed}/{total} · {current}"
+      "queue_pending": "{count} to do",
+      "queue_completed": "{count} completed"
     },
     "rename": "Rename",
     "resize": "Resize chat sidebar",

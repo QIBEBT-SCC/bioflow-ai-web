@@ -172,10 +172,8 @@
           "complete": "已写入 {file}"
         }
       },
-      "todo_complete": "所有计划步骤均已完成",
-      "todo_activity_active": "正在处理 {index}/{total} · {task}",
-      "todo_activity_complete": "已完成 {index}/{total} · {task}",
-      "todo_title": "{completed}/{total} · {current}"
+      "queue_pending": "{count} 项待办",
+      "queue_completed": "已完成 {count} 项"
     },
     "rename": "重命名",
     "resize": "调整对话侧栏宽度",
