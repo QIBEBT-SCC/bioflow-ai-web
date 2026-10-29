@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
-import { cn } from "@/lib/utils"
+import { cn } from "cn"
 
 import { Button } from "@/components/ui/button"
 import { CheckIcon, CopyIcon } from "lucide-react"
@@ -122,9 +122,11 @@ function CodeBlockCopyButton({
         {...props}
       >
         {copied ? (
-          <CheckIcon />
+          <CheckIcon
+          />
         ) : (
-          <CopyIcon />
+          <CopyIcon
+          />
         )}
       </Button>
       <span aria-live="polite" className="sr-only">

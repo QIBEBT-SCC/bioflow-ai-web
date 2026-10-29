@@ -8,7 +8,7 @@ import {
   InputGroupInput,
   InputGroupText,
 } from '@/components/ui/input-group'
-import { cn } from '@/lib/utils'
+import { cn } from 'cn'
 
 export type CommandSnippetProps = Omit<
   ComponentProps<typeof InputGroup>,

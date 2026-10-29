@@ -1,6 +1,6 @@
+import { cn } from 'cn'
 import { XIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { cn } from '@/lib/utils'
 
 /** File-like attachment: tinted icon tile, name and one line of meta. */
 export function AttachmentChip({

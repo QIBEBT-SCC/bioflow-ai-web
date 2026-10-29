@@ -1,3 +1,4 @@
+import { cn } from 'cn'
 import { Check, ChevronsUpDown, Plus, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
@@ -17,7 +18,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
-import { cn } from '@/lib/utils'
 import { colorClassMap } from '@/types/color'
 import type { ProjectTag } from '@/types/project'
 

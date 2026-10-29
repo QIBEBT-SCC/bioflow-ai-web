@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import {
   CheckIcon,
   ChevronRightIcon,
@@ -10,7 +11,6 @@ import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { cn } from '@/lib/utils'
 import type { AgentQuestion } from '@/types/agent'
 
 interface QuestionApprovalProps {

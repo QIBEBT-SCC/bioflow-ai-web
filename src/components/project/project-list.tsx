@@ -132,9 +132,9 @@ function ProjectTable({
             projects.map((project) => (
               <Card
                 key={project.id}
-                className='gap-0 py-0 transition-[border-color,box-shadow] hover:border-primary/40 hover:shadow-md'
+                className='gap-0 py-0 transition-shadow hover:shadow-md hover:ring-primary/40'
               >
-                <CardContent className='space-y-3 p-4'>
+                <CardContent className='gap-3 p-4'>
                   <div className='flex items-start gap-2'>
                     <Button
                       variant='ghost'
@@ -503,14 +503,14 @@ export function RecentProjectCard() {
   const recentProject = recentProjects[0]
 
   return !recentProject ? (
-    <Card className='gap-0 rounded-lg border py-0'>
-      <CardContent className='flex flex-col items-center justify-center py-8 text-center'>
-        <h3 className='mb-2 text-lg font-medium'>{t('emptyTitle')}</h3>
+    <Card className='gap-0 rounded-lg py-0'>
+      <CardContent className='items-center justify-center gap-2 py-8 text-center'>
+        <h3 className='text-lg font-medium'>{t('emptyTitle')}</h3>
         <p className='text-muted-foreground'>{t('emptyDescription')}</p>
       </CardContent>
     </Card>
   ) : (
-    <Card className='gap-0 rounded-lg border py-0'>
+    <Card className='gap-0 rounded-lg py-0'>
       <Link
         href={`/project/${recentProject.id}`}
         className='block p-4 transition-colors hover:bg-muted/50'

@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import { CalendarRangeIcon, Clock3Icon, Loader2Icon } from 'lucide-react'
 import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
@@ -23,7 +24,6 @@ import {
 import { RunStatusIcon } from '@/components/workflow/run-status'
 import { useRecentTasks } from '@/hooks/use-task'
 import { RUN_STATUS_APPEARANCE, statusToneClasses } from '@/lib/status'
-import { cn } from '@/lib/utils'
 import { type NodeRunRecordV2, NodeRunStatusV2 } from '@/types/workflow-v2'
 
 const RANGE_OPTIONS = [

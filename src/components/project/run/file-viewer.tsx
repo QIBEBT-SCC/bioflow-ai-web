@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import {
   ChartNoAxesCombined,
   Download,
@@ -42,7 +43,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { cn } from '@/lib/utils'
 
 interface FileViewerProps {
   fileName: string

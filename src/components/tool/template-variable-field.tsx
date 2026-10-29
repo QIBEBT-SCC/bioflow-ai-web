@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import { BracesIcon, CircleAlertIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import {
@@ -17,7 +18,6 @@ import {
   type TemplateCompletionContext,
   type ToolTemplateVariable,
 } from '@/lib/tool-template'
-import { cn } from '@/lib/utils'
 
 interface TemplateVariableFieldProps {
   id: string

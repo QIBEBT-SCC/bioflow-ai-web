@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import { Download } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -27,7 +28,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { cn } from '@/lib/utils'
 
 type LayoutNode = {
   node: NewickNode

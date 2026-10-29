@@ -7,9 +7,9 @@ import {
   useNodesData,
   useReactFlow,
 } from '@xyflow/react'
+import { cn } from 'cn'
 import { useTranslations } from 'next-intl'
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
-
 import { BaseNode } from '@/components/node-editor/node/base-node'
 import { colorSchemes } from '@/components/node-editor/node/color'
 import { useReadOnly } from '@/components/node-editor/read-only-context'
@@ -17,7 +17,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useDB } from '@/hooks/use-resource'
-import { cn } from '@/lib/utils'
 import type { HandleDefine } from '@/types/node.tsx'
 
 const STRING_INPUT_HANDLES = {

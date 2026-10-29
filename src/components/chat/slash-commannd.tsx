@@ -13,10 +13,10 @@
  * 命令数据（`SlashCommand[]`）由外部传入，组件本身与具体业务无关。
  */
 
+import { cn } from 'cn'
 import type { LucideIcon } from 'lucide-react'
 import type { ComponentProps, KeyboardEvent as ReactKeyboardEvent } from 'react'
 import { useCallback, useMemo, useState } from 'react'
-import { cn } from '@/lib/utils'
 
 // ============================================================================
 // 类型

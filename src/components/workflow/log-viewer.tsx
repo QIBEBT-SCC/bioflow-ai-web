@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import { TerminalIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import type { ComponentProps, ReactNode } from 'react'
@@ -14,7 +15,6 @@ import {
   CodeBlockTitle,
 } from '@/components/ui/code-block'
 import { useHighlightedCode } from '@/hooks/use-highlighted-code'
-import { cn } from '@/lib/utils'
 
 const DEFAULT_MAX_LINES = 5000
 // The hidden head grows in steps rather than line by line, so output that is
@@ -101,19 +101,21 @@ export function LogViewer({
             {t('truncated', { count: omitted })}
           </CodeBlockLine>
         )}
-        {lines.map((line, index) => (
-          // biome-ignore lint/suspicious/noArrayIndexKey: lines are positional and never reorder
-          <CodeBlockLine key={index}>
-            {streaming && index === lines.length - 1 ? (
+        {lines.map((line, index) => {
+          const content =
+            streaming && index === lines.length - 1 ? (
               <>
                 {line}
                 <span className='ml-0.5 inline-block h-3.5 w-1.5 animate-pulse bg-foreground/60 align-middle' />
               </>
             ) : (
               line
-            )}
-          </CodeBlockLine> // react-doctor-disable-line react-doctor/no-array-index-as-key
-        ))}
+            )
+          return (
+            // biome-ignore lint/suspicious/noArrayIndexKey: lines are positional and never reorder
+            <CodeBlockLine key={index}>{content}</CodeBlockLine> // react-doctor-disable-line react-doctor/no-array-index-as-key
+          )
+        })}
       </CodeBlockContent>
     </CodeBlock>
   )

@@ -1,9 +1,9 @@
+import { cn } from 'cn'
 import { useTranslations } from 'next-intl'
 import { FilterPanel } from '@/components/layout/filter-panel'
 import { NewTagDialog } from '@/components/project/new-tag-dialog'
 import { Button } from '@/components/ui/button'
 import { useProjectTags } from '@/hooks/use-project'
-import { cn } from '@/lib/utils'
 import { colorClassMap } from '@/types/color'
 
 export function TagList({

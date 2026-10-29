@@ -2,6 +2,7 @@
 
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { cn } from 'cn'
 import { GripVertical, HelpCircle, Trash2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { TemplateVariableField } from '@/components/tool/template-variable-field'
@@ -26,7 +27,6 @@ import {
 } from '@/components/ui/tooltip'
 import { getFileMountType } from '@/lib/tool-file-mount'
 import type { ToolTemplateVariable } from '@/lib/tool-template'
-import { cn } from '@/lib/utils'
 import type { FileMount, ParamDefine } from '@/types/tool'
 
 export function ToolParamCard({
@@ -103,8 +103,8 @@ export function ToolParamCard({
           </Button>
         </div>
       </CardHeader>
-      <CardContent className='pt-0'>
-        <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mb-4'>
+      <CardContent className='gap-4 pt-0'>
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
           <div className='space-y-2'>
             <Label htmlFor={`param-description-${index}`}>
               {t('description')}
@@ -137,7 +137,7 @@ export function ToolParamCard({
           </div>
         </div>
 
-        <div className='space-y-2 mb-4'>
+        <div className='space-y-2'>
           <Label htmlFor={`param-command-${index}`}>
             {t('commandFormat')} <span className='text-destructive'>*</span>
             <TooltipProvider>
@@ -286,8 +286,8 @@ export function ToolFileCard({
           </Button>
         </div>
       </CardHeader>
-      <CardContent className='pt-0'>
-        <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mb-4'>
+      <CardContent className='gap-4 pt-0'>
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
           <div className='space-y-2'>
             <Label htmlFor={`file-name-${index}`}>
               {t(isTextInput ? 'variableName' : 'fileName')}{' '}
@@ -329,7 +329,7 @@ export function ToolFileCard({
           </div>
         </div>
 
-        <div className='space-y-2 mb-4'>
+        <div className='space-y-2'>
           <Label htmlFor={`file-description-${index}`}>
             {t('description')}
           </Label>
@@ -347,7 +347,7 @@ export function ToolFileCard({
           />
         </div>
 
-        <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mb-4'>
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
           <div className='space-y-2'>
             <Label htmlFor={`file-path-${index}`}>
               {t(isTextInput ? 'textVariable' : 'filePath')}{' '}

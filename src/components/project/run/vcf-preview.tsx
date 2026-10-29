@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import { ChevronLeft, ChevronRight, Dna, SearchX, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
@@ -29,7 +30,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
-import { cn } from '@/lib/utils'
 import type {
   VcfFilterStatus,
   VcfPreviewContig,

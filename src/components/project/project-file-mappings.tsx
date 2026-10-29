@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import { format, parseISO } from 'date-fns'
 import {
   EditIcon,
@@ -46,7 +47,6 @@ import {
   useDeleteProjectFileMapping,
   useProjectFileMappings,
 } from '@/hooks/use-sample'
-import { cn } from '@/lib/utils'
 import type { ProjectFileMapping } from '@/types/sample'
 import { AddProjectFileMappingDialog } from './add-project-file-mapping-dialog'
 import { EditProjectFileMappingDialog } from './edit-project-file-mapping-dialog'

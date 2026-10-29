@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import { ImageOffIcon } from 'lucide-react'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
@@ -11,7 +12,6 @@ import {
   DialogDescription,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { cn } from '@/lib/utils'
 import type { AgentImagePart } from '@/types/agent'
 
 /**

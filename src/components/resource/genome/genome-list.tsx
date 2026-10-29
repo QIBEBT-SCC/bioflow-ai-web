@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import {
   CheckCircle2,
   ChevronLeftIcon,
@@ -25,7 +26,6 @@ import {
   useGenomeList,
   useSearchGenome,
 } from '@/hooks/use-genome'
-import { cn } from '@/lib/utils'
 import type {
   GenomeIndexStatus,
   IndexStatus,

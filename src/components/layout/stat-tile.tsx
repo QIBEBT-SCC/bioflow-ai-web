@@ -1,5 +1,5 @@
+import { cn } from 'cn'
 import type { ReactNode } from 'react'
-import { cn } from '@/lib/utils'
 
 /** Compact metric tile: icon + label on top, value content below. */
 export function StatTile({

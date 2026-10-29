@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import {
   AlertCircle,
   FileQuestion,
@@ -35,7 +36,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { cn } from '@/lib/utils'
 
 /** Control row at the top of every preview. */
 export function PreviewToolbar({

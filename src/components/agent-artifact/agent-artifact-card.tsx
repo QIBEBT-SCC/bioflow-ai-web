@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import {
   ClipboardListIcon,
   FileCheck2Icon,
@@ -12,7 +13,6 @@ import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { AgentArtifactSheet } from '@/components/agent-artifact/agent-artifact-sheet'
 import { Badge } from '@/components/ui/badge'
-import { cn } from '@/lib/utils'
 import type { AgentArtifact, AgentArtifactKind } from '@/types/agent-artifact'
 
 const icons: Record<AgentArtifactKind, typeof FileClockIcon> = {

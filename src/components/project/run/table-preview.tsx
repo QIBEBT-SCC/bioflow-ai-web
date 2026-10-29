@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import {
   AlertCircle,
   ArrowDown,
@@ -46,7 +47,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { cn } from '@/lib/utils'
 import type {
   TableDataKind,
   TableFilterOperator,

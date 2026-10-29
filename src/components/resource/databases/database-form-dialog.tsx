@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import { useTranslations } from 'next-intl'
 import type React from 'react'
 import { useState } from 'react'
@@ -16,7 +17,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useCreateDB, useUpdateDB } from '@/hooks/use-resource'
-import { cn } from '@/lib/utils'
 import type { BioDb } from '@/types/resource'
 
 interface DatabaseFormDialogProps {

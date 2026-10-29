@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import {
   ArrowLeftRightIcon,
   ArrowUpRightIcon,
@@ -50,7 +51,6 @@ import { useAgentRunArtifacts } from '@/hooks/use-agent-artifact'
 import { useTool } from '@/hooks/use-tool'
 import { useWorkflow } from '@/hooks/use-workflow'
 import { parseAgentQuestionAnswers } from '@/lib/agent-questions'
-import { cn } from '@/lib/utils'
 import type {
   AgentEvent,
   AgentQuestionAnswer,

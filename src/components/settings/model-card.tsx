@@ -82,7 +82,7 @@ export function ModelCard({
   }
 
   return (
-    <Card className='border bg-muted/30 pt-2'>
+    <Card className='bg-muted/30 pt-2'>
       <div className='p-4'>
         <div className='flex items-start justify-between gap-3 mb-3'>
           <div className='flex min-w-0 items-center gap-3'>

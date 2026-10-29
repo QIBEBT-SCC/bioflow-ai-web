@@ -1,6 +1,6 @@
+import { cn } from 'cn'
 import { FileCode2Icon, SquareTerminalIcon } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { cn } from '@/lib/utils'
 import type { CodeNodeType } from '@/types/code'
 
 const codeTypeStyles: Record<

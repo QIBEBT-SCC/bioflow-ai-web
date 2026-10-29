@@ -6,6 +6,7 @@ import {
   useNodeId,
   useNodesData,
 } from '@xyflow/react'
+import { cn } from 'cn'
 import { ImageIcon } from 'lucide-react'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
@@ -14,7 +15,6 @@ import { BaseNode } from '@/components/node-editor/node/base-node'
 import { colorSchemes } from '@/components/node-editor/node/color'
 import { getRunFileViewUrl } from '@/components/project/run/file-view-url'
 import { Skeleton } from '@/components/ui/skeleton'
-import { cn } from '@/lib/utils'
 import type { HandleDefine } from '@/types/node'
 
 interface ImagePreviewData {

@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import { MessageSquareIcon, PlusIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
@@ -26,7 +27,6 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useNotificationChannels } from '@/hooks/use-notification'
 import { CHANNEL_HEALTH, channelHealth } from '@/lib/notification'
 import { statusToneClasses } from '@/lib/status'
-import { cn } from '@/lib/utils'
 import type { NotificationChannelPublic } from '@/types/notification'
 
 function ChannelListItem({

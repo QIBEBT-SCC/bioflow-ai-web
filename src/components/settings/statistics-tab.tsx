@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import { format, parseISO } from 'date-fns'
 import { enUS, zhCN } from 'date-fns/locale'
 import {
@@ -47,7 +48,6 @@ import {
   useLLMStatisticsDetails,
   useLLMStatisticsOverview,
 } from '@/hooks/use-setting'
-import { cn } from '@/lib/utils'
 import type { LLMStatisticDetail, LLMStatisticOverview } from '@/types/setting'
 
 const TOKEN_UNITS = [

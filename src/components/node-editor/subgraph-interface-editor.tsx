@@ -17,6 +17,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { cn } from 'cn'
 import {
   FileInputIcon,
   FileOutputIcon,
@@ -43,7 +44,6 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { generateLetterId } from '@/lib/id-generator'
 import { emptyInterface } from '@/lib/subgraph'
-import { cn } from '@/lib/utils'
 import { useNodeEditorStore } from '@/stores/nodeviewStore'
 import type { InterfaceInput, InterfaceOutput } from '@/types/workflow'
 

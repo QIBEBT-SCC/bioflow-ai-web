@@ -371,7 +371,7 @@ function BasicConfigTab({
   const t = useTranslations('tool.ConfigForm')
   return (
     <Card>
-      <CardContent className='space-y-6 pt-6'>
+      <CardContent className='gap-6 pt-6'>
         <div className='space-y-2'>
           <Label htmlFor='tool-name'>
             {t('toolName')} <span className='text-destructive'>*</span>
@@ -531,7 +531,7 @@ function ParamsConfigTab({
   const t = useTranslations('tool.ConfigForm')
   return (
     <Card>
-      <CardContent className='space-y-6 pt-6'>
+      <CardContent className='gap-6 pt-6'>
         <div className='space-y-2'>
           <Label>{t('dynamicParams')}</Label>
           {value.dynamic_params.length === 0 ? (
@@ -655,7 +655,7 @@ function FilesConfigTab({
   const t = useTranslations('tool.ConfigForm')
   return (
     <Card>
-      <CardContent className='space-y-6 pt-6'>
+      <CardContent className='gap-6 pt-6'>
         <div className='space-y-2'>
           <Label>{t('fileMounts')}</Label>
           {value.file_mounts.length === 0 ? (

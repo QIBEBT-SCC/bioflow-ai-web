@@ -1,3 +1,4 @@
+import { cn } from 'cn'
 import Link from 'next/link'
 import { Fragment, type ReactNode } from 'react'
 import {
@@ -10,7 +11,6 @@ import {
 } from '@/components/ui/breadcrumb'
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
-import { cn } from '@/lib/utils'
 
 export interface PageCrumb {
   label: string

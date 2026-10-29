@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import {
   ChevronDown,
   ChevronRight,
@@ -53,7 +54,6 @@ import {
   useProjectWorkflows,
   useRemoveWorkflowFromProject,
 } from '@/hooks/use-project-workflow'
-import { cn } from '@/lib/utils'
 import { ExecutionScope } from '@/types/workflow'
 import { ImportWorkflowDialog } from './import-workflow-dialog'
 import { RunWorkflowDialog } from './run-workflow-dialog'

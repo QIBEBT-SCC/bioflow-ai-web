@@ -1,12 +1,12 @@
 'use client'
 
+import { cn } from 'cn'
 import { RotateCcwIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { AGENT_ICONS } from '@/components/chat/agent-meta'
 import { AgentRunProgress } from '@/components/chat/agent-run-content'
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
 import {
   type AgentEvent,
   type AgentRun,

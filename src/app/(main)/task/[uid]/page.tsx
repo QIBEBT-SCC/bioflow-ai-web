@@ -205,7 +205,7 @@ function TaskResultView({ task }: { task: NodeRunV2 }) {
   return (
     <SectionCard title={t('result')}>
       {task.error_message ? (
-        <div className='mb-4 rounded-md border border-destructive/40 bg-destructive/5 p-3 font-mono text-sm text-destructive'>
+        <div className='rounded-md border border-destructive/40 bg-destructive/5 p-3 font-mono text-sm text-destructive'>
           {task.error_message}
         </div>
       ) : null}
@@ -270,7 +270,7 @@ function TaskSidebar({
 
   return (
     <aside className='space-y-4 lg:sticky lg:top-0 lg:self-start'>
-      <SectionCard title={t('basicInfo')} contentClassName='space-y-3 text-sm'>
+      <SectionCard title={t('basicInfo')} contentClassName='gap-3 text-sm'>
         <div>
           <p className='mb-1 text-xs text-muted-foreground'>{t('nodeType')}</p>
           <p className='font-medium'>{task.tool_name ?? task.node_type}</p>
@@ -291,7 +291,7 @@ function TaskSidebar({
         </div>
       </SectionCard>
 
-      <SectionCard title={t('timeInfo')} contentClassName='space-y-3 text-sm'>
+      <SectionCard title={t('timeInfo')} contentClassName='gap-3 text-sm'>
         <div>
           <p className='mb-1 text-xs text-muted-foreground'>{t('createdAt')}</p>
           <p className='font-mono text-xs'>
@@ -322,10 +322,7 @@ function TaskSidebar({
       </SectionCard>
 
       {(task.system || task.hostname || task.worker_id) && (
-        <SectionCard
-          title={t('systemInfo')}
-          contentClassName='space-y-3 text-sm'
-        >
+        <SectionCard title={t('systemInfo')} contentClassName='gap-3 text-sm'>
           {task.hostname && (
             <>
               <div>

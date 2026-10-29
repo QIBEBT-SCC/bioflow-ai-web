@@ -182,10 +182,10 @@ export function SubgraphManagement() {
               {activeItems.map((item) => (
                 <Card
                   key={item.uid}
-                  className='group relative gap-0 py-0 transition-[border-color,box-shadow] hover:border-primary/40 hover:shadow-md'
+                  className='group relative gap-0 py-0 transition-shadow hover:shadow-md hover:ring-primary/40'
                 >
-                  <CardContent className='p-5'>
-                    <div className='mb-3 flex items-start gap-3'>
+                  <CardContent className='gap-3 p-5'>
+                    <div className='flex items-start gap-3'>
                       <div className='flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary'>
                         <GitForkIcon className='size-5' />
                       </div>
@@ -234,7 +234,7 @@ export function SubgraphManagement() {
                     <p className='line-clamp-2 min-h-10 text-sm text-muted-foreground'>
                       {item.description}
                     </p>
-                    <div className='mt-4 grid gap-2 border-t pt-3 text-xs'>
+                    <div className='mt-1 grid gap-2 border-t pt-3 text-xs'>
                       <InterfaceNames
                         label={t('inputs')}
                         ports={item.inputs ?? []}

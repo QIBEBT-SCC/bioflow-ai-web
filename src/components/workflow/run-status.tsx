@@ -1,3 +1,4 @@
+import { cn } from 'cn'
 import type { ReactNode } from 'react'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -5,7 +6,6 @@ import {
   type RunStatus,
   statusToneClasses,
 } from '@/lib/status'
-import { cn } from '@/lib/utils'
 
 export function RunStatusIcon({
   status,

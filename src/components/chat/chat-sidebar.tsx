@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import {
   ArrowUpIcon,
   BotIcon,
@@ -62,7 +63,6 @@ import {
 } from '@/hooks/use-chat-attachment'
 import type { Locale } from '@/i18n/config'
 import { parseAgentQuestionAnswers } from '@/lib/agent-questions'
-import { cn } from '@/lib/utils'
 import { getSuggestedWorkflowAgent } from '@/lib/workflow-agent-suggestions'
 import { useChatSidebarStore } from '@/stores/chat-sidebar-store'
 import {

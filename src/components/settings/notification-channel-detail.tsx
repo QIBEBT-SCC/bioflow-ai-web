@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import {
   CircleAlertIcon,
   Loader2Icon,
@@ -43,7 +44,6 @@ import {
 } from '@/hooks/use-notification'
 import { CHANNEL_HEALTH, channelHealth } from '@/lib/notification'
 import { statusToneClasses } from '@/lib/status'
-import { cn } from '@/lib/utils'
 import type { NotificationChannelPublic } from '@/types/notification'
 
 function errorMessage(error: unknown, fallback: string) {

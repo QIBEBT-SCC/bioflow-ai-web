@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import { ChevronRight, Folder, FolderOpen, FolderPlus } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
@@ -11,7 +12,6 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import { useToolGroupList, useToolList } from '@/hooks/use-tool'
-import { cn } from '@/lib/utils'
 import type { ToolGroup } from '@/types/tool'
 
 interface ToolGroupWithChildren extends ToolGroup {
