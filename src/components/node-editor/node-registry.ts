@@ -143,7 +143,7 @@ export const nodeDefaultData: Record<string, Record<string, unknown>> = {
   join_path: { relative_path: '' },
   bind_param: { parameter: '' },
   collect_mount_dirs: {},
-  code_R: { code: '', dependencies: [] },
+  code_R: { code: '' },
   code_python: { code: '', dependencies: [] },
   code_bash: { code: '' },
   downstream_summary: { prompt: '' },

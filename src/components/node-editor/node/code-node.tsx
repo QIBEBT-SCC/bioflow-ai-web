@@ -39,7 +39,7 @@ const CodeCard = memo(function CodeCard({
 
   const code = nodeData?.data.code ?? ''
   const dependencies = nodeData?.data.dependencies ?? EMPTY_DEPENDENCIES
-  const supportsDependencies = nodeType !== 'code_bash'
+  const supportsDependencies = nodeType === 'code_python'
 
   const handleSave = useCallback(
     (value: { code: string; dependencies: string[] }) => {

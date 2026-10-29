@@ -232,7 +232,7 @@ function FlowContent() {
       const data = {
         code: code.code,
         description: code.description,
-        ...(code.node_type !== 'code_bash' && {
+        ...(code.node_type === 'code_python' && {
           dependencies: [...code.dependencies],
         }),
       }

@@ -87,7 +87,8 @@ function initializeWorkspace(
 ): WorkspaceState {
   return {
     source: initialCode?.code ?? '',
-    dependencies: initialCode?.dependencies ?? [],
+    dependencies:
+      initialCode?.node_type === 'code_python' ? initialCode.dependencies : [],
     name: initialCode?.name ?? '',
     description: initialCode?.description ?? '',
     metadataOpen: false,
@@ -302,7 +303,6 @@ export function CodeWorkspaceForm(props: CodeWorkspaceFormProps) {
   })
   const isPython = nodeType === 'code_python'
   const isR = nodeType === 'code_R'
-  const supportsDependencies = isPython || isR
   const filename = isPython ? 'script.py' : isR ? 'script.R' : 'script.sh'
   const isSaving =
     props.mode === 'create'
@@ -318,7 +318,7 @@ export function CodeWorkspaceForm(props: CodeWorkspaceFormProps) {
       : source !== props.code.code ||
         name !== props.code.name ||
         description !== props.code.description ||
-        !sameDependencies(dependencies, props.code.dependencies)
+        (isPython && !sameDependencies(dependencies, props.code.dependencies))
   const statusText =
     props.mode === 'create' ? t('newNode') : isDirty ? t('unsaved') : t('saved')
 
@@ -328,7 +328,7 @@ export function CodeWorkspaceForm(props: CodeWorkspaceFormProps) {
       {
         node_type: nodeType,
         code: source,
-        dependencies: supportsDependencies ? dependencies : [],
+        dependencies: isPython ? dependencies : [],
       },
       {
         onSuccess: (metadata) => {
@@ -348,7 +348,7 @@ export function CodeWorkspaceForm(props: CodeWorkspaceFormProps) {
       name: name.trim(),
       description: description.trim(),
       code: source,
-      dependencies: supportsDependencies ? dependencies : [],
+      dependencies: isPython ? dependencies : [],
     }
 
     if (props.mode === 'create') {

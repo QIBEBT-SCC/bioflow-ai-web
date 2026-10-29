@@ -145,14 +145,10 @@ export default function CodeDetailPageClient() {
               </CardContent>
             </Card>
 
-            {code.node_type !== 'code_bash' && (
+            {code.node_type === 'code_python' && (
               <Card>
                 <CardHeader>
-                  <CardTitle>
-                    {code.node_type === 'code_python'
-                      ? t('dependencies')
-                      : t('rDependencies')}
-                  </CardTitle>
+                  <CardTitle>{t('dependencies')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {code.dependencies.length ? (
@@ -169,9 +165,7 @@ export default function CodeDetailPageClient() {
                     </div>
                   ) : (
                     <p className='text-sm text-muted-foreground'>
-                      {code.node_type === 'code_python'
-                        ? t('noDependencies')
-                        : t('noRDependencies')}
+                      {t('noDependencies')}
                     </p>
                   )}
                 </CardContent>
