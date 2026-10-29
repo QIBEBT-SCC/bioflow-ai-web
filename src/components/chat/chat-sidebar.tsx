@@ -20,7 +20,7 @@ import {
   ConversationContent,
   ConversationScrollButton,
 } from '@/components/ai-elements/conversation'
-import { Message, MessageResponse } from '@/components/ai-elements/message'
+import { Message } from '@/components/ai-elements/message'
 import { Suggestion, Suggestions } from '@/components/ai-elements/suggestion'
 import { AgentImage } from '@/components/chat/agent-image'
 import { AGENT_ICONS, AGENT_NAMES } from '@/components/chat/agent-meta'
@@ -40,6 +40,7 @@ import {
   SlashCommandMenu,
   useSlashCommand,
 } from '@/components/chat/slash-commannd'
+import { Markdown } from '@/components/markdown'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -133,15 +134,15 @@ function ChatMessage({ message }: { message: AgentMessage }) {
             key={`${message.uid}-${text}`}
             className='w-fit max-w-full rounded-2xl rounded-br-md bg-primary/10 px-3.5 py-2.5 text-foreground text-sm'
           >
-            <MessageResponse>{text}</MessageResponse>
+            <Markdown>{text}</Markdown>
           </div>
         ) : (
-          <MessageResponse
+          <Markdown
             key={`${message.uid}-${text}`}
             className='text-sm leading-relaxed'
           >
             {text}
-          </MessageResponse>
+          </Markdown>
         ),
       )}
     </Message>
@@ -629,13 +630,13 @@ function ChatSidebarInner({
               ) : (
                 <Alert variant='warning'>
                   <AlertDescription className='space-y-3'>
-                    <MessageResponse>
+                    <Markdown>
                       {typeof run.interrupt_payload?.question === 'string'
                         ? run.interrupt_payload.question
                         : typeof run.interrupt_payload?.message === 'string'
                           ? run.interrupt_payload.message
                           : JSON.stringify(run.interrupt_payload, null, 2)}
-                    </MessageResponse>
+                    </Markdown>
                     <Textarea
                       value={feedback}
                       onChange={(event) => setFeedback(event.target.value)}

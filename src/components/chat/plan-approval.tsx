@@ -2,7 +2,6 @@
 
 import { CheckCircle2Icon, Loader2Icon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { MessageResponse } from '@/components/ai-elements/message'
 import {
   Plan,
   PlanAction,
@@ -13,6 +12,7 @@ import {
   PlanTitle,
   PlanTrigger,
 } from '@/components/ai-elements/plan'
+import { Markdown } from '@/components/markdown'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 
@@ -57,9 +57,9 @@ export function PlanApproval({
 
       <PlanContent className='border-t bg-muted/20 p-3'>
         <div className='max-h-[min(48vh,28rem)] overflow-y-auto rounded-lg border bg-background p-4'>
-          <MessageResponse className='text-sm leading-relaxed'>
+          <Markdown className='text-sm leading-relaxed'>
             {plan || t('plan_unavailable')}
-          </MessageResponse>
+          </Markdown>
         </div>
       </PlanContent>
 

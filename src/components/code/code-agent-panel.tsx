@@ -10,12 +10,12 @@ import {
 import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
 import { type MouseEvent, useState } from 'react'
-import { Streamdown } from 'streamdown'
 import {
   Conversation,
   ConversationContent,
   ConversationScrollButton,
 } from '@/components/ai-elements/conversation'
+import { Markdown } from '@/components/markdown'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import type { useCodeAgent } from '@/hooks/use-code-agent'
@@ -126,7 +126,7 @@ export function CodeAgentPanel({
                   reply.role === 'assistant' &&
                   reply.turn_id === message.turn_id ? (
                     <div key={`${reply.turn_id}-reply`} className='text-sm'>
-                      <Streamdown>{reply.text}</Streamdown>
+                      <Markdown>{reply.text}</Markdown>
                     </div>
                   ) : null,
                 )}

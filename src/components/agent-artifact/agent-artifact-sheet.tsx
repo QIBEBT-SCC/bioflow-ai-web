@@ -11,7 +11,7 @@ import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { getAgentArtifactDownload } from '@/app/actions/agent-artifact'
-import { MessageResponse } from '@/components/ai-elements/message'
+import { Markdown } from '@/components/markdown'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -226,9 +226,7 @@ export function AgentArtifactSheet({
             </ScrollArea>
           ) : (
             <ScrollArea className='h-full'>
-              <MessageResponse className='max-w-none'>
-                {content}
-              </MessageResponse>
+              <Markdown className='max-w-none'>{content}</Markdown>
             </ScrollArea>
           )}
         </div>

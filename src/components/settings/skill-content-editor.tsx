@@ -11,7 +11,7 @@ import CodeMirror from '@uiw/react-codemirror'
 import { EyeIcon, PencilIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useMemo, useState } from 'react'
-import { MessageResponse } from '@/components/ai-elements/message'
+import { Markdown } from '@/components/markdown'
 import { Button } from '@/components/ui/button'
 
 interface SkillContentEditorProps {
@@ -131,7 +131,7 @@ export function SkillContentEditor({
 
       {mode === 'preview' ? (
         <div className='overflow-auto px-6 py-5' style={{ height }}>
-          <MessageResponse>{markdownBody(value)}</MessageResponse>
+          <Markdown>{markdownBody(value)}</Markdown>
         </div>
       ) : (
         <CodeMirror
