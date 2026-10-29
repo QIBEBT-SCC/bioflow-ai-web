@@ -77,5 +77,8 @@
   },
   "Auth": {
     "verifying": "Verifying identity..."
+  },
+  "LogViewer": {
+    "truncated": "{count} earlier lines hidden. Copy to get the full log."
   }
 }

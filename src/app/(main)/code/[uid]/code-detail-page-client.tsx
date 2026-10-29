@@ -5,14 +5,6 @@ import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
-import {
-  CodeBlock,
-  CodeBlockActions,
-  CodeBlockCopyButton,
-  CodeBlockFilename,
-  CodeBlockHeader,
-  CodeBlockTitle,
-} from '@/components/ai-elements/code-block'
 import { CodeTypeBadge } from '@/components/code/code-type-badge'
 import {
   PageContainer,
@@ -34,6 +26,15 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
+  CodeBlock,
+  CodeBlockActions,
+  CodeBlockContent,
+  CodeBlockCopyButton,
+  CodeBlockHeader,
+  CodeBlockLine,
+  CodeBlockTitle,
+} from '@/components/ui/code-block'
+import {
   Empty,
   EmptyDescription,
   EmptyHeader,
@@ -41,7 +42,27 @@ import {
 } from '@/components/ui/empty'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useCode, useDeleteCode } from '@/hooks/use-code'
+import { useHighlightedCode } from '@/hooks/use-highlighted-code'
 import { codeLanguage } from '@/lib/code'
+
+function SourceCodeContent({
+  code,
+  language,
+}: {
+  code: string
+  language: string
+}) {
+  const lines = useHighlightedCode(code, language)
+
+  return (
+    <CodeBlockContent lineNumbers className='max-h-[70vh]'>
+      {lines.map((line, index) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: lines are positional and never reorder
+        <CodeBlockLine key={index}>{line}</CodeBlockLine> // react-doctor-disable-line react-doctor/no-array-index-as-key
+      ))}
+    </CodeBlockContent>
+  )
+}
 
 export default function CodeDetailPageClient() {
   const params = useParams()
@@ -122,25 +143,23 @@ export default function CodeDetailPageClient() {
                 <CardTitle>{t('source')}</CardTitle>
               </CardHeader>
               <CardContent>
-                <CodeBlock
-                  code={code.code}
-                  language={codeLanguage(code.node_type)}
-                  showLineNumbers
-                >
+                <CodeBlock>
                   <CodeBlockHeader>
-                    <CodeBlockTitle>
-                      <CodeBlockFilename>
-                        {code.node_type === 'code_python'
-                          ? 'script.py'
-                          : code.node_type === 'code_R'
-                            ? 'script.R'
-                            : 'script.sh'}
-                      </CodeBlockFilename>
+                    <CodeBlockTitle className='font-mono'>
+                      {code.node_type === 'code_python'
+                        ? 'script.py'
+                        : code.node_type === 'code_R'
+                          ? 'script.R'
+                          : 'script.sh'}
                     </CodeBlockTitle>
                     <CodeBlockActions>
-                      <CodeBlockCopyButton />
+                      <CodeBlockCopyButton value={code.code} />
                     </CodeBlockActions>
                   </CodeBlockHeader>
+                  <SourceCodeContent
+                    code={code.code}
+                    language={codeLanguage(code.node_type)}
+                  />
                 </CodeBlock>
               </CardContent>
             </Card>

@@ -2,8 +2,8 @@
 
 import { FileTextIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { Terminal, TerminalContent } from '@/components/ai-elements/terminal'
 import { Skeleton } from '@/components/ui/skeleton'
+import { LogViewer } from '@/components/workflow/log-viewer'
 import { useTaskLog } from '@/hooks/use-task'
 
 interface TaskLogProps {
@@ -56,9 +56,7 @@ export function TaskLog({ taskUid, isRunning = false }: TaskLogProps) {
           {t('lineCount', { count: logData.content.split('\n').length })}
         </span>
       </div>
-      <Terminal output={logData.content} autoScroll={false}>
-        <TerminalContent />
-      </Terminal>
+      <LogViewer content={logData.content} />
     </>
   )
 }

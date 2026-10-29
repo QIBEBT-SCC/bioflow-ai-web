@@ -77,5 +77,8 @@
   },
   "Auth": {
     "verifying": "验证身份中..."
+  },
+  "LogViewer": {
+    "truncated": "已省略前 {count} 行，复制可获取完整日志"
   }
 }
