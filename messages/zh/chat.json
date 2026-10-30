@@ -212,6 +212,11 @@
     "loading": "正在加载对话…",
     "empty_no_session": "新建对话后即可与助手协作。",
     "choose_assistant": "选择助手",
-    "scroll_to_latest": "滚动到最新消息"
+    "scroll_to_latest": "滚动到最新消息",
+    "interrupt_title": "需要你的确认",
+    "question_progress": "{current} / {total}",
+    "answer_required": "请选择或填写一个回答后继续。",
+    "question_previous": "上一题",
+    "question_next": "下一题"
   }
 }

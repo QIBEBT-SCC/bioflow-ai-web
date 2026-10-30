@@ -212,6 +212,11 @@
     "loading": "Loading conversation…",
     "empty_no_session": "Start a new conversation to work with an assistant.",
     "choose_assistant": "Assistants",
-    "scroll_to_latest": "Scroll to latest message"
+    "scroll_to_latest": "Scroll to latest message",
+    "interrupt_title": "Your input is needed",
+    "question_progress": "{current} / {total}",
+    "answer_required": "Choose or write an answer to continue.",
+    "question_previous": "Previous",
+    "question_next": "Next"
   }
 }

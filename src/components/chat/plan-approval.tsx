@@ -1,23 +1,31 @@
 'use client'
 
-import { CheckCircle2Icon, Loader2Icon } from 'lucide-react'
+import { ChevronDownIcon, ClipboardCheckIcon, Loader2Icon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import {
-  Plan,
-  PlanAction,
-  PlanContent,
-  PlanDescription,
-  PlanFooter,
-  PlanHeader,
-  PlanTitle,
-  PlanTrigger,
-} from '@/components/ai-elements/plan'
 import { Markdown } from '@/components/markdown'
 import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupTextarea,
+} from '@/components/ui/input-group'
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemFooter,
+  ItemMedia,
+  ItemTitle,
+} from '@/components/ui/item'
 
-interface PlanApprovalProps {
-  plan: string
+interface ApprovalFeedbackProps {
   feedback: string
   isPending: boolean
   onFeedbackChange: (value: string) => void
@@ -25,66 +33,94 @@ interface PlanApprovalProps {
   onSendFeedback: () => void
 }
 
-export function PlanApproval({
-  plan,
+/** Approve, or write feedback that sends the agent back to revise. */
+export function ApprovalFeedback({
   feedback,
   isPending,
   onFeedbackChange,
   onApprove,
   onSendFeedback,
-}: PlanApprovalProps) {
+}: ApprovalFeedbackProps) {
   const t = useTranslations('Chat')
 
   return (
-    <Plan
-      defaultOpen
-      className='gap-0 overflow-hidden border-primary/20 bg-card py-0 shadow-sm'
-    >
-      <PlanHeader className='grid grid-cols-[minmax(0,1fr)_auto] gap-3 p-4'>
-        <div className='flex min-w-0 gap-3'>
-          <div className='flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary'>
-            <CheckCircle2Icon className='size-4' />
-          </div>
-          <div className='min-w-0 space-y-1'>
-            <PlanTitle>{t('plan_title')}</PlanTitle>
-            <PlanDescription>{t('plan_approval_prompt')}</PlanDescription>
-          </div>
-        </div>
-        <PlanAction>
-          <PlanTrigger aria-label={t('toggle_plan')} />
-        </PlanAction>
-      </PlanHeader>
+    <InputGroup className='rounded-lg bg-background'>
+      <InputGroupTextarea
+        value={feedback}
+        onChange={(event) => onFeedbackChange(event.target.value)}
+        placeholder={t('feedback_placeholder')}
+        aria-label={t('feedback_placeholder')}
+        className='max-h-40 min-h-14 p-3'
+      />
+      <InputGroupAddon align='block-end' className='justify-end'>
+        <InputGroupButton
+          size='sm'
+          variant='outline'
+          onClick={onSendFeedback}
+          disabled={isPending || !feedback.trim()}
+        >
+          {t('send_feedback')}
+        </InputGroupButton>
+        <InputGroupButton
+          size='sm'
+          variant='default'
+          onClick={onApprove}
+          disabled={isPending}
+        >
+          {isPending && <Loader2Icon className='animate-spin' />}
+          {t('approve')}
+        </InputGroupButton>
+      </InputGroupAddon>
+    </InputGroup>
+  )
+}
 
-      <PlanContent className='border-t bg-muted/20 p-3'>
-        <div className='max-h-[min(48vh,28rem)] overflow-y-auto rounded-lg border bg-background p-4'>
-          <Markdown className='text-sm leading-relaxed'>
-            {plan || t('plan_unavailable')}
-          </Markdown>
-        </div>
-      </PlanContent>
+interface PlanApprovalProps extends ApprovalFeedbackProps {
+  plan: string
+}
 
-      <PlanFooter className='flex-col items-stretch gap-3 border-t p-4'>
-        <Textarea
-          value={feedback}
-          onChange={(event) => onFeedbackChange(event.target.value)}
-          placeholder={t('feedback_placeholder')}
-          className='min-h-20 resize-y bg-background'
-        />
-        <div className='flex flex-wrap gap-2'>
-          <Button size='sm' onClick={onApprove} disabled={isPending}>
-            {isPending && <Loader2Icon className='size-3.5 animate-spin' />}
-            {t('approve')}
-          </Button>
-          <Button
-            size='sm'
-            variant='outline'
-            onClick={onSendFeedback}
-            disabled={isPending || !feedback.trim()}
-          >
-            {t('send_feedback')}
-          </Button>
-        </div>
-      </PlanFooter>
-    </Plan>
+export function PlanApproval({ plan, ...feedbackProps }: PlanApprovalProps) {
+  const t = useTranslations('Chat')
+
+  return (
+    <Collapsible defaultOpen asChild>
+      <Item
+        variant='outline'
+        size='sm'
+        className='rounded-xl bg-card shadow-xs'
+      >
+        <ItemMedia variant='icon'>
+          <ClipboardCheckIcon />
+        </ItemMedia>
+        <ItemContent>
+          <ItemTitle>{t('plan_title')}</ItemTitle>
+          <ItemDescription className='line-clamp-none'>
+            {t('plan_approval_prompt')}
+          </ItemDescription>
+        </ItemContent>
+        <ItemActions className='self-start'>
+          <CollapsibleTrigger asChild>
+            <Button
+              variant='ghost'
+              size='icon-sm'
+              className='group/plan-toggle'
+              aria-label={t('toggle_plan')}
+            >
+              <ChevronDownIcon className='transition-transform group-data-[state=open]/plan-toggle:rotate-180' />
+            </Button>
+          </CollapsibleTrigger>
+        </ItemActions>
+        <CollapsibleContent className='basis-full'>
+          <div className='max-h-[min(48vh,28rem)] overflow-y-auto rounded-lg border bg-background p-4'>
+            <Markdown className='leading-relaxed'>
+              {plan || t('plan_unavailable')}
+            </Markdown>
+          </div>
+        </CollapsibleContent>
+        <ItemFooter className='flex-col items-stretch'>
+          <ApprovalFeedback {...feedbackProps} />
+        </ItemFooter>
+      </Item>
+    </Collapsible>
   )
 }

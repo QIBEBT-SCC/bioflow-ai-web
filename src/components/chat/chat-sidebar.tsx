@@ -26,6 +26,7 @@ import { AgentRunTrace } from '@/components/chat/agent-run-trace'
 import { AgentWorkflowNode } from '@/components/chat/agent-workflow-node'
 import { SidebarHistoryMenu } from '@/components/chat/chat-history-menu'
 import { DraftAttachments } from '@/components/chat/draft-attachments'
+import { InterruptApproval } from '@/components/chat/interrupt-approval'
 import { PlanApproval } from '@/components/chat/plan-approval'
 import { QuestionApproval } from '@/components/chat/question-approval'
 import {
@@ -57,7 +58,6 @@ import {
   MessageScrollerViewport,
 } from '@/components/ui/message-scroller'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Textarea } from '@/components/ui/textarea'
 import {
   useAgentMessages,
   useAgentRun,
@@ -664,47 +664,14 @@ function ChatSidebarInner({
                         onSubmit={(response) => void resume(false, response)}
                       />
                     ) : (
-                      <Alert variant='warning'>
-                        <AlertDescription className='space-y-3'>
-                          <Markdown>
-                            {typeof run.interrupt_payload?.question === 'string'
-                              ? run.interrupt_payload.question
-                              : typeof run.interrupt_payload?.message ===
-                                  'string'
-                                ? run.interrupt_payload.message
-                                : JSON.stringify(
-                                    run.interrupt_payload,
-                                    null,
-                                    2,
-                                  )}
-                          </Markdown>
-                          <Textarea
-                            value={feedback}
-                            onChange={(event) =>
-                              setFeedback(event.target.value)
-                            }
-                            placeholder={t('feedback_placeholder')}
-                            className='bg-background'
-                          />
-                          <div className='flex gap-2'>
-                            <Button
-                              size='sm'
-                              onClick={() => void resume(true)}
-                              disabled={isResuming}
-                            >
-                              {t('approve')}
-                            </Button>
-                            <Button
-                              size='sm'
-                              variant='outline'
-                              onClick={() => void resume(false)}
-                              disabled={isResuming || !feedback.trim()}
-                            >
-                              {t('send_feedback')}
-                            </Button>
-                          </div>
-                        </AlertDescription>
-                      </Alert>
+                      <InterruptApproval
+                        payload={run.interrupt_payload}
+                        feedback={feedback}
+                        isPending={isResuming}
+                        onFeedbackChange={setFeedback}
+                        onApprove={() => void resume(true)}
+                        onSendFeedback={() => void resume(false)}
+                      />
                     )}
                   </MessageScrollerItem>
                 )}
