@@ -14,6 +14,7 @@ import { formatTokenCount } from '@/lib/token-format'
 import type { AgentEvent } from '@/types/agent'
 
 interface ModelUsage {
+  agent?: string
   model: string
   context_window: number | null
   input_tokens: number
@@ -21,6 +22,16 @@ interface ModelUsage {
   cache_read: number
   reasoning_tokens: number
   cost: number
+  /** Sub-agent nesting depth; 0 or absent is the main agent. */
+  scope?: { depth?: number; parent_id?: string | null }
+}
+
+interface AgentTotal {
+  agent: string
+  tokens: number
+  cost: number
+  calls: number
+  subAgent: boolean
 }
 
 interface Segment {
@@ -135,9 +146,64 @@ function SegmentLegend({
   )
 }
 
+function isSubAgent(usage: ModelUsage) {
+  return (usage.scope?.depth ?? 0) > 0
+}
+
+/** Session totals per agent, main agents first, then by cost. */
+function agentTotals(usages: ModelUsage[]) {
+  const totals = new Map<string, AgentTotal>()
+  for (const usage of usages) {
+    const agent = usage.agent ?? usage.model
+    const total = totals.get(agent) ?? {
+      agent,
+      tokens: 0,
+      cost: 0,
+      calls: 0,
+      subAgent: isSubAgent(usage),
+    }
+    total.tokens += usage.input_tokens + usage.output_tokens
+    total.cost += usage.cost
+    total.calls += 1
+    totals.set(agent, total)
+  }
+  return [...totals.values()].sort(
+    (a, b) => Number(a.subAgent) - Number(b.subAgent) || b.cost - a.cost,
+  )
+}
+
+function AgentTotals({ totals }: { totals: AgentTotal[] }) {
+  const t = useTranslations('Chat.context')
+  return (
+    <div className='flex flex-col gap-1.5 text-[11px]'>
+      <span className='font-medium text-xs'>{t('by_agent')}</span>
+      {totals.map((total) => (
+        <div key={total.agent} className='flex items-center gap-2'>
+          <span className='min-w-0 flex-1 truncate' title={total.agent}>
+            {total.agent.replaceAll('_', ' ')}
+            {total.subAgent && (
+              <span className='ml-1 text-muted-foreground'>
+                · {t('sub_agent')}
+              </span>
+            )}
+          </span>
+          <span className='text-muted-foreground tabular-nums'>
+            {formatTokenCount(total.tokens)}
+          </span>
+          <span className='w-14 text-right tabular-nums'>
+            {formatCost(total.cost)}
+          </span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 /**
- * Context fill of the latest model call, plus totals for the whole session.
- * Usage arrives as `run.usage` events, one per model call.
+ * Context fill of the main agent's latest model call, plus totals for the
+ * whole session. Usage arrives as `run.usage` events, one per model call;
+ * sub-agent calls count toward the totals but not the context fill unless
+ * no main-agent call exists (a run made only of sub-agents).
  */
 export function ContextUsage({ events }: { events: AgentEvent[] }) {
   const t = useTranslations('Chat.context')
@@ -145,7 +211,8 @@ export function ContextUsage({ events }: { events: AgentEvent[] }) {
     const usages = events
       .filter((event) => event.event_type === 'run.usage')
       .map((event) => event.payload as unknown as ModelUsage)
-    const latest = usages.at(-1)
+    const latest =
+      usages.findLast((usage) => !isSubAgent(usage)) ?? usages.at(-1)
     if (!latest) return null
     const total = usages.reduce(
       (sum, usage) => ({
@@ -162,11 +229,19 @@ export function ContextUsage({ events }: { events: AgentEvent[] }) {
     const percent = limit
       ? Math.min(100, Math.round((used / limit) * 100))
       : null
-    return { latest, total, used, limit, percent, calls: usages.length }
+    return {
+      latest,
+      total,
+      used,
+      limit,
+      percent,
+      calls: usages.length,
+      agents: agentTotals(usages),
+    }
   }, [events])
 
   if (!summary) return null
-  const { latest, total, used, limit, percent, calls } = summary
+  const { latest, total, used, limit, percent, calls, agents } = summary
 
   // Input tokens include cache hits, so split them to keep the segments disjoint.
   const segmentsOf = (input: number, cacheRead: number, output: number) => [
@@ -281,6 +356,13 @@ export function ContextUsage({ events }: { events: AgentEvent[] }) {
             </p>
           )}
         </div>
+
+        {agents.length > 1 && (
+          <>
+            <Separator />
+            <AgentTotals totals={agents} />
+          </>
+        )}
 
         <div className='flex items-center justify-between gap-3 text-muted-foreground text-[11px]'>
           <span className='truncate'>{latest.model}</span>

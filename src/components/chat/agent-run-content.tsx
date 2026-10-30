@@ -18,6 +18,7 @@ import {
   FolderOpenIcon,
   GlobeIcon,
   HammerIcon,
+  HourglassIcon,
   ImageIcon,
   ListChecksIcon,
   ListIcon,
@@ -95,6 +96,10 @@ interface ProgressActivity {
   toolCallId?: string
   toolStatus?: 'running' | 'completed' | 'skipped' | 'error'
   questionAnswers?: AgentQuestionAnswer[]
+  /** Sub-agent nesting depth; 0 is the main agent. */
+  depth: number
+  /** Step whose task runs the sub-agent that emitted this activity. */
+  parentId?: string
 }
 
 interface TodoActivityItem {
@@ -148,6 +153,10 @@ function todoItems(value: unknown): TodoActivityItem[] | undefined {
 
 function normalizeProgress(event: AgentEvent): ProgressActivity {
   const payload = event.payload
+  const scope =
+    typeof payload.scope === 'object' && payload.scope !== null
+      ? (payload.scope as Record<string, unknown>)
+      : undefined
   const nestedTodo =
     typeof payload.todo === 'object' && payload.todo !== null
       ? (payload.todo as Record<string, unknown>)
@@ -187,6 +196,8 @@ function normalizeProgress(event: AgentEvent): ProgressActivity {
     action: stringValue(source.action),
     toolCallId: stringValue(source.tool_call_id),
     toolStatus: toolStatus(source.status),
+    depth: numberValue(scope?.depth) ?? 0,
+    parentId: stringValue(scope?.parent_id),
   }
 }
 
@@ -237,7 +248,39 @@ const AGENT_TOOL_ICONS: Record<string, LucideIcon> = {
   write_diagnosis: FilePenLineIcon,
   fix_subgraph: HammerIcon,
   finalize_workflow_fix: ClipboardCheckIcon,
+  wait_tool_generation: HourglassIcon,
+  return_to_parent: ArrowUpRightIcon,
+  container_command: TerminalIcon,
+  search_local_image: SearchIcon,
+  search_biodb: DatabaseIcon,
+  search_tools_by_function: SearchIcon,
+  read_tool_doc: BookOpenIcon,
+  select_image: ImageIcon,
+  select_tool: CircleCheckIcon,
+  select_classification: ListIcon,
+  set_file_mounts: FolderOpenIcon,
+  set_command_detail: TerminalIcon,
+  set_tool_info: PencilLineIcon,
+  write_tool_report: FilePenLineIcon,
 }
+
+/** Tool-creation sub-agent tools whose labels take an optional subject. */
+const TOOL_CREATION_TOOLS = new Set([
+  'wait_tool_generation',
+  'return_to_parent',
+  'container_command',
+  'search_local_image',
+  'search_biodb',
+  'search_tools_by_function',
+  'read_tool_doc',
+  'select_image',
+  'select_tool',
+  'select_classification',
+  'set_file_mounts',
+  'set_command_detail',
+  'set_tool_info',
+  'write_tool_report',
+])
 
 const TOOL_GENERATOR_ICONS: Record<string, LucideIcon> = {
   select_image: SearchIcon,
@@ -333,12 +376,14 @@ function Step({
   icon: Icon,
   title,
   status,
+  description,
   defaultOpen,
   children,
 }: {
   icon: LucideIcon
   title: string
   status?: StepStatus
+  description?: string
   defaultOpen?: boolean
   children?: ReactNode
 }) {
@@ -349,8 +394,10 @@ function Step({
         {status === 'error' ? <CircleAlertIcon /> : <Icon />}
       </TraceIcon>
       <TraceTitle title={title}>{title}</TraceTitle>
-      {status === 'error' && (
+      {status === 'error' ? (
         <TraceDescription>{t('step_failed')}</TraceDescription>
+      ) : (
+        description && <TraceDescription>{description}</TraceDescription>
       )}
     </TraceLine>
   )
@@ -438,7 +485,9 @@ function activityDetail(activity: ProgressActivity) {
     return <QuestionAnswerDetail answers={activity.questionAnswers} />
   if (
     (activity.kind === 'planner_run_command' ||
-      (activity.kind === 'agent_tool' && activity.tool === 'run_command')) &&
+      (activity.kind === 'agent_tool' &&
+        (activity.tool === 'run_command' ||
+          activity.tool === 'container_command'))) &&
     activity.command
   )
     return <CommandDetail command={activity.command} />
@@ -446,29 +495,182 @@ function activityDetail(activity: ProgressActivity) {
   return path ? <p className='break-all font-mono text-xs'>{path}</p> : null
 }
 
+/** Steps grouped by the step that runs their sub-agent. */
+interface StepTree {
+  roots: ProgressActivity[]
+  children: Map<string, ProgressActivity[]>
+  todos: Map<string, ProgressActivity>
+}
+
+/**
+ * Nests each sub-agent activity under the step whose task invoked it. Todo
+ * updates are kept apart: the latest per parent step is shown with that
+ * step, the main agent's in the pinned Queue. Activities without a known
+ * parent stay at the top level.
+ */
+function stepTree(activities: ProgressActivity[]): StepTree {
+  const stepIds = new Set(
+    activities.flatMap((activity) =>
+      activity.kind !== 'todo' && activity.toolCallId
+        ? [activity.toolCallId]
+        : [],
+    ),
+  )
+  const tree: StepTree = { roots: [], children: new Map(), todos: new Map() }
+  for (const activity of activities) {
+    const parentId =
+      activity.parentId && stepIds.has(activity.parentId)
+        ? activity.parentId
+        : undefined
+    if (activity.kind === 'todo') {
+      if (parentId) tree.todos.set(parentId, activity)
+      continue
+    }
+    if (!parentId) {
+      tree.roots.push(activity)
+      continue
+    }
+    const siblings = tree.children.get(parentId)
+    if (siblings) siblings.push(activity)
+    else tree.children.set(parentId, [activity])
+  }
+  return tree
+}
+
+function todoQueueItems(todo: ProgressActivity | undefined) {
+  return (
+    todo?.items ??
+    (todo?.current
+      ? [{ content: todo.current, status: 'in_progress' as const }]
+      : [])
+  )
+}
+
+/** The steps of one level, each nesting the sub-agent work it ran. */
+function StepList({
+  steps,
+  tree,
+  runStatus,
+  parentUnfinished = true,
+}: {
+  steps: ProgressActivity[]
+  tree: StepTree
+  runStatus: AgentRun['status']
+  parentUnfinished?: boolean
+}) {
+  const t = useTranslations('Chat.progress')
+  return steps.map((activity, index) => {
+    const status = stepStatus(
+      activity,
+      parentUnfinished && index === steps.length - 1,
+      runStatus,
+    )
+    return (
+      <ActivityStep
+        key={`${activity.id}-${status ?? 'complete'}`}
+        activity={activity}
+        status={status}
+        tree={tree}
+        runStatus={runStatus}
+        fallbackLabel={t('fallback_activity')}
+      />
+    )
+  })
+}
+
+/** Sub-agent work of one step: its todo list and its own steps. */
+function SubAgentTrace({
+  steps,
+  todo,
+  tree,
+  runStatus,
+  unfinished,
+}: {
+  steps: ProgressActivity[]
+  todo?: ProgressActivity
+  tree: StepTree
+  runStatus: AgentRun['status']
+  unfinished: boolean
+}) {
+  const t = useTranslations('Chat.progress')
+  const todoItems = todoQueueItems(todo)
+  return (
+    <Trace
+      aria-label={t('sub_agent')}
+      className='ml-2 border-border border-l pl-3'
+    >
+      {todoItems.length > 0 && (
+        <TodoQueue
+          items={todoItems}
+          active={unfinished && STREAMING_AGENT_STATUSES.includes(runStatus)}
+        />
+      )}
+      <StepList
+        steps={steps}
+        tree={tree}
+        runStatus={runStatus}
+        parentUnfinished={unfinished}
+      />
+    </Trace>
+  )
+}
+
 function ActivityStep({
   activity,
   status,
+  tree,
+  runStatus,
   fallbackLabel,
 }: {
   activity: ProgressActivity
   status: StepStatus
+  tree: StepTree
+  runStatus: AgentRun['status']
   fallbackLabel: string
 }) {
+  const t = useTranslations('Chat.progress')
   const unfinished = status !== undefined
   const label =
     (unfinished ? activity.message : activity.completeMessage) ||
     activity.message ||
     fallbackLabel
+  const childSteps = activity.toolCallId
+    ? (tree.children.get(activity.toolCallId) ?? [])
+    : []
+  const childTodo = activity.toolCallId
+    ? tree.todos.get(activity.toolCallId)
+    : undefined
+  const hasSubAgent = childSteps.length > 0 || childTodo !== undefined
+  const detail = activityDetail(activity)
 
   return (
     <Step
       icon={activityIcon(activity)}
       title={label}
       status={status}
-      defaultOpen={status === 'running' && Boolean(activity.command)}
+      description={
+        childSteps.length > 0
+          ? t('sub_step_count', { count: childSteps.length })
+          : undefined
+      }
+      defaultOpen={
+        status === 'running' && (hasSubAgent || Boolean(activity.command))
+      }
     >
-      {activityDetail(activity)}
+      {detail || hasSubAgent ? (
+        <>
+          {detail}
+          {hasSubAgent && (
+            <SubAgentTrace
+              steps={childSteps}
+              todo={childTodo}
+              tree={tree}
+              runStatus={runStatus}
+              unfinished={status === 'running' || status === 'waiting'}
+            />
+          )}
+        </>
+      ) : null}
     </Step>
   )
 }
@@ -634,6 +836,18 @@ function useProgressActivities(events: AgentEvent[]) {
               message = t('tool.finalize_workflow_fix.active')
               completeMessage = t('tool.finalize_workflow_fix.complete')
               break
+            default:
+              if (activity.tool && TOOL_CREATION_TOOLS.has(activity.tool)) {
+                const variant = activity.subject ? 'subject' : 'plain'
+                message = t(
+                  `tool_creation.${activity.tool}.${variant}.active`,
+                  values,
+                )
+                completeMessage = t(
+                  `tool_creation.${activity.tool}.${variant}.complete`,
+                  values,
+                )
+              }
           }
           break
         }
@@ -867,25 +1081,23 @@ function TodoQueue({
   )
 }
 
-/** The run's steps in order; todo updates live in the pinned Queue instead. */
-function runSteps(activities: ProgressActivity[]) {
-  return activities.filter((activity) => activity.kind !== 'todo')
-}
-
 function RunChainOfThought({
-  steps,
+  tree,
   runStatus,
   currentLabel,
+  latestId,
 }: {
-  steps: ProgressActivity[]
+  tree: StepTree
   runStatus: AgentRun['status']
   currentLabel: string
+  latestId: number | undefined
 }) {
   const t = useTranslations('Chat.progress')
   const [open, setOpen] = useState<boolean>()
   const status = runStepStatus(runStatus)
   const isActive = status === 'running'
-  const traceRef = useFollowLatest(isActive, steps.at(-1)?.id)
+  const traceRef = useFollowLatest(isActive, latestId)
+  const steps = tree.roots
 
   return (
     <Trace>
@@ -906,21 +1118,7 @@ function RunChainOfThought({
         </TraceCollapsibleTrigger>
         <TraceCollapsibleContent>
           <Trace ref={traceRef} className='max-h-64 overflow-y-auto pr-1'>
-            {steps.map((activity, index) => {
-              const status = stepStatus(
-                activity,
-                index === steps.length - 1,
-                runStatus,
-              )
-              return (
-                <ActivityStep
-                  key={`${activity.id}-${status ?? 'complete'}`}
-                  activity={activity}
-                  status={status}
-                  fallbackLabel={t('fallback_activity')}
-                />
-              )
-            })}
+            <StepList steps={steps} tree={tree} runStatus={runStatus} />
           </Trace>
         </TraceCollapsibleContent>
       </TraceCollapsible>
@@ -937,11 +1135,11 @@ export function AgentRunProgress({
 }) {
   const t = useTranslations('Chat.progress')
   const activities = useProgressActivities(events)
-  const steps = useMemo(() => runSteps(activities), [activities])
+  const tree = useMemo(() => stepTree(activities), [activities])
   const isActive = STREAMING_AGENT_STATUSES.includes(run.status)
   const current = activities.at(-1)
 
-  if (steps.length === 0) {
+  if (tree.roots.length === 0) {
     return isActive ? (
       <TraceLine status='running'>
         <TraceIcon>
@@ -954,14 +1152,18 @@ export function AgentRunProgress({
 
   return (
     <RunChainOfThought
-      steps={steps}
+      tree={tree}
       runStatus={run.status}
       currentLabel={current?.message || t('fallback_activity')}
+      latestId={current?.id}
     />
   )
 }
 
-/** The latest todo list of a run, pinned above the composer. */
+/**
+ * The main agent's latest todo list, pinned above the composer. Sub-agent
+ * todo lists stay nested under the step that runs them.
+ */
 export function RunTodoQueue({
   events,
   run,
@@ -970,12 +1172,11 @@ export function RunTodoQueue({
   run: AgentRun
 }) {
   const activities = useProgressActivities(events)
-  const todo = activities.findLast((activity) => activity.kind === 'todo')
-  const items =
-    todo?.items ??
-    (todo?.current
-      ? [{ content: todo.current, status: 'in_progress' as const }]
-      : [])
+  const items = todoQueueItems(
+    activities.findLast(
+      (activity) => activity.kind === 'todo' && activity.depth === 0,
+    ),
+  )
 
   if (items.length === 0) return null
 

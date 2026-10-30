@@ -279,6 +279,118 @@
           "active": "正在保存工具",
           "complete": "已保存工具"
         }
+      },
+      "sub_agent": "子智能体步骤",
+      "sub_step_count": "{count} 个子步骤",
+      "tool_creation": {
+        "wait_tool_generation": {
+          "plain": {
+            "active": "等待其他工具生成任务完成",
+            "complete": "已等待其他工具生成任务"
+          }
+        },
+        "return_to_parent": {
+          "plain": {
+            "active": "正在将问题交回主智能体",
+            "complete": "已将问题交回主智能体"
+          }
+        },
+        "container_command": {
+          "plain": {
+            "active": "正在运行测试命令",
+            "complete": "已运行测试命令"
+          },
+          "subject": {
+            "active": "正在 {subject} 中运行测试命令",
+            "complete": "已在 {subject} 中运行测试命令"
+          }
+        },
+        "search_local_image": {
+          "plain": {
+            "active": "正在搜索本地镜像",
+            "complete": "已搜索本地镜像"
+          },
+          "subject": {
+            "active": "正在搜索本地镜像 {subject}",
+            "complete": "已搜索本地镜像 {subject}"
+          }
+        },
+        "search_biodb": {
+          "plain": {
+            "active": "正在搜索已注册数据库",
+            "complete": "已搜索已注册数据库"
+          },
+          "subject": {
+            "active": "正在搜索数据库 {subject}",
+            "complete": "已搜索数据库 {subject}"
+          }
+        },
+        "search_tools_by_function": {
+          "plain": {
+            "active": "正在搜索已有工具",
+            "complete": "已搜索已有工具"
+          },
+          "subject": {
+            "active": "正在搜索已有工具：{subject}",
+            "complete": "已搜索已有工具：{subject}"
+          }
+        },
+        "read_tool_doc": {
+          "plain": {
+            "active": "正在阅读工具帮助文档",
+            "complete": "已阅读工具帮助文档"
+          },
+          "subject": {
+            "active": "正在阅读工具 {subject} 的帮助文档",
+            "complete": "已阅读工具 {subject} 的帮助文档"
+          }
+        },
+        "select_image": {
+          "plain": {
+            "active": "正在选择镜像",
+            "complete": "已选择镜像"
+          },
+          "subject": {
+            "active": "正在选择镜像 {subject}",
+            "complete": "已选择镜像 {subject}"
+          }
+        },
+        "select_tool": {
+          "plain": {
+            "active": "正在选择已有工具",
+            "complete": "已选择已有工具"
+          }
+        },
+        "select_classification": {
+          "plain": {
+            "active": "正在保存功能与领域标签",
+            "complete": "已保存功能与领域标签"
+          }
+        },
+        "set_file_mounts": {
+          "plain": {
+            "active": "正在设置文件挂载",
+            "complete": "已设置文件挂载"
+          }
+        },
+        "set_command_detail": {
+          "plain": {
+            "active": "正在设置命令模板",
+            "complete": "已设置命令模板"
+          }
+        },
+        "set_tool_info": {
+          "plain": {
+            "active": "正在设置工具名称与描述",
+            "complete": "已设置工具名称与描述"
+          }
+        },
+        "write_tool_report": {
+          "plain": {
+            "active": "正在撰写试运行报告",
+            "complete": "已撰写试运行报告"
+          }
+        }
       }
     },
     "rename": "重命名",
@@ -337,7 +449,9 @@
       "no_limit": "已用 {used} tokens，该模型未设置上下文窗口",
       "session_total": "本会话累计",
       "reasoning_note": "输出中含 {tokens} 推理 token",
-      "calls": "{count} 次调用"
+      "calls": "{count} 次调用",
+      "by_agent": "按智能体",
+      "sub_agent": "子智能体"
     }
   }
 }
