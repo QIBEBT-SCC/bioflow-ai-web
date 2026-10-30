@@ -18,6 +18,7 @@ export type AgentEventType =
   | 'run.queued'
   | 'run.started'
   | 'run.progress'
+  | 'run.usage'
   | 'run.interrupted'
   | 'resource.changed'
   | 'run.cancel_requested'

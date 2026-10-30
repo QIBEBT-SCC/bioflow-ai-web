@@ -173,7 +173,113 @@
         }
       },
       "queue_pending": "{count} to do",
-      "queue_completed": "{count} completed"
+      "queue_completed": "{count} completed",
+      "step_failed": "Failed",
+      "waiting": "Waiting for your input",
+      "validation": {
+        "active": "Validating the generated tool",
+        "complete": "Validated the generated tool"
+      },
+      "tool": {
+        "ask_human": {
+          "active": "Waiting for your answer",
+          "complete": "Answered a question"
+        },
+        "summarize_work": {
+          "active": "Saving the handover summary",
+          "complete": "Saved the handover summary"
+        },
+        "load_skill": {
+          "active": "Loading skill {subject}",
+          "complete": "Loaded skill {subject}"
+        },
+        "read_skill_resource": {
+          "active": "Reading skill file {subject}",
+          "complete": "Read skill file {subject}"
+        },
+        "workflow_reader": {
+          "overview": {
+            "active": "Reading the run overview",
+            "complete": "Read the run overview"
+          },
+          "node": {
+            "active": "Inspecting node {subject}",
+            "complete": "Inspected node {subject}"
+          },
+          "children": {
+            "active": "Listing ForEach runs of {subject}",
+            "complete": "Listed ForEach runs of {subject}"
+          }
+        },
+        "run_command": {
+          "active": "Inspecting {subject}",
+          "complete": "Inspected {subject}"
+        },
+        "view_image": {
+          "active": "Viewing image {subject}",
+          "complete": "Viewed image {subject}"
+        },
+        "write_diagnosis": {
+          "active": "Writing the diagnosis report",
+          "complete": "Wrote the diagnosis report"
+        },
+        "fix_subgraph": {
+          "load": {
+            "active": "Opening subgraph {subject}",
+            "complete": "Opened subgraph {subject}"
+          },
+          "save": {
+            "active": "Saving the subgraph",
+            "complete": "Saved the subgraph"
+          },
+          "cancel": {
+            "active": "Discarding subgraph edits",
+            "complete": "Discarded subgraph edits"
+          },
+          "view_interface": {
+            "active": "Inspecting the subgraph interface",
+            "complete": "Inspected the subgraph interface"
+          },
+          "set_output": {
+            "active": "Updating subgraph outputs",
+            "complete": "Updated subgraph outputs"
+          }
+        },
+        "finalize_workflow_fix": {
+          "active": "Finalizing the workflow repair",
+          "complete": "Finalized the workflow repair"
+        }
+      },
+      "tool_generator": {
+        "select_image": {
+          "active": "Selecting the container image",
+          "complete": "Selected the container image"
+        },
+        "search_exist_tool": {
+          "active": "Checking for an existing tool node",
+          "complete": "Checked for an existing tool node"
+        },
+        "get_report": {
+          "active": "Test-running the tool",
+          "complete": "Test-ran the tool"
+        },
+        "choose_group": {
+          "active": "Assigning function and domain tags",
+          "complete": "Assigned function and domain tags"
+        },
+        "generate_tool_config": {
+          "active": "Generating the tool config",
+          "complete": "Generated the tool config"
+        },
+        "process_help_doc": {
+          "active": "Preparing the help document",
+          "complete": "Prepared the help document"
+        },
+        "save_tool": {
+          "active": "Saving the tool",
+          "complete": "Saved the tool"
+        }
+      }
     },
     "rename": "Rename",
     "resize": "Resize chat sidebar",
@@ -217,6 +323,18 @@
     "question_progress": "{current} / {total}",
     "answer_required": "Choose or write an answer to continue.",
     "question_previous": "Previous",
-    "question_next": "Next"
+    "question_next": "Next",
+    "cancelled": "Agent run cancelled.",
+    "context": {
+      "title": "Context",
+      "label": "Context usage",
+      "percent": "{percent}% context",
+      "input": "Input",
+      "cache_read": "Cache read",
+      "output": "Output",
+      "reasoning": "Reasoning",
+      "cost": "Cost",
+      "session_total": "Session total"
+    }
   }
 }

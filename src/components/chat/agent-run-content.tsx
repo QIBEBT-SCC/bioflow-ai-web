@@ -9,6 +9,8 @@ import {
   CircleCheckIcon,
   CircleDotIcon,
   CircleIcon,
+  CirclePauseIcon,
+  CircleSlashIcon,
   ClipboardCheckIcon,
   DatabaseIcon,
   FilePenLineIcon,
@@ -16,6 +18,7 @@ import {
   FolderOpenIcon,
   GlobeIcon,
   HammerIcon,
+  ImageIcon,
   ListChecksIcon,
   ListIcon,
   ListTodoIcon,
@@ -25,8 +28,10 @@ import {
   PencilLineIcon,
   PlusIcon,
   SaveIcon,
+  ScrollTextIcon,
   SearchIcon,
   ShieldCheckIcon,
+  SparklesIcon,
   TerminalIcon,
   Trash2Icon,
   WaypointsIcon,
@@ -46,6 +51,7 @@ import {
   TraceCollapsible,
   TraceCollapsibleContent,
   TraceCollapsibleTrigger,
+  TraceDescription,
   TraceIcon,
   TraceLine,
   TraceTitle,
@@ -82,9 +88,12 @@ interface ProgressActivity {
   manager?: string
   operation?: string
   subject?: string
+  tool?: string
+  step?: string
+  action?: string
   completeMessage?: string
   toolCallId?: string
-  toolStatus?: 'running' | 'completed' | 'skipped'
+  toolStatus?: 'running' | 'completed' | 'skipped' | 'error'
   questionAnswers?: AgentQuestionAnswer[]
 }
 
@@ -103,7 +112,10 @@ function stringValue(value: unknown) {
 }
 
 function toolStatus(value: unknown): ProgressActivity['toolStatus'] {
-  return value === 'running' || value === 'completed' || value === 'skipped'
+  return value === 'running' ||
+    value === 'completed' ||
+    value === 'skipped' ||
+    value === 'error'
     ? value
     : undefined
 }
@@ -170,6 +182,9 @@ function normalizeProgress(event: AgentEvent): ProgressActivity {
     manager: stringValue(source.manager),
     operation: stringValue(source.operation),
     subject: stringValue(source.subject),
+    tool: stringValue(source.tool),
+    step: stringValue(source.step),
+    action: stringValue(source.action),
     toolCallId: stringValue(source.tool_call_id),
     toolStatus: toolStatus(source.status),
   }
@@ -211,6 +226,29 @@ const OPERATION_ICONS: Record<string, LucideIcon> = {
   update: PencilLineIcon,
 }
 
+const AGENT_TOOL_ICONS: Record<string, LucideIcon> = {
+  ask_human: MessageCircleQuestionIcon,
+  summarize_work: ScrollTextIcon,
+  load_skill: SparklesIcon,
+  read_skill_resource: SparklesIcon,
+  workflow_reader: BookOpenIcon,
+  run_command: TerminalIcon,
+  view_image: ImageIcon,
+  write_diagnosis: FilePenLineIcon,
+  fix_subgraph: HammerIcon,
+  finalize_workflow_fix: ClipboardCheckIcon,
+}
+
+const TOOL_GENERATOR_ICONS: Record<string, LucideIcon> = {
+  select_image: SearchIcon,
+  search_exist_tool: SearchIcon,
+  get_report: TerminalIcon,
+  choose_group: ListIcon,
+  generate_tool_config: WrenchIcon,
+  process_help_doc: FileTextIcon,
+  save_tool: SaveIcon,
+}
+
 function activityIcon(activity: ProgressActivity): LucideIcon {
   const text = activity.message.toLowerCase()
   if (activity.kind === 'workflow_phase') {
@@ -230,6 +268,14 @@ function activityIcon(activity: ProgressActivity): LucideIcon {
   if (activity.kind === 'planner_view_pdf') return FileTextIcon
   if (activity.kind === 'planner_confirm_plan') return ClipboardCheckIcon
   if (activity.kind === 'validation') return ShieldCheckIcon
+  if (activity.kind === 'agent_tool') {
+    const icon = activity.tool ? AGENT_TOOL_ICONS[activity.tool] : undefined
+    if (icon) return icon
+  }
+  if (activity.kind === 'tool_generator_step') {
+    const icon = activity.step ? TOOL_GENERATOR_ICONS[activity.step] : undefined
+    if (icon) return icon
+  }
   if (/search|find|grep|look/.test(text)) return SearchIcon
   if (/read|inspect|view|load|open|check/.test(text)) return BookOpenIcon
   if (/list/.test(text)) return ListIcon
@@ -240,12 +286,46 @@ function activityIcon(activity: ProgressActivity): LucideIcon {
   return CircleDotIcon
 }
 
-type StepStatus = 'running' | 'error' | undefined
+type StepStatus = 'running' | 'waiting' | 'error' | 'cancelled' | undefined
 
-/** Summary icon of a Chain of Thought: spinner, failure or done. */
+/** Summary icon of a Chain of Thought: spinner, pause, failure, cancel or done. */
 function StatusIcon({ status }: { status: StepStatus }) {
   if (status === 'running') return <LoaderCircleIcon className='animate-spin' />
+  if (status === 'waiting') return <CirclePauseIcon />
+  if (status === 'cancelled') return <CircleSlashIcon />
   return status === 'error' ? <CircleAlertIcon /> : <CircleCheckIcon />
+}
+
+/** Trace line styling for a step status; waiting has no style of its own. */
+function lineStatus(status: StepStatus) {
+  if (status === 'running' || status === 'error') return status
+  return status === 'cancelled' ? 'pending' : undefined
+}
+
+/** A step's status from its own tool status and the run's. */
+function stepStatus(
+  activity: ProgressActivity,
+  isLast: boolean,
+  runStatus: AgentRun['status'],
+): StepStatus {
+  if (activity.toolStatus === 'error') return 'error'
+  const unfinished = activity.toolStatus
+    ? activity.toolStatus === 'running'
+    : isLast
+  if (!unfinished) return undefined
+  if (STREAMING_AGENT_STATUSES.includes(runStatus)) return 'running'
+  if (runStatus === 'waiting_input') return 'waiting'
+  if (!activity.toolStatus) return undefined
+  if (runStatus === 'failed') return 'error'
+  return runStatus === 'cancelled' ? 'cancelled' : undefined
+}
+
+/** A run's overall status as shown on its Chain of Thought. */
+function runStepStatus(runStatus: AgentRun['status']): StepStatus {
+  if (STREAMING_AGENT_STATUSES.includes(runStatus)) return 'running'
+  if (runStatus === 'waiting_input') return 'waiting'
+  if (runStatus === 'failed') return 'error'
+  return runStatus === 'cancelled' ? 'cancelled' : undefined
 }
 
 /** One trace step; steps with detail expand into it. */
@@ -262,12 +342,16 @@ function Step({
   defaultOpen?: boolean
   children?: ReactNode
 }) {
+  const t = useTranslations('Chat.progress')
   const line = (
-    <TraceLine status={status}>
+    <TraceLine status={lineStatus(status)}>
       <TraceIcon>
-        <Icon />
+        {status === 'error' ? <CircleAlertIcon /> : <Icon />}
       </TraceIcon>
       <TraceTitle title={title}>{title}</TraceTitle>
+      {status === 'error' && (
+        <TraceDescription>{t('step_failed')}</TraceDescription>
+      )}
     </TraceLine>
   )
 
@@ -342,10 +426,21 @@ function activityPath(activity: ProgressActivity) {
 }
 
 /** The expandable detail of a step, or nothing for a plain line. */
+function isAskHuman(activity: ProgressActivity) {
+  return (
+    activity.kind === 'planner_ask_human' ||
+    (activity.kind === 'agent_tool' && activity.tool === 'ask_human')
+  )
+}
+
 function activityDetail(activity: ProgressActivity) {
-  if (activity.kind === 'planner_ask_human' && activity.questionAnswers?.length)
+  if (isAskHuman(activity) && activity.questionAnswers?.length)
     return <QuestionAnswerDetail answers={activity.questionAnswers} />
-  if (activity.kind === 'planner_run_command' && activity.command)
+  if (
+    (activity.kind === 'planner_run_command' ||
+      (activity.kind === 'agent_tool' && activity.tool === 'run_command')) &&
+    activity.command
+  )
     return <CommandDetail command={activity.command} />
   const path = activityPath(activity)
   return path ? <p className='break-all font-mono text-xs'>{path}</p> : null
@@ -353,15 +448,16 @@ function activityDetail(activity: ProgressActivity) {
 
 function ActivityStep({
   activity,
-  active,
+  status,
   fallbackLabel,
 }: {
   activity: ProgressActivity
-  active: boolean
+  status: StepStatus
   fallbackLabel: string
 }) {
+  const unfinished = status !== undefined
   const label =
-    (active ? activity.message : activity.completeMessage) ||
+    (unfinished ? activity.message : activity.completeMessage) ||
     activity.message ||
     fallbackLabel
 
@@ -369,8 +465,8 @@ function ActivityStep({
     <Step
       icon={activityIcon(activity)}
       title={label}
-      status={active ? 'running' : undefined}
-      defaultOpen={active && activity.kind === 'planner_run_command'}
+      status={status}
+      defaultOpen={status === 'running' && Boolean(activity.command)}
     >
       {activityDetail(activity)}
     </Step>
@@ -460,6 +556,125 @@ function useProgressActivities(events: AgentEvent[]) {
           }
           break
         }
+        case 'agent_tool': {
+          const values = { subject: activity.subject ?? '…' }
+          switch (activity.tool) {
+            case 'ask_human':
+              message = t('tool.ask_human.active')
+              completeMessage = t('tool.ask_human.complete')
+              break
+            case 'summarize_work':
+              message = t('tool.summarize_work.active')
+              completeMessage = t('tool.summarize_work.complete')
+              break
+            case 'load_skill':
+              message = t('tool.load_skill.active', values)
+              completeMessage = t('tool.load_skill.complete', values)
+              break
+            case 'read_skill_resource':
+              message = t('tool.read_skill_resource.active', values)
+              completeMessage = t('tool.read_skill_resource.complete', values)
+              break
+            case 'workflow_reader':
+              if (activity.action === 'node') {
+                message = t('tool.workflow_reader.node.active', values)
+                completeMessage = t(
+                  'tool.workflow_reader.node.complete',
+                  values,
+                )
+              } else if (activity.action === 'children') {
+                message = t('tool.workflow_reader.children.active', values)
+                completeMessage = t(
+                  'tool.workflow_reader.children.complete',
+                  values,
+                )
+              } else {
+                message = t('tool.workflow_reader.overview.active')
+                completeMessage = t('tool.workflow_reader.overview.complete')
+              }
+              break
+            case 'run_command':
+              message = t('tool.run_command.active', values)
+              completeMessage = t('tool.run_command.complete', values)
+              break
+            case 'view_image':
+              message = t('tool.view_image.active', values)
+              completeMessage = t('tool.view_image.complete', values)
+              break
+            case 'write_diagnosis':
+              message = t('tool.write_diagnosis.active')
+              completeMessage = t('tool.write_diagnosis.complete')
+              break
+            case 'fix_subgraph':
+              switch (activity.action) {
+                case 'load':
+                  message = t('tool.fix_subgraph.load.active', values)
+                  completeMessage = t('tool.fix_subgraph.load.complete', values)
+                  break
+                case 'save':
+                  message = t('tool.fix_subgraph.save.active')
+                  completeMessage = t('tool.fix_subgraph.save.complete')
+                  break
+                case 'cancel':
+                  message = t('tool.fix_subgraph.cancel.active')
+                  completeMessage = t('tool.fix_subgraph.cancel.complete')
+                  break
+                case 'set_output':
+                  message = t('tool.fix_subgraph.set_output.active')
+                  completeMessage = t('tool.fix_subgraph.set_output.complete')
+                  break
+                default:
+                  message = t('tool.fix_subgraph.view_interface.active')
+                  completeMessage = t(
+                    'tool.fix_subgraph.view_interface.complete',
+                  )
+              }
+              break
+            case 'finalize_workflow_fix':
+              message = t('tool.finalize_workflow_fix.active')
+              completeMessage = t('tool.finalize_workflow_fix.complete')
+              break
+          }
+          break
+        }
+        case 'tool_generator_step':
+          switch (activity.step) {
+            case 'select_image':
+              message = t('tool_generator.select_image.active')
+              completeMessage = t('tool_generator.select_image.complete')
+              break
+            case 'search_exist_tool':
+              message = t('tool_generator.search_exist_tool.active')
+              completeMessage = t('tool_generator.search_exist_tool.complete')
+              break
+            case 'get_report':
+              message = t('tool_generator.get_report.active')
+              completeMessage = t('tool_generator.get_report.complete')
+              break
+            case 'choose_group':
+              message = t('tool_generator.choose_group.active')
+              completeMessage = t('tool_generator.choose_group.complete')
+              break
+            case 'generate_tool_config':
+              message = t('tool_generator.generate_tool_config.active')
+              completeMessage = t(
+                'tool_generator.generate_tool_config.complete',
+              )
+              break
+            case 'process_help_doc':
+              message = t('tool_generator.process_help_doc.active')
+              completeMessage = t('tool_generator.process_help_doc.complete')
+              break
+            case 'save_tool':
+              message = t('tool_generator.save_tool.active')
+              completeMessage = t('tool_generator.save_tool.complete')
+              break
+          }
+          break
+        case 'validation':
+          message = t('validation.active')
+          completeMessage = t('validation.complete')
+          break
         case 'planner_list_project_samples':
           message = t('planner.list_project_samples.active')
           completeMessage = t('planner.list_project_samples.complete')
@@ -527,7 +742,7 @@ function useProgressActivities(events: AgentEvent[]) {
     })
 
     return translatedActivities.map((activity) => {
-      if (activity.kind !== 'planner_ask_human') return activity
+      if (!isAskHuman(activity)) return activity
 
       const resumeEvent = events.find(
         (event) =>
@@ -535,11 +750,19 @@ function useProgressActivities(events: AgentEvent[]) {
           event.event_type === 'run.queued' &&
           event.payload.resume === true,
       )
-      const feedback = resumeEvent?.payload.feedback
-      const questionAnswers =
-        typeof feedback === 'string'
-          ? parseAgentQuestionAnswers(feedback)
+      const feedback = stringValue(resumeEvent?.payload.feedback)
+      if (!feedback) return activity
+      const interrupt = events.find(
+        (event) =>
+          event.id > activity.id && event.event_type === 'run.interrupted',
+      )?.payload.value
+      const question =
+        interrupt && typeof interrupt === 'object'
+          ? stringValue((interrupt as Record<string, unknown>).question)
           : undefined
+      const questionAnswers =
+        parseAgentQuestionAnswers(feedback) ??
+        (question ? [{ question, answer: feedback.trim() }] : undefined)
       return questionAnswers ? { ...activity, questionAnswers } : activity
     })
   }, [events, t])
@@ -651,15 +874,16 @@ function runSteps(activities: ProgressActivity[]) {
 
 function RunChainOfThought({
   steps,
-  status,
+  runStatus,
   currentLabel,
 }: {
   steps: ProgressActivity[]
-  status: StepStatus
+  runStatus: AgentRun['status']
   currentLabel: string
 }) {
   const t = useTranslations('Chat.progress')
   const [open, setOpen] = useState<boolean>()
+  const status = runStepStatus(runStatus)
   const isActive = status === 'running'
   const traceRef = useFollowLatest(isActive, steps.at(-1)?.id)
 
@@ -667,28 +891,32 @@ function RunChainOfThought({
     <Trace>
       <TraceCollapsible open={open ?? isActive} onOpenChange={setOpen}>
         <TraceCollapsibleTrigger aria-live='polite'>
-          <TraceLine status={status}>
+          <TraceLine status={lineStatus(status)}>
             <TraceIcon>
               <StatusIcon status={status} />
             </TraceIcon>
             <TraceTitle>
               {isActive
                 ? currentLabel
-                : t('history_count', { count: steps.length })}
+                : status === 'waiting'
+                  ? t('waiting')
+                  : t('history_count', { count: steps.length })}
             </TraceTitle>
           </TraceLine>
         </TraceCollapsibleTrigger>
         <TraceCollapsibleContent>
           <Trace ref={traceRef} className='max-h-64 overflow-y-auto pr-1'>
             {steps.map((activity, index) => {
-              const active = activity.toolStatus
-                ? isActive && activity.toolStatus === 'running'
-                : isActive && index === steps.length - 1
+              const status = stepStatus(
+                activity,
+                index === steps.length - 1,
+                runStatus,
+              )
               return (
                 <ActivityStep
-                  key={`${activity.id}-${active ? 'active' : 'complete'}`}
+                  key={`${activity.id}-${status ?? 'complete'}`}
                   activity={activity}
-                  active={active}
+                  status={status}
                   fallbackLabel={t('fallback_activity')}
                 />
               )
@@ -724,16 +952,10 @@ export function AgentRunProgress({
     ) : null
   }
 
-  const status: StepStatus = isActive
-    ? 'running'
-    : run.status === 'failed'
-      ? 'error'
-      : undefined
-
   return (
     <RunChainOfThought
       steps={steps}
-      status={status}
+      runStatus={run.status}
       currentLabel={current?.message || t('fallback_activity')}
     />
   )

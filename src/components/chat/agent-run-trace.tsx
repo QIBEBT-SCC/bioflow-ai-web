@@ -1,7 +1,7 @@
 'use client'
 
 import { cn } from 'cn'
-import { CircleAlertIcon, RotateCcwIcon } from 'lucide-react'
+import { CircleAlertIcon, CircleSlashIcon, RotateCcwIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { AGENT_ICONS } from '@/components/chat/agent-meta'
@@ -117,6 +117,15 @@ export function AgentRunTrace({
             </CodeBlock>
           )}
         </>
+      )}
+
+      {run.status === 'cancelled' && (
+        <TraceLine status='pending'>
+          <TraceIcon>
+            <CircleSlashIcon />
+          </TraceIcon>
+          <TraceTitle>{t('cancelled')}</TraceTitle>
+        </TraceLine>
       )}
     </Trace>
   )

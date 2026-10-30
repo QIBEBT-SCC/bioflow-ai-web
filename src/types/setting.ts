@@ -46,6 +46,7 @@ export interface LLMModelCreate {
   input_price?: number
   output_price?: number
   cache_read_price?: number
+  context_window?: number | null
   reasoning_effort?: ReasoningEffort | null
   is_active?: boolean
 }
@@ -56,6 +57,7 @@ export interface LLMModelUpdate {
   input_price?: number
   output_price?: number
   cache_read_price?: number
+  context_window?: number | null
   reasoning_effort?: ReasoningEffort | null
   is_active?: boolean
 }
@@ -68,6 +70,7 @@ export interface LLMModelPublic {
   input_price: number
   output_price: number
   cache_read_price: number
+  context_window: number | null
   reasoning_effort: ReasoningEffort | null
   is_active: boolean
 }
@@ -110,6 +113,8 @@ export interface LLMStatisticSummary {
   total_input_tokens: number
   total_output_tokens: number
   total_cache_read: number
+  total_cache_creation: number
+  total_reasoning_tokens: number
   total_price: number | string // 后端 Decimal 在 JSON 中序列化为字符串
 }
 
@@ -151,6 +156,8 @@ export interface LLMStatisticDetail {
   input_tokens: number
   output_tokens: number
   cache_read: number
+  cache_creation: number
+  reasoning_tokens: number
   price: number | string // 后端 Decimal 在 JSON 中序列化为字符串
   time: string // 后端 datetime 转 ISO 字符串
 }

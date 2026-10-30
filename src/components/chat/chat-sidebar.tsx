@@ -25,6 +25,7 @@ import {
 import { AgentRunTrace } from '@/components/chat/agent-run-trace'
 import { AgentWorkflowNode } from '@/components/chat/agent-workflow-node'
 import { SidebarHistoryMenu } from '@/components/chat/chat-history-menu'
+import { ContextUsage } from '@/components/chat/context-usage'
 import { DraftAttachments } from '@/components/chat/draft-attachments'
 import { InterruptApproval } from '@/components/chat/interrupt-approval'
 import { PlanApproval } from '@/components/chat/plan-approval'
@@ -242,6 +243,16 @@ function ChatSidebarInner({
     }
     return runs
   }, [run, storedRuns])
+
+  const sessionEvents = useMemo(
+    () =>
+      displayRuns.flatMap((displayRun) =>
+        displayRun.uid === runId && events.length > 0
+          ? events
+          : (eventHistory[displayRun.uid] ?? []),
+      ),
+    [displayRuns, eventHistory, events, runId],
+  )
 
   const availableCommands = useMemo(() => {
     const names =
@@ -859,35 +870,40 @@ function ChatSidebarInner({
                     </InputGroupButton>
                   )
                 )}
-                {isBusy && run ? (
-                  <InputGroupButton
-                    size='icon-sm'
-                    variant='outline'
-                    className='ml-auto rounded-full'
-                    onClick={() => void cancelRun(run.uid)}
-                    disabled={isCancelling || run.status === 'cancel_requested'}
-                    aria-label={t('cancel')}
-                    title={t('cancel')}
-                  >
-                    <SquareIcon className='size-3 fill-current' />
-                  </InputGroupButton>
-                ) : (
-                  <InputGroupButton
-                    size='icon-sm'
-                    variant='default'
-                    className='ml-auto rounded-full'
-                    disabled={inputDisabled || !canSubmit || isSubmitting}
-                    aria-label={t('send')}
-                    title={t('send')}
-                    onClick={() => void submit()}
-                  >
-                    {isSubmitting ? (
-                      <Loader2Icon className='animate-spin' />
-                    ) : (
-                      <ArrowUpIcon />
-                    )}
-                  </InputGroupButton>
-                )}
+                <div className='ml-auto flex items-center gap-1'>
+                  <ContextUsage events={sessionEvents} />
+                  {isBusy && run ? (
+                    <InputGroupButton
+                      size='icon-sm'
+                      variant='outline'
+                      className='rounded-full'
+                      onClick={() => void cancelRun(run.uid)}
+                      disabled={
+                        isCancelling || run.status === 'cancel_requested'
+                      }
+                      aria-label={t('cancel')}
+                      title={t('cancel')}
+                    >
+                      <SquareIcon className='size-3 fill-current' />
+                    </InputGroupButton>
+                  ) : (
+                    <InputGroupButton
+                      size='icon-sm'
+                      variant='default'
+                      className='rounded-full'
+                      disabled={inputDisabled || !canSubmit || isSubmitting}
+                      aria-label={t('send')}
+                      title={t('send')}
+                      onClick={() => void submit()}
+                    >
+                      {isSubmitting ? (
+                        <Loader2Icon className='animate-spin' />
+                      ) : (
+                        <ArrowUpIcon />
+                      )}
+                    </InputGroupButton>
+                  )}
+                </div>
               </InputGroupAddon>
             </InputGroup>
           </div>

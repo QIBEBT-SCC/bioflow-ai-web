@@ -48,6 +48,8 @@
       "input_price": "输入价格 ($/1M tokens)",
       "output_price": "输出价格 ($/1M tokens)",
       "cache_price": "缓存价格 ($/1M tokens)",
+      "context_window": "上下文窗口（tokens）",
+      "context_window_unset": "未设置",
       "reasoning_effort": "思索强度",
       "reasoning_effort_desc": "作为模型一级参数发送；仅在模型支持时设置，默认值表示由模型自行决定",
       "reasoning_effort_default": "模型默认",
