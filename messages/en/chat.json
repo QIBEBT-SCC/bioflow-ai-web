@@ -326,15 +326,18 @@
     "question_next": "Next",
     "cancelled": "Agent run cancelled.",
     "context": {
-      "title": "Context",
+      "title": "Context window",
       "label": "Context usage",
-      "percent": "{percent}% context",
+      "percent": "{percent}% context used",
       "input": "Input",
       "cache_read": "Cache read",
       "output": "Output",
-      "reasoning": "Reasoning",
-      "cost": "Cost",
-      "session_total": "Session total"
+      "used": "{used} / {limit} used",
+      "remaining": "{tokens} left",
+      "no_limit": "{used} tokens used; this model has no context window set",
+      "session_total": "Session total",
+      "reasoning_note": "Output includes {tokens} reasoning tokens",
+      "calls": "{count, plural, one {# call} other {# calls}}"
     }
   }
 }

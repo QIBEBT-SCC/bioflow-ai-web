@@ -326,15 +326,18 @@
     "question_next": "下一题",
     "cancelled": "智能体运行已取消。",
     "context": {
-      "title": "上下文",
+      "title": "上下文窗口",
       "label": "上下文用量",
-      "percent": "上下文 {percent}%",
+      "percent": "已用上下文 {percent}%",
       "input": "输入",
       "cache_read": "缓存命中",
       "output": "输出",
-      "reasoning": "推理",
-      "cost": "费用",
-      "session_total": "本会话累计"
+      "used": "已用 {used} / {limit}",
+      "remaining": "剩余 {tokens}",
+      "no_limit": "已用 {used} tokens，该模型未设置上下文窗口",
+      "session_total": "本会话累计",
+      "reasoning_note": "输出中含 {tokens} 推理 token",
+      "calls": "{count} 次调用"
     }
   }
 }
