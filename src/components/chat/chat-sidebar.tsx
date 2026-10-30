@@ -2,6 +2,7 @@
 
 import { cn } from 'cn'
 import {
+  ArrowDownIcon,
   ArrowUpIcon,
   BotIcon,
   Loader2Icon,
@@ -15,13 +16,6 @@ import { useLocale, useTranslations } from 'next-intl'
 import type React from 'react'
 import { useMemo, useRef, useState } from 'react'
 import type { AgentScope } from '@/app/actions/agent'
-import {
-  Conversation,
-  ConversationContent,
-  ConversationScrollButton,
-} from '@/components/ai-elements/conversation'
-import { Message } from '@/components/ai-elements/message'
-import { Suggestion, Suggestions } from '@/components/ai-elements/suggestion'
 import { AgentImage } from '@/components/chat/agent-image'
 import { AGENT_ICONS, AGENT_NAMES } from '@/components/chat/agent-meta'
 import { AgentPDF } from '@/components/chat/agent-pdf'
@@ -45,7 +39,17 @@ import {
 } from '@/components/chat/slash-commannd'
 import { Markdown } from '@/components/markdown'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Bubble, BubbleContent } from '@/components/ui/bubble'
 import { Button } from '@/components/ui/button'
+import { Message, MessageContent } from '@/components/ui/message'
+import {
+  MessageScroller,
+  MessageScrollerButton,
+  MessageScrollerContent,
+  MessageScrollerItem,
+  MessageScrollerProvider,
+  MessageScrollerViewport,
+} from '@/components/ui/message-scroller'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -120,34 +124,32 @@ function ChatMessage({ message }: { message: AgentMessage }) {
     part.type === 'text' && part.text.trim() ? [part.text] : [],
   )
   return (
-    <Message
-      from={message.role}
-      className={cn(isUser ? 'max-w-[88%] items-end' : 'max-w-full')}
-    >
-      {attachments.length > 0 && (
-        <div className={cn('flex flex-wrap gap-2', isUser && 'justify-end')}>
-          {attachments.map((part) => (
-            <MessageAttachment key={attachmentKey(part)} part={part} />
-          ))}
-        </div>
-      )}
-      {texts.map((text) =>
-        isUser ? (
-          <div
-            key={`${message.uid}-${text}`}
-            className='w-fit max-w-full rounded-2xl rounded-br-md bg-primary/10 px-3.5 py-2.5 text-foreground text-sm'
-          >
-            <Markdown>{text}</Markdown>
+    <Message align={isUser ? 'end' : 'start'}>
+      <MessageContent>
+        {attachments.length > 0 && (
+          <div className={cn('flex flex-wrap gap-2', isUser && 'self-end')}>
+            {attachments.map((part) => (
+              <MessageAttachment key={attachmentKey(part)} part={part} />
+            ))}
           </div>
-        ) : (
-          <Markdown
-            key={`${message.uid}-${text}`}
-            className='text-sm leading-relaxed'
-          >
-            {text}
-          </Markdown>
-        ),
-      )}
+        )}
+        {texts.map((text) =>
+          isUser ? (
+            <Bubble key={`${message.uid}-${text}`} align='end' variant='tinted'>
+              <BubbleContent>
+                <Markdown>{text}</Markdown>
+              </BubbleContent>
+            </Bubble>
+          ) : (
+            <Markdown
+              key={`${message.uid}-${text}`}
+              className='leading-relaxed'
+            >
+              {text}
+            </Markdown>
+          ),
+        )}
+      </MessageContent>
     </Message>
   )
 }
@@ -496,179 +498,218 @@ function ChatSidebarInner({
           </div>
         </header>
 
-        <Conversation className='min-h-0 flex-1'>
-          <ConversationContent className='gap-6 px-3 py-4'>
-            {isLoading ? (
-              <ConversationSkeleton label={t('loading')} />
-            ) : messages.length === 0 && displayRuns.length === 0 ? (
-              <div className='flex flex-col gap-5 py-6'>
-                <div className='flex flex-col items-center gap-2 text-center'>
-                  <span className='flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary'>
-                    <SparklesIcon className='size-5' />
-                  </span>
-                  <h3 className='font-semibold text-base'>{t('assistant')}</h3>
-                  <p className='max-w-72 text-muted-foreground text-sm'>
-                    {sessionId ? t('empty_description') : t('empty_no_session')}
-                  </p>
-                </div>
-                {sessionId ? (
-                  <ul className='flex flex-col gap-2'>
-                    {availableCommands.map((command) => {
-                      const Icon = command.icon ?? SparklesIcon
-                      return (
-                        <li key={command.key}>
-                          <button
-                            type='button'
-                            disabled={inputLocked}
-                            onClick={() => chooseCommand(command)}
-                            className='group flex w-full items-start gap-3 rounded-xl border bg-card p-3 text-left shadow-xs transition-[border-color,box-shadow] hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50'
-                          >
-                            <span className='flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary'>
-                              <Icon className='size-4' />
-                            </span>
-                            <span className='min-w-0 flex-1'>
-                              <span className='flex items-baseline gap-2'>
-                                <span className='truncate font-medium text-sm group-hover:text-primary'>
-                                  {command.label}
+        <MessageScrollerProvider
+          // Remount per thread so it opens at the latest turn once loaded.
+          key={isLoading ? 'loading' : (sessionId ?? 'none')}
+          autoScroll
+          defaultScrollPosition='last-anchor'
+        >
+          <MessageScroller className='min-h-0 flex-1'>
+            <MessageScrollerViewport>
+              <MessageScrollerContent className='gap-6 px-3 py-4'>
+                {isLoading ? (
+                  <MessageScrollerItem>
+                    <ConversationSkeleton label={t('loading')} />
+                  </MessageScrollerItem>
+                ) : messages.length === 0 && displayRuns.length === 0 ? (
+                  <MessageScrollerItem className='flex flex-col gap-5 py-6'>
+                    <div className='flex flex-col items-center gap-2 text-center'>
+                      <span className='flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary'>
+                        <SparklesIcon className='size-5' />
+                      </span>
+                      <h3 className='font-semibold text-base'>
+                        {t('assistant')}
+                      </h3>
+                      <p className='max-w-72 text-muted-foreground text-sm'>
+                        {sessionId
+                          ? t('empty_description')
+                          : t('empty_no_session')}
+                      </p>
+                    </div>
+                    {sessionId ? (
+                      <ul className='flex flex-col gap-2'>
+                        {availableCommands.map((command) => {
+                          const Icon = command.icon ?? SparklesIcon
+                          return (
+                            <li key={command.key}>
+                              <button
+                                type='button'
+                                disabled={inputLocked}
+                                onClick={() => chooseCommand(command)}
+                                className='group flex w-full items-start gap-3 rounded-xl border bg-card p-3 text-left shadow-xs transition-[border-color,box-shadow] hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50'
+                              >
+                                <span className='flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary'>
+                                  <Icon className='size-4' />
                                 </span>
-                                <code className='shrink-0 font-mono text-muted-foreground text-xs'>
-                                  /{command.key}
-                                </code>
-                              </span>
-                              <span className='mt-0.5 line-clamp-2 text-muted-foreground text-xs leading-relaxed'>
-                                {command.description}
-                              </span>
-                            </span>
-                          </button>
-                        </li>
+                                <span className='min-w-0 flex-1'>
+                                  <span className='flex items-baseline gap-2'>
+                                    <span className='truncate font-medium text-sm group-hover:text-primary'>
+                                      {command.label}
+                                    </span>
+                                    <code className='shrink-0 font-mono text-muted-foreground text-xs'>
+                                      /{command.key}
+                                    </code>
+                                  </span>
+                                  <span className='mt-0.5 line-clamp-2 text-muted-foreground text-xs leading-relaxed'>
+                                    {command.description}
+                                  </span>
+                                </span>
+                              </button>
+                            </li>
+                          )
+                        })}
+                      </ul>
+                    ) : (
+                      <Button
+                        className='self-center'
+                        onClick={() => void newChat()}
+                        disabled={isCreating}
+                      >
+                        {isCreating ? (
+                          <Loader2Icon className='animate-spin' />
+                        ) : (
+                          <PlusIcon />
+                        )}
+                        {t('new_conversation')}
+                      </Button>
+                    )}
+                  </MessageScrollerItem>
+                ) : (
+                  <>
+                    {displayRuns.map((displayRun: AgentRun) => {
+                      const runMessages = messages.filter(
+                        (message) => message.run_uid === displayRun.uid,
+                      )
+                      const userMessages = runMessages.filter(
+                        (message) => message.role === 'user',
+                      )
+                      const visibleUserMessages = userMessages.filter(
+                        (message, index) =>
+                          !(
+                            index > 0 &&
+                            message.parts.length === 1 &&
+                            message.parts[0].type === 'text' &&
+                            parseAgentQuestionAnswers(message.parts[0].text)
+                          ),
+                      )
+                      const assistantMessages = runMessages.filter(
+                        (message) => message.role === 'assistant',
+                      )
+                      const runEvents =
+                        displayRun.uid === runId && events.length > 0
+                          ? events
+                          : (eventHistory[displayRun.uid] ?? [])
+                      const isCurrentRun = displayRun.uid === run?.uid
+
+                      return (
+                        <MessageScrollerItem
+                          key={displayRun.uid}
+                          messageId={displayRun.uid}
+                          scrollAnchor
+                          className='flex flex-col gap-3'
+                        >
+                          {visibleUserMessages.map((message) => (
+                            <ChatMessage key={message.uid} message={message} />
+                          ))}
+                          <AgentRunTrace
+                            run={displayRun}
+                            events={runEvents}
+                            onRetry={
+                              isCurrentRun
+                                ? () => void retry(displayRun)
+                                : undefined
+                            }
+                            isRetrying={isRetrying}
+                          />
+                          {assistantMessages.map((message) => (
+                            <ChatMessage key={message.uid} message={message} />
+                          ))}
+                          <AgentRunArtifacts run={displayRun} />
+                        </MessageScrollerItem>
                       )
                     })}
-                  </ul>
-                ) : (
-                  <Button
-                    className='self-center'
-                    onClick={() => void newChat()}
-                    disabled={isCreating}
-                  >
-                    {isCreating ? (
-                      <Loader2Icon className='animate-spin' />
-                    ) : (
-                      <PlusIcon />
-                    )}
-                    {t('new_conversation')}
-                  </Button>
+                    {unmatchedMessages.map((message) => (
+                      <MessageScrollerItem
+                        key={message.uid}
+                        messageId={message.uid}
+                        scrollAnchor={message.role === 'user'}
+                      >
+                        <ChatMessage message={message} />
+                      </MessageScrollerItem>
+                    ))}
+                  </>
                 )}
-              </div>
-            ) : (
-              <>
-                {displayRuns.map((displayRun: AgentRun) => {
-                  const runMessages = messages.filter(
-                    (message) => message.run_uid === displayRun.uid,
-                  )
-                  const userMessages = runMessages.filter(
-                    (message) => message.role === 'user',
-                  )
-                  const visibleUserMessages = userMessages.filter(
-                    (message, index) =>
-                      !(
-                        index > 0 &&
-                        message.parts.length === 1 &&
-                        message.parts[0].type === 'text' &&
-                        parseAgentQuestionAnswers(message.parts[0].text)
-                      ),
-                  )
-                  const assistantMessages = runMessages.filter(
-                    (message) => message.role === 'assistant',
-                  )
-                  const runEvents =
-                    displayRun.uid === runId && events.length > 0
-                      ? events
-                      : (eventHistory[displayRun.uid] ?? [])
-                  const isCurrentRun = displayRun.uid === run?.uid
 
-                  return (
-                    <div key={displayRun.uid} className='flex flex-col gap-3'>
-                      {visibleUserMessages.map((message) => (
-                        <ChatMessage key={message.uid} message={message} />
-                      ))}
-                      <AgentRunTrace
-                        run={displayRun}
-                        events={runEvents}
-                        onRetry={
-                          isCurrentRun
-                            ? () => void retry(displayRun)
-                            : undefined
-                        }
-                        isRetrying={isRetrying}
+                {run?.status === 'waiting_input' && (
+                  <MessageScrollerItem messageId={`${run.uid}-input`}>
+                    {isPlanApproval ? (
+                      <PlanApproval
+                        plan={planContent}
+                        feedback={feedback}
+                        isPending={isResuming}
+                        onFeedbackChange={setFeedback}
+                        onApprove={() => void resume(true)}
+                        onSendFeedback={() => void resume(false)}
                       />
-                      {assistantMessages.map((message) => (
-                        <ChatMessage key={message.uid} message={message} />
-                      ))}
-                      <AgentRunArtifacts run={displayRun} />
-                    </div>
-                  )
-                })}
-                {unmatchedMessages.map((message) => (
-                  <ChatMessage key={message.uid} message={message} />
-                ))}
-              </>
-            )}
-
-            {run?.status === 'waiting_input' &&
-              (isPlanApproval ? (
-                <PlanApproval
-                  plan={planContent}
-                  feedback={feedback}
-                  isPending={isResuming}
-                  onFeedbackChange={setFeedback}
-                  onApprove={() => void resume(true)}
-                  onSendFeedback={() => void resume(false)}
-                />
-              ) : questions.length > 0 ? (
-                <QuestionApproval
-                  questions={questions}
-                  isPending={isResuming}
-                  onSubmit={(response) => void resume(false, response)}
-                />
-              ) : (
-                <Alert variant='warning'>
-                  <AlertDescription className='space-y-3'>
-                    <Markdown>
-                      {typeof run.interrupt_payload?.question === 'string'
-                        ? run.interrupt_payload.question
-                        : typeof run.interrupt_payload?.message === 'string'
-                          ? run.interrupt_payload.message
-                          : JSON.stringify(run.interrupt_payload, null, 2)}
-                    </Markdown>
-                    <Textarea
-                      value={feedback}
-                      onChange={(event) => setFeedback(event.target.value)}
-                      placeholder={t('feedback_placeholder')}
-                      className='bg-background'
-                    />
-                    <div className='flex gap-2'>
-                      <Button
-                        size='sm'
-                        onClick={() => void resume(true)}
-                        disabled={isResuming}
-                      >
-                        {t('approve')}
-                      </Button>
-                      <Button
-                        size='sm'
-                        variant='outline'
-                        onClick={() => void resume(false)}
-                        disabled={isResuming || !feedback.trim()}
-                      >
-                        {t('send_feedback')}
-                      </Button>
-                    </div>
-                  </AlertDescription>
-                </Alert>
-              ))}
-          </ConversationContent>
-          <ConversationScrollButton className='bottom-3 size-8 shadow-sm' />
-        </Conversation>
+                    ) : questions.length > 0 ? (
+                      <QuestionApproval
+                        questions={questions}
+                        isPending={isResuming}
+                        onSubmit={(response) => void resume(false, response)}
+                      />
+                    ) : (
+                      <Alert variant='warning'>
+                        <AlertDescription className='space-y-3'>
+                          <Markdown>
+                            {typeof run.interrupt_payload?.question === 'string'
+                              ? run.interrupt_payload.question
+                              : typeof run.interrupt_payload?.message ===
+                                  'string'
+                                ? run.interrupt_payload.message
+                                : JSON.stringify(
+                                    run.interrupt_payload,
+                                    null,
+                                    2,
+                                  )}
+                          </Markdown>
+                          <Textarea
+                            value={feedback}
+                            onChange={(event) =>
+                              setFeedback(event.target.value)
+                            }
+                            placeholder={t('feedback_placeholder')}
+                            className='bg-background'
+                          />
+                          <div className='flex gap-2'>
+                            <Button
+                              size='sm'
+                              onClick={() => void resume(true)}
+                              disabled={isResuming}
+                            >
+                              {t('approve')}
+                            </Button>
+                            <Button
+                              size='sm'
+                              variant='outline'
+                              onClick={() => void resume(false)}
+                              disabled={isResuming || !feedback.trim()}
+                            >
+                              {t('send_feedback')}
+                            </Button>
+                          </div>
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                  </MessageScrollerItem>
+                )}
+              </MessageScrollerContent>
+            </MessageScrollerViewport>
+            <MessageScrollerButton className='data-[direction=end]:bottom-3'>
+              <ArrowDownIcon />
+              <span className='sr-only'>{t('scroll_to_latest')}</span>
+            </MessageScrollerButton>
+          </MessageScroller>
+        </MessageScrollerProvider>
 
         <div className='shrink-0 space-y-2 px-3 pt-1 pb-3'>
           {(localError || attachments.error) && (
@@ -687,20 +728,21 @@ function ChatSidebarInner({
             />
           )}
           {workflowSuggestions.length > 0 && !isBusy && !nodeAttachment && (
-            <Suggestions>
+            <div className='flex scroll-fade-x scrollbar-none gap-2 overflow-x-auto overscroll-x-contain'>
               {workflowSuggestions.map((suggestion) => (
-                <Suggestion
+                <Button
                   key={suggestion.agentName}
-                  suggestion={suggestion.prompt}
+                  variant='outline'
+                  size='sm'
+                  className='shrink-0'
                   onClick={() => void runWorkflowSuggestion(suggestion)}
                   disabled={isCreating || isSubmitting}
-                  className='h-7 gap-1.5 border-primary/30 px-3 text-primary text-xs shadow-none hover:bg-primary/5 hover:text-primary'
                 >
-                  <SparklesIcon className='size-3.5' />
+                  <SparklesIcon />
                   {suggestion.label}
-                </Suggestion>
+                </Button>
               ))}
-            </Suggestions>
+            </div>
           )}
           <div className='relative'>
             {slashCommand.open && !parsedCommand && (

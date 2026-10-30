@@ -211,6 +211,7 @@
     },
     "loading": "Loading conversation…",
     "empty_no_session": "Start a new conversation to work with an assistant.",
-    "choose_assistant": "Assistants"
+    "choose_assistant": "Assistants",
+    "scroll_to_latest": "Scroll to latest message"
   }
 }
