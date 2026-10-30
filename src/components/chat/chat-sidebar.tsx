@@ -6,7 +6,6 @@ import {
   ArrowUpIcon,
   BotIcon,
   Loader2Icon,
-  PaperclipIcon,
   PlusIcon,
   SparklesIcon,
   SquareIcon,
@@ -39,8 +38,15 @@ import {
 } from '@/components/chat/slash-commannd'
 import { Markdown } from '@/components/markdown'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { AttachmentGroup } from '@/components/ui/attachment'
 import { Bubble, BubbleContent } from '@/components/ui/bubble'
 import { Button } from '@/components/ui/button'
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupTextarea,
+} from '@/components/ui/input-group'
 import { Message, MessageContent } from '@/components/ui/message'
 import {
   MessageScroller,
@@ -127,11 +133,11 @@ function ChatMessage({ message }: { message: AgentMessage }) {
     <Message align={isUser ? 'end' : 'start'}>
       <MessageContent>
         {attachments.length > 0 && (
-          <div className={cn('flex flex-wrap gap-2', isUser && 'self-end')}>
+          <AttachmentGroup className={cn('max-w-full', isUser && 'self-end')}>
             {attachments.map((part) => (
               <MessageAttachment key={attachmentKey(part)} part={part} />
             ))}
-          </div>
+          </AttachmentGroup>
         )}
         {texts.map((text) =>
           isUser ? (
@@ -769,7 +775,21 @@ function ChatSidebarInner({
                 })}
               </SlashCommandMenu>
             )}
-            <fieldset
+            <input
+              ref={fileInputRef}
+              type='file'
+              accept={CHAT_ATTACHMENT_ACCEPT}
+              multiple
+              className='sr-only'
+              tabIndex={-1}
+              aria-label={t('images.add')}
+              disabled={inputLocked}
+              onChange={(event) => {
+                attachments.addFiles(Array.from(event.target.files ?? []))
+                event.target.value = ''
+              }}
+            />
+            <InputGroup
               aria-label={t('images.attachments')}
               onDragOver={(event) => {
                 if (event.dataTransfer.types.includes('Files'))
@@ -781,7 +801,7 @@ function ChatSidebarInner({
                 if (!inputLocked)
                   attachments.addFiles(Array.from(event.dataTransfer.files))
               }}
-              className='rounded-xl border bg-card shadow-sm transition-[border-color,box-shadow] focus-within:border-primary/50 focus-within:ring-3 focus-within:ring-primary/10'
+              className='rounded-xl bg-card shadow-sm'
             >
               <DraftAttachments
                 drafts={attachments.drafts}
@@ -792,29 +812,17 @@ function ChatSidebarInner({
                 onRemoveNode={onRemoveNodeAction}
               />
               {nodeError && (
-                <output className='block px-3 pt-2 text-destructive text-xs'>
-                  {nodeError}
-                </output>
+                <InputGroupAddon align='block-start'>
+                  <output className='font-normal text-destructive text-xs'>
+                    {nodeError}
+                  </output>
+                </InputGroupAddon>
               )}
-              <input
-                ref={fileInputRef}
-                type='file'
-                accept={CHAT_ATTACHMENT_ACCEPT}
-                multiple
-                className='sr-only'
-                tabIndex={-1}
-                aria-label={t('images.add')}
-                disabled={inputLocked}
-                onChange={(event) => {
-                  attachments.addFiles(Array.from(event.target.files ?? []))
-                  event.target.value = ''
-                }}
-              />
-              <div className='relative'>
+              <div className='relative w-full'>
                 {parsedCommand && (
                   <div
                     aria-hidden='true'
-                    className='pointer-events-none absolute inset-x-0 top-0 min-h-16 whitespace-pre-wrap wrap-break-word px-3 py-2 text-base md:text-sm'
+                    className='pointer-events-none absolute inset-x-0 top-0 min-h-16 whitespace-pre-wrap wrap-break-word p-3 text-base md:text-sm'
                   >
                     <span className='rounded-sm bg-primary/10 text-primary'>
                       /{parsedCommand.command.key}
@@ -824,7 +832,7 @@ function ChatSidebarInner({
                     </span>
                   </div>
                 )}
-                <Textarea
+                <InputGroupTextarea
                   ref={textareaRef}
                   value={text}
                   onChange={(event) =>
@@ -852,75 +860,69 @@ function ChatSidebarInner({
                   }
                   disabled={inputLocked}
                   className={cn(
-                    'relative max-h-60 min-h-16 resize-none border-0 bg-transparent px-3 shadow-none focus-visible:ring-0 dark:bg-transparent',
+                    'relative max-h-60 min-h-16 p-3',
                     parsedCommand &&
                       'text-transparent caret-foreground selection:bg-primary/20',
                   )}
                 />
               </div>
-              <div className='flex items-center gap-1 px-2 pb-2'>
-                <Button
-                  type='button'
+              <InputGroupAddon align='block-end'>
+                <InputGroupButton
                   size='icon-sm'
-                  variant='ghost'
-                  className='text-muted-foreground'
+                  variant='outline'
+                  className='rounded-full'
                   disabled={inputLocked || attachments.drafts.length >= 4}
                   aria-label={t('images.add')}
                   title={t('images.add')}
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  <PaperclipIcon className='size-4' />
-                </Button>
+                  <PlusIcon />
+                </InputGroupButton>
                 {parsedCommand ? (
                   <ActiveAgentPill command={parsedCommand.command} />
                 ) : (
                   !text && (
-                    <Button
-                      type='button'
+                    <InputGroupButton
                       size='sm'
-                      variant='ghost'
-                      className='h-8 gap-1 px-2 text-muted-foreground text-xs'
                       disabled={inputLocked}
                       onClick={openCommandMenu}
                     >
-                      <BotIcon className='size-3.5' />
+                      <BotIcon />
                       {t('choose_assistant')}
-                    </Button>
+                    </InputGroupButton>
                   )
                 )}
-                <div className='flex-1' />
                 {isBusy && run ? (
-                  <Button
-                    type='button'
+                  <InputGroupButton
                     size='icon-sm'
                     variant='outline'
-                    className='rounded-lg'
+                    className='ml-auto rounded-full'
                     onClick={() => void cancelRun(run.uid)}
                     disabled={isCancelling || run.status === 'cancel_requested'}
                     aria-label={t('cancel')}
                     title={t('cancel')}
                   >
-                    <SquareIcon className='size-3.5 fill-current' />
-                  </Button>
+                    <SquareIcon className='size-3 fill-current' />
+                  </InputGroupButton>
                 ) : (
-                  <Button
-                    type='button'
+                  <InputGroupButton
                     size='icon-sm'
-                    className='rounded-lg'
+                    variant='default'
+                    className='ml-auto rounded-full'
                     disabled={inputDisabled || !canSubmit || isSubmitting}
                     aria-label={t('send')}
                     title={t('send')}
                     onClick={() => void submit()}
                   >
                     {isSubmitting ? (
-                      <Loader2Icon className='size-4 animate-spin' />
+                      <Loader2Icon className='animate-spin' />
                     ) : (
-                      <ArrowUpIcon className='size-4' />
+                      <ArrowUpIcon />
                     )}
-                  </Button>
+                  </InputGroupButton>
                 )}
-              </div>
-            </fieldset>
+              </InputGroupAddon>
+            </InputGroup>
           </div>
         </div>
       </div>

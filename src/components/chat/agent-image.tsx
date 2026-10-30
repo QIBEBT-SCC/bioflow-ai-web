@@ -1,11 +1,19 @@
 'use client'
 
-import { cn } from 'cn'
 import { ImageOffIcon } from 'lucide-react'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
-import { useState } from 'react'
+import { type ReactNode, useState } from 'react'
 import { getChatAttachmentPreviewUrl } from '@/app/actions/chat-attachment'
+import {
+  Attachment,
+  AttachmentActions,
+  AttachmentContent,
+  AttachmentDescription,
+  AttachmentMedia,
+  AttachmentTitle,
+  AttachmentTrigger,
+} from '@/components/ui/attachment'
 import {
   Dialog,
   DialogContent,
@@ -15,16 +23,18 @@ import {
 import type { AgentImagePart } from '@/types/agent'
 
 /**
- * Image attachment. `thumb` is a square tile matching the attachment chip
- * height (composer drafts); `preview` is a larger cover image (messages).
- * Either opens the full image in a dialog.
+ * Image attachment. `thumb` is a compact row card (composer drafts);
+ * `preview` stacks a larger cover above the name (messages). Either opens
+ * the full image in a dialog.
  */
 export function AgentImage({
   image,
   variant = 'preview',
+  actions,
 }: {
   image: AgentImagePart
   variant?: 'thumb' | 'preview'
+  actions?: ReactNode
 }) {
   const t = useTranslations('Chat.images')
   const [open, setOpen] = useState(false)
@@ -38,38 +48,46 @@ export function AgentImage({
 
   return (
     <>
-      <button
-        type='button'
-        onClick={() => setOpen(true)}
-        aria-label={t('preview', { name: image.filename })}
-        title={`${image.filename} · ${meta}`}
-        className={cn(
-          'relative block shrink-0 overflow-hidden rounded-lg border bg-muted shadow-xs transition-[border-color,box-shadow] hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-          variant === 'thumb' ? 'size-12' : 'h-32 w-44 rounded-xl',
-        )}
+      <Attachment
+        // sm pins the media to an icon tile, so the cover preview stays default.
+        size={variant === 'preview' ? 'default' : 'sm'}
+        orientation={variant === 'preview' ? 'vertical' : 'horizontal'}
+        className={variant === 'thumb' ? 'max-w-52' : undefined}
       >
-        {failed ? (
-          <span className='flex size-full items-center justify-center text-muted-foreground'>
-            <ImageOffIcon className='size-4' />
-            <span className='sr-only'>{t('load_failed')}</span>
-          </span>
-        ) : (
-          <Image
-            src={previewUrl}
-            width={image.width}
-            height={image.height}
-            alt={image.filename}
-            unoptimized
-            onError={() => setFailed(true)}
-            className='size-full object-cover'
-          />
-        )}
-        {isMultiPage && variant === 'preview' && (
-          <span className='absolute right-1.5 bottom-1.5 rounded-md bg-background/90 px-1.5 py-0.5 text-[10px] text-foreground tabular-nums shadow-xs'>
-            {image.page}/{image.page_count}
-          </span>
-        )}
-      </button>
+        <AttachmentMedia variant='image'>
+          {failed ? (
+            <>
+              <ImageOffIcon />
+              <span className='sr-only'>{t('load_failed')}</span>
+            </>
+          ) : (
+            <Image
+              src={previewUrl}
+              width={image.width}
+              height={image.height}
+              alt={image.filename}
+              unoptimized
+              onError={() => setFailed(true)}
+            />
+          )}
+          {isMultiPage && variant === 'preview' && (
+            <span className='absolute right-1.5 bottom-1.5 rounded-md bg-background/90 px-1.5 py-0.5 text-[10px] text-foreground tabular-nums shadow-xs'>
+              {image.page}/{image.page_count}
+            </span>
+          )}
+        </AttachmentMedia>
+        <AttachmentContent>
+          <AttachmentTitle title={image.filename}>
+            {image.filename}
+          </AttachmentTitle>
+          <AttachmentDescription>{meta}</AttachmentDescription>
+        </AttachmentContent>
+        {actions && <AttachmentActions>{actions}</AttachmentActions>}
+        <AttachmentTrigger
+          aria-label={t('preview', { name: image.filename })}
+          onClick={() => setOpen(true)}
+        />
+      </Attachment>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className='sm:max-w-4xl'>
           <DialogTitle className='pr-5'>{image.filename}</DialogTitle>
