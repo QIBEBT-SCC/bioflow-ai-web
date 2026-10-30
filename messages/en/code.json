@@ -184,7 +184,8 @@
         "cancelling": "Stopping…",
         "proposal": "Awaiting review",
         "closed": "Conversation closed. Reopen the sidebar to start again."
-      }
+      },
+      "scrollToLatest": "Scroll to latest message"
     }
   }
 }

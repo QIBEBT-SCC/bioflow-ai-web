@@ -3,7 +3,7 @@
     "files": [
       ".agents/**",
       ".claude/**",
-      "src/components/ai-elements/**",
+      "src/components/**",
       "src/components/ui/**"
     ]
   }
