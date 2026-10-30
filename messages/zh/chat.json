@@ -102,7 +102,10 @@
           },
           "search": {
             "active": "正在搜索{manager}：{subject}",
-            "complete": "已搜索{manager}：{subject}"
+            "complete": "已搜索{manager}：{subject}",
+            "searching": "正在搜索{manager}",
+            "searched": "已搜索{manager}",
+            "found": "{count, plural, =0 {未搜索到{manager}} other {搜索到 # 个{manager}}}"
           },
           "switch": {
             "active": "正在切换到{subject}",

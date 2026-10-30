@@ -42,6 +42,7 @@ import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import { AgentArtifactCard } from '@/components/agent-artifact/agent-artifact-card'
+import { Badge } from '@/components/ui/badge'
 import {
   CodeBlock,
   CodeBlockContent,
@@ -89,6 +90,10 @@ interface ProgressActivity {
   manager?: string
   operation?: string
   subject?: string
+  /** Search keywords of a builder manager search. */
+  keywords?: string[]
+  /** Number of matches a finished search returned. */
+  resultCount?: number
   tool?: string
   step?: string
   action?: string
@@ -191,6 +196,12 @@ function normalizeProgress(event: AgentEvent): ProgressActivity {
     manager: stringValue(source.manager),
     operation: stringValue(source.operation),
     subject: stringValue(source.subject),
+    keywords: Array.isArray(source.keywords)
+      ? source.keywords.filter(
+          (keyword): keyword is string => typeof keyword === 'string',
+        )
+      : undefined,
+    resultCount: numberValue(source.result_count),
     tool: stringValue(source.tool),
     step: stringValue(source.step),
     action: stringValue(source.action),
@@ -480,7 +491,21 @@ function isAskHuman(activity: ProgressActivity) {
   )
 }
 
+function KeywordsDetail({ keywords }: { keywords: string[] }) {
+  return (
+    <div className='flex flex-wrap gap-1'>
+      {keywords.map((keyword) => (
+        <Badge key={keyword} variant='secondary' className='font-mono'>
+          {keyword}
+        </Badge>
+      ))}
+    </div>
+  )
+}
+
 function activityDetail(activity: ProgressActivity) {
+  if (activity.kind === 'workflow_manager_action' && activity.keywords?.length)
+    return <KeywordsDetail keywords={activity.keywords} />
   if (isAskHuman(activity) && activity.questionAnswers?.length)
     return <QuestionAnswerDetail answers={activity.questionAnswers} />
   if (
@@ -713,12 +738,23 @@ function useProgressActivities(events: AgentEvent[]) {
                     ? t('builder.manager.subgraph')
                     : t('builder.manager.workflow')
           const operation = activity.operation ?? 'update'
-          const subject = activity.subject ?? manager
-          const values = { manager, subject }
+          const values = { manager, subject: activity.subject ?? manager }
           switch (operation) {
             case 'search':
-              message = t('builder.operation.search.active', values)
-              completeMessage = t('builder.operation.search.complete', values)
+              // Keywords expand under the step; older events only carry a subject.
+              if (activity.keywords?.length) {
+                message = t('builder.operation.search.searching', values)
+                completeMessage =
+                  activity.resultCount === undefined
+                    ? t('builder.operation.search.searched', values)
+                    : t('builder.operation.search.found', {
+                        ...values,
+                        count: activity.resultCount,
+                      })
+              } else {
+                message = t('builder.operation.search.active', values)
+                completeMessage = t('builder.operation.search.complete', values)
+              }
               break
             case 'inspect':
               message = t('builder.operation.inspect.active', values)
