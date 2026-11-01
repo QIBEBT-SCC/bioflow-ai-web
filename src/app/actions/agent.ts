@@ -111,6 +111,17 @@ export async function streamAgentEvents(
   })
 }
 
+export async function submitAgentInput(
+  runId: string,
+  messageUid: string,
+  text: string,
+) {
+  return await clientFetch<AgentMessage>(`/agent-runs/${runId}/inputs`, {
+    method: 'POST',
+    body: JSON.stringify({ message_uid: messageUid, text }),
+  })
+}
+
 export async function resumeAgentRun(
   runId: string,
   approved: boolean,

@@ -1,5 +1,13 @@
 {
   "Chat": {
+    "input": {
+      "placeholder": "补充或修正要求，当前工具结束后生效…",
+      "send": "发送补充要求",
+      "queued": "已排队，等待加入上下文",
+      "applied": "已加入模型上下文",
+      "unhandled": "本轮已结束，此条补充未处理",
+      "text_only": "运行中的补充仅支持文本，请先移除附件。"
+    },
     "approve": "批准",
     "assistant": "AI 助手",
     "assistants": {

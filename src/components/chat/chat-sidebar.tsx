@@ -71,12 +71,18 @@ import {
   useCreateAgentSession,
   useResumeAgentRun,
   useRetryAgentRun,
+  useSubmitAgentInput,
 } from '@/hooks/use-agent'
 import {
   CHAT_ATTACHMENT_ACCEPT,
   useChatAttachments,
 } from '@/hooks/use-chat-attachment'
 import type { Locale } from '@/i18n/config'
+import {
+  type AgentInputStatus,
+  acceptsAgentInput,
+  agentInputStatuses,
+} from '@/lib/agent-inputs'
 import { parseAgentQuestionAnswers } from '@/lib/agent-questions'
 import { getSuggestedWorkflowAgent } from '@/lib/workflow-agent-suggestions'
 import { useChatSidebarStore } from '@/stores/chat-sidebar-store'
@@ -124,7 +130,14 @@ function attachmentKey(part: AgentMessagePart) {
   return `text-${part.text}`
 }
 
-function ChatMessage({ message }: { message: AgentMessage }) {
+function ChatMessage({
+  message,
+  inputStatus,
+}: {
+  message: AgentMessage
+  inputStatus?: AgentInputStatus
+}) {
+  const t = useTranslations('Chat')
   const isUser = message.role === 'user'
   const attachments = message.parts.filter((part) => part.type !== 'text')
   const texts = message.parts.flatMap((part) =>
@@ -133,6 +146,11 @@ function ChatMessage({ message }: { message: AgentMessage }) {
   return (
     <Message align={isUser ? 'end' : 'start'}>
       <MessageContent>
+        {inputStatus && (
+          <output className='self-end text-xs text-muted-foreground'>
+            {t(`input.${inputStatus}`)}
+          </output>
+        )}
         {attachments.length > 0 && (
           <AttachmentGroup className={cn('max-w-full', isUser && 'self-end')}>
             {attachments.map((part) => (
@@ -222,6 +240,11 @@ function ChatSidebarInner({
   const [text, setText] = useState('')
   const [feedback, setFeedback] = useState('')
   const [localError, setLocalError] = useState<string | null>(null)
+  const inputRequest = useRef<{
+    runId: string
+    text: string
+    uid: string
+  } | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const attachments = useChatAttachments(sessionId)
@@ -229,6 +252,8 @@ function ChatSidebarInner({
     useCreateAgentSession()
   const { mutateAsync: createRun, isPending: isSubmitting } =
     useCreateAgentRun()
+  const { mutateAsync: submitInput, isPending: isSendingInput } =
+    useSubmitAgentInput()
   const { mutateAsync: resumeRun, isPending: isResuming } = useResumeAgentRun()
   const { mutateAsync: cancelRun, isPending: isCancelling } =
     useCancelAgentRun()
@@ -287,15 +312,20 @@ function ChatSidebarInner({
         ? t('node.assistant_required')
         : null
     : null
-  const canSubmit = Boolean(
-    parsedCommand &&
-      !attachments.blocked &&
-      !nodeError &&
-      (parsedCommand.prompt.trim() ||
-        ((attachments.images.length + attachments.pdfs.length > 0 ||
-          nodeAttachment) &&
-          parsedCommand.command.key !== 'workflow-fixer')),
-  )
+  const currentRunEvents =
+    events.length > 0 ? events : (eventHistory[runId ?? ''] ?? [])
+  const acceptsInput = acceptsAgentInput(run, currentRunEvents)
+  const canSubmit = acceptsInput
+    ? Boolean(text.trim() && attachments.drafts.length === 0 && !nodeAttachment)
+    : Boolean(
+        parsedCommand &&
+          !attachments.blocked &&
+          !nodeError &&
+          (parsedCommand.prompt.trim() ||
+            ((attachments.images.length + attachments.pdfs.length > 0 ||
+              nodeAttachment) &&
+              parsedCommand.command.key !== 'workflow-fixer')),
+      )
   const isBusy = Boolean(run && ACTIVE_AGENT_STATUSES.includes(run.status))
   const inputDisabled =
     !sessionId || isSessionLoading || isMessagesLoading || isRunsLoading
@@ -364,7 +394,31 @@ function ChatSidebarInner({
   }
 
   const submit = async () => {
-    if (!sessionId || isBusy || isSubmitting) return
+    if (!sessionId || isSubmitting || isSendingInput) return
+    if (acceptsInput && run) {
+      const correction = text.trim()
+      if (!correction || attachments.drafts.length > 0 || nodeAttachment) return
+      const previous = inputRequest.current
+      const request =
+        previous?.runId === run.uid && previous.text === correction
+          ? previous
+          : { runId: run.uid, text: correction, uid: crypto.randomUUID() }
+      inputRequest.current = request
+      setLocalError(null)
+      try {
+        await submitInput({
+          runId: run.uid,
+          messageUid: request.uid,
+          text: correction,
+        })
+        setText('')
+        inputRequest.current = null
+      } catch (error) {
+        setLocalError(error instanceof Error ? error.message : String(error))
+      }
+      return
+    }
+    if (isBusy) return
     if (!parsedCommand) {
       setLocalError(t('command_required'))
       return
@@ -449,7 +503,9 @@ function ChatSidebarInner({
   }
 
   const isLoading = isSessionLoading || isMessagesLoading || isRunsLoading
-  const inputLocked = inputDisabled || isBusy || isSubmitting
+  const inputLocked =
+    inputDisabled || (isBusy && !acceptsInput) || isSubmitting || isSendingInput
+  const attachmentLocked = inputLocked || isBusy
   const isPlanApproval = run?.interrupt_payload?.kind === 'plan_approval'
   const questions =
     run?.interrupt_payload?.kind === 'questions' &&
@@ -551,7 +607,7 @@ function ChatSidebarInner({
                             <li key={command.key}>
                               <button
                                 type='button'
-                                disabled={inputLocked}
+                                disabled={inputLocked || isBusy}
                                 onClick={() => chooseCommand(command)}
                                 className='group flex w-full items-start gap-3 rounded-xl border bg-card p-3 text-left shadow-xs transition-[border-color,box-shadow] hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50'
                               >
@@ -616,6 +672,10 @@ function ChatSidebarInner({
                         displayRun.uid === runId && events.length > 0
                           ? events
                           : (eventHistory[displayRun.uid] ?? [])
+                      const inputStatuses = agentInputStatuses(
+                        displayRun,
+                        runEvents,
+                      )
                       const isCurrentRun = displayRun.uid === run?.uid
 
                       return (
@@ -625,9 +685,16 @@ function ChatSidebarInner({
                           scrollAnchor
                           className='flex flex-col gap-3'
                         >
-                          {visibleUserMessages.map((message) => (
-                            <ChatMessage key={message.uid} message={message} />
-                          ))}
+                          {visibleUserMessages
+                            .filter(
+                              (message) => !inputStatuses.has(message.uid),
+                            )
+                            .map((message) => (
+                              <ChatMessage
+                                key={message.uid}
+                                message={message}
+                              />
+                            ))}
                           <AgentRunTrace
                             run={displayRun}
                             events={runEvents}
@@ -638,6 +705,15 @@ function ChatSidebarInner({
                             }
                             isRetrying={isRetrying}
                           />
+                          {visibleUserMessages
+                            .filter((message) => inputStatuses.has(message.uid))
+                            .map((message) => (
+                              <ChatMessage
+                                key={message.uid}
+                                message={message}
+                                inputStatus={inputStatuses.get(message.uid)}
+                              />
+                            ))}
                           {assistantMessages.map((message) => (
                             <ChatMessage key={message.uid} message={message} />
                           ))}
@@ -729,7 +805,7 @@ function ChatSidebarInner({
             </div>
           )}
           <div className='relative'>
-            {slashCommand.open && !parsedCommand && (
+            {!acceptsInput && slashCommand.open && !parsedCommand && (
               <SlashCommandMenu className='absolute inset-x-0 bottom-full z-20 mb-2'>
                 {slashCommand.suggestions.map((command, index) => {
                   const Icon = command.icon
@@ -761,7 +837,7 @@ function ChatSidebarInner({
               className='sr-only'
               tabIndex={-1}
               aria-label={t('images.add')}
-              disabled={inputLocked}
+              disabled={attachmentLocked}
               onChange={(event) => {
                 attachments.addFiles(Array.from(event.target.files ?? []))
                 event.target.value = ''
@@ -776,7 +852,7 @@ function ChatSidebarInner({
               onDrop={(event) => {
                 if (event.dataTransfer.files.length === 0) return
                 event.preventDefault()
-                if (!inputLocked)
+                if (!attachmentLocked)
                   attachments.addFiles(Array.from(event.dataTransfer.files))
               }}
               className='rounded-xl bg-card shadow-sm'
@@ -785,10 +861,20 @@ function ChatSidebarInner({
                 drafts={attachments.drafts}
                 onRemove={attachments.remove}
                 onRetry={attachments.retry}
-                disabled={isSubmitting || isBusy}
+                disabled={
+                  isSubmitting || isSendingInput || (isBusy && !acceptsInput)
+                }
                 node={nodeAttachment}
                 onRemoveNode={onRemoveNodeAction}
               />
+              {acceptsInput &&
+                (attachments.drafts.length > 0 || nodeAttachment) && (
+                  <InputGroupAddon align='block-start'>
+                    <output className='font-normal text-muted-foreground text-xs'>
+                      {t('input.text_only')}
+                    </output>
+                  </InputGroupAddon>
+                )}
               {nodeError && (
                 <InputGroupAddon align='block-start'>
                   <output className='font-normal text-destructive text-xs'>
@@ -797,7 +883,7 @@ function ChatSidebarInner({
                 </InputGroupAddon>
               )}
               <div className='relative w-full'>
-                {parsedCommand && (
+                {!acceptsInput && parsedCommand && (
                   <div
                     aria-hidden='true'
                     className='pointer-events-none absolute inset-x-0 top-0 min-h-16 whitespace-pre-wrap wrap-break-word p-3 text-base md:text-sm'
@@ -814,16 +900,18 @@ function ChatSidebarInner({
                   ref={textareaRef}
                   value={text}
                   onChange={(event) =>
-                    slashCommand.onValueChange(event.target.value)
+                    acceptsInput
+                      ? setText(event.target.value)
+                      : slashCommand.onValueChange(event.target.value)
                   }
                   onPaste={(event) => {
                     const files = Array.from(event.clipboardData.files)
                     if (files.length === 0) return
                     event.preventDefault()
-                    if (!inputLocked) attachments.addFiles(files)
+                    if (!attachmentLocked) attachments.addFiles(files)
                   }}
                   onKeyDown={(event) => {
-                    slashCommand.onKeyDown(event)
+                    if (!acceptsInput) slashCommand.onKeyDown(event)
                     if (event.defaultPrevented) return
                     if (event.key === 'Enter' && !event.shiftKey) {
                       if (event.nativeEvent.isComposing) return
@@ -834,12 +922,15 @@ function ChatSidebarInner({
                   placeholder={
                     inputDisabled
                       ? t('input_unavailable')
-                      : t('command_placeholder')
+                      : acceptsInput
+                        ? t('input.placeholder')
+                        : t('command_placeholder')
                   }
                   disabled={inputLocked}
                   className={cn(
                     'relative max-h-60 min-h-16 p-3',
-                    parsedCommand &&
+                    !acceptsInput &&
+                      parsedCommand &&
                       'text-transparent caret-foreground selection:bg-primary/20',
                   )}
                 />
@@ -849,7 +940,7 @@ function ChatSidebarInner({
                   size='icon-sm'
                   variant='outline'
                   className='rounded-full'
-                  disabled={inputLocked || attachments.drafts.length >= 4}
+                  disabled={attachmentLocked || attachments.drafts.length >= 4}
                   aria-label={t('images.add')}
                   title={t('images.add')}
                   onClick={() => fileInputRef.current?.click()}
@@ -862,7 +953,7 @@ function ChatSidebarInner({
                   !text && (
                     <InputGroupButton
                       size='sm'
-                      disabled={inputLocked}
+                      disabled={inputLocked || isBusy}
                       onClick={openCommandMenu}
                     >
                       <BotIcon />
@@ -886,17 +977,23 @@ function ChatSidebarInner({
                     >
                       <SquareIcon className='size-3 fill-current' />
                     </InputGroupButton>
-                  ) : (
+                  ) : null}
+                  {(!isBusy || acceptsInput) && (
                     <InputGroupButton
                       size='icon-sm'
                       variant='default'
                       className='rounded-full'
-                      disabled={inputDisabled || !canSubmit || isSubmitting}
-                      aria-label={t('send')}
-                      title={t('send')}
+                      disabled={
+                        inputDisabled ||
+                        !canSubmit ||
+                        isSubmitting ||
+                        isSendingInput
+                      }
+                      aria-label={t(acceptsInput ? 'input.send' : 'send')}
+                      title={t(acceptsInput ? 'input.send' : 'send')}
                       onClick={() => void submit()}
                     >
-                      {isSubmitting ? (
+                      {isSubmitting || isSendingInput ? (
                         <Loader2Icon className='animate-spin' />
                       ) : (
                         <ArrowUpIcon />

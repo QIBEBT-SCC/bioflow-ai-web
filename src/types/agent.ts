@@ -25,6 +25,9 @@ export type AgentEventType =
   | 'run.cancelled'
   | 'run.completed'
   | 'run.failed'
+  | 'run.input_queued'
+  | 'run.input_applied'
+  | 'run.input_closed'
 
 export interface AgentTextPart {
   type: 'text'

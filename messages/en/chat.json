@@ -1,5 +1,13 @@
 {
   "Chat": {
+    "input": {
+      "placeholder": "Add or correct instructions for the next step…",
+      "send": "Send additional instructions",
+      "queued": "Queued for the next model call",
+      "applied": "Added to model context",
+      "unhandled": "This run ended before processing this message",
+      "text_only": "Additional instructions support text only. Remove the attachments first."
+    },
     "approve": "Approve",
     "assistant": "AI Assistant",
     "assistants": {
