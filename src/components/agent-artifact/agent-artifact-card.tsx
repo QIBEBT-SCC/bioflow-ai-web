@@ -11,7 +11,7 @@ import {
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
-import { AgentArtifactSheet } from '@/components/agent-artifact/agent-artifact-sheet'
+import { AgentArtifactDialog } from '@/components/agent-artifact/agent-artifact-dialog'
 import { Badge } from '@/components/ui/badge'
 import type { AgentArtifact, AgentArtifactKind } from '@/types/agent-artifact'
 
@@ -83,7 +83,7 @@ export function AgentArtifactCard({
           </span>
         </span>
       </button>
-      <AgentArtifactSheet file={file} open={open} onOpenChange={setOpen} />
+      <AgentArtifactDialog file={file} open={open} onOpenChange={setOpen} />
     </>
   )
 }

@@ -15,15 +15,15 @@ import { Markdown } from '@/components/markdown'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet'
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { Textarea } from '@/components/ui/textarea'
 import {
   useAgentArtifactContent,
@@ -34,17 +34,17 @@ import type { AgentArtifact } from '@/types/agent-artifact'
 
 type ViewMode = 'preview' | 'source'
 
-interface AgentArtifactSheetProps {
+interface AgentArtifactDialogProps {
   file: AgentArtifact
   open: boolean
   onOpenChange: (open: boolean) => void
 }
 
-export function AgentArtifactSheet({
+export function AgentArtifactDialog({
   file,
   open,
   onOpenChange,
-}: AgentArtifactSheetProps) {
+}: AgentArtifactDialogProps) {
   const t = useTranslations('Project.agentArtifacts')
   const [currentFile, setCurrentFile] = useState(file)
   const [draft, setDraft] = useState('')
@@ -127,20 +127,20 @@ export function AgentArtifactSheet({
     : null
 
   return (
-    <Sheet open={open} onOpenChange={requestOpenChange}>
-      <SheetContent className='w-full gap-0 sm:max-w-3xl'>
-        <SheetHeader className='border-b pr-12'>
+    <Dialog open={open} onOpenChange={requestOpenChange}>
+      <DialogContent className='flex h-[85vh] flex-col gap-0 p-0 sm:max-w-5xl'>
+        <DialogHeader className='border-b p-4 pr-12'>
           <div className='flex items-center gap-2'>
             <FileTextIcon className='size-5 text-muted-foreground' />
-            <SheetTitle>{currentFile.name}</SheetTitle>
+            <DialogTitle>{currentFile.name}</DialogTitle>
             <Badge variant='outline'>{t(`kinds.${currentFile.kind}`)}</Badge>
           </div>
-          <SheetDescription>
+          <DialogDescription>
             {t('updatedAt', {
               date: new Date(currentFile.updated_at).toLocaleString(),
             })}
-          </SheetDescription>
-        </SheetHeader>
+          </DialogDescription>
+        </DialogHeader>
 
         <div className='flex items-center justify-between gap-2 border-b px-4 py-2'>
           <div className='flex gap-1'>
@@ -232,7 +232,7 @@ export function AgentArtifactSheet({
         </div>
 
         {editing && (
-          <SheetFooter className='flex-row justify-end border-t'>
+          <DialogFooter className='flex-row justify-end border-t p-4'>
             <Button
               type='button'
               variant='outline'
@@ -255,9 +255,9 @@ export function AgentArtifactSheet({
               )}
               {t('save')}
             </Button>
-          </SheetFooter>
+          </DialogFooter>
         )}
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   )
 }
