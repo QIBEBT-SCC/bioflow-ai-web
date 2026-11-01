@@ -226,6 +226,10 @@
           "active": "Inspecting {subject}",
           "complete": "Inspected {subject}"
         },
+        "apply_patch": {
+          "active": "Writing {file}",
+          "complete": "Wrote {file}"
+        },
         "view_image": {
           "active": "Viewing image {subject}",
           "complete": "Viewed image {subject}"

@@ -255,6 +255,7 @@ const AGENT_TOOL_ICONS: Record<string, LucideIcon> = {
   read_skill_resource: SparklesIcon,
   workflow_reader: BookOpenIcon,
   run_command: TerminalIcon,
+  apply_patch: FilePenLineIcon,
   view_image: ImageIcon,
   write_diagnosis: FilePenLineIcon,
   fix_subgraph: HammerIcon,
@@ -834,6 +835,14 @@ function useProgressActivities(events: AgentEvent[]) {
             case 'run_command':
               message = t('tool.run_command.active', values)
               completeMessage = t('tool.run_command.complete', values)
+              break
+            case 'apply_patch':
+              message = t('tool.apply_patch.active', {
+                file: activity.path ?? '…',
+              })
+              completeMessage = t('tool.apply_patch.complete', {
+                file: activity.path ?? '…',
+              })
               break
             case 'view_image':
               message = t('tool.view_image.active', values)

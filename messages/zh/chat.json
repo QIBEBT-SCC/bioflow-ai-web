@@ -226,6 +226,10 @@
           "active": "正在检查 {subject}",
           "complete": "已检查 {subject}"
         },
+        "apply_patch": {
+          "active": "正在写入 {file}",
+          "complete": "已写入 {file}"
+        },
         "view_image": {
           "active": "正在查看图片 {subject}",
           "complete": "已查看图片 {subject}"
