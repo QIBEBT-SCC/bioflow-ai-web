@@ -1,6 +1,7 @@
 'use client'
 
 import { type Node, useNodeId, useNodesData, useReactFlow } from '@xyflow/react'
+import { cn } from 'cn'
 import { EyeIcon, PencilIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
@@ -11,7 +12,6 @@ import { useReadOnly } from '@/components/node-editor/read-only-context'
 import { Badge } from '@/components/ui/badge'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { cn } from '@/lib/utils'
 import type { CodeNodeType } from '@/types/code'
 
 const EMPTY_DEPENDENCIES: string[] = []
@@ -39,7 +39,7 @@ const CodeCard = memo(function CodeCard({
 
   const code = nodeData?.data.code ?? ''
   const dependencies = nodeData?.data.dependencies ?? EMPTY_DEPENDENCIES
-  const supportsDependencies = nodeType !== 'code_bash'
+  const supportsDependencies = nodeType === 'code_python'
 
   const handleSave = useCallback(
     (value: { code: string; dependencies: string[] }) => {

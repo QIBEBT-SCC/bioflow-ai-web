@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import { ChevronRightIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import type React from 'react'
@@ -16,7 +17,6 @@ import { SaveSelectionSubgraph } from '@/components/node-editor/menu/save-select
 import { SubgraphMenu } from '@/components/node-editor/menu/subgraph-menu'
 import { ToolMenu } from '@/components/node-editor/menu/tool-menu'
 import { menuData } from '@/components/node-editor/node-registry'
-import { cn } from '@/lib/utils'
 import { useNodeEditorStore } from '@/stores/nodeviewStore'
 import type { CodeInfo } from '@/types/code'
 

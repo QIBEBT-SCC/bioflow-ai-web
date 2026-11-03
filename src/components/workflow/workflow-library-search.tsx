@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -27,7 +28,6 @@ import type {
   useWorkflowLibrarySearch,
   WorkflowSearchMode,
 } from '@/hooks/use-workflow-library-search'
-import { cn } from '@/lib/utils'
 
 type SearchState = ReturnType<typeof useWorkflowLibrarySearch>
 

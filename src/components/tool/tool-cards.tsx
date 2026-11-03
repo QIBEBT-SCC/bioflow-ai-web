@@ -2,6 +2,7 @@
 
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { cn } from 'cn'
 import { GripVertical, HelpCircle, Trash2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { TemplateVariableField } from '@/components/tool/template-variable-field'
@@ -24,8 +25,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { getFileMountType } from '@/lib/tool-file-mount'
 import type { ToolTemplateVariable } from '@/lib/tool-template'
-import { cn } from '@/lib/utils'
 import type { FileMount, ParamDefine } from '@/types/tool'
 
 export function ToolParamCard({
@@ -102,8 +103,8 @@ export function ToolParamCard({
           </Button>
         </div>
       </CardHeader>
-      <CardContent className='pt-0'>
-        <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mb-4'>
+      <CardContent className='gap-4 pt-0'>
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
           <div className='space-y-2'>
             <Label htmlFor={`param-description-${index}`}>
               {t('description')}
@@ -136,7 +137,7 @@ export function ToolParamCard({
           </div>
         </div>
 
-        <div className='space-y-2 mb-4'>
+        <div className='space-y-2'>
           <Label htmlFor={`param-command-${index}`}>
             {t('commandFormat')} <span className='text-destructive'>*</span>
             <TooltipProvider>
@@ -201,6 +202,8 @@ export function ToolFileCard({
   ) => void
 }) {
   const t = useTranslations('tool.Cards')
+  const fileType = getFileMountType(file)
+  const isTextInput = fileType === 'INPUT_TEXT'
   const {
     attributes,
     listeners,
@@ -236,7 +239,10 @@ export function ToolFileCard({
               <GripVertical className='size-4' />
             </button>
             <CardTitle className='text-base'>
-              {t('file', { index: index + 1, name: file.name || t('unnamed') })}
+              {t(isTextInput ? 'text' : 'file', {
+                index: index + 1,
+                name: file.name || t('unnamed'),
+              })}
               <Badge
                 variant='outline'
                 className={cn(
@@ -246,14 +252,18 @@ export function ToolFileCard({
                     : 'border-success/30 bg-success/10 text-success',
                 )}
               >
-                {file.file_type === 'INPUT' ? t('input') : t('output')}
+                {isTextInput
+                  ? t('inputText')
+                  : file.file_type === 'INPUT'
+                    ? t('input')
+                    : t('output')}
               </Badge>
-              {file.is_report && (
+              {file.file_type === 'OUTPUT' && file.is_report && (
                 <Badge variant='outline' className='ml-2'>
                   {t('report')}
                 </Badge>
               )}
-              {file.is_log && (
+              {file.file_type === 'OUTPUT' && file.is_log && (
                 <Badge variant='outline' className='ml-2'>
                   {t('log')}
                 </Badge>
@@ -276,20 +286,23 @@ export function ToolFileCard({
           </Button>
         </div>
       </CardHeader>
-      <CardContent className='pt-0'>
-        <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mb-4'>
+      <CardContent className='gap-4 pt-0'>
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
           <div className='space-y-2'>
             <Label htmlFor={`file-name-${index}`}>
-              {t('fileName')} <span className='text-destructive'>*</span>
+              {t(isTextInput ? 'variableName' : 'fileName')}{' '}
+              <span className='text-destructive'>*</span>
             </Label>
             <Input
               id={`file-name-${index}`}
               value={file.name}
               onChange={(e) => onUpdateAction(index, 'name', e.target.value)}
               placeholder={
-                file.file_type === 'INPUT'
-                  ? t('inputFileNamePlaceholder')
-                  : t('outputFileNamePlaceholder')
+                isTextInput
+                  ? t('inputTextNamePlaceholder')
+                  : file.file_type === 'INPUT'
+                    ? t('inputFileNamePlaceholder')
+                    : t('outputFileNamePlaceholder')
               }
               required
             />
@@ -299,7 +312,7 @@ export function ToolFileCard({
               {t('fileType')} <span className='text-destructive'>*</span>
             </Label>
             <Select
-              value={file.file_type}
+              value={fileType}
               onValueChange={(value) =>
                 onUpdateAction(index, 'file_type', value)
               }
@@ -309,13 +322,14 @@ export function ToolFileCard({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value='INPUT'>{t('inputFile')}</SelectItem>
+                <SelectItem value='INPUT_TEXT'>{t('inputText')}</SelectItem>
                 <SelectItem value='OUTPUT'>{t('outputFile')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
 
-        <div className='space-y-2 mb-4'>
+        <div className='space-y-2'>
           <Label htmlFor={`file-description-${index}`}>
             {t('description')}
           </Label>
@@ -325,14 +339,19 @@ export function ToolFileCard({
             onChange={(e) =>
               onUpdateAction(index, 'description', e.target.value)
             }
-            placeholder={t('fileDescriptionPlaceholder')}
+            placeholder={t(
+              isTextInput
+                ? 'inputTextDescriptionPlaceholder'
+                : 'fileDescriptionPlaceholder',
+            )}
           />
         </div>
 
-        <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mb-4'>
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
           <div className='space-y-2'>
             <Label htmlFor={`file-path-${index}`}>
-              {t('filePath')} <span className='text-destructive'>*</span>
+              {t(isTextInput ? 'textVariable' : 'filePath')}{' '}
+              <span className='text-destructive'>*</span>
             </Label>
             {file.file_type === 'INPUT' ? (
               <Input
@@ -363,46 +382,60 @@ export function ToolFileCard({
           </div>
           <div className='space-y-2'>
             <Label htmlFor={`mount-path-${index}`}>
-              {t('mountPath')} <span className='text-destructive'>*</span>
+              {t('mountPath')}{' '}
+              {!isTextInput && <span className='text-destructive'>*</span>}
             </Label>
             <Input
               id={`mount-path-${index}`}
-              value={file.mount_path}
+              value={isTextInput ? '' : file.mount_path}
               onChange={(e) =>
                 onUpdateAction(index, 'mount_path', e.target.value)
               }
               placeholder={
-                file.file_type === 'INPUT'
-                  ? t('inputMountPathPlaceholder')
-                  : t('outputMountPathPlaceholder')
+                isTextInput
+                  ? t('inputTextMountPathPlaceholder')
+                  : file.file_type === 'INPUT'
+                    ? t('inputMountPathPlaceholder')
+                    : t('outputMountPathPlaceholder')
               }
-              required
+              readOnly={isTextInput}
+              className={cn(
+                isTextInput &&
+                  'cursor-not-allowed bg-muted/50 text-muted-foreground',
+              )}
+              required={!isTextInput}
             />
           </div>
         </div>
 
-        <div className='flex flex-wrap gap-4'>
-          <div className='flex items-center gap-x-2'>
-            <Checkbox
-              id={`file-report-${index}`}
-              checked={file.is_report}
-              onCheckedChange={(checked) =>
-                onUpdateAction(index, 'is_report', checked as boolean)
-              }
-            />
-            <Label htmlFor={`file-report-${index}`}>{t('reportFile')}</Label>
-          </div>
-          <div className='flex items-center gap-x-2'>
-            <Checkbox
-              id={`file-log-${index}`}
-              checked={file.is_log}
-              onCheckedChange={(checked) =>
-                onUpdateAction(index, 'is_log', checked as boolean)
-              }
-            />
-            <Label htmlFor={`file-log-${index}`}>{t('logFile')}</Label>
-          </div>
-          {file.file_type === 'OUTPUT' && (
+        {isTextInput && (
+          <p className='text-xs text-muted-foreground'>
+            {t('inputTextHint', { variable: `{${file.name || 'text'}}` })}
+          </p>
+        )}
+
+        {file.file_type === 'OUTPUT' && (
+          <div className='flex flex-wrap gap-4'>
+            <div className='flex items-center gap-x-2'>
+              <Checkbox
+                id={`file-report-${index}`}
+                checked={file.is_report}
+                onCheckedChange={(checked) =>
+                  onUpdateAction(index, 'is_report', checked as boolean)
+                }
+              />
+              <Label htmlFor={`file-report-${index}`}>{t('reportFile')}</Label>
+            </div>
+            <div className='flex items-center gap-x-2'>
+              <Checkbox
+                id={`file-log-${index}`}
+                checked={file.is_log}
+                onCheckedChange={(checked) =>
+                  onUpdateAction(index, 'is_log', checked as boolean)
+                }
+              />
+              <Label htmlFor={`file-log-${index}`}>{t('logFile')}</Label>
+            </div>
             <div className='flex items-center gap-x-2'>
               <Checkbox
                 id={`file-required-${index}`}
@@ -416,8 +449,8 @@ export function ToolFileCard({
                 {t('requiredOutput')}
               </Label>
             </div>
-          )}
-        </div>
+          </div>
+        )}
         {file.file_type === 'OUTPUT' && (
           <p
             id={`file-required-hint-${index}`}

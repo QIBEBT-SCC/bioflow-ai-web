@@ -23,6 +23,7 @@ import {
   resumeAgentRun,
   retryAgentRun,
   streamAgentEvents,
+  submitAgentInput,
   updateAgentSession,
 } from '@/app/actions/agent'
 import { agentArtifactQueryKeys } from '@/hooks/use-agent-artifact'
@@ -372,6 +373,22 @@ export function useCreateAgentRun() {
         node,
       ),
     onSuccess: (run) => invalidate(run.session_uid, run.uid, run.project_id),
+  })
+}
+
+export function useSubmitAgentInput() {
+  const invalidate = useInvalidateAgentData()
+  return useMutation({
+    mutationFn: ({
+      runId,
+      messageUid,
+      text,
+    }: {
+      runId: string
+      messageUid: string
+      text: string
+    }) => submitAgentInput(runId, messageUid, text),
+    onSuccess: (message) => invalidate(message.session_uid, message.run_uid),
   })
 }
 

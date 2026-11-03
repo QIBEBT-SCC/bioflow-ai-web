@@ -6,12 +6,6 @@ import { useParams } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { useMemo, useState } from 'react'
 import {
-  Snippet,
-  SnippetAddon,
-  SnippetInput,
-  SnippetText,
-} from '@/components/ai-elements/snippet'
-import {
   PageContainer,
   PageHeader,
   PageShell,
@@ -19,7 +13,7 @@ import {
 import { SectionCard } from '@/components/layout/section-card'
 import { TaskLog } from '@/components/task/task-log'
 import { TaskMonitor } from '@/components/task/task-monitor'
-import { CopyButton } from '@/components/ui/copy-button'
+import { CommandSnippet } from '@/components/ui/command-snippet'
 import {
   Empty,
   EmptyHeader,
@@ -211,7 +205,7 @@ function TaskResultView({ task }: { task: NodeRunV2 }) {
   return (
     <SectionCard title={t('result')}>
       {task.error_message ? (
-        <div className='mb-4 rounded-md border border-destructive/40 bg-destructive/5 p-3 font-mono text-sm text-destructive'>
+        <div className='rounded-md border border-destructive/40 bg-destructive/5 p-3 font-mono text-sm text-destructive'>
           {task.error_message}
         </div>
       ) : null}
@@ -248,18 +242,11 @@ function TaskLogView({ task, taskUid }: { task: NodeRunV2; taskUid: string }) {
     <div className='space-y-4'>
       {task.commands && (
         <SectionCard title={t('command')}>
-          <Snippet
-            className='py-5 bg-muted text-sm font-mono'
-            code={task.commands}
-          >
-            <SnippetAddon className='pl-1'>
-              <SnippetText>$</SnippetText>
-            </SnippetAddon>
-            <SnippetInput />
-            <SnippetAddon align='inline-end' className='pr-2'>
-              <CopyButton code={task.commands} />
-            </SnippetAddon>
-          </Snippet>
+          <CommandSnippet
+            className='py-5 text-sm'
+            value={task.commands}
+            prompt='$'
+          />
         </SectionCard>
       )}
       <SectionCard title={t('log')}>
@@ -283,7 +270,7 @@ function TaskSidebar({
 
   return (
     <aside className='space-y-4 lg:sticky lg:top-0 lg:self-start'>
-      <SectionCard title={t('basicInfo')} contentClassName='space-y-3 text-sm'>
+      <SectionCard title={t('basicInfo')} contentClassName='gap-3 text-sm'>
         <div>
           <p className='mb-1 text-xs text-muted-foreground'>{t('nodeType')}</p>
           <p className='font-medium'>{task.tool_name ?? task.node_type}</p>
@@ -304,7 +291,7 @@ function TaskSidebar({
         </div>
       </SectionCard>
 
-      <SectionCard title={t('timeInfo')} contentClassName='space-y-3 text-sm'>
+      <SectionCard title={t('timeInfo')} contentClassName='gap-3 text-sm'>
         <div>
           <p className='mb-1 text-xs text-muted-foreground'>{t('createdAt')}</p>
           <p className='font-mono text-xs'>
@@ -335,10 +322,7 @@ function TaskSidebar({
       </SectionCard>
 
       {(task.system || task.hostname || task.worker_id) && (
-        <SectionCard
-          title={t('systemInfo')}
-          contentClassName='space-y-3 text-sm'
-        >
+        <SectionCard title={t('systemInfo')} contentClassName='gap-3 text-sm'>
           {task.hostname && (
             <>
               <div>

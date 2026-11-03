@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import { AlertCircle, CornerDownLeft } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import type React from 'react'
@@ -38,7 +39,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { cn } from '@/lib/utils'
 import type { ContactRegion, PreviewMeta } from '@/types/run'
 
 type Locus = { chrom: string; start: number; end: number }

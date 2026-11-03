@@ -17,12 +17,6 @@ import { Loader2Icon, PlayIcon } from 'lucide-react'
 import { nanoid } from 'nanoid'
 import { useTranslations } from 'next-intl'
 import { useRef, useState } from 'react'
-import {
-  Terminal,
-  TerminalContent,
-  TerminalHeader,
-  TerminalTitle,
-} from '@/components/ai-elements/terminal'
 import { TemplateVariableField } from '@/components/tool/template-variable-field'
 import { ToolFileCard, ToolParamCard } from '@/components/tool/tool-cards'
 import { ToolTagBadge } from '@/components/tool/tool-tag-badge'
@@ -47,6 +41,7 @@ import {
 } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
+import { LogViewer } from '@/components/workflow/log-viewer'
 import { useRunInImage } from '@/hooks/use-tool'
 import type { ToolTemplateVariable } from '@/lib/tool-template'
 import type {
@@ -339,12 +334,11 @@ export function ToolConfigForm({
           <DialogHeader>
             <DialogTitle>{t('helpCommandResult')}</DialogTitle>
           </DialogHeader>
-          <Terminal output={helpCommandResult} autoScroll={false}>
-            <TerminalHeader>
-              <TerminalTitle>{value.help_command}</TerminalTitle>
-            </TerminalHeader>
-            <TerminalContent />
-          </Terminal>
+          <LogViewer
+            content={helpCommandResult}
+            title={value.help_command}
+            contentClassName='max-h-[60vh]'
+          />
         </DialogContent>
       </Dialog>
     </div>
@@ -377,7 +371,7 @@ function BasicConfigTab({
   const t = useTranslations('tool.ConfigForm')
   return (
     <Card>
-      <CardContent className='space-y-6 pt-6'>
+      <CardContent className='gap-6 pt-6'>
         <div className='space-y-2'>
           <Label htmlFor='tool-name'>
             {t('toolName')} <span className='text-destructive'>*</span>
@@ -537,7 +531,7 @@ function ParamsConfigTab({
   const t = useTranslations('tool.ConfigForm')
   return (
     <Card>
-      <CardContent className='space-y-6 pt-6'>
+      <CardContent className='gap-6 pt-6'>
         <div className='space-y-2'>
           <Label>{t('dynamicParams')}</Label>
           {value.dynamic_params.length === 0 ? (
@@ -661,7 +655,7 @@ function FilesConfigTab({
   const t = useTranslations('tool.ConfigForm')
   return (
     <Card>
-      <CardContent className='space-y-6 pt-6'>
+      <CardContent className='gap-6 pt-6'>
         <div className='space-y-2'>
           <Label>{t('fileMounts')}</Label>
           {value.file_mounts.length === 0 ? (

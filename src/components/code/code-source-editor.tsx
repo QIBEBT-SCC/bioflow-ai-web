@@ -6,6 +6,7 @@ import { r } from '@codemirror/legacy-modes/mode/r'
 import { shell } from '@codemirror/legacy-modes/mode/shell'
 import { unifiedMergeView } from '@codemirror/merge'
 import CodeMirror from '@uiw/react-codemirror'
+import { cn } from 'cn'
 import { PlusIcon, XIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { type KeyboardEvent, useMemo, useState } from 'react'
@@ -13,7 +14,6 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { cn } from '@/lib/utils'
 import type { CodeNodeType } from '@/types/code'
 
 interface CodeSourceEditorProps {
@@ -44,7 +44,6 @@ export function CodeSourceEditor({
   const [cursor, setCursor] = useState({ line: 1, column: 1 })
   const isPython = nodeType === 'code_python'
   const isR = nodeType === 'code_R'
-  const supportsDependencies = isPython || isR
   const languageExtensions = useMemo(
     () => [isPython ? python() : StreamLanguage.define(isR ? r : shell)],
     [isPython, isR],
@@ -72,7 +71,7 @@ export function CodeSourceEditor({
   return (
     <div
       className={
-        supportsDependencies
+        isPython
           ? 'grid h-full min-h-0 grid-cols-[minmax(0,1fr)_18rem]'
           : 'h-full min-h-0'
       }
@@ -135,9 +134,8 @@ export function CodeSourceEditor({
         </div>
       </section>
 
-      {supportsDependencies && (
+      {isPython && (
         <DependencyPanel
-          isPython={isPython}
           dependencies={dependencies}
           review={review}
           onDependenciesChange={onDependenciesChange}
@@ -150,7 +148,6 @@ export function CodeSourceEditor({
 }
 
 function DependencyPanel({
-  isPython,
   dependencies,
   review,
   onDependenciesChange,
@@ -159,7 +156,7 @@ function DependencyPanel({
 }: Pick<
   CodeSourceEditorProps,
   'dependencies' | 'review' | 'onDependenciesChange'
-> & { isPython: boolean; disabled: boolean; readOnly: boolean }) {
+> & { disabled: boolean; readOnly: boolean }) {
   const t = useTranslations('code.Workspace')
   const [dependencyDraft, setDependencyDraft] = useState('')
   const displayedDependencies = useMemo(() => {
@@ -207,11 +204,9 @@ function DependencyPanel({
   return (
     <aside className='min-h-0 overflow-y-auto border-l bg-muted/20 p-4'>
       <div className='mb-5'>
-        <h3 className='font-medium'>
-          {isPython ? t('pythonEnvironment') : t('rEnvironment')}
-        </h3>
+        <h3 className='font-medium'>{t('pythonEnvironment')}</h3>
         <p className='mt-1 text-xs leading-5 text-muted-foreground'>
-          {isPython ? t('pythonEnvironmentHint') : t('rEnvironmentHint')}
+          {t('pythonEnvironmentHint')}
         </p>
       </div>
 
@@ -224,11 +219,7 @@ function DependencyPanel({
               value={dependencyDraft}
               onChange={(event) => setDependencyDraft(event.target.value)}
               onKeyDown={handleDependencyKeyDown}
-              placeholder={
-                isPython
-                  ? t('pythonDependencyPlaceholder')
-                  : t('rDependencyPlaceholder')
-              }
+              placeholder={t('pythonDependencyPlaceholder')}
               className='bg-background font-mono text-sm'
               disabled={disabled}
             />

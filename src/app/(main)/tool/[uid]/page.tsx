@@ -17,18 +17,6 @@ import { useParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { type ReactNode, useState } from 'react'
 import {
-  Snippet,
-  SnippetAddon,
-  SnippetInput,
-  SnippetText,
-} from '@/components/ai-elements/snippet'
-import {
-  Terminal,
-  TerminalContent,
-  TerminalHeader,
-  TerminalTitle,
-} from '@/components/ai-elements/terminal'
-import {
   PageContainer,
   PageHeader,
   PageShell,
@@ -38,7 +26,7 @@ import { ToolTagBadge } from '@/components/tool/tool-tag-badge'
 import { ToolUsageSheet } from '@/components/tool/tool-usage-sheet'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { CopyButton } from '@/components/ui/copy-button'
+import { CommandSnippet } from '@/components/ui/command-snippet'
 import {
   Empty,
   EmptyContent,
@@ -50,6 +38,7 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { LogViewer } from '@/components/workflow/log-viewer'
 import { useTool, useToolUsage } from '@/hooks/use-tool'
 import type { FileMount, ToolInfo } from '@/types/tool'
 
@@ -62,15 +51,7 @@ function ToolCommandCard({ command, t }: { command: string; t: DetailT }) {
       title={t('commandTitle')}
       description={t('commandDescription')}
     >
-      <Snippet className='bg-muted py-5 font-mono text-sm' code={command}>
-        <SnippetAddon className='pl-1'>
-          <SnippetText>$</SnippetText>
-        </SnippetAddon>
-        <SnippetInput />
-        <SnippetAddon align='inline-end' className='pr-2'>
-          <CopyButton code={command} />
-        </SnippetAddon>
-      </Snippet>
+      <CommandSnippet className='py-5 text-sm' value={command} prompt='$' />
     </SectionCard>
   )
 }
@@ -235,27 +216,18 @@ function ToolDocumentationCard({ tool, t }: { tool: ToolInfo; t: DetailT }) {
       <div className='space-y-4'>
         <div className='space-y-2'>
           <h4 className='text-sm font-medium'>{t('helpCommand')}</h4>
-          <Snippet
-            className='bg-muted py-2 font-mono text-sm'
-            code={tool.help_doc.help_command}
-          >
-            <SnippetAddon className='pl-1'>
-              <SnippetText>$</SnippetText>
-            </SnippetAddon>
-            <SnippetInput />
-            <SnippetAddon align='inline-end' className='pr-2'>
-              <CopyButton code={tool.help_doc.help_command} />
-            </SnippetAddon>
-          </Snippet>
+          <CommandSnippet
+            className='py-2 text-sm'
+            value={tool.help_doc.help_command}
+            prompt='$'
+          />
         </div>
         <div className='space-y-2'>
           <h4 className='text-sm font-medium'>{t('commandOutput')}</h4>
-          <Terminal output={tool.help_doc.content} autoScroll={false}>
-            <TerminalHeader>
-              <TerminalTitle>{tool.help_doc.help_command}</TerminalTitle>
-            </TerminalHeader>
-            <TerminalContent />
-          </Terminal>
+          <LogViewer
+            content={tool.help_doc.content}
+            title={tool.help_doc.help_command}
+          />
         </div>
       </div>
     </SectionCard>
@@ -310,12 +282,7 @@ function ToolInfoSidebar({
           )}
           <div className='space-y-2'>
             <h4 className='text-sm font-medium'>{t('dockerImage')}</h4>
-            <Snippet className='bg-muted py-2 text-xs!' code={dockerImage}>
-              <SnippetInput />
-              <SnippetAddon align='inline-end' className='pr-2'>
-                <CopyButton code={dockerImage} />
-              </SnippetAddon>
-            </Snippet>
+            <CommandSnippet className='py-2 text-xs!' value={dockerImage} />
           </div>
           {(tool.image.homepage || tool.image.paper_link) && (
             <div className='grid gap-2 border-t pt-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2'>

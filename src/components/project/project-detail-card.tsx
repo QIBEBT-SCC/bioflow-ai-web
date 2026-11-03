@@ -1,3 +1,4 @@
+import { cn } from 'cn'
 import { Clock, Database, FlaskConical, PencilIcon, Star } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
@@ -17,7 +18,6 @@ import {
 import { useProjectRunStats } from '@/hooks/use-project-workflow'
 import { useSampleCount } from '@/hooks/use-sample'
 import type { RunStatus } from '@/lib/status'
-import { cn } from '@/lib/utils'
 import { colorClassMap } from '@/types/color'
 
 export function ProjectDetailCard() {

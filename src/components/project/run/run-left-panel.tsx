@@ -14,17 +14,17 @@ import {
 import { useTranslations } from 'next-intl'
 import type React from 'react'
 import { useState } from 'react'
-import {
-  FileTree,
-  FileTreeFile,
-  FileTreeFolder,
-} from '@/components/ai-elements/file-tree'
 import { Badge } from '@/components/ui/badge'
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
+import {
+  FileTree,
+  FileTreeFile,
+  FileTreeFolder,
+} from '@/components/ui/file-tree'
 import type { RunFileNode } from '@/types/run'
 import { WorkflowRunStatusV2, type WorkflowRunV2 } from '@/types/workflow-v2'
 
@@ -207,13 +207,9 @@ export function RunLeftPanel({
             <FileTree
               defaultExpanded={new Set(['results', 'logs', 'reports'])}
               selectedPath={selectedFile}
-              onSelect={
-                ((path: unknown) => {
-                  if (typeof path === 'string' && filePaths.has(path))
-                    onSelectFile(path)
-                }) as never
-              }
-              className='border-0 rounded-none'
+              onSelect={(path) => {
+                if (filePaths.has(path)) onSelectFile(path)
+              }}
             >
               {(runFiles ?? []).map(renderOutputNode)}
             </FileTree>

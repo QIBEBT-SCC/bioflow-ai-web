@@ -1,6 +1,7 @@
 'use client'
 
 import { type Node, useNodeId, useNodesData, useReactFlow } from '@xyflow/react'
+import { cn } from 'cn'
 import { memo, useCallback, useEffect, useState } from 'react'
 import {
   NodeCard,
@@ -11,7 +12,6 @@ import {
 import { colorSchemes } from '@/components/node-editor/node/color'
 import { useReadOnly } from '@/components/node-editor/read-only-context'
 import { Textarea } from '@/components/ui/textarea'
-import { cn } from '@/lib/utils'
 
 interface NoteNodeData extends Record<string, unknown> {
   content: string

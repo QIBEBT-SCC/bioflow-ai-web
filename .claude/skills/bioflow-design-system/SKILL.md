@@ -10,10 +10,12 @@ The source of truth is the code; this skill explains how to use it. When they di
 
 ## Hard rules
 
-1. **Never restyle workflow editor nodes** (`src/components/node-editor/node/*`). Their colors and
-   styles are finalized. `.react-flow__node` in `globals.css` pins the original neutral tokens so
-   theme/accent changes cannot reach them — do not remove that block. Editor *chrome* (toolbar,
-   menus, dialogs) follows the normal system.
+1. **Don't redesign workflow editor nodes** (`src/components/node-editor/node/*`) unless asked.
+   Their layouts and colors are deliberate. `.react-flow__node` in `globals.css` pins the original
+   neutral tokens so theme/accent changes cannot reach them — do not remove that block. The shared
+   `ui/*` primitives used inside nodes (Button, Badge, Input, …) follow shadcn upstream, so nodes
+   pick up component upgrades; don't pin old primitive styles inside nodes. Editor *chrome*
+   (toolbar, menus, dialogs) follows the normal system.
 2. **No raw palette colors for meaning.** Use tokens (`primary`, `muted`, `success`, `warning`,
    `info`, `destructive`, …). Raw Tailwind palettes (`blue-500`, `emerald-600`) are only allowed
    for *categorical* data: code-language badges, tag colors (`src/types/color.ts`), syntax
@@ -119,7 +121,7 @@ import { PageContainer, PageHeader, PageShell } from '@/components/layout/page-s
 **List card** (images, tools, code, subgraphs, related tools) — the whole card is the link:
 
 ```tsx
-<Card className='group relative gap-3 p-5 transition-[border-color,box-shadow] hover:border-primary/40 hover:shadow-md'>
+<Card className='group relative gap-3 p-5 transition-shadow hover:shadow-md hover:ring-primary/40'>
   <div className='flex items-start gap-3'>
     <div className='flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary'>
       <WrenchIcon className='size-5' />

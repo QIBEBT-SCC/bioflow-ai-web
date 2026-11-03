@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import {
   CheckCircle2Icon,
   CircleDashedIcon,
@@ -45,7 +46,6 @@ import {
   useDownloadStatusStream,
 } from '@/hooks/use-resource'
 import { type StatusTone, statusToneClasses } from '@/lib/status'
-import { cn } from '@/lib/utils'
 import type { BioDbDownloadStatus } from '@/types/resource'
 
 interface DatabaseDetailProps {
@@ -202,7 +202,7 @@ export function DatabaseDetail({ databaseId, onDelete }: DatabaseDetailProps) {
         icon={<FolderIcon />}
         title={t('data_source')}
         description={t('data_source_desc')}
-        contentClassName='space-y-5'
+        contentClassName='gap-5'
       >
         <SourceField label={t('path')}>
           {database.path ? (

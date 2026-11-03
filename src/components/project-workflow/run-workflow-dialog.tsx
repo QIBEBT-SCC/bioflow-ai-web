@@ -195,7 +195,7 @@ export function RunWorkflowDialog({
                                   <Badge
                                     key={key}
                                     variant='secondary'
-                                    className='max-w-full shrink whitespace-normal break-words text-left text-xs'
+                                    className='h-auto max-w-full shrink whitespace-normal break-words text-left text-xs'
                                   >
                                     {key}: {String(value)}
                                   </Badge>

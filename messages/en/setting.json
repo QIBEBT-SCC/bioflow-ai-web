@@ -48,6 +48,8 @@
       "input_price": "Input Price ($/1M tokens)",
       "output_price": "Output Price ($/1M tokens)",
       "cache_price": "Cache Price ($/1M tokens)",
+      "context_window": "Context Window (tokens)",
+      "context_window_unset": "Not set",
       "reasoning_effort": "Reasoning Effort",
       "reasoning_effort_desc": "Sent as a first-class model parameter; set it only for supported models, or keep the model default",
       "reasoning_effort_default": "Model default",

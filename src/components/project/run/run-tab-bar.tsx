@@ -1,7 +1,7 @@
+import { cn } from 'cn'
 import { Loader2, Workflow, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { RUN_FILE_ICONS } from '@/components/project/run/file-type'
-import { cn } from '@/lib/utils'
 
 export const CANVAS_TAB_ID = '__canvas__'
 

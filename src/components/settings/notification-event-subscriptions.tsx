@@ -90,7 +90,7 @@ export function NotificationEventSubscriptions({
           {t('event_count', { count: channel.event_types.length })}
         </Badge>
       }
-      contentClassName='space-y-4'
+      contentClassName='gap-4'
     >
       {isLoading && (
         <div className='space-y-2' aria-busy='true'>

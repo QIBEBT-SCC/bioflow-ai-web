@@ -1,5 +1,5 @@
+import { cn } from 'cn'
 import { Badge } from '@/components/ui/badge'
-import { cn } from '@/lib/utils'
 
 function tagStyle(tagName: string) {
   switch (tagName) {

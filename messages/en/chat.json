@@ -1,5 +1,13 @@
 {
   "Chat": {
+    "input": {
+      "placeholder": "Add or correct instructions for the next step…",
+      "send": "Send additional instructions",
+      "queued": "Queued for the next model call",
+      "applied": "Added to model context",
+      "unhandled": "This run ended before processing this message",
+      "text_only": "Additional instructions support text only. Remove the attachments first."
+    },
     "approve": "Approve",
     "assistant": "AI Assistant",
     "assistants": {
@@ -102,7 +110,10 @@
           },
           "search": {
             "active": "Searching {manager} for {subject}",
-            "complete": "Searched {manager} for {subject}"
+            "complete": "Searched {manager} for {subject}",
+            "searching": "Searching {manager}",
+            "searched": "Searched {manager}",
+            "found": "{count, plural, =0 {No matches in {manager}} one {Found 1 match in {manager}} other {Found # matches in {manager}}}"
           },
           "switch": {
             "active": "Switching to {subject}",
@@ -172,10 +183,230 @@
           "complete": "Wrote {file}"
         }
       },
-      "todo_complete": "All planned steps are complete",
-      "todo_activity_active": "Working on {index}/{total} · {task}",
-      "todo_activity_complete": "Completed {index}/{total} · {task}",
-      "todo_title": "{completed}/{total} · {current}"
+      "queue_pending": "{count} to do",
+      "queue_completed": "{count} completed",
+      "step_failed": "Failed",
+      "waiting": "Waiting for your input",
+      "validation": {
+        "active": "Validating the generated tool",
+        "complete": "Validated the generated tool"
+      },
+      "tool": {
+        "ask_human": {
+          "active": "Waiting for your answer",
+          "complete": "Answered a question"
+        },
+        "summarize_work": {
+          "active": "Saving the handover summary",
+          "complete": "Saved the handover summary"
+        },
+        "load_skill": {
+          "active": "Loading skill {subject}",
+          "complete": "Loaded skill {subject}"
+        },
+        "read_skill_resource": {
+          "active": "Reading skill file {subject}",
+          "complete": "Read skill file {subject}"
+        },
+        "workflow_reader": {
+          "overview": {
+            "active": "Reading the run overview",
+            "complete": "Read the run overview"
+          },
+          "node": {
+            "active": "Inspecting node {subject}",
+            "complete": "Inspected node {subject}"
+          },
+          "children": {
+            "active": "Listing ForEach runs of {subject}",
+            "complete": "Listed ForEach runs of {subject}"
+          }
+        },
+        "run_command": {
+          "active": "Inspecting {subject}",
+          "complete": "Inspected {subject}"
+        },
+        "apply_patch": {
+          "active": "Writing {file}",
+          "complete": "Wrote {file}"
+        },
+        "view_image": {
+          "active": "Viewing image {subject}",
+          "complete": "Viewed image {subject}"
+        },
+        "write_diagnosis": {
+          "active": "Writing the diagnosis report",
+          "complete": "Wrote the diagnosis report"
+        },
+        "fix_subgraph": {
+          "load": {
+            "active": "Opening subgraph {subject}",
+            "complete": "Opened subgraph {subject}"
+          },
+          "save": {
+            "active": "Saving the subgraph",
+            "complete": "Saved the subgraph"
+          },
+          "cancel": {
+            "active": "Discarding subgraph edits",
+            "complete": "Discarded subgraph edits"
+          },
+          "view_interface": {
+            "active": "Inspecting the subgraph interface",
+            "complete": "Inspected the subgraph interface"
+          },
+          "set_output": {
+            "active": "Updating subgraph outputs",
+            "complete": "Updated subgraph outputs"
+          }
+        },
+        "finalize_workflow_fix": {
+          "active": "Finalizing the workflow repair",
+          "complete": "Finalized the workflow repair"
+        }
+      },
+      "tool_generator": {
+        "select_image": {
+          "active": "Selecting the container image",
+          "complete": "Selected the container image"
+        },
+        "search_exist_tool": {
+          "active": "Checking for an existing tool node",
+          "complete": "Checked for an existing tool node"
+        },
+        "get_report": {
+          "active": "Test-running the tool",
+          "complete": "Test-ran the tool"
+        },
+        "choose_group": {
+          "active": "Assigning function and domain tags",
+          "complete": "Assigned function and domain tags"
+        },
+        "generate_tool_config": {
+          "active": "Generating the tool config",
+          "complete": "Generated the tool config"
+        },
+        "process_help_doc": {
+          "active": "Preparing the help document",
+          "complete": "Prepared the help document"
+        },
+        "save_tool": {
+          "active": "Saving the tool",
+          "complete": "Saved the tool"
+        }
+      },
+      "sub_agent": "Sub-agent steps",
+      "sub_step_count": "{count, plural, one {# sub-step} other {# sub-steps}}",
+      "tool_creation": {
+        "wait_tool_generation": {
+          "plain": {
+            "active": "Waiting for another tool generation to finish",
+            "complete": "Waited for another tool generation"
+          }
+        },
+        "return_to_parent": {
+          "plain": {
+            "active": "Handing the issue back to the main agent",
+            "complete": "Handed the issue back to the main agent"
+          }
+        },
+        "container_command": {
+          "plain": {
+            "active": "Running a test command",
+            "complete": "Ran a test command"
+          },
+          "subject": {
+            "active": "Running a test command in {subject}",
+            "complete": "Ran a test command in {subject}"
+          }
+        },
+        "search_local_image": {
+          "plain": {
+            "active": "Searching local images",
+            "complete": "Searched local images"
+          },
+          "subject": {
+            "active": "Searching local images for {subject}",
+            "complete": "Searched local images for {subject}"
+          }
+        },
+        "search_biodb": {
+          "plain": {
+            "active": "Searching registered databases",
+            "complete": "Searched registered databases"
+          },
+          "subject": {
+            "active": "Searching databases for {subject}",
+            "complete": "Searched databases for {subject}"
+          }
+        },
+        "search_tools_by_function": {
+          "plain": {
+            "active": "Searching existing tools",
+            "complete": "Searched existing tools"
+          },
+          "subject": {
+            "active": "Searching existing tools for {subject}",
+            "complete": "Searched existing tools for {subject}"
+          }
+        },
+        "read_tool_doc": {
+          "plain": {
+            "active": "Reading a tool help document",
+            "complete": "Read a tool help document"
+          },
+          "subject": {
+            "active": "Reading the help document of tool {subject}",
+            "complete": "Read the help document of tool {subject}"
+          }
+        },
+        "select_image": {
+          "plain": {
+            "active": "Selecting the image",
+            "complete": "Selected the image"
+          },
+          "subject": {
+            "active": "Selecting image {subject}",
+            "complete": "Selected image {subject}"
+          }
+        },
+        "select_tool": {
+          "plain": {
+            "active": "Selecting an existing tool",
+            "complete": "Selected an existing tool"
+          }
+        },
+        "select_classification": {
+          "plain": {
+            "active": "Saving function and domain tags",
+            "complete": "Saved function and domain tags"
+          }
+        },
+        "set_file_mounts": {
+          "plain": {
+            "active": "Setting file mounts",
+            "complete": "Set file mounts"
+          }
+        },
+        "set_command_detail": {
+          "plain": {
+            "active": "Setting the command template",
+            "complete": "Set the command template"
+          }
+        },
+        "set_tool_info": {
+          "plain": {
+            "active": "Setting the tool name and description",
+            "complete": "Set the tool name and description"
+          }
+        },
+        "write_tool_report": {
+          "plain": {
+            "active": "Writing the test-run report",
+            "complete": "Wrote the test-run report"
+          }
+        }
+      }
     },
     "rename": "Rename",
     "resize": "Resize chat sidebar",
@@ -213,6 +444,29 @@
     },
     "loading": "Loading conversation…",
     "empty_no_session": "Start a new conversation to work with an assistant.",
-    "choose_assistant": "Assistants"
+    "choose_assistant": "Assistants",
+    "scroll_to_latest": "Scroll to latest message",
+    "interrupt_title": "Your input is needed",
+    "question_progress": "{current} / {total}",
+    "answer_required": "Choose or write an answer to continue.",
+    "question_previous": "Previous",
+    "question_next": "Next",
+    "cancelled": "Agent run cancelled.",
+    "context": {
+      "title": "Context window",
+      "label": "Context usage",
+      "percent": "{percent}% context used",
+      "input": "Input",
+      "cache_read": "Cache read",
+      "output": "Output",
+      "used": "{used} / {limit} used",
+      "remaining": "{tokens} left",
+      "no_limit": "{used} tokens used; this model has no context window set",
+      "session_total": "Session total",
+      "reasoning_note": "Output includes {tokens} reasoning tokens",
+      "calls": "{count, plural, one {# call} other {# calls}}",
+      "by_agent": "By agent",
+      "sub_agent": "Sub-agent"
+    }
   }
 }

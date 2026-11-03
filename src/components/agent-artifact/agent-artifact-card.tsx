@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import {
   ClipboardListIcon,
   FileCheck2Icon,
@@ -10,9 +11,8 @@ import {
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
-import { AgentArtifactSheet } from '@/components/agent-artifact/agent-artifact-sheet'
+import { AgentArtifactDialog } from '@/components/agent-artifact/agent-artifact-dialog'
 import { Badge } from '@/components/ui/badge'
-import { cn } from '@/lib/utils'
 import type { AgentArtifact, AgentArtifactKind } from '@/types/agent-artifact'
 
 const icons: Record<AgentArtifactKind, typeof FileClockIcon> = {
@@ -83,7 +83,7 @@ export function AgentArtifactCard({
           </span>
         </span>
       </button>
-      <AgentArtifactSheet file={file} open={open} onOpenChange={setOpen} />
+      <AgentArtifactDialog file={file} open={open} onOpenChange={setOpen} />
     </>
   )
 }

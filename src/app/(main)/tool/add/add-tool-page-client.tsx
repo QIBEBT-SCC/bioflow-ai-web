@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import { ArrowLeft, ArrowRight, Check, Search } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
@@ -26,7 +27,6 @@ import {
   useToolTagList,
 } from '@/hooks/use-tool'
 import { updateFileMountValue } from '@/lib/tool-file-mount'
-import { cn } from '@/lib/utils'
 import { useCreateToolStore } from '@/stores/toolStore'
 import type {
   DockerToolCreate,
@@ -571,8 +571,8 @@ function ConfirmStep({
       <StepHeading title={t('confirmCreate')} description={t('checkConfig')} />
       <div className='space-y-4'>
         <Card className='py-5'>
-          <CardContent className='px-5'>
-            <h3 className='mb-4 text-sm font-semibold'>{t('basicInfo')}</h3>
+          <CardContent className='gap-4 px-5'>
+            <h3 className='text-sm font-semibold'>{t('basicInfo')}</h3>
             <div className='space-y-2'>
               <div className='flex justify-between'>
                 <span className='text-muted-foreground'>{t('toolName')}</span>
@@ -598,8 +598,8 @@ function ConfirmStep({
           </CardContent>
         </Card>
         <Card className='py-5'>
-          <CardContent className='px-5'>
-            <h3 className='mb-4 text-sm font-semibold'>{t('configSummary')}</h3>
+          <CardContent className='gap-4 px-5'>
+            <h3 className='text-sm font-semibold'>{t('configSummary')}</h3>
             <div className='grid grid-cols-2 md:grid-cols-3 gap-4'>
               <div className='text-center'>
                 <div className='text-2xl font-semibold text-primary tabular-nums'>

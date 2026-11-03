@@ -1,24 +1,108 @@
 'use client'
 
 import {
+  ArrowDownIcon,
+  ArrowUpIcon,
   CheckIcon,
+  FileDiffIcon,
   Loader2Icon,
-  SendIcon,
   SquareIcon,
+  WrenchIcon,
   XIcon,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
 import { type MouseEvent, useState } from 'react'
-import { Streamdown } from 'streamdown'
-import {
-  Conversation,
-  ConversationContent,
-  ConversationScrollButton,
-} from '@/components/ai-elements/conversation'
+import { Markdown } from '@/components/markdown'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Bubble, BubbleContent } from '@/components/ui/bubble'
 import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
+import { CodeBlock, CodeBlockContent } from '@/components/ui/code-block'
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupTextarea,
+} from '@/components/ui/input-group'
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemFooter,
+  ItemMedia,
+  ItemTitle,
+} from '@/components/ui/item'
+import { Message, MessageContent } from '@/components/ui/message'
+import {
+  MessageScroller,
+  MessageScrollerButton,
+  MessageScrollerContent,
+  MessageScrollerItem,
+  MessageScrollerProvider,
+  MessageScrollerViewport,
+} from '@/components/ui/message-scroller'
+import {
+  Trace,
+  TraceCollapsible,
+  TraceCollapsibleContent,
+  TraceCollapsibleTrigger,
+  TraceDescription,
+  TraceIcon,
+  TraceLine,
+  TraceTitle,
+} from '@/components/ui/trace'
 import type { useCodeAgent } from '@/hooks/use-code-agent'
+import type { CodeAgentTool } from '@/types/code-agent'
+
+/** One tool call, expanding into its input and output. */
+function ToolStep({ tool }: { tool: CodeAgentTool }) {
+  const t = useTranslations('code.Agent')
+  const line = (
+    <TraceLine
+      status={
+        tool.status === 'running'
+          ? 'running'
+          : tool.status === 'failed'
+            ? 'error'
+            : undefined
+      }
+    >
+      <TraceIcon>
+        <WrenchIcon />
+      </TraceIcon>
+      <TraceTitle className='font-mono'>{tool.name}</TraceTitle>
+      <TraceDescription>{t(`tool.${tool.status}`)}</TraceDescription>
+    </TraceLine>
+  )
+
+  if (!tool.detail && !tool.output) return line
+
+  return (
+    <TraceCollapsible>
+      <TraceCollapsibleTrigger>{line}</TraceCollapsibleTrigger>
+      <TraceCollapsibleContent className='flex flex-col gap-2'>
+        {tool.detail && (
+          <CodeBlock size='sm'>
+            <CodeBlockContent wrap className='max-h-48'>
+              {tool.detail}
+            </CodeBlockContent>
+          </CodeBlock>
+        )}
+        {tool.output && (
+          <CodeBlock
+            size='sm'
+            variant={tool.status === 'failed' ? 'destructive' : 'default'}
+          >
+            <CodeBlockContent wrap className='max-h-64'>
+              {tool.output}
+            </CodeBlockContent>
+          </CodeBlock>
+        )}
+      </TraceCollapsibleContent>
+    </TraceCollapsible>
+  )
+}
 
 interface Props {
   agent: ReturnType<typeof useCodeAgent>
@@ -67,7 +151,7 @@ export function CodeAgentPanel({
           onClick={onClose}
           aria-label={t('close')}
         >
-          <XIcon className='size-4' />
+          <XIcon />
         </Button>
       </header>
       <div className='border-b px-4 py-3 text-xs text-muted-foreground'>
@@ -86,147 +170,193 @@ export function CodeAgentPanel({
           </p>
         )}
       </div>
-      <Conversation className='min-h-0' aria-live='polite'>
-        <ConversationContent className='gap-4'>
-          {!session && (
-            <p className='text-sm text-muted-foreground'>{t('opening')}</p>
-          )}
-          {session?.transcript.length === 0 && (
-            <p className='text-sm text-muted-foreground'>{t('empty')}</p>
-          )}
-          {session?.transcript.map((message) =>
-            message.role === 'user' ? (
-              <div key={message.turn_id} className='space-y-3'>
-                <div className='rounded-lg bg-muted p-3 text-sm whitespace-pre-wrap'>
-                  {message.text}
-                </div>
-                {session.tools.map((tool) =>
-                  tool.turn_id === message.turn_id ? (
-                    <details
-                      key={tool.call_id}
-                      className='rounded-lg border text-xs'
-                    >
-                      <summary className='cursor-pointer px-3 py-2 font-mono'>
-                        {tool.name} · {t(`tool.${tool.status}`)}
-                      </summary>
-                      {tool.detail && (
-                        <pre className='overflow-auto border-t p-3 whitespace-pre-wrap'>
-                          {tool.detail}
-                        </pre>
-                      )}
-                      {tool.output && (
-                        <pre className='max-h-64 overflow-auto border-t p-3 whitespace-pre-wrap'>
-                          {tool.output}
-                        </pre>
-                      )}
-                    </details>
-                  ) : null,
-                )}
-                {session.transcript.map((reply) =>
-                  reply.role === 'assistant' &&
-                  reply.turn_id === message.turn_id ? (
-                    <div key={`${reply.turn_id}-reply`} className='text-sm'>
-                      <Streamdown>{reply.text}</Streamdown>
-                    </div>
-                  ) : null,
-                )}
-              </div>
-            ) : null,
-          )}
-          {(agent.error || session?.error) && (
-            <p
-              role='alert'
-              className='rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive'
-            >
-              {agent.error === 'EDITOR_CHANGED'
-                ? t('editorChanged')
-                : agent.error || session?.error}
-            </p>
-          )}
-          {session && (
-            <p className='flex items-center gap-2 text-xs text-muted-foreground'>
-              {active && <Loader2Icon className='size-3 animate-spin' />}
-              {t(`status.${session.status}`)}
-              {!connected &&
-                session.status !== 'closed' &&
-                ` · ${t('reconnecting')}`}
-            </p>
-          )}
-        </ConversationContent>
-        <ConversationScrollButton />
-      </Conversation>
-      {session?.proposal && (
-        <div className='space-y-3 border-t bg-muted/30 p-4'>
-          <p className='text-sm font-medium'>{t('review')}</p>
-          <p className='text-xs text-muted-foreground'>{t('acceptHint')}</p>
-          {session.proposal.warnings.map((warning) => (
-            <p key={warning} className='text-xs text-warning'>
-              {warning}
-            </p>
-          ))}
-          <div className='flex gap-2'>
-            <Button
-              size='sm'
-              disabled={working}
-              onClick={() => void agent.decide('accept')}
-            >
-              <CheckIcon className='size-4' />
-              {t('accept')}
-            </Button>
-            <Button
-              variant='outline'
-              size='sm'
-              disabled={working}
-              onClick={() => void agent.decide('reject')}
-            >
-              <XIcon className='size-4' />
-              {t('reject')}
-            </Button>
-          </div>
-        </div>
-      )}
-      <div className='space-y-2 border-t p-3'>
-        <Textarea
-          value={prompt}
-          onChange={(event) => setPrompt(event.target.value)}
-          placeholder={t('placeholder')}
-          className='min-h-24 resize-none'
-          maxLength={100000}
-          disabled={!session || session.status !== 'ready' || working}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
-              event.preventDefault()
-              void send()
-            }
-          }}
-        />
-        <div className='flex justify-end'>
-          {active ? (
-            <Button
-              variant='outline'
-              size='sm'
-              disabled={working || session.status === 'cancelling'}
-              onClick={() => void agent.stop()}
-            >
-              <SquareIcon className='size-3' />
-              {t('stop')}
-            </Button>
-          ) : (
-            <Button
-              size='sm'
-              disabled={
-                !prompt.trim() ||
-                !session ||
-                session.status !== 'ready' ||
-                working
+      <MessageScrollerProvider key={session?.id ?? 'opening'} autoScroll>
+        <MessageScroller className='min-h-0 flex-1'>
+          <MessageScrollerViewport>
+            <MessageScrollerContent className='gap-6 p-4'>
+              {!session && (
+                <MessageScrollerItem className='text-sm text-muted-foreground'>
+                  {t('opening')}
+                </MessageScrollerItem>
+              )}
+              {session?.transcript.length === 0 && (
+                <MessageScrollerItem className='text-sm text-muted-foreground'>
+                  {t('empty')}
+                </MessageScrollerItem>
+              )}
+              {session?.transcript.map((message) => {
+                if (message.role !== 'user') return null
+                const tools = session.tools.filter(
+                  (tool) => tool.turn_id === message.turn_id,
+                )
+                const replies = session.transcript.filter(
+                  (reply) =>
+                    reply.role === 'assistant' &&
+                    reply.turn_id === message.turn_id,
+                )
+                return (
+                  <MessageScrollerItem
+                    key={message.turn_id}
+                    messageId={message.turn_id}
+                    scrollAnchor
+                    className='flex flex-col gap-3'
+                  >
+                    <Message align='end'>
+                      <MessageContent>
+                        <Bubble align='end' variant='tinted'>
+                          <BubbleContent className='whitespace-pre-wrap'>
+                            {message.text}
+                          </BubbleContent>
+                        </Bubble>
+                      </MessageContent>
+                    </Message>
+                    {tools.length > 0 && (
+                      <Trace>
+                        {tools.map((tool) => (
+                          <ToolStep key={tool.call_id} tool={tool} />
+                        ))}
+                      </Trace>
+                    )}
+                    {replies.map((reply) => (
+                      <Markdown
+                        key={`${reply.turn_id}-${reply.text}`}
+                        className='leading-relaxed'
+                      >
+                        {reply.text}
+                      </Markdown>
+                    ))}
+                  </MessageScrollerItem>
+                )
+              })}
+              {(agent.error || session?.error) && (
+                <MessageScrollerItem>
+                  <Alert variant='destructive'>
+                    <AlertDescription>
+                      {agent.error === 'EDITOR_CHANGED'
+                        ? t('editorChanged')
+                        : agent.error || session?.error}
+                    </AlertDescription>
+                  </Alert>
+                </MessageScrollerItem>
+              )}
+              {session && (
+                <MessageScrollerItem aria-live='polite'>
+                  <TraceLine status={active ? 'running' : undefined}>
+                    {active && (
+                      <TraceIcon>
+                        <Loader2Icon className='animate-spin' />
+                      </TraceIcon>
+                    )}
+                    <TraceTitle className='text-xs'>
+                      {t(`status.${session.status}`)}
+                      {!connected &&
+                        session.status !== 'closed' &&
+                        ` · ${t('reconnecting')}`}
+                    </TraceTitle>
+                  </TraceLine>
+                </MessageScrollerItem>
+              )}
+            </MessageScrollerContent>
+          </MessageScrollerViewport>
+          <MessageScrollerButton className='data-[direction=end]:bottom-3'>
+            <ArrowDownIcon />
+            <span className='sr-only'>{t('scrollToLatest')}</span>
+          </MessageScrollerButton>
+        </MessageScroller>
+      </MessageScrollerProvider>
+      <div className='flex shrink-0 flex-col gap-2 border-t p-3'>
+        {session?.proposal && (
+          <Item variant='outline' size='sm' className='rounded-xl bg-card'>
+            <ItemMedia variant='icon'>
+              <FileDiffIcon />
+            </ItemMedia>
+            <ItemContent>
+              <ItemTitle>{t('review')}</ItemTitle>
+              <ItemDescription className='line-clamp-none'>
+                {t('acceptHint')}
+              </ItemDescription>
+            </ItemContent>
+            {session.proposal.warnings.length > 0 && (
+              <ItemFooter className='flex-col items-start gap-1'>
+                {session.proposal.warnings.map((warning) => (
+                  <p key={warning} className='text-xs text-warning'>
+                    {warning}
+                  </p>
+                ))}
+              </ItemFooter>
+            )}
+            <ItemFooter className='justify-end'>
+              <ItemActions>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  disabled={working}
+                  onClick={() => void agent.decide('reject')}
+                >
+                  <XIcon />
+                  {t('reject')}
+                </Button>
+                <Button
+                  size='sm'
+                  disabled={working}
+                  onClick={() => void agent.decide('accept')}
+                >
+                  <CheckIcon />
+                  {t('accept')}
+                </Button>
+              </ItemActions>
+            </ItemFooter>
+          </Item>
+        )}
+        <InputGroup className='rounded-xl bg-card shadow-sm'>
+          <InputGroupTextarea
+            value={prompt}
+            onChange={(event) => setPrompt(event.target.value)}
+            placeholder={t('placeholder')}
+            aria-label={t('placeholder')}
+            className='max-h-60 min-h-20 p-3'
+            maxLength={100000}
+            disabled={!session || session.status !== 'ready' || working}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+                event.preventDefault()
+                void send()
               }
-              onClick={() => void send()}
-            >
-              <SendIcon className='size-4' />
-              {t('send')}
-            </Button>
-          )}
-        </div>
+            }}
+          />
+          <InputGroupAddon align='block-end'>
+            {active ? (
+              <InputGroupButton
+                size='icon-sm'
+                variant='outline'
+                className='ml-auto rounded-full'
+                disabled={working || session.status === 'cancelling'}
+                onClick={() => void agent.stop()}
+                aria-label={t('stop')}
+                title={t('stop')}
+              >
+                <SquareIcon className='size-3 fill-current' />
+              </InputGroupButton>
+            ) : (
+              <InputGroupButton
+                size='icon-sm'
+                variant='default'
+                className='ml-auto rounded-full'
+                disabled={
+                  !prompt.trim() ||
+                  !session ||
+                  session.status !== 'ready' ||
+                  working
+                }
+                onClick={() => void send()}
+                aria-label={t('send')}
+                title={t('send')}
+              >
+                <ArrowUpIcon />
+              </InputGroupButton>
+            )}
+          </InputGroupAddon>
+        </InputGroup>
       </div>
     </aside>
   )

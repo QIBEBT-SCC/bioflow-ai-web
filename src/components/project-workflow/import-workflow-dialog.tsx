@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import { LayersIcon, Loader2, PlusIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
@@ -26,7 +27,6 @@ import {
 } from '@/components/workflow/workflow-library-search'
 import { useAddWorkflowToProject } from '@/hooks/use-project-workflow'
 import { useWorkflowLibrarySearch } from '@/hooks/use-workflow-library-search'
-import { cn } from '@/lib/utils'
 import { ExecutionScope, WorkflowType } from '@/types/workflow'
 
 interface ImportWorkflowDialogProps {

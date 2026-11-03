@@ -59,6 +59,7 @@ export function AddModelDialog({
       input_price: newModel.input_price,
       output_price: newModel.output_price,
       cache_read_price: newModel.cache_read_price,
+      context_window: newModel.context_window,
       reasoning_effort: newModel.reasoning_effort,
       is_active: newModel.is_active,
     })
@@ -155,6 +156,24 @@ export function AddModelDialog({
                 }
               />
             </div>
+          </div>
+          <div className='space-y-2'>
+            <Label htmlFor='new-model-context-window'>
+              {t('context_window')}
+            </Label>
+            <Input
+              id='new-model-context-window'
+              type='number'
+              min={1}
+              step={1}
+              value={newModel.context_window ?? ''}
+              onChange={(e) =>
+                setNewModel((prev) => ({
+                  ...prev,
+                  context_window: parseOptionalPrice(e.target.value),
+                }))
+              }
+            />
           </div>
           <div className='space-y-2'>
             <Label htmlFor='new-model-reasoning-effort'>

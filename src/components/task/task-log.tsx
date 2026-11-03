@@ -2,8 +2,8 @@
 
 import { FileTextIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { Terminal, TerminalContent } from '@/components/ai-elements/terminal'
 import { Skeleton } from '@/components/ui/skeleton'
+import { LogViewer } from '@/components/workflow/log-viewer'
 import { useTaskLog } from '@/hooks/use-task'
 
 interface TaskLogProps {
@@ -50,15 +50,13 @@ export function TaskLog({ taskUid, isRunning = false }: TaskLogProps) {
   }
 
   return (
-    <>
-      <div className='flex justify-between items-center mb-3'>
+    <div className='flex flex-col gap-3'>
+      <div className='flex justify-between items-center'>
         <span className='text-sm text-muted-foreground'>
           {t('lineCount', { count: logData.content.split('\n').length })}
         </span>
       </div>
-      <Terminal output={logData.content} autoScroll={false}>
-        <TerminalContent />
-      </Terminal>
-    </>
+      <LogViewer content={logData.content} />
+    </div>
   )
 }

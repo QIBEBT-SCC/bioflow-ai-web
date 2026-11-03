@@ -1,10 +1,11 @@
 'use client'
 
+import { cn } from 'cn'
 import {
+  ArrowDownIcon,
   ArrowUpIcon,
   BotIcon,
   Loader2Icon,
-  PaperclipIcon,
   PlusIcon,
   SparklesIcon,
   SquareIcon,
@@ -14,21 +15,19 @@ import { useLocale, useTranslations } from 'next-intl'
 import type React from 'react'
 import { useMemo, useRef, useState } from 'react'
 import type { AgentScope } from '@/app/actions/agent'
-import {
-  Conversation,
-  ConversationContent,
-  ConversationScrollButton,
-} from '@/components/ai-elements/conversation'
-import { Message, MessageResponse } from '@/components/ai-elements/message'
-import { Suggestion, Suggestions } from '@/components/ai-elements/suggestion'
 import { AgentImage } from '@/components/chat/agent-image'
 import { AGENT_ICONS, AGENT_NAMES } from '@/components/chat/agent-meta'
 import { AgentPDF } from '@/components/chat/agent-pdf'
-import { AgentRunArtifacts } from '@/components/chat/agent-run-content'
+import {
+  AgentRunArtifacts,
+  RunTodoQueue,
+} from '@/components/chat/agent-run-content'
 import { AgentRunTrace } from '@/components/chat/agent-run-trace'
 import { AgentWorkflowNode } from '@/components/chat/agent-workflow-node'
 import { SidebarHistoryMenu } from '@/components/chat/chat-history-menu'
+import { ContextUsage } from '@/components/chat/context-usage'
 import { DraftAttachments } from '@/components/chat/draft-attachments'
+import { InterruptApproval } from '@/components/chat/interrupt-approval'
 import { PlanApproval } from '@/components/chat/plan-approval'
 import { QuestionApproval } from '@/components/chat/question-approval'
 import {
@@ -39,10 +38,27 @@ import {
   SlashCommandMenu,
   useSlashCommand,
 } from '@/components/chat/slash-commannd'
+import { Markdown } from '@/components/markdown'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { AttachmentGroup } from '@/components/ui/attachment'
+import { Bubble, BubbleContent } from '@/components/ui/bubble'
 import { Button } from '@/components/ui/button'
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupTextarea,
+} from '@/components/ui/input-group'
+import { Message, MessageContent } from '@/components/ui/message'
+import {
+  MessageScroller,
+  MessageScrollerButton,
+  MessageScrollerContent,
+  MessageScrollerItem,
+  MessageScrollerProvider,
+  MessageScrollerViewport,
+} from '@/components/ui/message-scroller'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Textarea } from '@/components/ui/textarea'
 import {
   useAgentMessages,
   useAgentRun,
@@ -55,14 +71,19 @@ import {
   useCreateAgentSession,
   useResumeAgentRun,
   useRetryAgentRun,
+  useSubmitAgentInput,
 } from '@/hooks/use-agent'
 import {
   CHAT_ATTACHMENT_ACCEPT,
   useChatAttachments,
 } from '@/hooks/use-chat-attachment'
 import type { Locale } from '@/i18n/config'
+import {
+  type AgentInputStatus,
+  acceptsAgentInput,
+  agentInputStatuses,
+} from '@/lib/agent-inputs'
 import { parseAgentQuestionAnswers } from '@/lib/agent-questions'
-import { cn } from '@/lib/utils'
 import { getSuggestedWorkflowAgent } from '@/lib/workflow-agent-suggestions'
 import { useChatSidebarStore } from '@/stores/chat-sidebar-store'
 import {
@@ -109,41 +130,51 @@ function attachmentKey(part: AgentMessagePart) {
   return `text-${part.text}`
 }
 
-function ChatMessage({ message }: { message: AgentMessage }) {
+function ChatMessage({
+  message,
+  inputStatus,
+}: {
+  message: AgentMessage
+  inputStatus?: AgentInputStatus
+}) {
+  const t = useTranslations('Chat')
   const isUser = message.role === 'user'
   const attachments = message.parts.filter((part) => part.type !== 'text')
   const texts = message.parts.flatMap((part) =>
     part.type === 'text' && part.text.trim() ? [part.text] : [],
   )
   return (
-    <Message
-      from={message.role}
-      className={cn(isUser ? 'max-w-[88%] items-end' : 'max-w-full')}
-    >
-      {attachments.length > 0 && (
-        <div className={cn('flex flex-wrap gap-2', isUser && 'justify-end')}>
-          {attachments.map((part) => (
-            <MessageAttachment key={attachmentKey(part)} part={part} />
-          ))}
-        </div>
-      )}
-      {texts.map((text) =>
-        isUser ? (
-          <div
-            key={`${message.uid}-${text}`}
-            className='w-fit max-w-full rounded-2xl rounded-br-md bg-primary/10 px-3.5 py-2.5 text-foreground text-sm'
-          >
-            <MessageResponse>{text}</MessageResponse>
-          </div>
-        ) : (
-          <MessageResponse
-            key={`${message.uid}-${text}`}
-            className='text-sm leading-relaxed'
-          >
-            {text}
-          </MessageResponse>
-        ),
-      )}
+    <Message align={isUser ? 'end' : 'start'}>
+      <MessageContent>
+        {inputStatus && (
+          <output className='self-end text-xs text-muted-foreground'>
+            {t(`input.${inputStatus}`)}
+          </output>
+        )}
+        {attachments.length > 0 && (
+          <AttachmentGroup className={cn('max-w-full', isUser && 'self-end')}>
+            {attachments.map((part) => (
+              <MessageAttachment key={attachmentKey(part)} part={part} />
+            ))}
+          </AttachmentGroup>
+        )}
+        {texts.map((text) =>
+          isUser ? (
+            <Bubble key={`${message.uid}-${text}`} align='end' variant='tinted'>
+              <BubbleContent>
+                <Markdown>{text}</Markdown>
+              </BubbleContent>
+            </Bubble>
+          ) : (
+            <Markdown
+              key={`${message.uid}-${text}`}
+              className='leading-relaxed'
+            >
+              {text}
+            </Markdown>
+          ),
+        )}
+      </MessageContent>
     </Message>
   )
 }
@@ -209,6 +240,11 @@ function ChatSidebarInner({
   const [text, setText] = useState('')
   const [feedback, setFeedback] = useState('')
   const [localError, setLocalError] = useState<string | null>(null)
+  const inputRequest = useRef<{
+    runId: string
+    text: string
+    uid: string
+  } | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const attachments = useChatAttachments(sessionId)
@@ -216,6 +252,8 @@ function ChatSidebarInner({
     useCreateAgentSession()
   const { mutateAsync: createRun, isPending: isSubmitting } =
     useCreateAgentRun()
+  const { mutateAsync: submitInput, isPending: isSendingInput } =
+    useSubmitAgentInput()
   const { mutateAsync: resumeRun, isPending: isResuming } = useResumeAgentRun()
   const { mutateAsync: cancelRun, isPending: isCancelling } =
     useCancelAgentRun()
@@ -230,6 +268,16 @@ function ChatSidebarInner({
     }
     return runs
   }, [run, storedRuns])
+
+  const sessionEvents = useMemo(
+    () =>
+      displayRuns.flatMap((displayRun) =>
+        displayRun.uid === runId && events.length > 0
+          ? events
+          : (eventHistory[displayRun.uid] ?? []),
+      ),
+    [displayRuns, eventHistory, events, runId],
+  )
 
   const availableCommands = useMemo(() => {
     const names =
@@ -264,15 +312,20 @@ function ChatSidebarInner({
         ? t('node.assistant_required')
         : null
     : null
-  const canSubmit = Boolean(
-    parsedCommand &&
-      !attachments.blocked &&
-      !nodeError &&
-      (parsedCommand.prompt.trim() ||
-        ((attachments.images.length + attachments.pdfs.length > 0 ||
-          nodeAttachment) &&
-          parsedCommand.command.key !== 'workflow-fixer')),
-  )
+  const currentRunEvents =
+    events.length > 0 ? events : (eventHistory[runId ?? ''] ?? [])
+  const acceptsInput = acceptsAgentInput(run, currentRunEvents)
+  const canSubmit = acceptsInput
+    ? Boolean(text.trim() && attachments.drafts.length === 0 && !nodeAttachment)
+    : Boolean(
+        parsedCommand &&
+          !attachments.blocked &&
+          !nodeError &&
+          (parsedCommand.prompt.trim() ||
+            ((attachments.images.length + attachments.pdfs.length > 0 ||
+              nodeAttachment) &&
+              parsedCommand.command.key !== 'workflow-fixer')),
+      )
   const isBusy = Boolean(run && ACTIVE_AGENT_STATUSES.includes(run.status))
   const inputDisabled =
     !sessionId || isSessionLoading || isMessagesLoading || isRunsLoading
@@ -341,7 +394,31 @@ function ChatSidebarInner({
   }
 
   const submit = async () => {
-    if (!sessionId || isBusy || isSubmitting) return
+    if (!sessionId || isSubmitting || isSendingInput) return
+    if (acceptsInput && run) {
+      const correction = text.trim()
+      if (!correction || attachments.drafts.length > 0 || nodeAttachment) return
+      const previous = inputRequest.current
+      const request =
+        previous?.runId === run.uid && previous.text === correction
+          ? previous
+          : { runId: run.uid, text: correction, uid: crypto.randomUUID() }
+      inputRequest.current = request
+      setLocalError(null)
+      try {
+        await submitInput({
+          runId: run.uid,
+          messageUid: request.uid,
+          text: correction,
+        })
+        setText('')
+        inputRequest.current = null
+      } catch (error) {
+        setLocalError(error instanceof Error ? error.message : String(error))
+      }
+      return
+    }
+    if (isBusy) return
     if (!parsedCommand) {
       setLocalError(t('command_required'))
       return
@@ -426,7 +503,9 @@ function ChatSidebarInner({
   }
 
   const isLoading = isSessionLoading || isMessagesLoading || isRunsLoading
-  const inputLocked = inputDisabled || isBusy || isSubmitting
+  const inputLocked =
+    inputDisabled || (isBusy && !acceptsInput) || isSubmitting || isSendingInput
+  const attachmentLocked = inputLocked || isBusy
   const isPlanApproval = run?.interrupt_payload?.kind === 'plan_approval'
   const questions =
     run?.interrupt_payload?.kind === 'questions' &&
@@ -492,179 +571,205 @@ function ChatSidebarInner({
           </div>
         </header>
 
-        <Conversation className='min-h-0 flex-1'>
-          <ConversationContent className='gap-6 px-3 py-4'>
-            {isLoading ? (
-              <ConversationSkeleton label={t('loading')} />
-            ) : messages.length === 0 && displayRuns.length === 0 ? (
-              <div className='flex flex-col gap-5 py-6'>
-                <div className='flex flex-col items-center gap-2 text-center'>
-                  <span className='flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary'>
-                    <SparklesIcon className='size-5' />
-                  </span>
-                  <h3 className='font-semibold text-base'>{t('assistant')}</h3>
-                  <p className='max-w-72 text-muted-foreground text-sm'>
-                    {sessionId ? t('empty_description') : t('empty_no_session')}
-                  </p>
-                </div>
-                {sessionId ? (
-                  <ul className='flex flex-col gap-2'>
-                    {availableCommands.map((command) => {
-                      const Icon = command.icon ?? SparklesIcon
-                      return (
-                        <li key={command.key}>
-                          <button
-                            type='button'
-                            disabled={inputLocked}
-                            onClick={() => chooseCommand(command)}
-                            className='group flex w-full items-start gap-3 rounded-xl border bg-card p-3 text-left shadow-xs transition-[border-color,box-shadow] hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50'
-                          >
-                            <span className='flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary'>
-                              <Icon className='size-4' />
-                            </span>
-                            <span className='min-w-0 flex-1'>
-                              <span className='flex items-baseline gap-2'>
-                                <span className='truncate font-medium text-sm group-hover:text-primary'>
-                                  {command.label}
+        <MessageScrollerProvider
+          // Remount per thread so it opens at the latest turn once loaded.
+          key={isLoading ? 'loading' : (sessionId ?? 'none')}
+          autoScroll
+          defaultScrollPosition='last-anchor'
+        >
+          <MessageScroller className='min-h-0 flex-1'>
+            <MessageScrollerViewport>
+              <MessageScrollerContent className='gap-6 px-3 py-4'>
+                {isLoading ? (
+                  <MessageScrollerItem>
+                    <ConversationSkeleton label={t('loading')} />
+                  </MessageScrollerItem>
+                ) : messages.length === 0 && displayRuns.length === 0 ? (
+                  <MessageScrollerItem className='flex flex-col gap-5 py-6'>
+                    <div className='flex flex-col items-center gap-2 text-center'>
+                      <span className='flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary'>
+                        <SparklesIcon className='size-5' />
+                      </span>
+                      <h3 className='font-semibold text-base'>
+                        {t('assistant')}
+                      </h3>
+                      <p className='max-w-72 text-muted-foreground text-sm'>
+                        {sessionId
+                          ? t('empty_description')
+                          : t('empty_no_session')}
+                      </p>
+                    </div>
+                    {sessionId ? (
+                      <ul className='flex flex-col gap-2'>
+                        {availableCommands.map((command) => {
+                          const Icon = command.icon ?? SparklesIcon
+                          return (
+                            <li key={command.key}>
+                              <button
+                                type='button'
+                                disabled={inputLocked || isBusy}
+                                onClick={() => chooseCommand(command)}
+                                className='group flex w-full items-start gap-3 rounded-xl border bg-card p-3 text-left shadow-xs transition-[border-color,box-shadow] hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50'
+                              >
+                                <span className='flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary'>
+                                  <Icon className='size-4' />
                                 </span>
-                                <code className='shrink-0 font-mono text-muted-foreground text-xs'>
-                                  /{command.key}
-                                </code>
-                              </span>
-                              <span className='mt-0.5 line-clamp-2 text-muted-foreground text-xs leading-relaxed'>
-                                {command.description}
-                              </span>
-                            </span>
-                          </button>
-                        </li>
+                                <span className='min-w-0 flex-1'>
+                                  <span className='flex items-baseline gap-2'>
+                                    <span className='truncate font-medium text-sm group-hover:text-primary'>
+                                      {command.label}
+                                    </span>
+                                    <code className='shrink-0 font-mono text-muted-foreground text-xs'>
+                                      /{command.key}
+                                    </code>
+                                  </span>
+                                  <span className='mt-0.5 line-clamp-2 text-muted-foreground text-xs leading-relaxed'>
+                                    {command.description}
+                                  </span>
+                                </span>
+                              </button>
+                            </li>
+                          )
+                        })}
+                      </ul>
+                    ) : (
+                      <Button
+                        className='self-center'
+                        onClick={() => void newChat()}
+                        disabled={isCreating}
+                      >
+                        {isCreating ? (
+                          <Loader2Icon className='animate-spin' />
+                        ) : (
+                          <PlusIcon />
+                        )}
+                        {t('new_conversation')}
+                      </Button>
+                    )}
+                  </MessageScrollerItem>
+                ) : (
+                  <>
+                    {displayRuns.map((displayRun: AgentRun) => {
+                      const runMessages = messages.filter(
+                        (message) => message.run_uid === displayRun.uid,
+                      )
+                      const userMessages = runMessages.filter(
+                        (message) => message.role === 'user',
+                      )
+                      const visibleUserMessages = userMessages.filter(
+                        (message, index) =>
+                          !(
+                            index > 0 &&
+                            message.parts.length === 1 &&
+                            message.parts[0].type === 'text' &&
+                            parseAgentQuestionAnswers(message.parts[0].text)
+                          ),
+                      )
+                      const assistantMessages = runMessages.filter(
+                        (message) => message.role === 'assistant',
+                      )
+                      const runEvents =
+                        displayRun.uid === runId && events.length > 0
+                          ? events
+                          : (eventHistory[displayRun.uid] ?? [])
+                      const inputStatuses = agentInputStatuses(
+                        displayRun,
+                        runEvents,
+                      )
+                      const isCurrentRun = displayRun.uid === run?.uid
+
+                      return (
+                        <MessageScrollerItem
+                          key={displayRun.uid}
+                          messageId={displayRun.uid}
+                          scrollAnchor
+                          className='flex flex-col gap-3'
+                        >
+                          {visibleUserMessages
+                            .filter(
+                              (message) => !inputStatuses.has(message.uid),
+                            )
+                            .map((message) => (
+                              <ChatMessage
+                                key={message.uid}
+                                message={message}
+                              />
+                            ))}
+                          <AgentRunTrace
+                            run={displayRun}
+                            events={runEvents}
+                            onRetry={
+                              isCurrentRun
+                                ? () => void retry(displayRun)
+                                : undefined
+                            }
+                            isRetrying={isRetrying}
+                          />
+                          {visibleUserMessages
+                            .filter((message) => inputStatuses.has(message.uid))
+                            .map((message) => (
+                              <ChatMessage
+                                key={message.uid}
+                                message={message}
+                                inputStatus={inputStatuses.get(message.uid)}
+                              />
+                            ))}
+                          {assistantMessages.map((message) => (
+                            <ChatMessage key={message.uid} message={message} />
+                          ))}
+                          <AgentRunArtifacts run={displayRun} />
+                        </MessageScrollerItem>
                       )
                     })}
-                  </ul>
-                ) : (
-                  <Button
-                    className='self-center'
-                    onClick={() => void newChat()}
-                    disabled={isCreating}
-                  >
-                    {isCreating ? (
-                      <Loader2Icon className='animate-spin' />
-                    ) : (
-                      <PlusIcon />
-                    )}
-                    {t('new_conversation')}
-                  </Button>
+                    {unmatchedMessages.map((message) => (
+                      <MessageScrollerItem
+                        key={message.uid}
+                        messageId={message.uid}
+                        scrollAnchor={message.role === 'user'}
+                      >
+                        <ChatMessage message={message} />
+                      </MessageScrollerItem>
+                    ))}
+                  </>
                 )}
-              </div>
-            ) : (
-              <>
-                {displayRuns.map((displayRun: AgentRun) => {
-                  const runMessages = messages.filter(
-                    (message) => message.run_uid === displayRun.uid,
-                  )
-                  const userMessages = runMessages.filter(
-                    (message) => message.role === 'user',
-                  )
-                  const visibleUserMessages = userMessages.filter(
-                    (message, index) =>
-                      !(
-                        index > 0 &&
-                        message.parts.length === 1 &&
-                        message.parts[0].type === 'text' &&
-                        parseAgentQuestionAnswers(message.parts[0].text)
-                      ),
-                  )
-                  const assistantMessages = runMessages.filter(
-                    (message) => message.role === 'assistant',
-                  )
-                  const runEvents =
-                    displayRun.uid === runId && events.length > 0
-                      ? events
-                      : (eventHistory[displayRun.uid] ?? [])
-                  const isCurrentRun = displayRun.uid === run?.uid
 
-                  return (
-                    <div key={displayRun.uid} className='flex flex-col gap-3'>
-                      {visibleUserMessages.map((message) => (
-                        <ChatMessage key={message.uid} message={message} />
-                      ))}
-                      <AgentRunTrace
-                        run={displayRun}
-                        events={runEvents}
-                        onRetry={
-                          isCurrentRun
-                            ? () => void retry(displayRun)
-                            : undefined
-                        }
-                        isRetrying={isRetrying}
+                {run?.status === 'waiting_input' && (
+                  <MessageScrollerItem messageId={`${run.uid}-input`}>
+                    {isPlanApproval ? (
+                      <PlanApproval
+                        plan={planContent}
+                        feedback={feedback}
+                        isPending={isResuming}
+                        onFeedbackChange={setFeedback}
+                        onApprove={() => void resume(true)}
+                        onSendFeedback={() => void resume(false)}
                       />
-                      {assistantMessages.map((message) => (
-                        <ChatMessage key={message.uid} message={message} />
-                      ))}
-                      <AgentRunArtifacts run={displayRun} />
-                    </div>
-                  )
-                })}
-                {unmatchedMessages.map((message) => (
-                  <ChatMessage key={message.uid} message={message} />
-                ))}
-              </>
-            )}
-
-            {run?.status === 'waiting_input' &&
-              (isPlanApproval ? (
-                <PlanApproval
-                  plan={planContent}
-                  feedback={feedback}
-                  isPending={isResuming}
-                  onFeedbackChange={setFeedback}
-                  onApprove={() => void resume(true)}
-                  onSendFeedback={() => void resume(false)}
-                />
-              ) : questions.length > 0 ? (
-                <QuestionApproval
-                  questions={questions}
-                  isPending={isResuming}
-                  onSubmit={(response) => void resume(false, response)}
-                />
-              ) : (
-                <Alert variant='warning'>
-                  <AlertDescription className='space-y-3'>
-                    <MessageResponse>
-                      {typeof run.interrupt_payload?.question === 'string'
-                        ? run.interrupt_payload.question
-                        : typeof run.interrupt_payload?.message === 'string'
-                          ? run.interrupt_payload.message
-                          : JSON.stringify(run.interrupt_payload, null, 2)}
-                    </MessageResponse>
-                    <Textarea
-                      value={feedback}
-                      onChange={(event) => setFeedback(event.target.value)}
-                      placeholder={t('feedback_placeholder')}
-                      className='bg-background'
-                    />
-                    <div className='flex gap-2'>
-                      <Button
-                        size='sm'
-                        onClick={() => void resume(true)}
-                        disabled={isResuming}
-                      >
-                        {t('approve')}
-                      </Button>
-                      <Button
-                        size='sm'
-                        variant='outline'
-                        onClick={() => void resume(false)}
-                        disabled={isResuming || !feedback.trim()}
-                      >
-                        {t('send_feedback')}
-                      </Button>
-                    </div>
-                  </AlertDescription>
-                </Alert>
-              ))}
-          </ConversationContent>
-          <ConversationScrollButton className='bottom-3 size-8 shadow-sm' />
-        </Conversation>
+                    ) : questions.length > 0 ? (
+                      <QuestionApproval
+                        questions={questions}
+                        isPending={isResuming}
+                        onSubmit={(response) => void resume(false, response)}
+                      />
+                    ) : (
+                      <InterruptApproval
+                        payload={run.interrupt_payload}
+                        feedback={feedback}
+                        isPending={isResuming}
+                        onFeedbackChange={setFeedback}
+                        onApprove={() => void resume(true)}
+                        onSendFeedback={() => void resume(false)}
+                      />
+                    )}
+                  </MessageScrollerItem>
+                )}
+              </MessageScrollerContent>
+            </MessageScrollerViewport>
+            <MessageScrollerButton className='data-[direction=end]:bottom-3'>
+              <ArrowDownIcon />
+              <span className='sr-only'>{t('scroll_to_latest')}</span>
+            </MessageScrollerButton>
+          </MessageScroller>
+        </MessageScrollerProvider>
 
         <div className='shrink-0 space-y-2 px-3 pt-1 pb-3'>
           {(localError || attachments.error) && (
@@ -674,24 +779,33 @@ function ChatSidebarInner({
               </AlertDescription>
             </Alert>
           )}
+          {run && (
+            <RunTodoQueue
+              run={run}
+              events={
+                events.length > 0 ? events : (eventHistory[run.uid] ?? [])
+              }
+            />
+          )}
           {workflowSuggestions.length > 0 && !isBusy && !nodeAttachment && (
-            <Suggestions>
+            <div className='flex scroll-fade-x scrollbar-none gap-2 overflow-x-auto overscroll-x-contain'>
               {workflowSuggestions.map((suggestion) => (
-                <Suggestion
+                <Button
                   key={suggestion.agentName}
-                  suggestion={suggestion.prompt}
+                  variant='outline'
+                  size='sm'
+                  className='shrink-0'
                   onClick={() => void runWorkflowSuggestion(suggestion)}
                   disabled={isCreating || isSubmitting}
-                  className='h-7 gap-1.5 border-primary/30 px-3 text-primary text-xs shadow-none hover:bg-primary/5 hover:text-primary'
                 >
-                  <SparklesIcon className='size-3.5' />
+                  <SparklesIcon />
                   {suggestion.label}
-                </Suggestion>
+                </Button>
               ))}
-            </Suggestions>
+            </div>
           )}
           <div className='relative'>
-            {slashCommand.open && !parsedCommand && (
+            {!acceptsInput && slashCommand.open && !parsedCommand && (
               <SlashCommandMenu className='absolute inset-x-0 bottom-full z-20 mb-2'>
                 {slashCommand.suggestions.map((command, index) => {
                   const Icon = command.icon
@@ -715,7 +829,21 @@ function ChatSidebarInner({
                 })}
               </SlashCommandMenu>
             )}
-            <fieldset
+            <input
+              ref={fileInputRef}
+              type='file'
+              accept={CHAT_ATTACHMENT_ACCEPT}
+              multiple
+              className='sr-only'
+              tabIndex={-1}
+              aria-label={t('images.add')}
+              disabled={attachmentLocked}
+              onChange={(event) => {
+                attachments.addFiles(Array.from(event.target.files ?? []))
+                event.target.value = ''
+              }}
+            />
+            <InputGroup
               aria-label={t('images.attachments')}
               onDragOver={(event) => {
                 if (event.dataTransfer.types.includes('Files'))
@@ -724,43 +852,41 @@ function ChatSidebarInner({
               onDrop={(event) => {
                 if (event.dataTransfer.files.length === 0) return
                 event.preventDefault()
-                if (!inputLocked)
+                if (!attachmentLocked)
                   attachments.addFiles(Array.from(event.dataTransfer.files))
               }}
-              className='rounded-xl border bg-card shadow-sm transition-[border-color,box-shadow] focus-within:border-primary/50 focus-within:ring-3 focus-within:ring-primary/10'
+              className='rounded-xl bg-card shadow-sm'
             >
               <DraftAttachments
                 drafts={attachments.drafts}
                 onRemove={attachments.remove}
                 onRetry={attachments.retry}
-                disabled={isSubmitting || isBusy}
+                disabled={
+                  isSubmitting || isSendingInput || (isBusy && !acceptsInput)
+                }
                 node={nodeAttachment}
                 onRemoveNode={onRemoveNodeAction}
               />
+              {acceptsInput &&
+                (attachments.drafts.length > 0 || nodeAttachment) && (
+                  <InputGroupAddon align='block-start'>
+                    <output className='font-normal text-muted-foreground text-xs'>
+                      {t('input.text_only')}
+                    </output>
+                  </InputGroupAddon>
+                )}
               {nodeError && (
-                <output className='block px-3 pt-2 text-destructive text-xs'>
-                  {nodeError}
-                </output>
+                <InputGroupAddon align='block-start'>
+                  <output className='font-normal text-destructive text-xs'>
+                    {nodeError}
+                  </output>
+                </InputGroupAddon>
               )}
-              <input
-                ref={fileInputRef}
-                type='file'
-                accept={CHAT_ATTACHMENT_ACCEPT}
-                multiple
-                className='sr-only'
-                tabIndex={-1}
-                aria-label={t('images.add')}
-                disabled={inputLocked}
-                onChange={(event) => {
-                  attachments.addFiles(Array.from(event.target.files ?? []))
-                  event.target.value = ''
-                }}
-              />
-              <div className='relative'>
-                {parsedCommand && (
+              <div className='relative w-full'>
+                {!acceptsInput && parsedCommand && (
                   <div
                     aria-hidden='true'
-                    className='pointer-events-none absolute inset-x-0 top-0 min-h-16 whitespace-pre-wrap wrap-break-word px-3 py-2 text-base md:text-sm'
+                    className='pointer-events-none absolute inset-x-0 top-0 min-h-16 whitespace-pre-wrap wrap-break-word p-3 text-base md:text-sm'
                   >
                     <span className='rounded-sm bg-primary/10 text-primary'>
                       /{parsedCommand.command.key}
@@ -770,20 +896,22 @@ function ChatSidebarInner({
                     </span>
                   </div>
                 )}
-                <Textarea
+                <InputGroupTextarea
                   ref={textareaRef}
                   value={text}
                   onChange={(event) =>
-                    slashCommand.onValueChange(event.target.value)
+                    acceptsInput
+                      ? setText(event.target.value)
+                      : slashCommand.onValueChange(event.target.value)
                   }
                   onPaste={(event) => {
                     const files = Array.from(event.clipboardData.files)
                     if (files.length === 0) return
                     event.preventDefault()
-                    if (!inputLocked) attachments.addFiles(files)
+                    if (!attachmentLocked) attachments.addFiles(files)
                   }}
                   onKeyDown={(event) => {
-                    slashCommand.onKeyDown(event)
+                    if (!acceptsInput) slashCommand.onKeyDown(event)
                     if (event.defaultPrevented) return
                     if (event.key === 'Enter' && !event.shiftKey) {
                       if (event.nativeEvent.isComposing) return
@@ -794,79 +922,87 @@ function ChatSidebarInner({
                   placeholder={
                     inputDisabled
                       ? t('input_unavailable')
-                      : t('command_placeholder')
+                      : acceptsInput
+                        ? t('input.placeholder')
+                        : t('command_placeholder')
                   }
                   disabled={inputLocked}
                   className={cn(
-                    'relative max-h-60 min-h-16 resize-none border-0 bg-transparent px-3 shadow-none focus-visible:ring-0 dark:bg-transparent',
-                    parsedCommand &&
+                    'relative max-h-60 min-h-16 p-3',
+                    !acceptsInput &&
+                      parsedCommand &&
                       'text-transparent caret-foreground selection:bg-primary/20',
                   )}
                 />
               </div>
-              <div className='flex items-center gap-1 px-2 pb-2'>
-                <Button
-                  type='button'
+              <InputGroupAddon align='block-end'>
+                <InputGroupButton
                   size='icon-sm'
-                  variant='ghost'
-                  className='text-muted-foreground'
-                  disabled={inputLocked || attachments.drafts.length >= 4}
+                  variant='outline'
+                  className='rounded-full'
+                  disabled={attachmentLocked || attachments.drafts.length >= 4}
                   aria-label={t('images.add')}
                   title={t('images.add')}
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  <PaperclipIcon className='size-4' />
-                </Button>
+                  <PlusIcon />
+                </InputGroupButton>
                 {parsedCommand ? (
                   <ActiveAgentPill command={parsedCommand.command} />
                 ) : (
                   !text && (
-                    <Button
-                      type='button'
+                    <InputGroupButton
                       size='sm'
-                      variant='ghost'
-                      className='h-8 gap-1 px-2 text-muted-foreground text-xs'
-                      disabled={inputLocked}
+                      disabled={inputLocked || isBusy}
                       onClick={openCommandMenu}
                     >
-                      <BotIcon className='size-3.5' />
+                      <BotIcon />
                       {t('choose_assistant')}
-                    </Button>
+                    </InputGroupButton>
                   )
                 )}
-                <div className='flex-1' />
-                {isBusy && run ? (
-                  <Button
-                    type='button'
-                    size='icon-sm'
-                    variant='outline'
-                    className='rounded-lg'
-                    onClick={() => void cancelRun(run.uid)}
-                    disabled={isCancelling || run.status === 'cancel_requested'}
-                    aria-label={t('cancel')}
-                    title={t('cancel')}
-                  >
-                    <SquareIcon className='size-3.5 fill-current' />
-                  </Button>
-                ) : (
-                  <Button
-                    type='button'
-                    size='icon-sm'
-                    className='rounded-lg'
-                    disabled={inputDisabled || !canSubmit || isSubmitting}
-                    aria-label={t('send')}
-                    title={t('send')}
-                    onClick={() => void submit()}
-                  >
-                    {isSubmitting ? (
-                      <Loader2Icon className='size-4 animate-spin' />
-                    ) : (
-                      <ArrowUpIcon className='size-4' />
-                    )}
-                  </Button>
-                )}
-              </div>
-            </fieldset>
+                <div className='ml-auto flex items-center gap-1'>
+                  <ContextUsage events={sessionEvents} />
+                  {isBusy && run ? (
+                    <InputGroupButton
+                      size='icon-sm'
+                      variant='outline'
+                      className='rounded-full'
+                      onClick={() => void cancelRun(run.uid)}
+                      disabled={
+                        isCancelling || run.status === 'cancel_requested'
+                      }
+                      aria-label={t('cancel')}
+                      title={t('cancel')}
+                    >
+                      <SquareIcon className='size-3 fill-current' />
+                    </InputGroupButton>
+                  ) : null}
+                  {(!isBusy || acceptsInput) && (
+                    <InputGroupButton
+                      size='icon-sm'
+                      variant='default'
+                      className='rounded-full'
+                      disabled={
+                        inputDisabled ||
+                        !canSubmit ||
+                        isSubmitting ||
+                        isSendingInput
+                      }
+                      aria-label={t(acceptsInput ? 'input.send' : 'send')}
+                      title={t(acceptsInput ? 'input.send' : 'send')}
+                      onClick={() => void submit()}
+                    >
+                      {isSubmitting || isSendingInput ? (
+                        <Loader2Icon className='animate-spin' />
+                      ) : (
+                        <ArrowUpIcon />
+                      )}
+                    </InputGroupButton>
+                  )}
+                </div>
+              </InputGroupAddon>
+            </InputGroup>
           </div>
         </div>
       </div>

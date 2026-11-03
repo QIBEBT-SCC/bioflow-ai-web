@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import { format, parseISO } from 'date-fns'
 import {
   CheckIcon,
@@ -45,7 +46,6 @@ import {
   useSample,
   useSamplesPage,
 } from '@/hooks/use-sample'
-import { cn } from '@/lib/utils'
 import type { Sample } from '@/types/sample'
 import { AddSampleFileDialog } from './add-sample-file-dialog'
 import { CreateSampleDialog } from './create-sample-dialog'
@@ -442,7 +442,7 @@ export function SampleList({ projectId }: SampleListProps) {
                                 <Badge
                                   key={key}
                                   variant='outline'
-                                  className='max-w-full break-all text-xs whitespace-normal'
+                                  className='h-auto max-w-full break-all text-xs whitespace-normal'
                                 >
                                   {key}: {String(value)}
                                 </Badge>

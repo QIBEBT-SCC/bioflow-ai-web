@@ -286,7 +286,7 @@ function ToolGridView({
         {tools.map((tool: SimpleToolInfo) => (
           <Card
             key={tool.uid}
-            className='group relative gap-3 p-5 transition-[border-color,box-shadow] hover:border-primary/40 hover:shadow-md'
+            className='group relative gap-3 p-5 transition-shadow hover:shadow-md hover:ring-primary/40'
           >
             <div className='flex items-start gap-3'>
               <div className='flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary'>

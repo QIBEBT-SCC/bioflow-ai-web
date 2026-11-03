@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import {
   ChevronDownIcon,
   ChevronLeftIcon,
@@ -31,7 +32,6 @@ import { RunStatusBadge } from '@/components/workflow/run-status'
 import { RunTaskList } from '@/components/workflow/run-task-list'
 import { useWorkflowMonitorRuns } from '@/hooks/use-workflow-monitor'
 import { RUN_STATUS_APPEARANCE } from '@/lib/status'
-import { cn } from '@/lib/utils'
 import { WorkflowRunStatusV2 } from '@/types/workflow-v2'
 
 export function RunTables({

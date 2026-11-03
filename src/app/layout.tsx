@@ -5,6 +5,7 @@ import { NextIntlClientProvider } from 'next-intl'
 import { getTranslations } from 'next-intl/server'
 import type React from 'react'
 import { QueryProvider } from '@/components/providers/query-provider'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import { ACCENT_COOKIE, defaultAccent, isAccentColor } from '@/lib/theme'
 
 const geistSans = Geist({
@@ -42,7 +43,10 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <NextIntlClientProvider>
-          <QueryProvider>{children}</QueryProvider>
+          <QueryProvider>
+            {/* Sidebar tooltips used to get a zero-delay provider from SidebarProvider */}
+            <TooltipProvider delayDuration={0}>{children}</TooltipProvider>
+          </QueryProvider>
         </NextIntlClientProvider>
       </body>
     </html>

@@ -19,7 +19,6 @@
       "!dist",
       "!build",
       "!.agents",
-      "!src/components/ai-elements",
       "!src/components/ui"
     ]
   },

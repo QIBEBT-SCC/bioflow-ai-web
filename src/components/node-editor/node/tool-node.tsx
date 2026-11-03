@@ -9,6 +9,7 @@ import {
   useNodesData,
   useReactFlow,
 } from '@xyflow/react'
+import { cn } from 'cn'
 import { ShieldAlertIcon, ShieldCheckIcon, UserRoundIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
@@ -20,7 +21,6 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useToolArg } from '@/hooks/use-tool'
-import { cn } from '@/lib/utils'
 import type { NodeRunDataV2 } from '@/types/workflow-v2'
 
 const OUTPUT_FOLDER_HANDLE_NAME = 'workdir'

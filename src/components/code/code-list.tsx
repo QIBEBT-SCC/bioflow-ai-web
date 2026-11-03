@@ -134,7 +134,7 @@ export function CodeList({
           return (
             <Card
               key={code.uid}
-              className='group relative gap-0 py-0 transition-[border-color,box-shadow] hover:border-primary/40 hover:shadow-md'
+              className='group relative gap-0 py-0 transition-shadow hover:shadow-md hover:ring-primary/40'
             >
               <CardHeader className='gap-3 px-5 pt-5 pb-3'>
                 <div className='flex min-w-0 items-start gap-3'>

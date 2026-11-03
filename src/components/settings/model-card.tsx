@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { useDeleteLLMModel, useUpdateLLMModel } from '@/hooks/use-setting'
+import { formatTokenCount } from '@/lib/token-format'
 import type {
   LLMModelPublic,
   LLMModelUpdate,
@@ -44,6 +45,7 @@ export function ModelCard({
       input_price: model.input_price,
       output_price: model.output_price,
       cache_read_price: model.cache_read_price,
+      context_window: model.context_window,
       reasoning_effort: model.reasoning_effort,
       is_active: model.is_active,
     })
@@ -82,7 +84,7 @@ export function ModelCard({
   }
 
   return (
-    <Card className='border bg-muted/30 pt-2'>
+    <Card className='bg-muted/30 pt-2'>
       <div className='p-4'>
         <div className='flex items-start justify-between gap-3 mb-3'>
           <div className='flex min-w-0 items-center gap-3'>
@@ -233,6 +235,28 @@ export function ModelCard({
                   className='h-8 text-xs bg-background'
                 />
               </div>
+              <div className='space-y-1'>
+                <Label
+                  htmlFor={`context-window-${model.id}`}
+                  className='text-xs'
+                >
+                  {t('context_window')}
+                </Label>
+                <Input
+                  id={`context-window-${model.id}`}
+                  type='number'
+                  min={1}
+                  step={1}
+                  value={draft?.context_window ?? ''}
+                  onChange={(e) =>
+                    updateDraft(
+                      'context_window',
+                      e.target.value === '' ? null : Number(e.target.value),
+                    )
+                  }
+                  className='h-8 text-xs bg-background'
+                />
+              </div>
               <div className='flex items-center gap-2 pt-4'>
                 <Label htmlFor={`model-active-${model.id}`} className='text-xs'>
                   {t('active')}
@@ -286,6 +310,16 @@ export function ModelCard({
                 </p>
                 <p className='font-medium'>
                   ${model.cache_read_price}/1M tokens
+                </p>
+              </div>
+              <div className='space-y-1'>
+                <p className='text-xs text-muted-foreground'>
+                  {t('context_window')}
+                </p>
+                <p className='font-medium'>
+                  {model.context_window
+                    ? formatTokenCount(model.context_window)
+                    : t('context_window_unset')}
                 </p>
               </div>
               <div className='space-y-1'>

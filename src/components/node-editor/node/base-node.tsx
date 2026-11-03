@@ -8,6 +8,7 @@ import {
   useNodeId,
   useNodesData,
 } from '@xyflow/react'
+import { cn } from 'cn'
 import {
   BanIcon,
   CheckCircle2Icon,
@@ -29,7 +30,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
-import { cn } from '@/lib/utils'
 import type { HandleDefine } from '@/types/node'
 import { type NodeRunDataV2, NodeRunStatusV2 } from '@/types/workflow-v2'
 

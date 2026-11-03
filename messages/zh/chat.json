@@ -1,5 +1,13 @@
 {
   "Chat": {
+    "input": {
+      "placeholder": "补充或修正要求，当前工具结束后生效…",
+      "send": "发送补充要求",
+      "queued": "已排队，等待加入上下文",
+      "applied": "已加入模型上下文",
+      "unhandled": "本轮已结束，此条补充未处理",
+      "text_only": "运行中的补充仅支持文本，请先移除附件。"
+    },
     "approve": "批准",
     "assistant": "AI 助手",
     "assistants": {
@@ -102,7 +110,10 @@
           },
           "search": {
             "active": "正在搜索{manager}：{subject}",
-            "complete": "已搜索{manager}：{subject}"
+            "complete": "已搜索{manager}：{subject}",
+            "searching": "正在搜索{manager}",
+            "searched": "已搜索{manager}",
+            "found": "{count, plural, =0 {未搜索到{manager}} other {搜索到 # 个{manager}}}"
           },
           "switch": {
             "active": "正在切换到{subject}",
@@ -172,10 +183,230 @@
           "complete": "已写入 {file}"
         }
       },
-      "todo_complete": "所有计划步骤均已完成",
-      "todo_activity_active": "正在处理 {index}/{total} · {task}",
-      "todo_activity_complete": "已完成 {index}/{total} · {task}",
-      "todo_title": "{completed}/{total} · {current}"
+      "queue_pending": "{count} 项待办",
+      "queue_completed": "已完成 {count} 项",
+      "step_failed": "失败",
+      "waiting": "正在等待你的输入",
+      "validation": {
+        "active": "正在验证生成的工具",
+        "complete": "已验证生成的工具"
+      },
+      "tool": {
+        "ask_human": {
+          "active": "正在等待回答",
+          "complete": "已回答问题"
+        },
+        "summarize_work": {
+          "active": "正在保存交接摘要",
+          "complete": "已保存交接摘要"
+        },
+        "load_skill": {
+          "active": "正在加载技能 {subject}",
+          "complete": "已加载技能 {subject}"
+        },
+        "read_skill_resource": {
+          "active": "正在读取技能文件 {subject}",
+          "complete": "已读取技能文件 {subject}"
+        },
+        "workflow_reader": {
+          "overview": {
+            "active": "正在读取运行概览",
+            "complete": "已读取运行概览"
+          },
+          "node": {
+            "active": "正在查看节点 {subject}",
+            "complete": "已查看节点 {subject}"
+          },
+          "children": {
+            "active": "正在列出 {subject} 的 ForEach 子运行",
+            "complete": "已列出 {subject} 的 ForEach 子运行"
+          }
+        },
+        "run_command": {
+          "active": "正在检查 {subject}",
+          "complete": "已检查 {subject}"
+        },
+        "apply_patch": {
+          "active": "正在写入 {file}",
+          "complete": "已写入 {file}"
+        },
+        "view_image": {
+          "active": "正在查看图片 {subject}",
+          "complete": "已查看图片 {subject}"
+        },
+        "write_diagnosis": {
+          "active": "正在撰写诊断报告",
+          "complete": "已撰写诊断报告"
+        },
+        "fix_subgraph": {
+          "load": {
+            "active": "正在打开子图 {subject}",
+            "complete": "已打开子图 {subject}"
+          },
+          "save": {
+            "active": "正在保存子图",
+            "complete": "已保存子图"
+          },
+          "cancel": {
+            "active": "正在放弃子图修改",
+            "complete": "已放弃子图修改"
+          },
+          "view_interface": {
+            "active": "正在查看子图接口",
+            "complete": "已查看子图接口"
+          },
+          "set_output": {
+            "active": "正在更新子图输出",
+            "complete": "已更新子图输出"
+          }
+        },
+        "finalize_workflow_fix": {
+          "active": "正在完成工作流修复",
+          "complete": "已完成工作流修复"
+        }
+      },
+      "tool_generator": {
+        "select_image": {
+          "active": "正在选择容器镜像",
+          "complete": "已选择容器镜像"
+        },
+        "search_exist_tool": {
+          "active": "正在检查是否已有工具节点",
+          "complete": "已检查是否已有工具节点"
+        },
+        "get_report": {
+          "active": "正在试运行工具",
+          "complete": "已试运行工具"
+        },
+        "choose_group": {
+          "active": "正在分配功能和领域标签",
+          "complete": "已分配功能和领域标签"
+        },
+        "generate_tool_config": {
+          "active": "正在生成工具配置",
+          "complete": "已生成工具配置"
+        },
+        "process_help_doc": {
+          "active": "正在准备帮助文档",
+          "complete": "已准备帮助文档"
+        },
+        "save_tool": {
+          "active": "正在保存工具",
+          "complete": "已保存工具"
+        }
+      },
+      "sub_agent": "子智能体步骤",
+      "sub_step_count": "{count} 个子步骤",
+      "tool_creation": {
+        "wait_tool_generation": {
+          "plain": {
+            "active": "等待其他工具生成任务完成",
+            "complete": "已等待其他工具生成任务"
+          }
+        },
+        "return_to_parent": {
+          "plain": {
+            "active": "正在将问题交回主智能体",
+            "complete": "已将问题交回主智能体"
+          }
+        },
+        "container_command": {
+          "plain": {
+            "active": "正在运行测试命令",
+            "complete": "已运行测试命令"
+          },
+          "subject": {
+            "active": "正在 {subject} 中运行测试命令",
+            "complete": "已在 {subject} 中运行测试命令"
+          }
+        },
+        "search_local_image": {
+          "plain": {
+            "active": "正在搜索本地镜像",
+            "complete": "已搜索本地镜像"
+          },
+          "subject": {
+            "active": "正在搜索本地镜像 {subject}",
+            "complete": "已搜索本地镜像 {subject}"
+          }
+        },
+        "search_biodb": {
+          "plain": {
+            "active": "正在搜索已注册数据库",
+            "complete": "已搜索已注册数据库"
+          },
+          "subject": {
+            "active": "正在搜索数据库 {subject}",
+            "complete": "已搜索数据库 {subject}"
+          }
+        },
+        "search_tools_by_function": {
+          "plain": {
+            "active": "正在搜索已有工具",
+            "complete": "已搜索已有工具"
+          },
+          "subject": {
+            "active": "正在搜索已有工具：{subject}",
+            "complete": "已搜索已有工具：{subject}"
+          }
+        },
+        "read_tool_doc": {
+          "plain": {
+            "active": "正在阅读工具帮助文档",
+            "complete": "已阅读工具帮助文档"
+          },
+          "subject": {
+            "active": "正在阅读工具 {subject} 的帮助文档",
+            "complete": "已阅读工具 {subject} 的帮助文档"
+          }
+        },
+        "select_image": {
+          "plain": {
+            "active": "正在选择镜像",
+            "complete": "已选择镜像"
+          },
+          "subject": {
+            "active": "正在选择镜像 {subject}",
+            "complete": "已选择镜像 {subject}"
+          }
+        },
+        "select_tool": {
+          "plain": {
+            "active": "正在选择已有工具",
+            "complete": "已选择已有工具"
+          }
+        },
+        "select_classification": {
+          "plain": {
+            "active": "正在保存功能与领域标签",
+            "complete": "已保存功能与领域标签"
+          }
+        },
+        "set_file_mounts": {
+          "plain": {
+            "active": "正在设置文件挂载",
+            "complete": "已设置文件挂载"
+          }
+        },
+        "set_command_detail": {
+          "plain": {
+            "active": "正在设置命令模板",
+            "complete": "已设置命令模板"
+          }
+        },
+        "set_tool_info": {
+          "plain": {
+            "active": "正在设置工具名称与描述",
+            "complete": "已设置工具名称与描述"
+          }
+        },
+        "write_tool_report": {
+          "plain": {
+            "active": "正在撰写试运行报告",
+            "complete": "已撰写试运行报告"
+          }
+        }
+      }
     },
     "rename": "重命名",
     "resize": "调整对话侧栏宽度",
@@ -213,6 +444,29 @@
     },
     "loading": "正在加载对话…",
     "empty_no_session": "新建对话后即可与助手协作。",
-    "choose_assistant": "选择助手"
+    "choose_assistant": "选择助手",
+    "scroll_to_latest": "滚动到最新消息",
+    "interrupt_title": "需要你的确认",
+    "question_progress": "{current} / {total}",
+    "answer_required": "请选择或填写一个回答后继续。",
+    "question_previous": "上一题",
+    "question_next": "下一题",
+    "cancelled": "智能体运行已取消。",
+    "context": {
+      "title": "上下文窗口",
+      "label": "上下文用量",
+      "percent": "已用上下文 {percent}%",
+      "input": "输入",
+      "cache_read": "缓存命中",
+      "output": "输出",
+      "used": "已用 {used} / {limit}",
+      "remaining": "剩余 {tokens}",
+      "no_limit": "已用 {used} tokens，该模型未设置上下文窗口",
+      "session_total": "本会话累计",
+      "reasoning_note": "输出中含 {tokens} 推理 token",
+      "calls": "{count} 次调用",
+      "by_agent": "按智能体",
+      "sub_agent": "子智能体"
+    }
   }
 }

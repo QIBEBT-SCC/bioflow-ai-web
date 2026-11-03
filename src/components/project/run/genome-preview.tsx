@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import {
   AlertCircle,
   ChevronLeft,
@@ -46,7 +47,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { cn } from '@/lib/utils'
 import type { PreviewMeta, PreviewRegion } from '@/types/run'
 
 type IntervalItem = Extract<PreviewRegion, { kind: 'intervals' }>['items'][0]

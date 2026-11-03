@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import { formatDistanceToNow } from 'date-fns'
 import {
   CheckIcon,
@@ -24,7 +25,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useDeleteAgentSession, useUpdateAgentSession } from '@/hooks/use-agent'
-import { cn } from '@/lib/utils'
 import { ACTIVE_AGENT_STATUSES, type AgentSession } from '@/types/agent'
 
 export function ChatHistoryItem({

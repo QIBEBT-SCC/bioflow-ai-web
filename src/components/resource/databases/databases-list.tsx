@@ -1,8 +1,8 @@
 'use client'
 
+import { cn } from 'cn'
 import { useTranslations } from 'next-intl'
 import { statusToneClasses } from '@/lib/status'
-import { cn } from '@/lib/utils'
 import type { BioDbSimple } from '@/types/resource'
 
 interface DatabasesListProps {

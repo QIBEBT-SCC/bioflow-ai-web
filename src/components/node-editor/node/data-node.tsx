@@ -1,6 +1,7 @@
 'use client'
 
 import { type Node, useNodeId, useNodesData, useReactFlow } from '@xyflow/react'
+import { cn } from 'cn'
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import { BaseNode } from '@/components/node-editor/node/base-node'
 import { colorSchemes } from '@/components/node-editor/node/color'
@@ -14,7 +15,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { cn } from '@/lib/utils'
 import type { HandleDefine } from '@/types/node'
 
 const COPY2FOLDER_HANDLES = {

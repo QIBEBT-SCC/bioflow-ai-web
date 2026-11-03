@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from 'cn'
 import { format, parseISO } from 'date-fns'
 import { enUS, zhCN } from 'date-fns/locale'
 import {
@@ -47,26 +48,8 @@ import {
   useLLMStatisticsDetails,
   useLLMStatisticsOverview,
 } from '@/hooks/use-setting'
-import { cn } from '@/lib/utils'
+import { formatTokenCount } from '@/lib/token-format'
 import type { LLMStatisticDetail, LLMStatisticOverview } from '@/types/setting'
-
-const TOKEN_UNITS = [
-  { threshold: 1_000_000_000_000, suffix: 'T' },
-  { threshold: 1_000_000_000, suffix: 'B' },
-  { threshold: 1_000_000, suffix: 'M' },
-  { threshold: 1_000, suffix: 'K' },
-] as const
-
-function formatTokenCount(value: number) {
-  const unit = TOKEN_UNITS.find(({ threshold }) => Math.abs(value) >= threshold)
-
-  if (!unit) return value.toLocaleString()
-
-  const compactValue = value / unit.threshold
-  return `${compactValue.toLocaleString('en-US', {
-    maximumFractionDigits: 2,
-  })}${unit.suffix}`
-}
 
 function formatTotalPrice(value: number | string) {
   const numericValue = Number(value)
@@ -458,6 +441,8 @@ const defaultStats: LLMStatisticOverview = {
     total_input_tokens: 0,
     total_output_tokens: 0,
     total_cache_read: 0,
+    total_cache_creation: 0,
+    total_reasoning_tokens: 0,
     total_price: 0,
   },
   by_agent: [],

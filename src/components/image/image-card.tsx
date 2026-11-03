@@ -28,7 +28,7 @@ export function ImageCard({ image }: ImageCardProps) {
   const hasLinks = Boolean(image.homepage || image.paper_link)
 
   return (
-    <Card className='group relative h-full gap-4 p-5 transition-[border-color,box-shadow] hover:border-primary/40 hover:shadow-md'>
+    <Card className='group relative h-full gap-4 p-5 transition-shadow hover:shadow-md hover:ring-primary/40'>
       <div className='flex items-start gap-3'>
         <div className='flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary'>
           <PackageIcon className='size-5' />

@@ -4,7 +4,7 @@ import { CheckIcon, CopyIcon } from 'lucide-react'
 import type { ComponentProps } from 'react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
+import { cn } from 'cn'
 
 function copyToClipboard(text: string): Promise<void> {
   if (navigator?.clipboard?.writeText) {

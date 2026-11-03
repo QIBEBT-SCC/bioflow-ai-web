@@ -2,6 +2,7 @@
 
 import type { Node as FlowNode } from '@xyflow/react'
 import { ReactFlowProvider } from '@xyflow/react'
+import { cn } from 'cn'
 import {
   use,
   useCallback,
@@ -35,7 +36,6 @@ import { useRunFiles, useRunStream } from '@/hooks/use-run'
 import { useRunFlow } from '@/hooks/use-run-flow'
 import { useSubgraphRun } from '@/hooks/use-subgraph-run'
 import { useWorkflowNodeAttachment } from '@/hooks/use-workflow-node-attachment'
-import { cn } from '@/lib/utils'
 import { useChatSidebarStore } from '@/stores/chat-sidebar-store'
 import { type NodeRunDataV2, NodeRunStatusV2 } from '@/types/workflow-v2'
 
