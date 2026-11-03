@@ -72,6 +72,10 @@
       "answer": "回答",
       "fallback_activity": "正在处理请求",
       "builder": {
+        "read_node_memory": {
+          "active": "正在读取工具 Memory",
+          "complete": "已读取工具 Memory"
+        },
         "manager": {
           "resource_node": "资源节点",
           "tool_node": "工具节点",
@@ -259,6 +263,10 @@
             "active": "正在更新子图输出",
             "complete": "已更新子图输出"
           }
+        },
+        "write_node_memory": {
+          "active": "正在等待确认写入工具 Memory",
+          "complete": "{count, plural, =0 {未写入工具 Memory} other {已写入 # 条工具 Memory}}"
         },
         "finalize_workflow_fix": {
           "active": "正在完成工作流修复",

@@ -72,6 +72,10 @@
       "answer": "Answer",
       "fallback_activity": "Working on the request",
       "builder": {
+        "read_node_memory": {
+          "active": "Reading a tool memory",
+          "complete": "Read a tool memory"
+        },
         "manager": {
           "resource_node": "resource nodes",
           "tool_node": "tool nodes",
@@ -259,6 +263,10 @@
             "active": "Updating subgraph outputs",
             "complete": "Updated subgraph outputs"
           }
+        },
+        "write_node_memory": {
+          "active": "Waiting for you to confirm tool memories",
+          "complete": "{count, plural, =0 {No tool memories saved} one {Saved 1 tool memory} other {Saved # tool memories}}"
         },
         "finalize_workflow_fix": {
           "active": "Finalizing the workflow repair",

@@ -4,6 +4,7 @@ import {
   ArrowLeftRightIcon,
   ArrowUpRightIcon,
   BookOpenIcon,
+  BrainIcon,
   CheckCircle2Icon,
   CircleAlertIcon,
   CircleCheckIcon,
@@ -94,6 +95,8 @@ interface ProgressActivity {
   keywords?: string[]
   /** Number of matches a finished search returned. */
   resultCount?: number
+  /** Description of the tool memory an agent read. */
+  memoryDescription?: string
   tool?: string
   step?: string
   action?: string
@@ -202,6 +205,7 @@ function normalizeProgress(event: AgentEvent): ProgressActivity {
         )
       : undefined,
     resultCount: numberValue(source.result_count),
+    memoryDescription: stringValue(source.memory_description),
     tool: stringValue(source.tool),
     step: stringValue(source.step),
     action: stringValue(source.action),
@@ -258,6 +262,8 @@ const AGENT_TOOL_ICONS: Record<string, LucideIcon> = {
   apply_patch: FilePenLineIcon,
   view_image: ImageIcon,
   write_diagnosis: FilePenLineIcon,
+  read_node_memory: BrainIcon,
+  write_node_memory: BrainIcon,
   fix_subgraph: HammerIcon,
   finalize_workflow_fix: ClipboardCheckIcon,
   wait_tool_generation: HourglassIcon,
@@ -311,6 +317,7 @@ function activityIcon(activity: ProgressActivity): LucideIcon {
     return WaypointsIcon
   }
   if (activity.kind === 'workflow_manager_action') {
+    if (activity.action === 'read_node_memory') return BrainIcon
     return OPERATION_ICONS[activity.operation ?? 'update'] ?? PencilLineIcon
   }
   if (activity.kind === 'planner_run_command') return TerminalIcon
@@ -484,11 +491,12 @@ function activityPath(activity: ProgressActivity) {
   return activity.kind === 'planner_web_run' ? activity.subject : undefined
 }
 
-/** The expandable detail of a step, or nothing for a plain line. */
-function isAskHuman(activity: ProgressActivity) {
+/** Steps whose interrupt is answered through the question form. */
+function asksHuman(activity: ProgressActivity) {
   return (
     activity.kind === 'planner_ask_human' ||
-    (activity.kind === 'agent_tool' && activity.tool === 'ask_human')
+    (activity.kind === 'agent_tool' &&
+      (activity.tool === 'ask_human' || activity.tool === 'write_node_memory'))
   )
 }
 
@@ -504,10 +512,17 @@ function KeywordsDetail({ keywords }: { keywords: string[] }) {
   )
 }
 
+/** The expandable detail of a step, or nothing for a plain line. */
 function activityDetail(activity: ProgressActivity) {
   if (activity.kind === 'workflow_manager_action' && activity.keywords?.length)
     return <KeywordsDetail keywords={activity.keywords} />
-  if (isAskHuman(activity) && activity.questionAnswers?.length)
+  if (
+    (activity.action === 'read_node_memory' ||
+      activity.tool === 'read_node_memory') &&
+    activity.memoryDescription
+  )
+    return <p className='text-xs'>{activity.memoryDescription}</p>
+  if (asksHuman(activity) && activity.questionAnswers?.length)
     return <QuestionAnswerDetail answers={activity.questionAnswers} />
   if (
     (activity.kind === 'planner_run_command' ||
@@ -728,6 +743,11 @@ function useProgressActivities(events: AgentEvent[]) {
           }
           break
         case 'workflow_manager_action': {
+          if (activity.action === 'read_node_memory') {
+            message = t('builder.read_node_memory.active')
+            completeMessage = t('builder.read_node_memory.complete')
+            break
+          }
           const manager =
             activity.manager === 'tool_node'
               ? t('builder.manager.tool_node')
@@ -851,6 +871,16 @@ function useProgressActivities(events: AgentEvent[]) {
             case 'write_diagnosis':
               message = t('tool.write_diagnosis.active')
               completeMessage = t('tool.write_diagnosis.complete')
+              break
+            case 'read_node_memory':
+              message = t('builder.read_node_memory.active')
+              completeMessage = t('builder.read_node_memory.complete')
+              break
+            case 'write_node_memory':
+              message = t('tool.write_node_memory.active')
+              completeMessage = t('tool.write_node_memory.complete', {
+                count: activity.resultCount ?? 0,
+              })
               break
             case 'fix_subgraph':
               switch (activity.action) {
@@ -1001,7 +1031,7 @@ function useProgressActivities(events: AgentEvent[]) {
     })
 
     return translatedActivities.map((activity) => {
-      if (!isAskHuman(activity)) return activity
+      if (!asksHuman(activity)) return activity
 
       const resumeEvent = events.find(
         (event) =>
