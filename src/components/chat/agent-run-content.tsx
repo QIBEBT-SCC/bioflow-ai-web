@@ -348,7 +348,12 @@ function activityIcon(activity: ProgressActivity): LucideIcon {
   return CircleDotIcon
 }
 
-type StepStatus = 'running' | 'waiting' | 'error' | 'cancelled' | undefined
+export type StepStatus =
+  | 'running'
+  | 'waiting'
+  | 'error'
+  | 'cancelled'
+  | undefined
 
 /** Summary icon of a Chain of Thought: spinner, pause, failure, cancel or done. */
 function StatusIcon({ status }: { status: StepStatus }) {
@@ -391,7 +396,7 @@ function runStepStatus(runStatus: AgentRun['status']): StepStatus {
 }
 
 /** One trace step; steps with detail expand into it. */
-function Step({
+export function Step({
   icon: Icon,
   title,
   status,
@@ -431,7 +436,7 @@ function Step({
   )
 }
 
-function CommandDetail({ command }: { command: string }) {
+export function CommandDetail({ command }: { command: string }) {
   const lines = useHighlightedCode(command, 'bash')
 
   return (
@@ -472,7 +477,10 @@ function QuestionAnswerDetail({ answers }: { answers: AgentQuestionAnswer[] }) {
 }
 
 /** Keeps a scrolling trace pinned to its newest step while the run streams. */
-function useFollowLatest(active: boolean, latestId: number | undefined) {
+function useFollowLatest(
+  active: boolean,
+  latestId: number | string | undefined,
+) {
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
     if (!active || latestId === undefined || !ref.current) return
@@ -1156,23 +1164,27 @@ function TodoQueue({
   )
 }
 
-function RunChainOfThought({
-  tree,
-  runStatus,
+/**
+ * A run's steps folded under one summary line: the current step while it
+ * runs, then the step count. It opens while running unless toggled.
+ */
+export function StepsSummary({
+  status,
   currentLabel,
+  count,
   latestId,
+  children,
 }: {
-  tree: StepTree
-  runStatus: AgentRun['status']
+  status: StepStatus
   currentLabel: string
-  latestId: number | undefined
+  count: number
+  latestId: number | string | undefined
+  children: ReactNode
 }) {
   const t = useTranslations('Chat.progress')
   const [open, setOpen] = useState<boolean>()
-  const status = runStepStatus(runStatus)
   const isActive = status === 'running'
   const traceRef = useFollowLatest(isActive, latestId)
-  const steps = tree.roots
 
   return (
     <Trace>
@@ -1187,17 +1199,40 @@ function RunChainOfThought({
                 ? currentLabel
                 : status === 'waiting'
                   ? t('waiting')
-                  : t('history_count', { count: steps.length })}
+                  : t('history_count', { count })}
             </TraceTitle>
           </TraceLine>
         </TraceCollapsibleTrigger>
         <TraceCollapsibleContent>
           <Trace ref={traceRef} className='max-h-64 overflow-y-auto pr-1'>
-            <StepList steps={steps} tree={tree} runStatus={runStatus} />
+            {children}
           </Trace>
         </TraceCollapsibleContent>
       </TraceCollapsible>
     </Trace>
+  )
+}
+
+function RunChainOfThought({
+  tree,
+  runStatus,
+  currentLabel,
+  latestId,
+}: {
+  tree: StepTree
+  runStatus: AgentRun['status']
+  currentLabel: string
+  latestId: number | undefined
+}) {
+  return (
+    <StepsSummary
+      status={runStepStatus(runStatus)}
+      currentLabel={currentLabel}
+      count={tree.roots.length}
+      latestId={latestId}
+    >
+      <StepList steps={tree.roots} tree={tree} runStatus={runStatus} />
+    </StepsSummary>
   )
 }
 

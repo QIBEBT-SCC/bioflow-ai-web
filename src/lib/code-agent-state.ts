@@ -55,7 +55,12 @@ export function codingEventState(
         tools: previous
           ? state.tools.map((item) =>
               item === previous
-                ? { ...item, ...tool, detail: tool.detail || item.detail }
+                ? {
+                    ...item,
+                    ...tool,
+                    detail: tool.detail || item.detail,
+                    subject: tool.subject || item.subject,
+                  }
                 : item,
             )
           : [...state.tools, tool],

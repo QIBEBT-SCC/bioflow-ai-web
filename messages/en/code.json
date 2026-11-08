@@ -112,6 +112,8 @@
       "nodeInfo": "Node info",
       "reviewingChanges": "Reviewing changes",
       "saveCode": "Save",
+      "format": "Format",
+      "formatShortcut": "Format and sort imports with Ruff (Shift + Alt + F)",
       "pythonEnvironment": "Python environment",
       "pythonEnvironmentHint": "Add third-party Python packages installed at runtime from the system-configured index. Click is already provided.",
       "dependency": "Dependency",
@@ -146,6 +148,7 @@
       "createSuccess": "CODE node created",
       "createError": "Failed to create CODE node: {message}",
       "generateError": "Failed to generate name and description: {message}",
+      "formatError": "Failed to format code: {message}",
       "updateSuccess": "CODE node updated",
       "updateError": "Failed to update CODE node: {message}",
       "deleteSuccess": "CODE node deleted",
@@ -168,15 +171,9 @@
       "accept": "Accept changes",
       "reject": "Discard changes",
       "editorChanged": "The editor changed. Discard this proposal and submit the latest content.",
-      "placeholder": "Describe your code changes… (Ctrl / ⌘ + Enter to send)",
+      "placeholder": "Describe your code changes… (Enter to send, Shift + Enter for a new line)",
       "stop": "Stop",
       "send": "Send",
-      "tool": {
-        "running": "Running",
-        "completed": "Completed",
-        "failed": "Failed",
-        "cancelled": "Stopped"
-      },
       "status": {
         "ready": "Ready",
         "queued": "Queued",

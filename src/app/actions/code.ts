@@ -1,6 +1,8 @@
 import { clientFetch } from '@/lib/api-client'
 import type {
   CodeCreate,
+  CodeFormatRequest,
+  CodeFormatResult,
   CodeInfo,
   CodeMetadata,
   CodeMetadataRequest,
@@ -48,6 +50,15 @@ export async function generateCodeMetadata(
   request: CodeMetadataRequest,
 ): Promise<CodeMetadata> {
   return await clientFetch<CodeMetadata>('/codes/generate-metadata', {
+    method: 'POST',
+    body: JSON.stringify(request),
+  })
+}
+
+export async function formatCode(
+  request: CodeFormatRequest,
+): Promise<CodeFormatResult> {
+  return await clientFetch<CodeFormatResult>('/codes/format', {
     method: 'POST',
     body: JSON.stringify(request),
   })

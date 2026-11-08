@@ -112,6 +112,8 @@
       "nodeInfo": "节点信息",
       "reviewingChanges": "正在审查修改",
       "saveCode": "保存",
+      "format": "格式化",
+      "formatShortcut": "使用 Ruff 格式化并整理导入（Shift + Alt + F）",
       "pythonEnvironment": "Python 运行环境",
       "pythonEnvironmentHint": "添加运行时需要从系统配置源安装的第三方 Python 包，Click 无需填写。",
       "dependency": "依赖",
@@ -146,6 +148,7 @@
       "createSuccess": "CODE 节点创建成功",
       "createError": "CODE 节点创建失败：{message}",
       "generateError": "AI 生成名称和描述失败：{message}",
+      "formatError": "代码格式化失败：{message}",
       "updateSuccess": "CODE 节点更新成功",
       "updateError": "CODE 节点更新失败：{message}",
       "deleteSuccess": "CODE 节点删除成功",
@@ -168,15 +171,9 @@
       "accept": "接受修改",
       "reject": "丢弃修改",
       "editorChanged": "编辑器内容已变化，请丢弃该提案后提交最新内容。",
-      "placeholder": "描述需要修改的代码…（Ctrl / ⌘ + Enter 发送）",
+      "placeholder": "描述需要修改的代码…（Enter 发送，Shift + Enter 换行）",
       "stop": "停止",
       "send": "发送",
-      "tool": {
-        "running": "执行中",
-        "completed": "已完成",
-        "failed": "失败",
-        "cancelled": "已停止"
-      },
       "status": {
         "ready": "可以发送消息",
         "queued": "排队中",

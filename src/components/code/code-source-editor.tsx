@@ -5,11 +5,23 @@ import { StreamLanguage } from '@codemirror/language'
 import { r } from '@codemirror/legacy-modes/mode/r'
 import { shell } from '@codemirror/legacy-modes/mode/shell'
 import { unifiedMergeView } from '@codemirror/merge'
-import CodeMirror from '@uiw/react-codemirror'
+import CodeMirror, {
+  type EditorView,
+  keymap,
+  Prec,
+  type ReactCodeMirrorRef,
+} from '@uiw/react-codemirror'
 import { cn } from 'cn'
 import { PlusIcon, XIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { type KeyboardEvent, useMemo, useState } from 'react'
+import {
+  type KeyboardEvent,
+  type Ref,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -28,6 +40,35 @@ interface CodeSourceEditorProps {
   onDependenciesChange: (dependencies: string[]) => void
   disabled?: boolean
   readOnly?: boolean
+  editorRef?: Ref<ReactCodeMirrorRef>
+  /** Formats the source; bound to Shift+Alt+F. */
+  onFormat?: () => void
+}
+
+/**
+ * Replaces the editor's document with `text`, changing only the range that
+ * differs so the cursor keeps its place and the edit can be undone.
+ */
+export function replaceDocument(view: EditorView, text: string) {
+  const current = view.state.doc.toString()
+  const limit = Math.min(current.length, text.length)
+  let start = 0
+  while (start < limit && current[start] === text[start]) start++
+  let end = 0
+  while (
+    end < limit - start &&
+    current[current.length - 1 - end] === text[text.length - 1 - end]
+  )
+    end++
+  if (start === current.length && start === text.length) return
+  view.dispatch({
+    changes: {
+      from: start,
+      to: current.length - end,
+      insert: text.slice(start, text.length - end),
+    },
+    userEvent: 'input.format',
+  })
 }
 
 export function CodeSourceEditor({
@@ -39,13 +80,33 @@ export function CodeSourceEditor({
   onDependenciesChange,
   disabled = false,
   readOnly = false,
+  editorRef,
+  onFormat,
 }: CodeSourceEditorProps) {
   const t = useTranslations('code.Workspace')
   const [cursor, setCursor] = useState({ line: 1, column: 1 })
   const isPython = nodeType === 'code_python'
   const isR = nodeType === 'code_R'
+  const formatRef = useRef(onFormat)
+  useEffect(() => {
+    formatRef.current = onFormat
+  }, [onFormat])
   const languageExtensions = useMemo(
-    () => [isPython ? python() : StreamLanguage.define(isR ? r : shell)],
+    () => [
+      isPython ? python() : StreamLanguage.define(isR ? r : shell),
+      Prec.high(
+        keymap.of([
+          {
+            key: 'Shift-Alt-f',
+            run: () => {
+              if (!formatRef.current) return false
+              formatRef.current()
+              return true
+            },
+          },
+        ]),
+      ),
+    ],
     [isPython, isR],
   )
   const editorExtensions = useMemo(
@@ -78,6 +139,7 @@ export function CodeSourceEditor({
     >
       <section className='flex h-full min-h-0 min-w-0 flex-col bg-background'>
         <CodeMirror
+          ref={editorRef}
           value={displayedCode}
           height='100%'
           theme='light'
