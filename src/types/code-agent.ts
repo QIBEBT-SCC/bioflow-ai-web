@@ -27,6 +27,8 @@ export interface CodeAgentTool {
   name: string
   status: 'running' | 'completed' | 'failed' | 'cancelled'
   detail: string
+  /** Patched files or skill the call works on. */
+  subject?: string
   output: string
 }
 export interface CodeAgentSession {

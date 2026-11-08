@@ -5,14 +5,24 @@ import {
   ArrowUpIcon,
   CheckIcon,
   FileDiffIcon,
+  FilePenLineIcon,
   Loader2Icon,
+  type LucideIcon,
+  SparklesIcon,
   SquareIcon,
+  TerminalIcon,
   WrenchIcon,
   XIcon,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
 import { type MouseEvent, useState } from 'react'
+import {
+  CommandDetail,
+  Step,
+  type StepStatus,
+  StepsSummary,
+} from '@/components/chat/agent-run-content'
 import { Markdown } from '@/components/markdown'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Bubble, BubbleContent } from '@/components/ui/bubble'
@@ -42,65 +52,116 @@ import {
   MessageScrollerProvider,
   MessageScrollerViewport,
 } from '@/components/ui/message-scroller'
-import {
-  Trace,
-  TraceCollapsible,
-  TraceCollapsibleContent,
-  TraceCollapsibleTrigger,
-  TraceDescription,
-  TraceIcon,
-  TraceLine,
-  TraceTitle,
-} from '@/components/ui/trace'
+import { TraceIcon, TraceLine, TraceTitle } from '@/components/ui/trace'
 import type { useCodeAgent } from '@/hooks/use-code-agent'
 import type { CodeAgentTool } from '@/types/code-agent'
 
-/** One tool call, expanding into its input and output. */
-function ToolStep({ tool }: { tool: CodeAgentTool }) {
-  const t = useTranslations('code.Agent')
-  const line = (
-    <TraceLine
-      status={
-        tool.status === 'running'
-          ? 'running'
-          : tool.status === 'failed'
-            ? 'error'
-            : undefined
-      }
-    >
-      <TraceIcon>
-        <WrenchIcon />
-      </TraceIcon>
-      <TraceTitle className='font-mono'>{tool.name}</TraceTitle>
-      <TraceDescription>{t(`tool.${tool.status}`)}</TraceDescription>
-    </TraceLine>
-  )
+const TOOL_ICONS: Record<string, LucideIcon> = {
+  run_command: TerminalIcon,
+  apply_patch: FilePenLineIcon,
+  load_skill: SparklesIcon,
+  read_skill_resource: SparklesIcon,
+}
 
-  if (!tool.detail && !tool.output) return line
+const TOOL_STATUSES: Record<CodeAgentTool['status'], StepStatus> = {
+  running: 'running',
+  completed: undefined,
+  failed: 'error',
+  cancelled: 'cancelled',
+}
+
+/** A tool call's label, worded like the main chat's coding sub-agent steps. */
+function useToolLabel() {
+  const t = useTranslations('Chat.progress')
+  return (tool: CodeAgentTool) => {
+    const phase = tool.status === 'running' ? 'active' : 'complete'
+    const subject = tool.subject || '…'
+    switch (tool.name) {
+      case 'run_command':
+        return t(`tool_creation.container_command.plain.${phase}`)
+      case 'apply_patch':
+        return t(`tool.apply_patch.${phase}`, { file: subject })
+      case 'load_skill':
+      case 'read_skill_resource':
+        return t(`tool.${tool.name}.${phase}`, { subject })
+      default:
+        return tool.name
+    }
+  }
+}
+
+/** One tool call; its command and failure output expand under it. */
+function ToolStep({ tool, label }: { tool: CodeAgentTool; label: string }) {
+  const status = TOOL_STATUSES[tool.status]
+  const failure = tool.status === 'failed' && tool.output
+  return (
+    <Step
+      icon={TOOL_ICONS[tool.name] ?? WrenchIcon}
+      title={label}
+      status={status}
+      defaultOpen={status === 'running' && Boolean(tool.detail)}
+    >
+      {tool.detail || failure ? (
+        <div className='flex flex-col gap-2'>
+          {tool.detail && <CommandDetail command={tool.detail} />}
+          {failure && (
+            <CodeBlock size='sm' variant='destructive'>
+              <CodeBlockContent wrap className='max-h-48'>
+                {tool.output}
+              </CodeBlockContent>
+            </CodeBlock>
+          )}
+        </div>
+      ) : null}
+    </Step>
+  )
+}
+
+/** The tool calls of one turn, folded under a summary like the main chat's. */
+function TurnTrace({
+  tools,
+  active,
+}: {
+  tools: CodeAgentTool[]
+  active: boolean
+}) {
+  const t = useTranslations('Chat.progress')
+  const label = useToolLabel()
+  const latest = tools.at(-1)
+  const currentLabel = latest ? label(latest) : t('fallback_activity')
+
+  if (tools.length === 0) {
+    return active ? (
+      <TraceLine status='running'>
+        <TraceIcon>
+          <Loader2Icon className='animate-spin' />
+        </TraceIcon>
+        <TraceTitle>{currentLabel}</TraceTitle>
+      </TraceLine>
+    ) : null
+  }
 
   return (
-    <TraceCollapsible>
-      <TraceCollapsibleTrigger>{line}</TraceCollapsibleTrigger>
-      <TraceCollapsibleContent className='flex flex-col gap-2'>
-        {tool.detail && (
-          <CodeBlock size='sm'>
-            <CodeBlockContent wrap className='max-h-48'>
-              {tool.detail}
-            </CodeBlockContent>
-          </CodeBlock>
-        )}
-        {tool.output && (
-          <CodeBlock
-            size='sm'
-            variant={tool.status === 'failed' ? 'destructive' : 'default'}
-          >
-            <CodeBlockContent wrap className='max-h-64'>
-              {tool.output}
-            </CodeBlockContent>
-          </CodeBlock>
-        )}
-      </TraceCollapsibleContent>
-    </TraceCollapsible>
+    <StepsSummary
+      status={
+        active
+          ? 'running'
+          : tools.some((tool) => tool.status === 'cancelled')
+            ? 'cancelled'
+            : undefined
+      }
+      currentLabel={currentLabel}
+      count={tools.length}
+      latestId={latest?.call_id}
+    >
+      {tools.map((tool) => (
+        <ToolStep
+          key={`${tool.call_id}-${tool.status}`}
+          tool={tool}
+          label={label(tool)}
+        />
+      ))}
+    </StepsSummary>
   )
 }
 
@@ -204,19 +265,18 @@ export function CodeAgentPanel({
                     <Message align='end'>
                       <MessageContent>
                         <Bubble align='end' variant='tinted'>
-                          <BubbleContent className='whitespace-pre-wrap'>
-                            {message.text}
+                          <BubbleContent>
+                            <Markdown>{message.text}</Markdown>
                           </BubbleContent>
                         </Bubble>
                       </MessageContent>
                     </Message>
-                    {tools.length > 0 && (
-                      <Trace>
-                        {tools.map((tool) => (
-                          <ToolStep key={tool.call_id} tool={tool} />
-                        ))}
-                      </Trace>
-                    )}
+                    <TurnTrace
+                      tools={tools}
+                      active={
+                        Boolean(active) && session.turn_id === message.turn_id
+                      }
+                    />
                     {replies.map((reply) => (
                       <Markdown
                         key={`${reply.turn_id}-${reply.text}`}
@@ -239,7 +299,7 @@ export function CodeAgentPanel({
                   </Alert>
                 </MessageScrollerItem>
               )}
-              {session && (
+              {session && (session.status !== 'running' || !connected) && (
                 <MessageScrollerItem aria-live='polite'>
                   <TraceLine status={active ? 'running' : undefined}>
                     {active && (
@@ -318,7 +378,8 @@ export function CodeAgentPanel({
             maxLength={100000}
             disabled={!session || session.status !== 'ready' || working}
             onKeyDown={(event) => {
-              if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+              if (event.key === 'Enter' && !event.shiftKey) {
+                if (event.nativeEvent.isComposing) return
                 event.preventDefault()
                 void send()
               }

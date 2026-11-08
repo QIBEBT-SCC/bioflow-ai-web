@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import {
   createCode,
   deleteCode,
+  formatCode,
   generateCodeMetadata,
   getCode,
   getCodeList,
@@ -13,6 +14,7 @@ import {
 } from '@/app/actions/code'
 import type {
   CodeCreate,
+  CodeFormatRequest,
   CodeInfo,
   CodeMetadataRequest,
   CodeNodeType,
@@ -70,6 +72,17 @@ export function useGenerateCodeMetadata() {
     mutationFn: (request: CodeMetadataRequest) => generateCodeMetadata(request),
     onError: (error: Error) => {
       toast.error(t('generateError', { message: error.message }))
+    },
+  })
+}
+
+export function useFormatCode() {
+  const t = useTranslations('code.Toast')
+
+  return useMutation({
+    mutationFn: (request: CodeFormatRequest) => formatCode(request),
+    onError: (error: Error) => {
+      toast.error(t('formatError', { message: error.message }))
     },
   })
 }

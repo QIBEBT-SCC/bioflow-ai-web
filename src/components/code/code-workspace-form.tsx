@@ -1,9 +1,11 @@
 'use client'
 
+import type { ReactCodeMirrorRef } from '@uiw/react-codemirror'
 import {
   ArrowLeftIcon,
   CheckIcon,
   Loader2Icon,
+  PaintbrushIcon,
   SaveIcon,
   Settings2Icon,
   SparklesIcon,
@@ -15,11 +17,15 @@ import {
   type FormEvent,
   type ReactNode,
   useReducer,
+  useRef,
   useState,
 } from 'react'
 import { ChatSidebarToggleButton } from '@/components/chat/chat-sidebar-toggle'
 import { CodeAgentPanel } from '@/components/code/code-agent-panel'
-import { CodeSourceEditor } from '@/components/code/code-source-editor'
+import {
+  CodeSourceEditor,
+  replaceDocument,
+} from '@/components/code/code-source-editor'
 import { CodeTypeBadge } from '@/components/code/code-type-badge'
 import { PageTopbar } from '@/components/layout/page-shell'
 import { Button } from '@/components/ui/button'
@@ -40,6 +46,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { useChatSidebarResize } from '@/hooks/use-chat-sidebar-resize'
 import {
   useCreateCode,
+  useFormatCode,
   useGenerateCodeMetadata,
   useUpdateCode,
 } from '@/hooks/use-code'
@@ -281,6 +288,8 @@ export function CodeWorkspaceForm(props: CodeWorkspaceFormProps) {
   const createMutation = useCreateCode()
   const updateMutation = useUpdateCode()
   const metadataMutation = useGenerateCodeMetadata()
+  const formatMutation = useFormatCode()
+  const editorRef = useRef<ReactCodeMirrorRef>(null)
   const initialCode = props.mode === 'edit' ? props.code : undefined
   const nodeType = props.mode === 'edit' ? props.code.node_type : props.nodeType
   const [workspace, dispatch] = useReducer(
@@ -321,6 +330,29 @@ export function CodeWorkspaceForm(props: CodeWorkspaceFormProps) {
         (isPython && !sameDependencies(dependencies, props.code.dependencies))
   const statusText =
     props.mode === 'create' ? t('newNode') : isDirty ? t('unsaved') : t('saved')
+
+  const canFormat =
+    isPython &&
+    source.trim().length > 0 &&
+    !isSaving &&
+    !agent.locked &&
+    !formatMutation.isPending
+
+  const formatSource = () => {
+    if (!canFormat) return
+    const original = source
+    formatMutation.mutate(
+      { node_type: nodeType, code: original },
+      {
+        onSuccess: ({ code }) => {
+          const view = editorRef.current?.view
+          // Drop the result if the source was edited while it was formatting.
+          if (!view || view.state.doc.toString() !== original) return
+          replaceDocument(view, code)
+        },
+      },
+    )
+  }
 
   const generateMetadata = () => {
     if (!source.trim() || metadataMutation.isPending) return
@@ -415,6 +447,23 @@ export function CodeWorkspaceForm(props: CodeWorkspaceFormProps) {
             </div>
 
             <div className='flex shrink-0 items-center gap-2'>
+              {isPython && (
+                <Button
+                  type='button'
+                  variant='outline'
+                  size='sm'
+                  onClick={formatSource}
+                  disabled={!canFormat}
+                  title={t('formatShortcut')}
+                >
+                  {formatMutation.isPending ? (
+                    <Loader2Icon className='size-4 animate-spin' />
+                  ) : (
+                    <PaintbrushIcon className='size-4' />
+                  )}
+                  {t('format')}
+                </Button>
+              )}
               {props.mode === 'edit' && (
                 <Button
                   type='button'
@@ -457,6 +506,8 @@ export function CodeWorkspaceForm(props: CodeWorkspaceFormProps) {
 
           <div className='min-h-0 flex-1'>
             <CodeSourceEditor
+              editorRef={editorRef}
+              onFormat={isPython ? formatSource : undefined}
               disabled={isSaving || agent.locked}
               review={
                 agent.session?.proposal

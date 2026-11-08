@@ -33,6 +33,15 @@ export interface CodeMetadataRequest {
   dependencies: string[]
 }
 
+export interface CodeFormatRequest {
+  node_type: CodeNodeType
+  code: string
+}
+
+export interface CodeFormatResult {
+  code: string
+}
+
 export interface CodeMetadata {
   name: string
   description: string
