@@ -19,6 +19,7 @@ interface SkillContentEditorProps {
   value: string
   onChange: (value: string) => void
   height?: string
+  initialMode?: 'preview' | 'edit'
 }
 
 function fileExtension(filePath: string) {
@@ -88,11 +89,10 @@ export function SkillContentEditor({
   value,
   onChange,
   height = '440px',
+  initialMode = 'preview',
 }: SkillContentEditorProps) {
   const t = useTranslations('setting.skill_management')
-  const [requestedMode, setRequestedMode] = useState<'preview' | 'edit'>(
-    'preview',
-  )
+  const [requestedMode, setRequestedMode] = useState(initialMode)
   const language = languageName(filePath)
   const canPreview = language === 'Markdown'
   const mode = canPreview ? requestedMode : 'edit'

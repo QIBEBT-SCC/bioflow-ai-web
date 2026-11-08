@@ -57,6 +57,7 @@
     "resource": "Resource Management",
     "setting": "Settings",
     "skill_management": "Skill Management",
+    "tool_memory_management": "Tool Memories",
     "tool_config": "Tool Config",
     "tools": "Tool",
     "user_management": "User Management",

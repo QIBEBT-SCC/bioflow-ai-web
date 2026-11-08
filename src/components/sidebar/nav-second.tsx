@@ -34,6 +34,7 @@ const projects = [
     items: [
       { name: 'images', url: '/image' },
       { name: 'tools', url: '/tool' },
+      { name: 'tool_memory_management', url: '/memory' },
       { name: 'code_nodes', url: '/code' },
       { name: 'subgraphs', url: '/subgraph' },
     ],

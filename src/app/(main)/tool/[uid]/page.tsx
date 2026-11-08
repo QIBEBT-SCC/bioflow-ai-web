@@ -2,6 +2,7 @@
 
 import {
   BookOpen,
+  BrainIcon,
   Container,
   ExternalLink,
   FileInput,
@@ -40,6 +41,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { LogViewer } from '@/components/workflow/log-viewer'
 import { useTool, useToolUsage } from '@/hooks/use-tool'
+import { useToolMemorySummaries } from '@/hooks/use-tool-memory'
 import type { FileMount, ToolInfo } from '@/types/tool'
 
 type DetailT = ReturnType<typeof useTranslations<'tool.Detail'>>
@@ -243,6 +245,36 @@ function InfoRow({ label, children }: { label: string; children: ReactNode }) {
   )
 }
 
+function ToolMemoriesCard({ toolUid, t }: { toolUid: string; t: DetailT }) {
+  const { data: memories, isLoading } = useToolMemorySummaries(toolUid)
+
+  return (
+    <SectionCard
+      icon={<BrainIcon />}
+      title={t('memoriesTitle')}
+      action={
+        <Button variant='ghost' size='sm' asChild>
+          <Link href={`/memory?tool=${toolUid}`}>{t('memoriesManage')}</Link>
+        </Button>
+      }
+    >
+      {isLoading && <Skeleton className='h-10 rounded-lg' />}
+      {memories?.length === 0 && (
+        <p className='rounded-lg border border-dashed p-4 text-sm text-muted-foreground'>
+          {t('noMemories')}
+        </p>
+      )}
+      {!!memories?.length && (
+        <ul className='space-y-2 text-sm'>
+          {memories.map((memory) => (
+            <li key={memory.uid}>{memory.description}</li>
+          ))}
+        </ul>
+      )}
+    </SectionCard>
+  )
+}
+
 function ToolInfoSidebar({
   tool,
   dockerImage,
@@ -314,6 +346,7 @@ function ToolInfoSidebar({
           )}
         </div>
       </SectionCard>
+      <ToolMemoriesCard toolUid={tool.uid} t={t} />
     </aside>
   )
 }
