@@ -1,7 +1,13 @@
 'use client'
 
-import { useQueryClient } from '@tanstack/react-query'
-import type { Connection, Edge, EdgeChange, NodeChange } from '@xyflow/react'
+import { type QueryClient, useQueryClient } from '@tanstack/react-query'
+import type {
+  Connection,
+  Edge,
+  EdgeChange,
+  Node,
+  NodeChange,
+} from '@xyflow/react'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -14,9 +20,32 @@ import {
 import { useNodeEditorStore } from '@/stores/nodeviewStore'
 import type { ToolArgPublic } from '@/types/node'
 import { ToolType } from '@/types/tool'
+import type { WorkflowDefinition } from '@/types/workflow'
 
 // Node types whose input handles accept several incoming edges.
 const MULTI_INPUT_NODE_TYPES = new Set(['collect_mount_dirs'])
+
+/** Whether a new edge at this level could break pass-through topology (subgraphs may hide pass-through Tools). */
+function mayAffectPassthrough(nodes: Node[], queryClient: QueryClient) {
+  return nodes.some(
+    (node) =>
+      node.type === 'subgraph' ||
+      (node.type === 'tool' &&
+        queryClient.getQueryData<ToolArgPublic>(['toolArg', node.data.tool_uid])
+          ?.tool_type === ToolType.DOCKER_PASSTHROUGH),
+  )
+}
+
+/** Ask the workflow validator for the first pass-through violation in a whole graph. */
+async function passthroughIssue(graph: WorkflowDefinition) {
+  const { diagnostics } = await clientFetch<{
+    diagnostics: { code: string; message: string }[]
+  }>('/workflows/validate', {
+    method: 'POST',
+    body: JSON.stringify({ graph }),
+  })
+  return diagnostics.find((d) => d.code.startsWith('passthrough.'))?.message
+}
 
 export function useSubgraphInterface() {
   const t = useTranslations('editor.subgraph')
@@ -83,63 +112,33 @@ export function useSubgraphInterface() {
     onConnect: async (connection: Connection) => {
       const graph = store.getGraph()
       const iface = connectInterface(graph, connection)
-      const hasShared = store.nodes.some(
-        (node) =>
-          node.type === 'subgraph' ||
-          (node.type === 'tool' &&
-            queryClient.getQueryData<ToolArgPublic>([
-              'toolArg',
-              node.data.tool_uid,
-            ])?.tool_type === ToolType.DOCKER_PASSTHROUGH),
-      )
-      if (hasShared) {
-        try {
-          let candidate = iface
-            ? { ...graph, interface: iface }
-            : {
-                ...graph,
-                edges: [
-                  ...graph.edges,
-                  {
-                    ...connection,
-                    id: `pending-${connection.source}-${connection.target}`,
-                  },
-                ],
-              }
-          for (const frame of [...store.parents].reverse()) {
-            const child = candidate
-            candidate = {
-              ...frame.graph,
-              nodes: frame.graph.nodes.map((node) =>
-                node.id === frame.id
-                  ? { ...node, data: { ...node.data, workflow: child } }
-                  : node,
-              ),
+      if (mayAffectPassthrough(store.nodes, queryClient)) {
+        const candidate = iface
+          ? { ...graph, interface: iface }
+          : {
+              ...graph,
+              edges: [
+                ...graph.edges,
+                {
+                  ...connection,
+                  id: `pending-${connection.source}-${connection.target}`,
+                },
+              ],
             }
-          }
-          const result = await clientFetch<{
-            diagnostics: { code: string; message: string }[]
-          }>('/workflows/validate', {
-            method: 'POST',
-            body: JSON.stringify({ graph: candidate }),
-          })
-          const issue = result.diagnostics.find((d) =>
-            d.code.startsWith('passthrough.'),
-          )
-          if (issue) {
-            toast.error(issue.message)
-            return
-          }
-          // Do not apply stale validation after another edit occurred.
-          if (
-            store.getGraph().nodes !== graph.nodes ||
-            store.getGraph().edges !== graph.edges
-          )
-            return
+        let issue: string | undefined
+        try {
+          issue = await passthroughIssue(store.getRootGraph(candidate))
         } catch {
           toast.error(t('sharedValidationFailed'))
           return
         }
+        if (issue) {
+          toast.error(issue)
+          return
+        }
+        // Do not apply stale validation after another edit occurred.
+        const latest = store.getGraph()
+        if (latest.nodes !== graph.nodes || latest.edges !== graph.edges) return
       }
       if (iface) store.setInterface(iface)
       else if (

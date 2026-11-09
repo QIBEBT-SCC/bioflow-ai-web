@@ -26,7 +26,8 @@ export interface NodeEditorStore {
   graphInterface: WorkflowInterface | null
   setInterface: (value: WorkflowInterface) => void
   getGraph: () => WorkflowDefinition
-  getRootGraph: () => WorkflowDefinition
+  /** Nest the current level (or a candidate replacing it) back into its parents. */
+  getRootGraph: (current?: WorkflowDefinition) => WorkflowDefinition
   loadGraph: (graph: WorkflowDefinition) => void
   enterSubgraph: (id: string) => void
   leaveSubgraph: () => void
@@ -54,8 +55,8 @@ export const useNodeEditorStore = create<NodeEditorStore>()(
         edges: get().edges,
         interface: get().graphInterface,
       }),
-      getRootGraph: () => {
-        let graph = get().getGraph()
+      getRootGraph: (current) => {
+        let graph = current ?? get().getGraph()
         for (const frame of [...get().parents].reverse()) {
           graph = {
             ...frame.graph,
