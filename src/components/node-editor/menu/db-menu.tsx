@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl'
 import type React from 'react'
 import { useState } from 'react'
 import {
+  Command,
   CommandDialog,
   CommandEmpty,
   CommandGroup,
@@ -52,55 +53,61 @@ export const DbMenu: React.FC<DBMenuProps> = ({
   }
 
   return (
-    <CommandDialog open={isOpen} onOpenChange={onOpenChange}>
-      <CommandInput
-        placeholder={t('search_database')}
-        value={query}
-        onValueChange={handleSearchChange}
-      />
-      <CommandList>
-        <CommandEmpty>
-          {hasQuery ? t('no_database_found') : t('enter_keywords')}
-        </CommandEmpty>
+    <CommandDialog
+      open={isOpen}
+      onOpenChange={onOpenChange}
+      className='top-[8vh]'
+    >
+      <Command shouldFilter={false}>
+        <CommandInput
+          placeholder={t('search_database')}
+          value={query}
+          onValueChange={handleSearchChange}
+        />
+        <CommandList>
+          <CommandEmpty>
+            {hasQuery ? t('no_database_found') : t('enter_keywords')}
+          </CommandEmpty>
 
-        {hasQuery &&
-          (isLoading ? (
-            <CommandGroup heading={t('searching')}>
-              {['s1', 's2', 's3'].map((id) => (
-                <div key={id}>
-                  <DBSkeleton />
-                </div>
-              ))}
-            </CommandGroup>
-          ) : (
-            searchResults.length > 0 && (
-              <CommandGroup
-                heading={t('search_results_count', { count: searchTotal })}
-              >
-                {searchResults.map((db) => (
-                  <CommandItem
-                    key={db.id}
-                    value={db.name}
-                    onSelect={() => handleDBSelect(db)}
-                    className='cursor-pointer'
-                  >
-                    <div className='flex flex-col w-full'>
-                      <span className='font-medium'>{db.name}</span>
-                      {db.description && (
-                        <span className='text-xs text-muted-foreground truncate'>
-                          {db.description}
-                        </span>
-                      )}
-                      <span className='text-xs text-muted-foreground truncate'>
-                        {t('db_path', { path: db.path ?? '' })}
-                      </span>
-                    </div>
-                  </CommandItem>
+          {hasQuery &&
+            (isLoading ? (
+              <CommandGroup heading={t('searching')}>
+                {['s1', 's2', 's3'].map((id) => (
+                  <div key={id}>
+                    <DBSkeleton />
+                  </div>
                 ))}
               </CommandGroup>
-            )
-          ))}
-      </CommandList>
+            ) : (
+              searchResults.length > 0 && (
+                <CommandGroup
+                  heading={t('search_results_count', { count: searchTotal })}
+                >
+                  {searchResults.map((db) => (
+                    <CommandItem
+                      key={db.id}
+                      value={db.name}
+                      onSelect={() => handleDBSelect(db)}
+                      className='cursor-pointer'
+                    >
+                      <div className='flex flex-col w-full'>
+                        <span className='font-medium'>{db.name}</span>
+                        {db.description && (
+                          <span className='text-xs text-muted-foreground truncate'>
+                            {db.description}
+                          </span>
+                        )}
+                        <span className='text-xs text-muted-foreground truncate'>
+                          {t('db_path', { path: db.path ?? '' })}
+                        </span>
+                      </div>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )
+            ))}
+        </CommandList>
+      </Command>
     </CommandDialog>
   )
 }
