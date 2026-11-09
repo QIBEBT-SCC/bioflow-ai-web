@@ -2,7 +2,7 @@ import type { WorkflowRunStatusV2 } from '@/types/workflow-v2'
 
 export enum ToolType {
   DOCKER = 0,
-  COMMAND_LINE = 1,
+  DOCKER_PASSTHROUGH = 1,
 }
 
 export interface ToolTag {
@@ -130,6 +130,7 @@ export interface SimpleToolDoc {
 
 // 工具创建接口 - 与后端 Pydantic 模型匹配
 export interface DockerToolCreate {
+  tool_type: ToolType
   name: string
   image_uid: string
   description: string
@@ -146,6 +147,7 @@ export interface DockerToolCreate {
 }
 
 export interface DockerToolUpdate {
+  tool_type: ToolType
   name: string
   image_uid: string
   description: string

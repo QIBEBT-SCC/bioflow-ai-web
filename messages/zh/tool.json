@@ -138,7 +138,11 @@
       "noFileMounts": "暂无文件挂载",
       "addFileMount": "添加文件挂载",
       "helpCommandResult": "帮助命令执行结果",
-      "helpCommandError": "错误: {message}"
+      "helpCommandError": "错误: {message}",
+      "toolType": "工具类型",
+      "docker": "Docker",
+      "dockerPassthrough": "Docker 透传",
+      "passthroughDescription": "继承唯一透传上游的工作区；没有透传上游时创建工作区。透传链必须线性：最多一个透传上游，且最多一个透传下游。"
     },
     "Cards": {
       "param": "参数 {index}",
@@ -181,7 +185,8 @@
       "logFile": "日志文件",
       "requiredOutput": "必需输出",
       "requiredOutputHint": "仅对工具允许不生成的输出取消勾选；下游引用时仍会检查文件是否存在。",
-      "optionalOutput": "可选输出"
+      "optionalOutput": "可选输出",
+      "inputPassthrough": "透传输入（共享可写）"
     },
     "VariableField": {
       "completionHint": "输入 {openBrace} 触发变量补全",
@@ -236,7 +241,9 @@
       "tags": "标签",
       "dockerImage": "Docker 镜像",
       "homepage": "主页",
-      "publication": "论文"
+      "publication": "论文",
+      "docker": "Docker",
+      "dockerPassthrough": "Docker 透传"
     },
     "Edit": {
       "breadcrumb": "编辑",

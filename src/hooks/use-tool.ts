@@ -200,6 +200,7 @@ export const useUpdateTool = () => {
     }) => updateTool(uid, tool),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['tool', variables.uid] })
+      queryClient.invalidateQueries({ queryKey: ['toolArg', variables.uid] })
       queryClient.invalidateQueries({ queryKey: ['toolList'] })
       queryClient.invalidateQueries({ queryKey: ['groupTools'] })
       toast.success(t('updateSuccess'))

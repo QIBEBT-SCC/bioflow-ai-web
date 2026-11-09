@@ -185,6 +185,7 @@ export function ToolParamCard({
 export function ToolFileCard({
   id,
   file,
+  allowPassthrough,
   index,
   templateVariables,
   onRemoveAction,
@@ -192,6 +193,7 @@ export function ToolFileCard({
 }: {
   id: string
   file: FileMount
+  allowPassthrough: boolean
   index: number
   templateVariables: ToolTemplateVariable[]
   onRemoveAction: (index: number) => void
@@ -323,6 +325,11 @@ export function ToolFileCard({
               <SelectContent>
                 <SelectItem value='INPUT'>{t('inputFile')}</SelectItem>
                 <SelectItem value='INPUT_TEXT'>{t('inputText')}</SelectItem>
+                {allowPassthrough && (
+                  <SelectItem value='INPUT_PASSTHROUGH'>
+                    {t('inputPassthrough')}
+                  </SelectItem>
+                )}
                 <SelectItem value='OUTPUT'>{t('outputFile')}</SelectItem>
               </SelectContent>
             </Select>

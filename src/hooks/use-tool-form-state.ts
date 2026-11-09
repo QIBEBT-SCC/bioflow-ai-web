@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { ToolConfigValues } from '@/components/tool/tool-config-form'
-import { updateFileMountValue } from '@/lib/tool-file-mount'
+import {
+  updateFileMountValue,
+  withToolConfigField,
+} from '@/lib/tool-file-mount'
 import type {
   FileMount,
   ParamDefine,
@@ -23,6 +26,7 @@ export function useToolFormState(
     if (tool) {
       setFormState({
         name: tool.name,
+        tool_type: tool.tool_type,
         image_uid: tool.image.uid || '',
         description: tool.description,
         help_command: tool.help_doc.help_command,
@@ -54,7 +58,9 @@ export function useToolFormState(
       | FileMount[]
       | ToolTag[],
   ) => {
-    setFormState((prev) => (prev ? { ...prev, [field]: value } : prev))
+    setFormState((prev) =>
+      prev ? withToolConfigField(prev, field, value) : prev,
+    )
   }
 
   const addDynamicParam = () => {

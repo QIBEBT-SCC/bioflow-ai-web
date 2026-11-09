@@ -1,13 +1,15 @@
-import type { ToolTag } from '@/types/tool'
+import type { ToolTag, ToolType } from '@/types/tool'
 
 export interface HandleDefine {
   id?: string
   label?: string
   name: string
   description: string
+  shared_writable?: boolean
 }
 
 export interface ToolArgPublic {
+  tool_type: ToolType
   uid: string
   name: string
   description: string

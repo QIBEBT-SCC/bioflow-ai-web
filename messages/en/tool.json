@@ -138,7 +138,11 @@
       "noFileMounts": "No file mounts",
       "addFileMount": "Add File Mount",
       "helpCommandResult": "Help Command Execution Result",
-      "helpCommandError": "Error: {message}"
+      "helpCommandError": "Error: {message}",
+      "toolType": "Tool type",
+      "docker": "Docker",
+      "dockerPassthrough": "Docker pass-through",
+      "passthroughDescription": "Reuse the workspace of one pass-through predecessor, or create one to start a chain. Each chain stays linear: one pass-through predecessor and at most one pass-through successor."
     },
     "Cards": {
       "param": "Parameter {index}",
@@ -181,7 +185,8 @@
       "logFile": "Log File",
       "requiredOutput": "Required output",
       "requiredOutputHint": "Uncheck only for outputs the tool may validly omit. Downstream use still requires the file to exist.",
-      "optionalOutput": "Optional output"
+      "optionalOutput": "Optional output",
+      "inputPassthrough": "Pass-through input (shared writable)"
     },
     "VariableField": {
       "completionHint": "Type {openBrace} to complete a variable",
@@ -236,7 +241,9 @@
       "tags": "Tags",
       "dockerImage": "Docker image",
       "homepage": "Homepage",
-      "publication": "Publication"
+      "publication": "Publication",
+      "docker": "Docker",
+      "dockerPassthrough": "Docker pass-through"
     },
     "Edit": {
       "breadcrumb": "Edit",

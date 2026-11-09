@@ -54,6 +54,7 @@
       "data_processing": "Data Processing",
       "database": "Database",
       "enter_keywords": "Enter keywords to search database",
+      "enter_tool_keywords": "Type keywords to search tools",
       "file_input": "File Input",
       "text_file_input": "Inline Text File",
       "group": "Group",
@@ -181,7 +182,8 @@
         "markAsChecked": "Mark as AI Checked",
         "markingAsChecked": "Marking...",
         "markSuccess": "Marked as AI Checked",
-        "markError": "Failed to mark tool: {error}"
+        "markError": "Failed to mark tool: {error}",
+        "sharedWritable": "Shared writable"
       }
     },
     "load_workflow_dialog": {
@@ -329,7 +331,8 @@
         "public": "Public",
         "private": "Private",
         "legacy": "This subgraph has no public interface. Open the editor to configure it."
-      }
+      },
+      "sharedValidationFailed": "Could not validate the shared workspace connection. Please retry."
     }
   }
 }

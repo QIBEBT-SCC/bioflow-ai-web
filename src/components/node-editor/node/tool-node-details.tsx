@@ -19,6 +19,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAuth } from '@/hooks/use-auth-query'
 import { useMarkToolAIChecked, useTool } from '@/hooks/use-tool'
+import { isPassthrough } from '@/lib/tool-file-mount'
 import { UserRole } from '@/types/auth'
 import type { FileMount } from '@/types/tool'
 
@@ -37,6 +38,9 @@ function FileMountItem({ file }: { file: FileMount }) {
           )}
         </div>
         <div className='flex shrink-0 gap-1'>
+          {isPassthrough(file) && (
+            <Badge variant='secondary'>{t('sharedWritable')}</Badge>
+          )}
           {file.is_log && (
             <Badge variant='secondary' className='text-[10px]'>
               LOG
@@ -137,7 +141,7 @@ export function ToolNodeDetails({ toolUid }: { toolUid: string }) {
     (file) => file.file_type === 'INPUT',
   )
   const outputFiles = tool.file_mounts.filter(
-    (file) => file.file_type === 'OUTPUT',
+    (file) => file.file_type === 'OUTPUT' || isPassthrough(file),
   )
   const isAdmin = !!user && user.role >= UserRole.ADMIN
   const isAIUnchecked = tool.tags.some((tag) => tag.name === 'AI Unchecked')

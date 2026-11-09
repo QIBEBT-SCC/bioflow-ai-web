@@ -333,6 +333,7 @@ function AddToolPageContent() {
       if (cancelled) return
       setSearchQuery(tool.image.name)
       initFromCopy(tool.image, {
+        tool_type: tool.tool_type,
         name: `${tool.name}${t('copySuffix')}`,
         image_uid: tool.image.uid ?? '',
         description: tool.description,

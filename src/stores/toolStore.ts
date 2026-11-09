@@ -3,7 +3,8 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import type { ToolConfigValues } from '@/components/tool/tool-config-form'
-import type { ToolImage } from '@/types/tool'
+import { withToolConfigField } from '@/lib/tool-file-mount'
+import { type ToolImage, ToolType } from '@/types/tool'
 
 interface CreateToolStore {
   currentImage: ToolImage
@@ -35,6 +36,7 @@ const initialImage: ToolImage = {
 }
 
 const initialToolConfig: ToolConfigValues = {
+  tool_type: ToolType.DOCKER,
   name: '',
   image_uid: '',
   description: '',
@@ -72,10 +74,7 @@ export const useCreateToolStore = create<CreateToolStore>()(
       },
       updateToolConfigField: (field, value) => {
         set((state) => ({
-          toolConfig: {
-            ...state.toolConfig,
-            [field]: value,
-          },
+          toolConfig: withToolConfigField(state.toolConfig, field, value),
         }))
       },
       resetStore: () => {

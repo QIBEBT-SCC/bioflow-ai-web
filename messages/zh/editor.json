@@ -54,6 +54,7 @@
       "data_processing": "数据处理",
       "database": "数据库",
       "enter_keywords": "请输入关键词搜索数据库",
+      "enter_tool_keywords": "请输入关键词搜索工具",
       "file_input": "文件输入",
       "text_file_input": "内联文本文件",
       "group": "分组",
@@ -181,7 +182,8 @@
         "markAsChecked": "标记为 AI Checked",
         "markingAsChecked": "正在标记...",
         "markSuccess": "已标记为 AI Checked",
-        "markError": "标记失败：{error}"
+        "markError": "标记失败：{error}",
+        "sharedWritable": "共享可写"
       }
     },
     "load_workflow_dialog": {
@@ -329,7 +331,8 @@
         "public": "公开",
         "private": "私有",
         "legacy": "此子图尚未定义公开接口，可进入编辑器配置。"
-      }
+      },
+      "sharedValidationFailed": "共享工作区连接校验失败，请重试"
     }
   }
 }

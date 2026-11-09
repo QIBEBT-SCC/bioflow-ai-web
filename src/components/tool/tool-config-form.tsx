@@ -51,6 +51,7 @@ import type {
   ToolGroup,
   ToolTag,
 } from '@/types/tool'
+import { ToolType } from '@/types/tool'
 
 export type ToolConfigValues = Omit<
   DockerToolCreate,
@@ -373,6 +374,30 @@ function BasicConfigTab({
     <Card>
       <CardContent className='gap-6 pt-6'>
         <div className='space-y-2'>
+          <Label htmlFor='tool-type'>{t('toolType')}</Label>
+          <Select
+            value={String(value.tool_type)}
+            onValueChange={(type) => onFieldChange('tool_type', Number(type))}
+          >
+            <SelectTrigger id='tool-type'>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={String(ToolType.DOCKER)}>
+                {t('docker')}
+              </SelectItem>
+              <SelectItem value={String(ToolType.DOCKER_PASSTHROUGH)}>
+                {t('dockerPassthrough')}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+          {value.tool_type === ToolType.DOCKER_PASSTHROUGH && (
+            <p className='text-sm text-muted-foreground'>
+              {t('passthroughDescription')}
+            </p>
+          )}
+        </div>
+        <div className='space-y-2'>
           <Label htmlFor='tool-name'>
             {t('toolName')} <span className='text-destructive'>*</span>
           </Label>
@@ -678,6 +703,9 @@ function FilesConfigTab({
                       key={fileIds[index]}
                       id={fileIds[index]}
                       file={file}
+                      allowPassthrough={
+                        value.tool_type === ToolType.DOCKER_PASSTHROUGH
+                      }
                       index={index}
                       templateVariables={templateVariables}
                       onUpdateAction={onUpdate}

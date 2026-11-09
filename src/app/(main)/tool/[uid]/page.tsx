@@ -42,7 +42,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { LogViewer } from '@/components/workflow/log-viewer'
 import { useTool, useToolUsage } from '@/hooks/use-tool'
 import { useToolMemorySummaries } from '@/hooks/use-tool-memory'
-import type { FileMount, ToolInfo } from '@/types/tool'
+import { type FileMount, type ToolInfo, ToolType } from '@/types/tool'
 
 type DetailT = ReturnType<typeof useTranslations<'tool.Detail'>>
 
@@ -300,7 +300,13 @@ function ToolInfoSidebar({
             <InfoRow label={t('version')}>
               <span className='font-mono'>{tool.image.version}</span>
             </InfoRow>
-            <InfoRow label={t('toolType')}>{tool.tool_type}</InfoRow>
+            <InfoRow label={t('toolType')}>
+              {t(
+                tool.tool_type === ToolType.DOCKER_PASSTHROUGH
+                  ? 'dockerPassthrough'
+                  : 'docker',
+              )}
+            </InfoRow>
           </dl>
           {tool.tags && tool.tags.length > 0 && (
             <div className='space-y-2'>
