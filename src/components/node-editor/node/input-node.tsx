@@ -152,30 +152,20 @@ const SampleMarkCollectionCard = memo(function SampleMarkCollectionCard() {
   const nodeId = useNodeId() ?? ''
   const nodeData =
     useNodesData<
-      Node<
-        { mark_names: string[]; require_all_samples: boolean },
-        'resource_sample_mark_collection'
-      >
+      Node<{ mark_names: string[] }, 'resource_sample_mark_collection'>
     >(nodeId)
   const { updateNodeData } = useReactFlow()
   const [markNames, setMarkNames] = useState(() =>
     (nodeData?.data.mark_names ?? []).join('\n'),
   )
-  const [requireAllSamples, setRequireAllSamples] = useState(
-    nodeData?.data.require_all_samples ?? true,
-  )
 
   useEffect(() => {
     setMarkNames((nodeData?.data.mark_names ?? []).join('\n'))
-    setRequireAllSamples(nodeData?.data.require_all_samples ?? true)
-  }, [nodeData?.data.mark_names, nodeData?.data.require_all_samples])
+  }, [nodeData?.data.mark_names])
 
   const saveNodeData = useCallback(() => {
-    updateNodeData(nodeId, {
-      mark_names: parseMarkNames(markNames),
-      require_all_samples: requireAllSamples,
-    })
-  }, [markNames, nodeId, requireAllSamples, updateNodeData])
+    updateNodeData(nodeId, { mark_names: parseMarkNames(markNames) })
+  }, [markNames, nodeId, updateNodeData])
 
   return (
     <div className='space-y-3 p-3'>
@@ -194,23 +184,6 @@ const SampleMarkCollectionCard = memo(function SampleMarkCollectionCard() {
           disabled={readOnly}
         />
       </div>
-      <label className='flex items-center gap-2 text-sm'>
-        <input
-          type='checkbox'
-          aria-label='Require every project sample'
-          checked={requireAllSamples}
-          onChange={(event) => {
-            const checked = event.target.checked
-            setRequireAllSamples(checked)
-            updateNodeData(nodeId, {
-              mark_names: parseMarkNames(markNames),
-              require_all_samples: checked,
-            })
-          }}
-          disabled={readOnly}
-        />
-        Require every project sample
-      </label>
     </div>
   )
 })
@@ -220,7 +193,7 @@ const SampleMarkCollectionNode = memo(function SampleMarkCollectionNode() {
   return (
     <BaseNode
       title='Sample Mark Collection'
-      description='Freeze current dynamic sample marks into a manifest and virtual mounted collection.'
+      description='Collect the samples that currently have these marks into a manifest and virtual mounted collection.'
       handles={SAMPLE_MARK_COLLECTION_HANDLES}
       color={colorSchemes.green}
       nodeComponent={nodeComponent}

@@ -122,10 +122,7 @@ export const nodeDefaultData: Record<string, Record<string, unknown>> = {
   collect_file_collection: { pattern: '', subfolder_prefix: 'item' },
   value_string: { value: '' },
   resource_file: { file_path: '' },
-  resource_sample_mark_collection: {
-    mark_names: [],
-    require_all_samples: true,
-  },
+  resource_sample_mark_collection: { mark_names: [] },
   resource_text_file: { file_name: '', content: '' },
   resource_sequence: { r1: '', r2: '' },
   resource_db: { db_id: '', db_name: '' },
