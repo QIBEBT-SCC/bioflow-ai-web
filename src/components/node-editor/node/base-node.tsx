@@ -187,7 +187,7 @@ const BaseNode = memo(function BaseNode({
   const usesCustomDetailsTrigger = detailsTrigger !== undefined
 
   return (
-    <NodeCard className={cn('border-t-4', color.border)}>
+    <NodeCard className={cn('flex flex-col border-t-4', color.border)}>
       <NodeCardHeader className={cn(color.bg, 'border-b border-border/50')}>
         <Sheet>
           <div className='flex min-w-0 items-center gap-2'>
@@ -216,7 +216,8 @@ const BaseNode = memo(function BaseNode({
           </SheetContent>
         </Sheet>
       </NodeCardHeader>
-      <NodeCardContent>
+      {/* flex-1 keeps the status bar pinned to the bottom when content is shorter than the card's min height */}
+      <NodeCardContent className='flex-1'>
         {handlesElements}
         {/* 调整分隔线样式 */}
         <div
@@ -360,7 +361,7 @@ const RunStatusBar = memo(function RunStatusBar({
   return (
     <div
       className={cn(
-        'border-t rounded-b-2xl px-3 py-2 text-xs flex flex-col gap-1',
+        'shrink-0 border-t rounded-b-[calc(var(--radius-xl)-1px)] px-3 py-2 text-xs flex flex-col gap-1',
         cfg.className,
       )}
     >
