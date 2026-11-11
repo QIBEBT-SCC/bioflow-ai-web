@@ -28,7 +28,7 @@
         "label": "工作流修复助手"
       },
       "workflow-builder": {
-        "description": "创建或更新项目工作流",
+        "description": "根据项目规划助手确认的样本信息和分析计划构建工作流",
         "label": "工作流构建助手"
       }
     },
@@ -38,7 +38,8 @@
     "command_required": "请先使用 / 选择一条智能体命令。",
     "default_requests": {
       "workflow-assistant": "请诊断本次工作流运行，分析错误、日志和相关输出，并给出修复建议。",
-      "workflow-fixer": "请检查本次运行关联的当前工作流，修复能够确认的问题；如果信息不足，请说明需要补充哪些错误细节。"
+      "workflow-fixer": "请检查本次运行关联的当前工作流，修复能够确认的问题；如果信息不足，请说明需要补充哪些错误细节。",
+      "workflow-builder": "请根据已确认的样本信息和分析计划构建工作流。"
     },
     "run_context_required": "工作流助手和修复助手只能从具体运行详情页发起，请重新打开该运行后再试。",
     "delete": "删除",
@@ -130,17 +131,6 @@
         }
       },
       "history_count": "执行了 {count} 个步骤",
-      "phase": {
-        "project_planner": {
-          "active": "正在准备样本和分析计划",
-          "complete": "已完成样本准备并确认分析计划",
-          "reused": "已加载现有样本和分析计划"
-        },
-        "workflow_builder": {
-          "active": "正在构建工作流",
-          "complete": "已完成工作流构建"
-        }
-      },
       "planner": {
         "add_project_file": {
           "active": "正在注册 proj:{keyword}",
@@ -424,7 +414,8 @@
     "submit_answers": "提交回答",
     "suggestions": {
       "diagnose": "诊断本次运行",
-      "fix": "修复当前工作流"
+      "fix": "修复当前工作流",
+      "build": "开始构建工作流"
     },
     "title": "AI 对话",
     "node": {

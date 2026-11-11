@@ -73,6 +73,7 @@ import {
   useRetryAgentRun,
   useSubmitAgentInput,
 } from '@/hooks/use-agent'
+import { useProjectAgentArtifacts } from '@/hooks/use-agent-artifact'
 import {
   CHAT_ATTACHMENT_ACCEPT,
   useChatAttachments,
@@ -84,7 +85,10 @@ import {
   agentInputStatuses,
 } from '@/lib/agent-inputs'
 import { parseAgentQuestionAnswers } from '@/lib/agent-questions'
-import { getSuggestedWorkflowAgent } from '@/lib/workflow-agent-suggestions'
+import {
+  getSuggestedWorkflowAgent,
+  shouldSuggestBuild,
+} from '@/lib/workflow-agent-suggestions'
 import { useChatSidebarStore } from '@/stores/chat-sidebar-store'
 import {
   ACTIVE_AGENT_STATUSES,
@@ -279,13 +283,22 @@ function ChatSidebarInner({
     [displayRuns, eventHistory, events, runId],
   )
 
+  const { data: projectArtifacts = [] } = useProjectAgentArtifacts(
+    scope.scope === 'project' ? scope.projectId : '',
+  )
+  // The builder only reads the planner's documents, so it is offered once both exist.
+  const hasProjectPlan =
+    projectArtifacts.some((file) => file.kind === 'plan') &&
+    projectArtifacts.some((file) => file.kind === 'samples')
+
   const availableCommands = useMemo(() => {
     const names =
       scope.scope === 'project'
         ? AGENT_NAMES.filter(
             (name) =>
-              Boolean(sourceRunUid) ||
-              (name !== 'workflow-assistant' && name !== 'workflow-fixer'),
+              (Boolean(sourceRunUid) ||
+                (name !== 'workflow-assistant' && name !== 'workflow-fixer')) &&
+              (hasProjectPlan || name !== 'workflow-builder'),
           )
         : AGENT_NAMES.filter((name) => name === 'tool-generator')
     return names.map<AgentSlashCommand>((name) => ({
@@ -294,7 +307,7 @@ function ChatSidebarInner({
       label: t(`assistants.${name}.label`),
       description: t(`assistants.${name}.description`),
     }))
-  }, [scope.scope, sourceRunUid, t])
+  }, [hasProjectPlan, scope.scope, sourceRunUid, t])
   const slashCommand = useSlashCommand({
     commands: availableCommands,
     value: text,
@@ -331,21 +344,37 @@ function ChatSidebarInner({
     !sessionId || isSessionLoading || isMessagesLoading || isRunsLoading
 
   const workflowSuggestions = useMemo(() => {
-    if (!sourceRunUid) return []
-    const agentName = getSuggestedWorkflowAgent(displayRuns, sourceRunUid)
-    if (!agentName) return []
-    return [
-      {
-        agentName,
+    const suggestions: {
+      agentName: AgentName
+      label: string
+      prompt: string
+    }[] = []
+    const runAgent = sourceRunUid
+      ? getSuggestedWorkflowAgent(displayRuns, sourceRunUid)
+      : null
+    if (runAgent) {
+      suggestions.push({
+        agentName: runAgent,
         label: t(
-          agentName === 'workflow-assistant'
+          runAgent === 'workflow-assistant'
             ? 'suggestions.diagnose'
             : 'suggestions.fix',
         ),
-        prompt: t(`default_requests.${agentName}`),
-      },
-    ]
-  }, [displayRuns, sourceRunUid, t])
+        prompt: t(`default_requests.${runAgent}`),
+      })
+    }
+    if (
+      scope.scope === 'project' &&
+      shouldSuggestBuild(displayRuns, hasProjectPlan)
+    ) {
+      suggestions.push({
+        agentName: 'workflow-builder',
+        label: t('suggestions.build'),
+        prompt: t('default_requests.workflow-builder'),
+      })
+    }
+    return suggestions
+  }, [displayRuns, hasProjectPlan, scope.scope, sourceRunUid, t])
 
   const unmatchedMessages = useMemo(() => {
     const runIds = new Set(displayRuns.map((storedRun) => storedRun.uid))
@@ -369,7 +398,10 @@ function ChatSidebarInner({
   const runWorkflowSuggestion = async (
     suggestion: (typeof workflowSuggestions)[number],
   ) => {
-    if (!sourceRunUid || isBusy) return
+    const requiresSourceRun =
+      suggestion.agentName === 'workflow-assistant' ||
+      suggestion.agentName === 'workflow-fixer'
+    if ((requiresSourceRun && !sourceRunUid) || isBusy) return
     setLocalError(null)
     try {
       let targetSessionId = sessionId
@@ -382,7 +414,7 @@ function ChatSidebarInner({
         agentName: suggestion.agentName,
         text: suggestion.prompt,
         language,
-        sourceRunUid,
+        sourceRunUid: requiresSourceRun ? sourceRunUid : undefined,
       })
       if (targetSessionId !== sessionId) {
         setSessionId(scopeKey, targetSessionId)

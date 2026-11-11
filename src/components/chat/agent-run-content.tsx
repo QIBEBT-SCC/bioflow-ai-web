@@ -87,7 +87,6 @@ interface ProgressActivity {
   keyword?: string
   path?: string
   command?: string
-  phase?: string
   manager?: string
   operation?: string
   subject?: string
@@ -195,7 +194,6 @@ function normalizeProgress(event: AgentEvent): ProgressActivity {
     keyword: stringValue(source.keyword),
     path: stringValue(source.path),
     command: stringValue(source.command),
-    phase: stringValue(source.phase),
     manager: stringValue(source.manager),
     operation: stringValue(source.operation),
     subject: stringValue(source.subject),
@@ -312,10 +310,6 @@ const TOOL_GENERATOR_ICONS: Record<string, LucideIcon> = {
 
 function activityIcon(activity: ProgressActivity): LucideIcon {
   const text = activity.message.toLowerCase()
-  if (activity.kind === 'workflow_phase') {
-    if (activity.phase === 'project_planner') return ListTodoIcon
-    return WaypointsIcon
-  }
   if (activity.kind === 'workflow_manager_action') {
     if (activity.action === 'read_node_memory') return BrainIcon
     return OPERATION_ICONS[activity.operation ?? 'update'] ?? PencilLineIcon
@@ -738,18 +732,6 @@ function useProgressActivities(events: AgentEvent[]) {
       let message = activity.message
       let completeMessage: string | undefined
       switch (activity.kind) {
-        case 'workflow_phase':
-          if (activity.phase === 'project_planner') {
-            message = t('phase.project_planner.active')
-            completeMessage =
-              activity.toolStatus === 'skipped'
-                ? t('phase.project_planner.reused')
-                : t('phase.project_planner.complete')
-          } else if (activity.phase === 'workflow_builder') {
-            message = t('phase.workflow_builder.active')
-            completeMessage = t('phase.workflow_builder.complete')
-          }
-          break
         case 'workflow_manager_action': {
           if (activity.action === 'read_node_memory') {
             message = t('builder.read_node_memory.active')

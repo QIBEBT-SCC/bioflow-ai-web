@@ -28,7 +28,7 @@
         "label": "Workflow Fixer"
       },
       "workflow-builder": {
-        "description": "Create or update a project workflow",
+        "description": "Build project workflows from the samples and analysis plan approved with the Project Planner",
         "label": "Workflow Builder"
       }
     },
@@ -38,7 +38,8 @@
     "command_required": "Choose an agent command with / first.",
     "default_requests": {
       "workflow-assistant": "Diagnose this workflow run by examining its errors, logs, and relevant outputs, then recommend a repair.",
-      "workflow-fixer": "Inspect the current workflow linked to this run and repair issues you can confirm. If there is not enough information, explain which error details are needed."
+      "workflow-fixer": "Inspect the current workflow linked to this run and repair issues you can confirm. If there is not enough information, explain which error details are needed.",
+      "workflow-builder": "Build the workflow(s) from the approved sample information and analysis plan."
     },
     "run_context_required": "The workflow assistant and repair assistant must be started from a specific run detail page. Reopen the run and try again.",
     "delete": "Delete",
@@ -130,17 +131,6 @@
         }
       },
       "history_count": "Ran {count, plural, one {# step} other {# steps}}",
-      "phase": {
-        "project_planner": {
-          "active": "Preparing samples and the analysis plan",
-          "complete": "Prepared samples and the approved analysis plan",
-          "reused": "Loaded existing samples and analysis plan"
-        },
-        "workflow_builder": {
-          "active": "Building the workflow",
-          "complete": "Built the workflow"
-        }
-      },
       "planner": {
         "add_project_file": {
           "active": "Registering proj:{keyword}",
@@ -424,7 +414,8 @@
     "submit_answers": "Submit answers",
     "suggestions": {
       "diagnose": "Diagnose this run",
-      "fix": "Repair current workflow"
+      "fix": "Repair current workflow",
+      "build": "Build workflow"
     },
     "title": "AI Chat",
     "node": {

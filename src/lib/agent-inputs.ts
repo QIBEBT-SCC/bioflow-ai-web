@@ -10,13 +10,6 @@ export function acceptsAgentInput(
     run?.agent_name === 'workflow-builder' &&
       (run.status === 'queued' || run.status === 'running') &&
       !run.cancel_requested &&
-      // Planning does not read corrections, so wait until the builder phase starts.
-      events.some(
-        (event) =>
-          event.event_type === 'run.progress' &&
-          event.payload.kind === 'workflow_phase' &&
-          event.payload.phase === 'workflow_builder',
-      ) &&
       !events.some((event) => event.event_type === 'run.input_closed'),
   )
 }
