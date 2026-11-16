@@ -8,6 +8,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
+import { toast } from 'sonner'
 import {
   type AgentScope,
   cancelAgentRun,
@@ -187,6 +188,7 @@ export function useAgentRunEvents(
 
     const accept = (incoming: AgentEvent[]) => {
       if (incoming.length === 0) return
+      const previousCursor = cursorRef.current
       cursorRef.current = Math.max(
         cursorRef.current,
         ...incoming.map((event) => event.id),
@@ -197,6 +199,14 @@ export function useAgentRunEvents(
         (current = []) => mergeEvents(current, incoming),
       )
       for (const event of incoming) {
+        if (
+          event.id > previousCursor &&
+          event.event_type === 'run.progress' &&
+          event.payload.kind === 'error' &&
+          typeof event.payload.message === 'string'
+        ) {
+          toast.error(event.payload.message, { id: `${runId}:${event.id}` })
+        }
         if (event.event_type === 'resource.changed') {
           invalidateResource(queryClient, event)
         }
