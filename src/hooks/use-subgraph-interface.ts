@@ -18,12 +18,18 @@ import {
   interfaceView,
 } from '@/lib/subgraph-interface'
 import { useNodeEditorStore } from '@/stores/nodeviewStore'
+import type { CodeNodeType } from '@/types/code'
 import type { ToolArgPublic } from '@/types/node'
 import { ToolType } from '@/types/tool'
 import type { WorkflowDefinition } from '@/types/workflow'
 
 // Node types whose input handles accept several incoming edges.
 const MULTI_INPUT_NODE_TYPES = new Set(['collect_mount_dirs'])
+const CODE_NODE_TYPES: ReadonlySet<string> = new Set<CodeNodeType>([
+  'code_bash',
+  'code_python',
+  'code_R',
+])
 
 /** Whether a new edge at this level could break pass-through topology (subgraphs may hide pass-through Tools). */
 function mayAffectPassthrough(nodes: Node[], queryClient: QueryClient) {
@@ -57,6 +63,10 @@ export function useSubgraphInterface() {
   const isValidConnection = (connection: Connection | Edge) => {
     const source = store.nodes.find((node) => node.id === connection.source)
     const target = store.nodes.find((node) => node.id === connection.target)
+    const targetType = target?.type ?? ''
+    const isCodeInput = CODE_NODE_TYPES.has(targetType)
+    if (isCodeInput && source?.type !== 'bind_param') return false
+
     if (source?.type === 'collect_file_collection') {
       if (
         target?.type !== 'subgraph' ||
@@ -74,7 +84,7 @@ export function useSubgraphInterface() {
       )
         return false
     }
-    const multiInput = MULTI_INPUT_NODE_TYPES.has(target?.type ?? '')
+    const multiInput = isCodeInput || MULTI_INPUT_NODE_TYPES.has(targetType)
     if (
       !multiInput &&
       store.edges.some(
@@ -110,6 +120,7 @@ export function useSubgraphInterface() {
     })),
     isValidConnection,
     onConnect: async (connection: Connection) => {
+      if (!isValidConnection(connection)) return
       const graph = store.getGraph()
       const iface = connectInterface(graph, connection)
       if (mayAffectPassthrough(store.nodes, queryClient)) {
@@ -141,11 +152,7 @@ export function useSubgraphInterface() {
         if (latest.nodes !== graph.nodes || latest.edges !== graph.edges) return
       }
       if (iface) store.setInterface(iface)
-      else if (
-        !isBoundary(connection.source) &&
-        !isBoundary(connection.target) &&
-        isValidConnection(connection)
-      ) {
+      else {
         const source = store.nodes.find((node) => node.id === connection.source)
         if (source?.type === 'collect_file_collection') {
           const obsolete = store.edges.filter(
