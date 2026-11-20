@@ -61,6 +61,18 @@ export async function removeWorkflowFromProject(
   )
 }
 
+export async function resetProjectWorkflowRuns(
+  projectId: string,
+  workflowUid: string,
+): Promise<void> {
+  await clientFetchV2<void>(
+    `/projects/${projectId}/workflows/${workflowUid}/runs`,
+    {
+      method: 'DELETE',
+    },
+  )
+}
+
 /**
  * 运行工作流
  */
