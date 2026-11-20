@@ -56,6 +56,7 @@ import {
 } from '@/hooks/use-project-workflow'
 import { ExecutionScope } from '@/types/workflow'
 import { ImportWorkflowDialog } from './import-workflow-dialog'
+import { ResetWorkflowRunsDialog } from './reset-workflow-runs-dialog'
 import { RunWorkflowDialog } from './run-workflow-dialog'
 
 interface ProjectWorkflowListProps {
@@ -268,6 +269,11 @@ export function ProjectWorkflowList({ projectId }: ProjectWorkflowListProps) {
                               {t('downloadResults')}
                             </TooltipContent>
                           </Tooltip>
+                          <ResetWorkflowRunsDialog
+                            projectId={projectId}
+                            workflowUid={workflow.workflow_uid}
+                            workflowName={workflow.workflow_name}
+                          />
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button

@@ -12,6 +12,7 @@ import {
   getProjectRuns,
   getProjectWorkflows,
   removeWorkflowFromProject,
+  resetProjectWorkflowRuns,
   runWorkflow,
 } from '@/app/actions/project-workflow'
 import type {
@@ -123,6 +124,34 @@ export function useRemoveWorkflowFromProject() {
       queryClient.invalidateQueries({
         queryKey: ['projects', projectId, 'workflows'],
       })
+    },
+  })
+}
+
+export function useResetProjectWorkflowRuns() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      projectId,
+      workflowUid,
+    }: {
+      projectId: string
+      workflowUid: string
+    }) => resetProjectWorkflowRuns(projectId, workflowUid),
+    onSuccess: async (_, { projectId }) => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ['projects', projectId, 'runs'],
+        }),
+        queryClient.invalidateQueries({ queryKey: ['runs'] }),
+        queryClient.invalidateQueries({ queryKey: ['runCount'] }),
+        queryClient.invalidateQueries({ queryKey: ['runStats'] }),
+        queryClient.invalidateQueries({ queryKey: ['node-runs'] }),
+        queryClient.invalidateQueries({ queryKey: ['samples', projectId] }),
+        queryClient.invalidateQueries({
+          queryKey: ['projectFileMappings', projectId],
+        }),
+      ])
     },
   })
 }

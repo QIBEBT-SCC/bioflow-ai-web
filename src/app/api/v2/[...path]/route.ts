@@ -55,3 +55,10 @@ export async function POST(
 ) {
   return proxyRequest(request, await params)
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ path: string[] }> },
+) {
+  return proxyRequest(request, await params)
+}
