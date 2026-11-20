@@ -9,6 +9,21 @@ import type {
   WorkflowInterface,
 } from '@/types/workflow'
 
+export function inputConnectionPolicy(nodeType: string | undefined) {
+  switch (nodeType) {
+    case 'code_bash':
+    case 'code_python':
+    case 'code_R':
+      return 'parameter-bindings'
+    case 'downstream_summary':
+    case 'copy2folder':
+    case 'collect_mount_dirs':
+      return 'multiple'
+    default:
+      return 'single'
+  }
+}
+
 // These nodes and edges are a view of interface mappings, never workflow tasks.
 export function interfaceView(graph: WorkflowDefinition) {
   const ids = new Set(graph.nodes.map((node) => node.id))
@@ -103,10 +118,13 @@ export function connectInterface(
   const { source, target, sourceHandle, targetHandle } = connection
   if (source === inputId && target !== outputId) {
     const prefix = `${target}-in-`
+    const targetNode = graph.nodes.find((node) => node.id === target)
+    const policy = inputConnectionPolicy(targetNode?.type)
     if (
+      !targetNode ||
+      policy === 'parameter-bindings' ||
       !iface.inputs.some((port) => port.id === sourceHandle) ||
-      !targetHandle?.startsWith(prefix) ||
-      !graph.nodes.some((node) => node.id === target)
+      !targetHandle?.startsWith(prefix)
     )
       return null
     const binding = {
@@ -115,13 +133,17 @@ export function connectInterface(
     }
     if (
       !binding.handle ||
-      graph.edges.some(
-        (edge) => edge.target === target && edge.targetHandle === targetHandle,
-      ) ||
-      iface.inputs.some((port) =>
-        port.targets.some(
-          (item) => item.node_id === target && item.handle === binding.handle,
-        ),
+      (policy === 'single' &&
+        graph.edges.some(
+          (edge) =>
+            edge.target === target && edge.targetHandle === targetHandle,
+        )) ||
+      iface.inputs.some(
+        (port) =>
+          (policy === 'single' || port.id === sourceHandle) &&
+          port.targets.some(
+            (item) => item.node_id === target && item.handle === binding.handle,
+          ),
       )
     )
       return null

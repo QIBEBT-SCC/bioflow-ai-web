@@ -1,6 +1,10 @@
 import type { Node } from '@xyflow/react'
 import { generateLetterId } from '@/lib/id-generator'
-import type { WorkflowDefinition, WorkflowInterface } from '@/types/workflow'
+import type {
+  PortTarget,
+  WorkflowDefinition,
+  WorkflowInterface,
+} from '@/types/workflow'
 
 export const emptyInterface = (): WorkflowInterface => ({
   inputs: [],
@@ -78,6 +82,19 @@ export function groupSelection(graph: WorkflowDefinition): WorkflowDefinition {
   if (!selected.size) return graph
   const inside = graph.nodes.filter((node) => selected.has(node.id))
   const boundary = emptyInterface()
+  // Each upstream connection needs its own subgraph input port.
+  const addInput = (name: string, description: string, target: PortTarget) => {
+    let label = name
+    for (
+      let suffix = 2;
+      boundary.inputs.some((port) => port.name === label);
+      suffix++
+    )
+      label = `${name} ${suffix}`
+    const id = generateLetterId()
+    boundary.inputs.push({ id, name: label, description, targets: [target] })
+    return id
+  }
   const group = makeSubgraph(
     {
       nodes: inside,
@@ -97,25 +114,12 @@ export function groupSelection(graph: WorkflowDefinition): WorkflowDefinition {
       const handle = (edge.targetHandle ?? '').slice(
         `${edge.target}-in-`.length,
       )
-      let port = boundary.inputs.find(
-        (port) =>
-          port.targets[0].node_id === edge.target &&
-          port.targets[0].handle === handle,
-      )
-      if (!port) {
-        port = {
-          id: generateLetterId(),
-          name: handle,
-          description: '',
-          targets: [{ node_id: edge.target, handle }],
-        }
-        boundary.inputs.push(port)
-      }
+      const portId = addInput(handle, '', { node_id: edge.target, handle })
       return [
         {
           ...edge,
           target: group.id,
-          targetHandle: `${group.id}-in-${port.id}`,
+          targetHandle: `${group.id}-in-${portId}`,
         },
       ]
     }
@@ -146,22 +150,8 @@ export function groupSelection(graph: WorkflowDefinition): WorkflowDefinition {
     for (const input of iface.inputs)
       input.targets = input.targets.map((target) => {
         if (!selected.has(target.node_id)) return target
-        let port = boundary.inputs.find(
-          (port) =>
-            port.targets.length === 1 &&
-            port.targets[0].node_id === target.node_id &&
-            port.targets[0].handle === target.handle,
-        )
-        if (!port) {
-          port = {
-            id: generateLetterId(),
-            name: input.name,
-            description: input.description,
-            targets: [target],
-          }
-          boundary.inputs.push(port)
-        }
-        return { node_id: group.id, handle: port.id }
+        const portId = addInput(input.name, input.description, target)
+        return { node_id: group.id, handle: portId }
       })
     for (const output of iface.outputs)
       if (selected.has(output.source.node_id)) {
