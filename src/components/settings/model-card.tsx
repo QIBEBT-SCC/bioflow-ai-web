@@ -1,22 +1,45 @@
 'use client'
 
-import { Edit2Icon, SaveIcon, Trash2Icon, XIcon } from 'lucide-react'
+import { cn } from 'cn'
+import {
+  CheckCircle2Icon,
+  Edit2Icon,
+  Loader2Icon,
+  SaveIcon,
+  SendIcon,
+  Trash2Icon,
+  XCircleIcon,
+  XIcon,
+} from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { useDeleteLLMModel, useUpdateLLMModel } from '@/hooks/use-setting'
+import {
+  useDeleteLLMModel,
+  useTestLLMModel,
+  useUpdateLLMModel,
+} from '@/hooks/use-setting'
+import { statusToneClasses } from '@/lib/status'
 import { formatTokenCount } from '@/lib/token-format'
 import type {
   LLMModelPublic,
+  LLMModelTestResult,
   LLMModelUpdate,
   ProviderType,
 } from '@/types/setting'
 import { ReasoningEffortSelect } from './reasoning-effort-select'
+
+function formatLatency(latencyMs: number): string {
+  return latencyMs < 1000
+    ? `${latencyMs} ms`
+    : `${(latencyMs / 1000).toFixed(2)} s`
+}
 
 interface ModelCardProps {
   model: LLMModelPublic
@@ -34,9 +57,11 @@ export function ModelCard({
   const t = useTranslations('setting.llm_setting')
   const updateModelMutation = useUpdateLLMModel()
   const deleteModelMutation = useDeleteLLMModel()
+  const testModelMutation = useTestLLMModel()
 
   const [isEditing, setIsEditing] = useState(false)
   const [draft, setDraft] = useState<LLMModelUpdate | null>(null)
+  const [testResult, setTestResult] = useState<LLMModelTestResult | null>(null)
 
   const startEditing = () => {
     setDraft({
@@ -58,6 +83,7 @@ export function ModelCard({
       id: model.id,
       data: draft,
     })
+    setTestResult(null)
     setIsEditing(false)
     setDraft(null)
   }
@@ -69,6 +95,38 @@ export function ModelCard({
 
   const deleteModel = async () => {
     await deleteModelMutation.mutateAsync(model.id)
+  }
+
+  const handleTestModel = async () => {
+    try {
+      const result = await testModelMutation.mutateAsync(model.id)
+      setTestResult(result)
+      if (result.available) {
+        toast.success(
+          t('test_success_toast', {
+            name: model.display_name,
+            latency: formatLatency(result.latency_ms),
+          }),
+        )
+      } else {
+        toast.error(t('test_unavailable_toast', { name: model.display_name }), {
+          description: result.error ?? undefined,
+        })
+      }
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : t('test_request_failed')
+      setTestResult({
+        model_id: model.id,
+        model_name: model.name,
+        provider_name: providerName,
+        available: false,
+        latency_ms: 0,
+        response_text: null,
+        error: message,
+      })
+      toast.error(message)
+    }
   }
 
   const toggleActive = async (checked: boolean) => {
@@ -164,17 +222,42 @@ export function ModelCard({
             ) : (
               <>
                 <Button
+                  type='button'
+                  variant='outline'
+                  size='sm'
+                  onClick={handleTestModel}
+                  disabled={testModelMutation.isPending}
+                  className='h-8 bg-background'
+                >
+                  {testModelMutation.isPending ? (
+                    <Loader2Icon className='size-3.5 animate-spin' />
+                  ) : (
+                    <SendIcon className='size-3.5' />
+                  )}
+                  {testModelMutation.isPending
+                    ? t('testing_model')
+                    : t('test_model')}
+                </Button>
+                <Button
+                  type='button'
                   variant='ghost'
                   size='sm'
                   onClick={startEditing}
+                  disabled={testModelMutation.isPending}
+                  aria-label={t('edit')}
                   className='h-8'
                 >
                   <Edit2Icon className='size-3' />
                 </Button>
                 <Button
+                  type='button'
                   variant='ghost'
                   size='sm'
                   onClick={deleteModel}
+                  disabled={
+                    testModelMutation.isPending || deleteModelMutation.isPending
+                  }
+                  aria-label={t('delete_model')}
                   className='h-8 text-destructive hover:text-destructive'
                 >
                   <Trash2Icon className='size-3' />
@@ -333,6 +416,63 @@ export function ModelCard({
                 </p>
               </div>
             </div>
+            {testResult && (
+              <div
+                className={cn(
+                  'flex items-start justify-between gap-3 rounded-lg border px-3 py-2.5 text-xs',
+                  testResult.available
+                    ? statusToneClasses.success.badge
+                    : statusToneClasses.danger.badge,
+                )}
+              >
+                <div className='flex min-w-0 items-start gap-2'>
+                  {testResult.available ? (
+                    <CheckCircle2Icon className='mt-0.5 size-3.5 shrink-0' />
+                  ) : (
+                    <XCircleIcon className='mt-0.5 size-3.5 shrink-0' />
+                  )}
+                  <div className='min-w-0 space-y-1'>
+                    <div className='flex flex-wrap items-center gap-x-2 gap-y-0.5'>
+                      <span className='font-medium'>
+                        {testResult.available
+                          ? t('test_status_available')
+                          : t('test_status_unavailable')}
+                      </span>
+                      {testResult.latency_ms > 0 && (
+                        <span className='font-mono tabular-nums opacity-80'>
+                          {formatLatency(testResult.latency_ms)}
+                        </span>
+                      )}
+                    </div>
+                    {testResult.available && testResult.response_text && (
+                      <p className='break-words text-foreground/90'>
+                        <span className='text-muted-foreground'>
+                          {t('test_response_label')}:{' '}
+                        </span>
+                        <span className='font-mono'>
+                          {testResult.response_text}
+                        </span>
+                      </p>
+                    )}
+                    {!testResult.available && testResult.error && (
+                      <p className='break-words opacity-90'>
+                        {testResult.error}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <Button
+                  type='button'
+                  variant='ghost'
+                  size='sm'
+                  onClick={() => setTestResult(null)}
+                  aria-label={t('dismiss_test_result')}
+                  className='size-6 shrink-0 p-0 text-current hover:bg-transparent hover:text-current/80'
+                >
+                  <XIcon className='size-3.5' />
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </div>

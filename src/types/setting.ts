@@ -75,6 +75,16 @@ export interface LLMModelPublic {
   is_active: boolean
 }
 
+export interface LLMModelTestResult {
+  model_id: number
+  model_name: string
+  provider_name: string
+  available: boolean
+  latency_ms: number
+  response_text: string | null
+  error: string | null
+}
+
 // ==================== LLMSetting Schemas ====================
 
 export interface LLMSettingItem {

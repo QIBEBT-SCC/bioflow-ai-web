@@ -15,6 +15,7 @@ import {
   getLLMStatisticsDetails,
   getLLMStatisticsOverview,
   getProviderModels,
+  testLLMModel,
   updateLLMModel,
   updateLLMProvider,
   updateLLMSetting,
@@ -189,6 +190,12 @@ export function useDeleteLLMModel() {
       queryClient.invalidateQueries({ queryKey: ['llm-provider-models'] })
       queryClient.invalidateQueries({ queryKey: ['llm-providers'] })
     },
+  })
+}
+
+export function useTestLLMModel() {
+  return useMutation({
+    mutationFn: (id: number) => testLLMModel(id),
   })
 }
 
