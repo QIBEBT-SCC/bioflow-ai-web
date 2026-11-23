@@ -1,0 +1,386 @@
+name: Release & Publish Docker Image
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Build and verify only; skip GHCR image push and GitHub Release creation
+        type: boolean
+        required: false
+        default: false
+
+permissions: {}
+
+concurrency:
+  group: frontend-release
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build and verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+    outputs:
+      package_name: ${{ steps.meta.outputs.package_name }}
+      description: ${{ steps.meta.outputs.description }}
+      version: ${{ steps.meta.outputs.version }}
+      tag: ${{ steps.meta.outputs.tag }}
+      is_prerelease: ${{ steps.meta.outputs.is_prerelease }}
+      commit_sha: ${{ steps.meta.outputs.commit_sha }}
+      created_at: ${{ steps.meta.outputs.created_at }}
+      image_name: ${{ steps.meta.outputs.image_name }}
+      primary_image_ref: ${{ steps.meta.outputs.primary_image_ref }}
+      image_tags_csv: ${{ steps.meta.outputs.image_tags_csv }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+
+      - name: Resolve and validate release metadata
+        id: meta
+        env:
+          DRY_RUN: ${{ inputs.dry_run }}
+          GITHUB_REF_VALUE: ${{ github.ref }}
+          GITHUB_SHA_VALUE: ${{ github.sha }}
+          GITHUB_REPOSITORY_VALUE: ${{ github.repository }}
+        run: |
+          node - <<'JS'
+          const fs = require('node:fs');
+          const { execFileSync } = require('node:child_process');
+
+          const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          if (pkg.name !== 'bioflow-ai-web') {
+            console.error(`::error::Expected package.json name 'bioflow-ai-web', got ${JSON.stringify(pkg.name)}`);
+            process.exit(1);
+          }
+
+          const version = pkg.version;
+          const pattern = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-(alpha|beta|rc)\.(0|[1-9]\d*))?$/;
+          const match = typeof version === 'string' ? pattern.exec(version) : null;
+          if (!match) {
+            console.error(
+              `::error::Unsupported package.json version ${JSON.stringify(version)}. ` +
+                'Expected SemVer X.Y.Z or X.Y.Z-{alpha|beta|rc}.N (e.g. 1.0.0 or 1.0.0-beta.1).'
+            );
+            process.exit(1);
+          }
+
+          const [, major, minor, , phase] = match;
+          const tag = `v${version}`;
+          const isPrerelease = Boolean(phase);
+          const description = String(pkg.description || 'Web frontend for BioFlow AI')
+            .replace(/[\r\n]+/g, ' ')
+            .trim();
+          const createdAt = new Date().toISOString();
+
+          const dryRun = (process.env.DRY_RUN || 'false').toLowerCase() === 'true';
+          const ref = process.env.GITHUB_REF_VALUE || '';
+          const sha = process.env.GITHUB_SHA_VALUE || '';
+          const repository = process.env.GITHUB_REPOSITORY_VALUE || '';
+
+          if (!repository) {
+            console.error('::error::GITHUB_REPOSITORY_VALUE is empty.');
+            process.exit(1);
+          }
+
+          if (!dryRun && ref !== 'refs/heads/master') {
+            console.error(
+              `::error::Non-dry-run releases must run from refs/heads/master (got ${JSON.stringify(ref)}).`
+            );
+            process.exit(1);
+          }
+
+          let tagExists = false;
+          try {
+            execFileSync('git', ['rev-parse', '--verify', '--quiet', `refs/tags/${tag}`], { stdio: 'ignore' });
+            tagExists = true;
+          } catch {
+            tagExists = false;
+          }
+
+          if (tagExists) {
+            if (!dryRun) {
+              console.error(
+                `::error::Tag ${tag} already exists. Bump package.json (or delete the unused tag) before releasing.`
+              );
+              process.exit(1);
+            }
+            console.warn(`::warning::Tag ${tag} already exists; continuing because dry_run is enabled.`);
+          }
+
+          const imageName = `ghcr.io/${repository.toLowerCase()}`;
+          const primaryImageRef = `${imageName}:${version}`;
+          const tags = isPrerelease
+            ? [primaryImageRef]
+            : [
+                primaryImageRef,
+                `${imageName}:${major}.${minor}`,
+                `${imageName}:${major}`,
+                `${imageName}:latest`,
+              ];
+
+          const outputs = [
+            `package_name=${pkg.name}`,
+            `description=${description}`,
+            `version=${version}`,
+            `tag=${tag}`,
+            `is_prerelease=${isPrerelease ? 'true' : 'false'}`,
+            `commit_sha=${sha}`,
+            `created_at=${createdAt}`,
+            `image_name=${imageName}`,
+            `primary_image_ref=${primaryImageRef}`,
+            `image_tags_csv=${tags.join(',')}`,
+          ];
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `${outputs.join('\n')}\n`, 'utf8');
+          JS
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build Docker image for verification
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          load: true
+          push: false
+          provenance: false
+          tags: ${{ steps.meta.outputs.primary_image_ref }}
+          labels: |
+            org.opencontainers.image.created=${{ steps.meta.outputs.created_at }}
+            org.opencontainers.image.description=${{ steps.meta.outputs.description }}
+            org.opencontainers.image.revision=${{ steps.meta.outputs.commit_sha }}
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.title=${{ steps.meta.outputs.package_name }}
+            org.opencontainers.image.url=https://github.com/${{ github.repository }}
+            org.opencontainers.image.version=${{ steps.meta.outputs.version }}
+          cache-from: type=gha,scope=frontend-release
+          cache-to: type=gha,mode=max,scope=frontend-release
+
+      - name: Inspect and smoke-test Docker image
+        env:
+          IMAGE_REF: ${{ steps.meta.outputs.primary_image_ref }}
+          VERSION: ${{ steps.meta.outputs.version }}
+          COMMIT_SHA: ${{ steps.meta.outputs.commit_sha }}
+        run: |
+          set -euo pipefail
+
+          actual_version="$(docker image inspect -f '{{ index .Config.Labels "org.opencontainers.image.version" }}' "$IMAGE_REF")"
+          actual_revision="$(docker image inspect -f '{{ index .Config.Labels "org.opencontainers.image.revision" }}' "$IMAGE_REF")"
+          actual_user="$(docker image inspect -f '{{ .Config.User }}' "$IMAGE_REF")"
+
+          if [ "$actual_version" != "$VERSION" ]; then
+            echo "::error::Expected image version label ${VERSION}, got ${actual_version}"
+            exit 1
+          fi
+          if [ "$actual_revision" != "$COMMIT_SHA" ]; then
+            echo "::error::Expected image revision label ${COMMIT_SHA}, got ${actual_revision}"
+            exit 1
+          fi
+          if [ "$actual_user" != "nextjs" ]; then
+            echo "::error::Expected image user 'nextjs', got ${actual_user}"
+            exit 1
+          fi
+
+          TMP_DIR="$(mktemp -d)"
+          CONTAINER_NAME="bioflow-ai-web-smoke-${GITHUB_RUN_ID:-local}"
+          cleanup() {
+            exit_code=$?
+            if [ "$exit_code" -ne 0 ]; then
+              docker logs "$CONTAINER_NAME" || true
+            fi
+            docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1 || true
+            rm -rf "$TMP_DIR"
+          }
+          trap cleanup EXIT
+
+          docker run -d --name "$CONTAINER_NAME" -p 127.0.0.1:3000:3000 "$IMAGE_REF"
+
+          ready=false
+          for _ in $(seq 1 30); do
+            running="$(docker inspect -f '{{ .State.Running }}' "$CONTAINER_NAME" 2>/dev/null || echo 'false')"
+            if [ "$running" != "true" ]; then
+              echo "::error::Smoke-test container exited unexpectedly."
+              exit 1
+            fi
+            if curl -fsS -o "$TMP_DIR/home.html" http://127.0.0.1:3000/; then
+              ready=true
+              break
+            fi
+            sleep 1
+          done
+
+          if [ "$ready" != "true" ]; then
+            echo "::error::Timed out waiting for standalone Next.js server to become ready."
+            exit 1
+          fi
+
+          grep -q 'BioFlow AI' "$TMP_DIR/home.html"
+          curl -fsS http://127.0.0.1:3000/login >/dev/null
+          curl -fsS http://127.0.0.1:3000/logo_and_text.svg >/dev/null
+
+          redirect_check="$(curl -sS -o /dev/null -w '%{http_code} %{redirect_url}' http://127.0.0.1:3000/project)"
+          case "$redirect_check" in
+            "307 "*/login) ;;
+            *)
+              echo "::error::Expected 307 redirect to /login for /project, got: ${redirect_check}"
+              exit 1
+              ;;
+          esac
+
+          echo "Smoke test passed for ${IMAGE_REF}"
+
+      - name: Write dry-run summary
+        if: ${{ inputs.dry_run }}
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
+          TAG: ${{ steps.meta.outputs.tag }}
+          IS_PRERELEASE: ${{ steps.meta.outputs.is_prerelease }}
+          IMAGE_TAGS_CSV: ${{ steps.meta.outputs.image_tags_csv }}
+        run: |
+          {
+            echo '### Release dry run succeeded'
+            echo
+            echo "- **Package version**: \`${VERSION}\`"
+            echo "- **Derived tag**: \`${TAG}\`"
+            echo "- **Pre-release**: \`${IS_PRERELEASE}\`"
+            echo '- **Planned GHCR image tags**:'
+            IFS=',' read -ra tags <<< "$IMAGE_TAGS_CSV"
+            for image_tag in "${tags[@]}"; do
+              echo "  - \`${image_tag}\`"
+            done
+            echo '- **GHCR publish & GitHub Release**: skipped (`dry_run=true`)'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  publish-image:
+    name: Publish to GHCR
+    needs: build
+    if: ${{ !inputs.dry_run }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      digest: ${{ steps.push.outputs.digest }}
+
+    steps:
+      - name: Checkout release commit
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.build.outputs.commit_sha }}
+          persist-credentials: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push Docker image to GHCR
+        id: push
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: true
+          tags: ${{ needs.build.outputs.image_tags_csv }}
+          labels: |
+            org.opencontainers.image.created=${{ needs.build.outputs.created_at }}
+            org.opencontainers.image.description=${{ needs.build.outputs.description }}
+            org.opencontainers.image.revision=${{ needs.build.outputs.commit_sha }}
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.title=${{ needs.build.outputs.package_name }}
+            org.opencontainers.image.url=https://github.com/${{ github.repository }}
+            org.opencontainers.image.version=${{ needs.build.outputs.version }}
+          cache-from: type=gha,scope=frontend-release
+
+      - name: Write publish summary
+        env:
+          VERSION: ${{ needs.build.outputs.version }}
+          IMAGE_DIGEST: ${{ steps.push.outputs.digest }}
+          IMAGE_TAGS_CSV: ${{ needs.build.outputs.image_tags_csv }}
+        run: |
+          {
+            echo '### Published Docker image to GHCR'
+            echo
+            echo "- **Version**: \`${VERSION}\`"
+            if [ -n "$IMAGE_DIGEST" ]; then
+              echo "- **Digest**: \`${IMAGE_DIGEST}\`"
+            fi
+            echo '- **Published tags**:'
+            IFS=',' read -ra tags <<< "$IMAGE_TAGS_CSV"
+            for image_tag in "${tags[@]}"; do
+              echo "  - \`${image_tag}\`"
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  create-github-release:
+    name: Create GitHub Release
+    needs: [build, publish-image]
+    if: ${{ !inputs.dry_run }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+
+    steps:
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.build.outputs.tag }}
+          COMMIT_SHA: ${{ needs.build.outputs.commit_sha }}
+          IS_PRERELEASE: ${{ needs.build.outputs.is_prerelease }}
+          IMAGE_TAGS_CSV: ${{ needs.build.outputs.image_tags_csv }}
+          IMAGE_DIGEST: ${{ needs.publish-image.outputs.digest }}
+        run: |
+          notes_header="### Docker Image"
+          IFS=',' read -ra tags <<< "$IMAGE_TAGS_CSV"
+          for image_tag in "${tags[@]}"; do
+            notes_header="${notes_header}"$'\n'"- \`${image_tag}\`"
+          done
+          if [ -n "$IMAGE_DIGEST" ]; then
+            notes_header="${notes_header}"$'\n'"- Digest: \`${IMAGE_DIGEST}\`"
+          fi
+
+          args=(
+            "${TAG}"
+            --repo "${GITHUB_REPOSITORY}"
+            --target "${COMMIT_SHA}"
+            --title "${TAG}"
+            --notes "${notes_header}"
+            --generate-notes
+          )
+          if [ "${IS_PRERELEASE}" = "true" ]; then
+            args+=(--prerelease)
+          fi
+          gh release create "${args[@]}"
+
+      - name: Write release summary
+        env:
+          TAG: ${{ needs.build.outputs.tag }}
+          PRIMARY_IMAGE_REF: ${{ needs.build.outputs.primary_image_ref }}
+          IMAGE_DIGEST: ${{ needs.publish-image.outputs.digest }}
+        run: |
+          {
+            echo '### Created GitHub Release'
+            echo
+            echo "- **Release**: https://github.com/${GITHUB_REPOSITORY}/releases/tag/${TAG}"
+            echo "- **Image**: \`${PRIMARY_IMAGE_REF}\`"
+            if [ -n "$IMAGE_DIGEST" ]; then
+              echo "- **Digest**: \`${IMAGE_DIGEST}\`"
+            fi
+            echo '- **Next step**: Edit the release notes to link related frontend/backend PRs and record the tested backend version and any environment or deployment changes.'
+          } >> "$GITHUB_STEP_SUMMARY"
