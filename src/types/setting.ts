@@ -21,7 +21,7 @@ export interface LLMProviderCreate {
 export interface LLMProviderUpdate {
   name?: string
   provider_type?: ProviderType
-  base_url?: string
+  base_url?: string | null
   api_key?: string
   use_proxy?: boolean
   is_active?: boolean
@@ -31,7 +31,7 @@ export interface LLMProviderPublic {
   id: number
   name: string
   provider_type: ProviderType
-  base_url?: string
+  base_url?: string | null
   credential_configured: boolean
   use_proxy: boolean
   is_active: boolean

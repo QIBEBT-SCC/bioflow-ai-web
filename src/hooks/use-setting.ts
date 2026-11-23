@@ -140,6 +140,8 @@ export function useUpdateLLMProvider() {
       updateLLMProvider(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['llm-providers'] })
+      queryClient.invalidateQueries({ queryKey: ['llm-models'] })
+      queryClient.invalidateQueries({ queryKey: ['llm-settings'] })
     },
   })
 }
@@ -150,6 +152,8 @@ export function useDeleteLLMProvider() {
     mutationFn: (id: number) => deleteLLMProvider(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['llm-providers'] })
+      queryClient.invalidateQueries({ queryKey: ['llm-models'] })
+      queryClient.invalidateQueries({ queryKey: ['llm-settings'] })
     },
   })
 }

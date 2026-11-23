@@ -4,7 +4,6 @@ import { CpuIcon, SettingsIcon, TrendingUpIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
-import { AddProviderDialog } from '@/components/settings/add-provider-dialog'
 import { ModelConfigTab } from '@/components/settings/model-config-tab'
 import { ProviderList } from '@/components/settings/provider-list'
 import { StatisticsTab } from '@/components/settings/statistics-tab'
@@ -56,10 +55,7 @@ export function LLMManagementTabs({ initialTab }: LLMManagementTabsProps) {
         <ModelConfigTab />
       </TabsContent>
 
-      <TabsContent value='providers' className='space-y-4'>
-        <div className='flex justify-end'>
-          <AddProviderDialog />
-        </div>
+      <TabsContent value='providers'>
         <ProviderList />
       </TabsContent>
     </Tabs>
