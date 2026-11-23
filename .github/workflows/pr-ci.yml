@@ -1,15 +1,17 @@
-name: Frontend PR CI
+name: Frontend CI
 
 on:
   pull_request:
     branches: [master, dev]
+  push:
+    branches: [master]
 
 permissions:
   contents: read
 
 concurrency:
-  group: frontend-pr-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
+  group: frontend-ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   checks:
@@ -18,7 +20,6 @@ jobs:
     timeout-minutes: 15
     env:
       NEXT_TELEMETRY_DISABLED: '1'
-      PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -31,9 +32,34 @@ jobs:
           cache: pnpm
       - name: Install locked dependencies
         run: pnpm install --frozen-lockfile
+      - name: Resolve diff base
+        id: diff
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            base_sha="$PR_BASE_SHA"
+          elif [ -n "$PUSH_BEFORE_SHA" ] && [ "$PUSH_BEFORE_SHA" != "0000000000000000000000000000000000000000" ] && git cat-file -e "${PUSH_BEFORE_SHA}^{commit}" 2>/dev/null; then
+            base_sha="$PUSH_BEFORE_SHA"
+          else
+            base_sha=""
+          fi
+          echo "base_sha=${base_sha}" >> "$GITHUB_OUTPUT"
       - name: Biome
-        run: pnpm exec biome check --changed --since="$PR_BASE_SHA" --no-errors-on-unmatched --reporter=github
+        env:
+          DIFF_BASE_SHA: ${{ steps.diff.outputs.base_sha }}
+        run: |
+          if [ -n "$DIFF_BASE_SHA" ]; then
+            pnpm exec biome check --changed --since="$DIFF_BASE_SHA" --no-errors-on-unmatched --reporter=github
+          else
+            pnpm exec biome check --reporter=github
+          fi
       - name: React Doctor
-        run: pnpm exec react-doctor --diff "$PR_BASE_SHA" --no-score --yes --annotations
+        if: ${{ steps.diff.outputs.base_sha != '' }}
+        env:
+          DIFF_BASE_SHA: ${{ steps.diff.outputs.base_sha }}
+        run: pnpm exec react-doctor --diff "$DIFF_BASE_SHA" --no-score --yes --annotations
       - name: Production build
         run: pnpm build
