@@ -21,7 +21,7 @@ export interface LLMProviderCreate {
 export interface LLMProviderUpdate {
   name?: string
   provider_type?: ProviderType
-  base_url?: string
+  base_url?: string | null
   api_key?: string
   use_proxy?: boolean
   is_active?: boolean
@@ -31,7 +31,7 @@ export interface LLMProviderPublic {
   id: number
   name: string
   provider_type: ProviderType
-  base_url?: string
+  base_url?: string | null
   credential_configured: boolean
   use_proxy: boolean
   is_active: boolean
@@ -73,6 +73,16 @@ export interface LLMModelPublic {
   context_window: number | null
   reasoning_effort: ReasoningEffort | null
   is_active: boolean
+}
+
+export interface LLMModelTestResult {
+  model_id: number
+  model_name: string
+  provider_name: string
+  available: boolean
+  latency_ms: number
+  response_text: string | null
+  error: string | null
 }
 
 // ==================== LLMSetting Schemas ====================

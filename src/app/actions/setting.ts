@@ -2,6 +2,7 @@ import { clientFetch } from '@/lib/api-client'
 import type {
   LLMModelCreate,
   LLMModelPublic,
+  LLMModelTestResult,
   LLMModelUpdate,
   LLMProviderCreate,
   LLMProviderPublic,
@@ -91,6 +92,12 @@ export async function updateLLMModel(
 export async function deleteLLMModel(id: number): Promise<void> {
   return await clientFetch<void>(`/settings/models/${id}`, {
     method: 'DELETE',
+  })
+}
+
+export async function testLLMModel(id: number): Promise<LLMModelTestResult> {
+  return await clientFetch<LLMModelTestResult>(`/settings/models/${id}/test`, {
+    method: 'POST',
   })
 }
 

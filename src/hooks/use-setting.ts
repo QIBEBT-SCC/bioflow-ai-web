@@ -15,6 +15,7 @@ import {
   getLLMStatisticsDetails,
   getLLMStatisticsOverview,
   getProviderModels,
+  testLLMModel,
   updateLLMModel,
   updateLLMProvider,
   updateLLMSetting,
@@ -139,6 +140,8 @@ export function useUpdateLLMProvider() {
       updateLLMProvider(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['llm-providers'] })
+      queryClient.invalidateQueries({ queryKey: ['llm-models'] })
+      queryClient.invalidateQueries({ queryKey: ['llm-settings'] })
     },
   })
 }
@@ -149,6 +152,8 @@ export function useDeleteLLMProvider() {
     mutationFn: (id: number) => deleteLLMProvider(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['llm-providers'] })
+      queryClient.invalidateQueries({ queryKey: ['llm-models'] })
+      queryClient.invalidateQueries({ queryKey: ['llm-settings'] })
     },
   })
 }
@@ -189,6 +194,12 @@ export function useDeleteLLMModel() {
       queryClient.invalidateQueries({ queryKey: ['llm-provider-models'] })
       queryClient.invalidateQueries({ queryKey: ['llm-providers'] })
     },
+  })
+}
+
+export function useTestLLMModel() {
+  return useMutation({
+    mutationFn: (id: number) => testLLMModel(id),
   })
 }
 

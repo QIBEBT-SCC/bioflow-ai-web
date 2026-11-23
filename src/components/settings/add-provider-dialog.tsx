@@ -1,8 +1,9 @@
 'use client'
 
-import { PlusIcon } from 'lucide-react'
+import { Loader2Icon, PlusIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { useState } from 'react'
+import { type FormEvent, useState } from 'react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -24,7 +25,11 @@ import {
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { useCreateLLMProvider } from '@/hooks/use-setting'
-import type { LLMProviderCreate, ProviderType } from '@/types/setting'
+import type {
+  LLMProviderCreate,
+  LLMProviderPublic,
+  ProviderType,
+} from '@/types/setting'
 
 const defaultProvider: LLMProviderCreate = {
   name: '',
@@ -35,7 +40,15 @@ const defaultProvider: LLMProviderCreate = {
   is_active: true,
 }
 
-export function AddProviderDialog() {
+interface AddProviderDialogProps {
+  triggerVariant?: 'button' | 'icon'
+  onCreated?: (provider: LLMProviderPublic) => void
+}
+
+export function AddProviderDialog({
+  triggerVariant = 'button',
+  onCreated,
+}: AddProviderDialogProps) {
   const t = useTranslations('setting.llm_setting')
   const createProviderMutation = useCreateLLMProvider()
 
@@ -43,64 +56,115 @@ export function AddProviderDialog() {
   const [newProvider, setNewProvider] =
     useState<LLMProviderCreate>(defaultProvider)
 
-  const handleAdd = async () => {
-    if (!newProvider.name) return
-    await createProviderMutation.mutateAsync(newProvider)
-    setOpen(false)
-    setNewProvider(defaultProvider)
+  const handleOpenChange = (nextOpen: boolean) => {
+    setOpen(nextOpen)
+    if (!nextOpen) {
+      setNewProvider(defaultProvider)
+    }
+  }
+
+  const canSubmit =
+    !!newProvider.name.trim() &&
+    !!newProvider.api_key.trim() &&
+    !createProviderMutation.isPending
+
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault()
+    if (!canSubmit) return
+    const trimmedBaseUrl = newProvider.base_url?.trim()
+    try {
+      const created = await createProviderMutation.mutateAsync({
+        name: newProvider.name.trim(),
+        provider_type: newProvider.provider_type,
+        base_url: trimmedBaseUrl || undefined,
+        api_key: newProvider.api_key.trim(),
+        use_proxy: newProvider.use_proxy,
+        is_active: newProvider.is_active,
+      })
+      toast.success(t('provider_created'))
+      handleOpenChange(false)
+      onCreated?.(created)
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : t('provider_create_failed'),
+      )
+    }
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button className='gap-2'>
-          <PlusIcon className='size-4' />
-          {t('add_provider')}
-        </Button>
+        {triggerVariant === 'icon' ? (
+          <Button
+            type='button'
+            variant='ghost'
+            size='icon'
+            className='size-7'
+            aria-label={t('add_provider')}
+          >
+            <PlusIcon className='size-4' />
+          </Button>
+        ) : (
+          <Button type='button'>
+            <PlusIcon className='size-4' />
+            {t('add_provider')}
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className='sm:max-w-[500px]'>
         <DialogHeader>
           <DialogTitle>{t('add_provider_title')}</DialogTitle>
           <DialogDescription>{t('add_provider_desc')}</DialogDescription>
         </DialogHeader>
-        <div className='space-y-4 py-4'>
-          <div className='space-y-2'>
-            <Label htmlFor='new-provider-name'>{t('provider_name')}</Label>
-            <Input
-              id='new-provider-name'
-              value={newProvider.name}
-              onChange={(e) =>
-                setNewProvider((prev) => ({ ...prev, name: e.target.value }))
-              }
-              placeholder='OpenAI, Anthropic, etc.'
-            />
-          </div>
-          <div className='space-y-2'>
-            <Label htmlFor='new-provider-type'>{t('provider_type')}</Label>
-            <Select
-              value={newProvider.provider_type}
-              onValueChange={(value) =>
-                setNewProvider((prev) => ({
-                  ...prev,
-                  provider_type: value as ProviderType,
-                }))
-              }
-            >
-              <SelectTrigger id='new-provider-type'>
-                <SelectValue placeholder={t('select_type')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={'openai'}>OpenAI</SelectItem>
-                <SelectItem value={'anthropic'}>Anthropic</SelectItem>
-                <SelectItem value={'google'}>Google</SelectItem>
-              </SelectContent>
-            </Select>
+        <form onSubmit={handleSubmit} className='space-y-4'>
+          <div className='grid gap-4 sm:grid-cols-2'>
+            <div className='space-y-2'>
+              <Label htmlFor='new-provider-name'>{t('provider_name')}</Label>
+              <Input
+                id='new-provider-name'
+                value={newProvider.name}
+                disabled={createProviderMutation.isPending}
+                onChange={(e) =>
+                  setNewProvider((prev) => ({ ...prev, name: e.target.value }))
+                }
+                placeholder='OpenAI, Anthropic, etc.'
+              />
+            </div>
+            <div className='space-y-2'>
+              <Label htmlFor='new-provider-type'>{t('provider_type')}</Label>
+              <Select
+                value={newProvider.provider_type}
+                disabled={createProviderMutation.isPending}
+                onValueChange={(value) =>
+                  setNewProvider((prev) => ({
+                    ...prev,
+                    provider_type: value as ProviderType,
+                  }))
+                }
+              >
+                <SelectTrigger id='new-provider-type' className='w-full'>
+                  <SelectValue placeholder={t('select_type')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='openai'>
+                    {t('provider_type_openai')}
+                  </SelectItem>
+                  <SelectItem value='anthropic'>
+                    {t('provider_type_anthropic')}
+                  </SelectItem>
+                  <SelectItem value='google'>
+                    {t('provider_type_google')}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <div className='space-y-2'>
             <Label htmlFor='new-provider-baseurl'>Base URL</Label>
             <Input
               id='new-provider-baseurl'
               value={newProvider.base_url}
+              disabled={createProviderMutation.isPending}
               onChange={(e) =>
                 setNewProvider((prev) => ({
                   ...prev,
@@ -116,7 +180,9 @@ export function AddProviderDialog() {
             <Input
               id='new-provider-apikey'
               type='password'
-              value={newProvider.api_key || ''}
+              autoComplete='new-password'
+              value={newProvider.api_key}
+              disabled={createProviderMutation.isPending}
               onChange={(e) =>
                 setNewProvider((prev) => ({ ...prev, api_key: e.target.value }))
               }
@@ -124,7 +190,7 @@ export function AddProviderDialog() {
               className='font-mono text-sm'
             />
           </div>
-          <div className='flex items-center justify-between'>
+          <div className='flex items-center justify-between gap-4 rounded-lg border px-3 py-2.5'>
             <div className='space-y-0.5'>
               <Label htmlFor='new-provider-proxy'>{t('use_proxy')}</Label>
               <p className='text-xs text-muted-foreground'>
@@ -134,12 +200,13 @@ export function AddProviderDialog() {
             <Switch
               id='new-provider-proxy'
               checked={newProvider.use_proxy}
+              disabled={createProviderMutation.isPending}
               onCheckedChange={(checked) =>
                 setNewProvider((prev) => ({ ...prev, use_proxy: checked }))
               }
             />
           </div>
-          <div className='flex items-center justify-between'>
+          <div className='flex items-center justify-between gap-4 rounded-lg border px-3 py-2.5'>
             <div className='space-y-0.5'>
               <Label htmlFor='new-provider-active'>
                 {t('enable_provider')}
@@ -151,20 +218,29 @@ export function AddProviderDialog() {
             <Switch
               id='new-provider-active'
               checked={newProvider.is_active}
+              disabled={createProviderMutation.isPending}
               onCheckedChange={(checked) =>
                 setNewProvider((prev) => ({ ...prev, is_active: checked }))
               }
             />
           </div>
-        </div>
-        <DialogFooter>
-          <Button variant='outline' onClick={() => setOpen(false)}>
-            {t('cancel')}
-          </Button>
-          <Button onClick={handleAdd} disabled={!newProvider.name}>
-            {t('add')}
-          </Button>
-        </DialogFooter>
+          <DialogFooter>
+            <Button
+              type='button'
+              variant='outline'
+              disabled={createProviderMutation.isPending}
+              onClick={() => handleOpenChange(false)}
+            >
+              {t('cancel')}
+            </Button>
+            <Button type='submit' disabled={!canSubmit}>
+              {createProviderMutation.isPending && (
+                <Loader2Icon className='size-4 animate-spin' />
+              )}
+              {createProviderMutation.isPending ? t('adding') : t('add')}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   )
