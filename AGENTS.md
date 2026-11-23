@@ -23,6 +23,13 @@ Among these, parts 2 and 3 only check the files affected by the current change.
 
 Follow the shared branch, pull request, and release workflow in [CONTRIBUTING.md](./CONTRIBUTING.md).
 
+When asked to open or submit a pull request targeting `dev` (unless the user explicitly asks to pause before merging), complete the full PR lifecycle in one pass:
+
+- After creating the PR (`gh pr create --base dev`), wait for required CI checks to finish (`gh pr checks <pr> --watch`).
+- Once required checks pass, squash-merge and delete the topic branch (`gh pr merge <pr> --squash --delete-branch`).
+- Switch back to `dev`, fast-forward from `origin/dev`, prune stale remote refs (`git fetch --prune`), and ensure the local topic branch is removed while preserving any unrelated uncommitted files.
+- If any required CI check fails or merge is blocked, stop and report the failure instead of force-merging. Do not auto-merge `dev` -> `master` release PRs unless explicitly requested.
+
 ### Stack
 
 - **UI**: Tailwind CSS v4 + shadcn/ui (Radix)
