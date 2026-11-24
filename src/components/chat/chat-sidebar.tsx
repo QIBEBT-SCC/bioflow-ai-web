@@ -97,6 +97,7 @@ import {
   type AgentName,
   type AgentRun,
   type AgentWorkflowNodePart,
+  STREAMING_AGENT_STATUSES,
 } from '@/types/agent'
 
 interface NodeAttachmentProps {
@@ -236,11 +237,13 @@ function ChatSidebarInner({
     useAgentMessages(sessionId)
   const { data: storedRuns = [], isLoading: isRunsLoading } =
     useAgentSessionRuns(sessionId)
-  const eventHistory = useAgentRunEventHistory(storedRuns)
   const [localRunId, setRunId] = useState<string | null>(null)
   const runId = localRunId ?? session?.latest_run?.uid ?? null
-  const { data: run } = useAgentRun(runId)
-  const events = useAgentRunEvents(runId, run?.status, run?.project_id)
+  const { data: queriedRun } = useAgentRun(runId)
+  const fallbackRun =
+    storedRuns.find((storedRun) => storedRun.uid === runId) ??
+    (session?.latest_run?.uid === runId ? session.latest_run : undefined)
+  const run = queriedRun ?? fallbackRun
   const [text, setText] = useState('')
   const [feedback, setFeedback] = useState('')
   const [localError, setLocalError] = useState<string | null>(null)
@@ -273,14 +276,20 @@ function ChatSidebarInner({
     return runs
   }, [run, storedRuns])
 
+  const streamingRunId =
+    run && STREAMING_AGENT_STATUSES.includes(run.status) ? run.uid : null
+
+  useAgentRunEvents({
+    runId: streamingRunId,
+    sessionId,
+    projectId: run?.project_id,
+  })
+  const eventHistory = useAgentRunEventHistory(displayRuns, streamingRunId)
+
   const sessionEvents = useMemo(
     () =>
-      displayRuns.flatMap((displayRun) =>
-        displayRun.uid === runId && events.length > 0
-          ? events
-          : (eventHistory[displayRun.uid] ?? []),
-      ),
-    [displayRuns, eventHistory, events, runId],
+      displayRuns.flatMap((displayRun) => eventHistory[displayRun.uid] ?? []),
+    [displayRuns, eventHistory],
   )
 
   const { data: projectArtifacts = [] } = useProjectAgentArtifacts(
@@ -325,8 +334,7 @@ function ChatSidebarInner({
         ? t('node.assistant_required')
         : null
     : null
-  const currentRunEvents =
-    events.length > 0 ? events : (eventHistory[runId ?? ''] ?? [])
+  const currentRunEvents = eventHistory[runId ?? ''] ?? []
   const acceptsInput = acceptsAgentInput(run, currentRunEvents)
   const canSubmit = acceptsInput
     ? Boolean(text.trim() && attachments.drafts.length === 0 && !nodeAttachment)
@@ -700,10 +708,7 @@ function ChatSidebarInner({
                       const assistantMessages = runMessages.filter(
                         (message) => message.role === 'assistant',
                       )
-                      const runEvents =
-                        displayRun.uid === runId && events.length > 0
-                          ? events
-                          : (eventHistory[displayRun.uid] ?? [])
+                      const runEvents = eventHistory[displayRun.uid] ?? []
                       const inputStatuses = agentInputStatuses(
                         displayRun,
                         runEvents,
@@ -812,12 +817,7 @@ function ChatSidebarInner({
             </Alert>
           )}
           {run && (
-            <RunTodoQueue
-              run={run}
-              events={
-                events.length > 0 ? events : (eventHistory[run.uid] ?? [])
-              }
-            />
+            <RunTodoQueue run={run} events={eventHistory[run.uid] ?? []} />
           )}
           {workflowSuggestions.length > 0 && !isBusy && !nodeAttachment && (
             <div className='flex scroll-fade-x scrollbar-none gap-2 overflow-x-auto overscroll-x-contain'>

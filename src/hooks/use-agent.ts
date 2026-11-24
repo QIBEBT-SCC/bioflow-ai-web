@@ -7,7 +7,7 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect } from 'react'
 import { toast } from 'sonner'
 import {
   type AgentScope,
@@ -29,29 +29,36 @@ import {
 } from '@/app/actions/agent'
 import { agentArtifactQueryKeys } from '@/hooks/use-agent-artifact'
 import type { Locale } from '@/i18n/config'
+import { ClientApiError } from '@/lib/api-client'
 import type {
   AgentEvent,
+  AgentEventType,
   AgentImagePart,
+  AgentMessage,
   AgentName,
   AgentPDFPart,
   AgentRun,
   AgentSessionPage,
+  AgentStatus,
   AgentWorkflowNodeReference,
 } from '@/types/agent'
-import { STREAMING_AGENT_STATUSES } from '@/types/agent'
 
 export const agentQueryKeys = {
   all: ['agent-sessions'] as const,
-  session: (id: string) => ['agent-sessions', id] as const,
-  messages: (id: string) => ['agent-sessions', id, 'messages'] as const,
-  runs: (id: string) => ['agent-sessions', id, 'runs'] as const,
+  lists: () => ['agent-sessions', 'list'] as const,
+  list: (scope: AgentScope, limit: number) =>
+    ['agent-sessions', 'list', scope, limit] as const,
+  session: (id: string) => ['agent-sessions', 'detail', id] as const,
+  messages: (id: string) =>
+    ['agent-sessions', 'detail', id, 'messages'] as const,
+  runs: (id: string) => ['agent-sessions', 'detail', id, 'runs'] as const,
   run: (id: string) => ['agent-runs', id] as const,
   events: (id: string) => ['agent-runs', id, 'events'] as const,
 }
 
 export function useInfiniteAgentSessions(scope: AgentScope, limit = 8) {
   return useInfiniteQuery<AgentSessionPage>({
-    queryKey: [...agentQueryKeys.all, 'infinite', scope, limit],
+    queryKey: agentQueryKeys.list(scope, limit),
     queryFn: ({ pageParam }) =>
       getAgentSessions(scope, pageParam as string | null, limit),
     initialPageParam: null,
@@ -84,18 +91,20 @@ export function useAgentSessionRuns(sessionId: string | null) {
     queryKey: agentQueryKeys.runs(sessionId ?? ''),
     queryFn: () => getAgentSessionRuns(sessionId ?? ''),
     enabled: Boolean(sessionId),
-    staleTime: 2_000,
+    staleTime: 10_000,
   })
 }
 
-export function useAgentRunEventHistory(runs: AgentRun[]) {
+export function useAgentRunEventHistory(
+  runs: AgentRun[],
+  streamingRunId: string | null = null,
+) {
   const queries = useQueries({
     queries: runs.map((run) => ({
       queryKey: agentQueryKeys.events(run.uid),
       queryFn: () => getAgentEvents(run.uid),
-      staleTime: STREAMING_AGENT_STATUSES.includes(run.status)
-        ? 1_000
-        : Number.POSITIVE_INFINITY,
+      enabled: run.uid !== streamingRunId,
+      staleTime: Number.POSITIVE_INFINITY,
     })),
   })
 
@@ -109,13 +118,7 @@ export function useAgentRun(runId: string | null) {
     queryKey: agentQueryKeys.run(runId ?? ''),
     queryFn: () => getAgentRun(runId ?? ''),
     enabled: Boolean(runId),
-    staleTime: 2_000,
-    refetchInterval: (query) => {
-      const run = query.state.data as AgentRun | undefined
-      return run && STREAMING_AGENT_STATUSES.includes(run.status)
-        ? 5_000
-        : false
-    },
+    staleTime: 10_000,
   })
 }
 
@@ -164,43 +167,66 @@ function mergeEvents(current: AgentEvent[], incoming: AgentEvent[]) {
   return [...byId.values()].sort((a, b) => a.id - b.id)
 }
 
-function scheduleAgentReconnect(callback: () => void) {
-  const timer = setTimeout(callback, 1_500)
+const EVENT_TO_RUN_STATUS: Partial<Record<AgentEventType, AgentStatus>> = {
+  'run.queued': 'queued',
+  'run.started': 'running',
+  'run.cancel_requested': 'cancel_requested',
+  'run.interrupted': 'waiting_input',
+  'run.completed': 'completed',
+  'run.failed': 'failed',
+  'run.cancelled': 'cancelled',
+}
+
+const STREAM_END_EVENT_TYPES = new Set<AgentEventType>([
+  'run.completed',
+  'run.failed',
+  'run.cancelled',
+  'run.interrupted',
+])
+
+function scheduleAgentReconnect(callback: () => void, delayMs: number) {
+  const timer = setTimeout(callback, delayMs)
   return () => clearTimeout(timer)
 }
 
-export function useAgentRunEvents(
-  runId: string | null,
-  status?: AgentRun['status'],
-  projectId?: number | null,
-) {
+export function useAgentRunEvents({
+  runId,
+  sessionId,
+  projectId,
+}: {
+  runId: string | null
+  sessionId: string | null
+  projectId?: number | null
+}) {
   const queryClient = useQueryClient()
-  const [events, setEvents] = useState<AgentEvent[]>([])
-  const cursorRef = useRef(0)
 
   useEffect(() => {
-    setEvents([])
-    cursorRef.current = 0
-    if (!runId) return () => undefined
+    if (!runId) return undefined
 
     const controller = new AbortController()
     let cancelReconnect: () => void = () => undefined
+    const cachedEvents =
+      queryClient.getQueryData<AgentEvent[]>(agentQueryKeys.events(runId)) ?? []
+    let cursor =
+      cachedEvents.length > 0
+        ? Math.max(...cachedEvents.map((event) => event.id))
+        : 0
+    let hasSettled = false
+    let retryDelayMs = 1_500
 
     const accept = (incoming: AgentEvent[]) => {
-      if (incoming.length === 0) return
-      const previousCursor = cursorRef.current
-      cursorRef.current = Math.max(
-        cursorRef.current,
-        ...incoming.map((event) => event.id),
-      )
-      setEvents((current) => mergeEvents(current, incoming))
+      const fresh = incoming.filter((event) => event.id > cursor)
+      if (fresh.length === 0) return
+
+      cursor = Math.max(cursor, ...fresh.map((event) => event.id))
+      retryDelayMs = 1_500
       queryClient.setQueryData<AgentEvent[]>(
         agentQueryKeys.events(runId),
-        (current = []) => mergeEvents(current, incoming),
+        (current = []) => mergeEvents(current, fresh),
       )
-      for (const event of incoming) {
+
+      for (const event of fresh) {
         if (
-          event.id > previousCursor &&
           event.event_type === 'run.progress' &&
           event.payload.kind === 'error' &&
           typeof event.payload.message === 'string'
@@ -220,19 +246,63 @@ export function useAgentRunEvents(
           queryClient.invalidateQueries({ queryKey: ['workflows'] })
         }
       }
-      queryClient.invalidateQueries({ queryKey: agentQueryKeys.run(runId) })
-      queryClient.invalidateQueries({ queryKey: agentQueryKeys.all })
-      if (
-        incoming.some((event) =>
-          [
-            'run.completed',
-            'run.failed',
-            'run.cancelled',
-            'run.interrupted',
-          ].includes(event.event_type),
-        )
-      ) {
-        queryClient.invalidateQueries({ queryKey: agentQueryKeys.all })
+
+      if (sessionId) {
+        const queuedMessageIds = fresh
+          .filter(
+            (event) =>
+              event.event_type === 'run.input_queued' &&
+              typeof event.payload.message_uid === 'string',
+          )
+          .map((event) => event.payload.message_uid as string)
+        if (queuedMessageIds.length > 0) {
+          const cachedMessages =
+            queryClient.getQueryData<AgentMessage[]>(
+              agentQueryKeys.messages(sessionId),
+            ) ?? []
+          const knownIds = new Set(cachedMessages.map((message) => message.uid))
+          if (queuedMessageIds.some((id) => !knownIds.has(id))) {
+            queryClient.invalidateQueries({
+              queryKey: agentQueryKeys.messages(sessionId),
+            })
+          }
+        }
+      }
+
+      const latestStatusEvent = fresh.findLast(
+        (event) => event.event_type in EVENT_TO_RUN_STATUS,
+      )
+      const sawStreamEnd = fresh.some((event) =>
+        STREAM_END_EVENT_TYPES.has(event.event_type),
+      )
+      if (sawStreamEnd) hasSettled = true
+
+      const cachedRun = queryClient.getQueryData<AgentRun>(
+        agentQueryKeys.run(runId),
+      )
+      const statusChanged =
+        latestStatusEvent !== undefined &&
+        EVENT_TO_RUN_STATUS[latestStatusEvent.event_type] !== cachedRun?.status
+
+      if (statusChanged || sawStreamEnd) {
+        queryClient.invalidateQueries({ queryKey: agentQueryKeys.run(runId) })
+        if (sessionId) {
+          queryClient.invalidateQueries({
+            queryKey: agentQueryKeys.runs(sessionId),
+          })
+          queryClient.invalidateQueries({
+            queryKey: agentQueryKeys.session(sessionId),
+          })
+        }
+      }
+
+      if (sawStreamEnd) {
+        if (sessionId) {
+          queryClient.invalidateQueries({
+            queryKey: agentQueryKeys.messages(sessionId),
+          })
+        }
+        queryClient.invalidateQueries({ queryKey: agentQueryKeys.lists() })
         queryClient.invalidateQueries({
           queryKey: agentArtifactQueryKeys.run(runId),
         })
@@ -244,48 +314,51 @@ export function useAgentRunEvents(
       }
     }
 
-    const consumeStream = async () => {
-      const response = await streamAgentEvents(
-        runId,
-        cursorRef.current,
-        controller.signal,
-      )
-      const reader = response.body?.getReader()
-      if (!reader) return
-      const decoder = new TextDecoder()
-      let buffer = ''
-      while (!controller.signal.aborted) {
-        const { value, done } = await reader.read()
-        if (done) break
-        buffer += decoder.decode(value, { stream: true })
-        const frames = buffer.split(/\r?\n\r?\n/)
-        buffer = frames.pop() ?? ''
-        for (const frame of frames) {
-          const data = frame
-            .split(/\r?\n/)
-            .find((line) => line.startsWith('data: '))
-            ?.slice(6)
-          if (data) accept([JSON.parse(data) as AgentEvent])
-        }
-      }
-    }
-
     const connect = async () => {
       try {
-        accept(await getAgentEvents(runId, cursorRef.current))
-        if (!status || STREAMING_AGENT_STATUSES.includes(status)) {
-          await consumeStream()
+        const response = await streamAgentEvents(
+          runId,
+          cursor,
+          controller.signal,
+        )
+        const reader = response.body?.getReader()
+        if (reader) {
+          const decoder = new TextDecoder()
+          let buffer = ''
+          while (!controller.signal.aborted) {
+            const { value, done } = await reader.read()
+            if (done) break
+            buffer += decoder.decode(value, { stream: true })
+            const frames = buffer.split(/\r?\n\r?\n/)
+            buffer = frames.pop() ?? ''
+            const parsed: AgentEvent[] = []
+            for (const frame of frames) {
+              const data = frame
+                .split(/\r?\n/)
+                .find((line) => line.startsWith('data: '))
+                ?.slice(6)
+              if (data) parsed.push(JSON.parse(data) as AgentEvent)
+            }
+            if (parsed.length > 0) accept(parsed)
+          }
         }
       } catch (error) {
-        if (!controller.signal.aborted)
-          console.error('Agent event stream failed', error)
+        if (controller.signal.aborted) return
+        console.error('Agent event stream failed', error)
+        if (
+          error instanceof ClientApiError &&
+          [401, 403, 404].includes(error.status)
+        ) {
+          return
+        }
       }
-      if (
-        !controller.signal.aborted &&
-        (!status || STREAMING_AGENT_STATUSES.includes(status))
-      ) {
+
+      if (!controller.signal.aborted && !hasSettled) {
+        queryClient.invalidateQueries({ queryKey: agentQueryKeys.run(runId) })
+        const delay = retryDelayMs
+        retryDelayMs = Math.min(10_000, retryDelayMs * 2)
         cancelReconnect()
-        cancelReconnect = scheduleAgentReconnect(() => void connect())
+        cancelReconnect = scheduleAgentReconnect(() => void connect(), delay)
       }
     }
 
@@ -293,65 +366,67 @@ export function useAgentRunEvents(
     return () => {
       controller.abort()
       cancelReconnect()
+      if (!hasSettled) {
+        queryClient.invalidateQueries({
+          queryKey: agentQueryKeys.events(runId),
+          refetchType: 'none',
+        })
+      }
     }
-  }, [projectId, queryClient, runId, status])
-
-  return events
+  }, [projectId, queryClient, runId, sessionId])
 }
 
-function useInvalidateAgentData() {
-  const queryClient = useQueryClient()
-  return (sessionId?: string, runId?: string, projectId?: number | null) => {
-    queryClient.invalidateQueries({ queryKey: agentQueryKeys.all })
-    if (sessionId) {
-      queryClient.invalidateQueries({
-        queryKey: agentQueryKeys.session(sessionId),
-      })
-      queryClient.invalidateQueries({
-        queryKey: agentQueryKeys.messages(sessionId),
-      })
-    }
-    if (runId) {
-      queryClient.invalidateQueries({ queryKey: agentQueryKeys.run(runId) })
-      queryClient.invalidateQueries({
-        queryKey: agentArtifactQueryKeys.run(runId),
-      })
-    }
-    if (projectId !== null && projectId !== undefined) {
-      queryClient.invalidateQueries({
-        queryKey: agentArtifactQueryKeys.project(String(projectId)),
-      })
-    }
-  }
+function syncRunStarted(
+  queryClient: ReturnType<typeof useQueryClient>,
+  run: AgentRun,
+) {
+  queryClient.setQueryData(agentQueryKeys.run(run.uid), run)
+  queryClient.invalidateQueries({ queryKey: agentQueryKeys.lists() })
+  queryClient.invalidateQueries({
+    queryKey: agentQueryKeys.session(run.session_uid),
+  })
+  queryClient.invalidateQueries({
+    queryKey: agentQueryKeys.runs(run.session_uid),
+  })
+  queryClient.invalidateQueries({
+    queryKey: agentQueryKeys.messages(run.session_uid),
+  })
 }
 
 export function useCreateAgentSession() {
-  const invalidate = useInvalidateAgentData()
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: createAgentSession,
-    onSuccess: () => invalidate(),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: agentQueryKeys.lists() }),
   })
 }
 
 export function useUpdateAgentSession() {
-  const invalidate = useInvalidateAgentData()
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: ({ sessionId, title }: { sessionId: string; title: string }) =>
       updateAgentSession(sessionId, title),
-    onSuccess: (session) => invalidate(session.uid),
+    onSuccess: (session) => {
+      queryClient.invalidateQueries({ queryKey: agentQueryKeys.lists() })
+      queryClient.invalidateQueries({
+        queryKey: agentQueryKeys.session(session.uid),
+      })
+    },
   })
 }
 
 export function useDeleteAgentSession() {
-  const invalidate = useInvalidateAgentData()
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: deleteAgentSession,
-    onSuccess: () => invalidate(),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: agentQueryKeys.lists() }),
   })
 }
 
 export function useCreateAgentRun() {
-  const invalidate = useInvalidateAgentData()
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: ({
       sessionId,
@@ -382,12 +457,12 @@ export function useCreateAgentRun() {
         pdfs,
         node,
       ),
-    onSuccess: (run) => invalidate(run.session_uid, run.uid, run.project_id),
+    onSuccess: (run) => syncRunStarted(queryClient, run),
   })
 }
 
 export function useSubmitAgentInput() {
-  const invalidate = useInvalidateAgentData()
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: ({
       runId,
@@ -398,12 +473,15 @@ export function useSubmitAgentInput() {
       messageUid: string
       text: string
     }) => submitAgentInput(runId, messageUid, text),
-    onSuccess: (message) => invalidate(message.session_uid, message.run_uid),
+    onSuccess: (message) =>
+      queryClient.invalidateQueries({
+        queryKey: agentQueryKeys.messages(message.session_uid),
+      }),
   })
 }
 
 export function useResumeAgentRun() {
-  const invalidate = useInvalidateAgentData()
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: ({
       runId,
@@ -416,23 +494,32 @@ export function useResumeAgentRun() {
       language: Locale
       feedback?: string
     }) => resumeAgentRun(runId, approved, language, feedback),
-    onSuccess: (run) => invalidate(run.session_uid, run.uid, run.project_id),
+    onSuccess: (run) => syncRunStarted(queryClient, run),
   })
 }
 
 export function useCancelAgentRun() {
-  const invalidate = useInvalidateAgentData()
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: cancelAgentRun,
-    onSuccess: (run) => invalidate(run.session_uid, run.uid, run.project_id),
+    onSuccess: (run) => {
+      queryClient.setQueryData(agentQueryKeys.run(run.uid), run)
+      queryClient.invalidateQueries({ queryKey: agentQueryKeys.lists() })
+      queryClient.invalidateQueries({
+        queryKey: agentQueryKeys.session(run.session_uid),
+      })
+      queryClient.invalidateQueries({
+        queryKey: agentQueryKeys.runs(run.session_uid),
+      })
+    },
   })
 }
 
 export function useRetryAgentRun() {
-  const invalidate = useInvalidateAgentData()
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: ({ runId, language }: { runId: string; language: Locale }) =>
       retryAgentRun(runId, language),
-    onSuccess: (run) => invalidate(run.session_uid, run.uid, run.project_id),
+    onSuccess: (run) => syncRunStarted(queryClient, run),
   })
 }
