@@ -11,8 +11,13 @@
     "badge_viz": "可视化结果",
     "badge_ext": "开放扩展",
     "loading": "加载中...",
-    "cta_start": "开始使用 →",
+    "cta_start": "进入分析工作台 →",
+    "cta_library": "探索节点知识库",
     "cta_login": "登录后继续",
+    "stats_nodes": "可执行节点",
+    "stats_images": "容器镜像",
+    "stats_groups": "工具领域分组",
+    "stats_resources": "参考库与基因组",
     "footer": "© {year} BioFlow AI. Built for bioinformatics researchers."
   }
 }

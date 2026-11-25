@@ -1,0 +1,84 @@
+{
+  "Library": {
+    "meta": {
+      "title": "Node Library · BioFlow AI",
+      "description": "The core bioinformatics knowledge base of BioFlow AI: tool nodes, code nodes, subgraphs, container images, tool memories, and reference resources."
+    },
+    "breadcrumb": "Node Library",
+    "hero": {
+      "statusLive": "Node Registry Online",
+      "refreshButton": "Refresh Stats",
+      "refreshing": "Refreshing…",
+      "addToolCta": "Add Tool Node",
+      "eyebrow": "CORE DATABASE · HARNESS FOUNDATION",
+      "title": "BioFlow Node Library",
+      "subtitle": "The knowledge foundation behind every analysis project and Agent workflow — unifying curated bio tools, code nodes, reusable subgraphs, container images, reference resources, and Tool Memories.",
+      "stats": {
+        "nodesLabel": "Executable Nodes",
+        "nodesSub": "Tool {tool} · Code {code} · Subgraph {subgraph}",
+        "toolsLabel": "Curated Bio Tools",
+        "toolsSub": "Organized across {groups} tool groups",
+        "imagesLabel": "Container Images",
+        "imagesSub": "Reproducible execution environments",
+        "memoriesLabel": "Tool Memories",
+        "memoriesSub": "Shared troubleshooting & usage lessons",
+        "resourcesLabel": "Databases & Genomes",
+        "resourcesSub": "{dbs} databases · {genomes} reference genomes"
+      }
+    },
+    "overview": {
+      "groupsTitle": "3D Tool Taxonomy Atlas",
+      "groupsDesc": "Interactive 3D orbital constellation mapping curated tool groups and top functional tags by real co-occurrence.",
+      "groupsEmpty": "No tool groups found",
+      "groupToolCount": "{count} tools",
+      "view3d": "3D Atlas",
+      "viewList": "List View",
+      "tagsTitle": "Top Functional Tags",
+      "viewAllTools": "Manage All Tools",
+      "resourcesTitle": "Local Reference Resources",
+      "databasesLink": "Bio Databases ({count})",
+      "genomesLink": "Reference Genomes ({count})",
+      "memoriesTitle": "Latest Tool Memories",
+      "memoriesDesc": "Recently recorded tool usage and troubleshooting lessons shared across users.",
+      "memoriesEmpty": "No tool memories recorded yet",
+      "viewAllMemories": "Manage All Memories"
+    },
+    "atlas": {
+      "legendGroups": "{count} domain groups",
+      "legendTags": "{count} top tags",
+      "legendSummary": "{tools} tools · {links} links",
+      "pauseOrbit": "Pause rotation",
+      "resumeOrbit": "Resume rotation",
+      "zoomIn": "Zoom in",
+      "resetView": "Reset view",
+      "kindGroup": "Domain Group",
+      "kindTag": "Tool Tag",
+      "toolCount": "{count} tools",
+      "connectedTags": "Linked tags:",
+      "connectedGroups": "Linked groups:",
+      "openGroupTools": "Inspect tools in this group",
+      "hint": "Drag to orbit in 3D · Hover or click any node to spotlight group-tag links"
+    },
+    "browser": {
+      "sectionTitle": "Node Library Asset Explorer",
+      "sectionDesc": "Browse and search live tools, container images, code nodes, subgraphs, memories, and reference data directly from the backend.",
+      "searchPlaceholder": "Search by name in active tab…",
+      "manageAll": "Open Full Manager",
+      "paperLink": "Paper",
+      "empty": "No matching records found.",
+      "loading": "Loading…",
+      "noDescription": "No description",
+      "portsSummary": "{inputs} inputs · {outputs} outputs",
+      "databasesHeading": "Bioinformatics Databases",
+      "genomesHeading": "Reference Genomes",
+      "tabs": {
+        "tool": "Tools",
+        "image": "Images",
+        "code": "Code Nodes",
+        "subgraph": "Subgraphs",
+        "memory": "Tool Memories",
+        "resource": "Refs & Genomes"
+      }
+    }
+  }
+}
