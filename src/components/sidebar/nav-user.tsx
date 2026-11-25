@@ -5,7 +5,7 @@ import {
   LanguagesIcon,
   LogOut,
   PaletteIcon,
-  ShieldCheckIcon,
+  UserCogIcon,
 } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 import { useState } from 'react'
@@ -137,7 +137,7 @@ export function NavUser({ user }: NavUserProps) {
 
             <DropdownMenuGroup>
               <DropdownMenuItem onSelect={() => setSecurityOpen(true)}>
-                <ShieldCheckIcon />
+                <UserCogIcon />
                 {t('AccountSecurity.menu')}
               </DropdownMenuItem>
             </DropdownMenuGroup>
@@ -213,6 +213,7 @@ export function NavUser({ user }: NavUserProps) {
           </DropdownMenuContent>
         </DropdownMenu>
         <AccountSecurityDialog
+          user={user}
           open={securityOpen}
           onOpenChange={setSecurityOpen}
         />

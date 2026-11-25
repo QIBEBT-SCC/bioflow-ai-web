@@ -3,6 +3,7 @@ import type {
   ManagedUser,
   ManagedUserCreate,
   UserPasswordReset,
+  UserProfileUpdate,
   UserRoleUpdate,
   UserRoleUpdateResponse,
   UserStatusUpdate,
@@ -10,6 +11,16 @@ import type {
 
 export async function getUsers(): Promise<ManagedUser[]> {
   return await clientFetch<ManagedUser[]>('/user')
+}
+
+export async function updateUserProfile(
+  userId: number,
+  data: UserProfileUpdate,
+): Promise<UserRoleUpdateResponse> {
+  return await clientFetch<UserRoleUpdateResponse>(`/user/${userId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  })
 }
 
 export async function updateUserRole(

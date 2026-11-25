@@ -32,6 +32,10 @@ export interface UserStatusUpdate {
   is_active: boolean
 }
 
+export interface UserProfileUpdate {
+  username: string
+}
+
 export interface UserPasswordReset {
   password: string
 }

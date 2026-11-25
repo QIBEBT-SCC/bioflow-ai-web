@@ -3,37 +3,18 @@
 import {
   ActivityIcon,
   DollarSignIcon,
-  Loader2Icon,
-  MoreHorizontalIcon,
   ShieldIcon,
   UserCheckIcon,
   UsersIcon,
 } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
-import { useMemo, useState } from 'react'
-import { toast } from 'sonner'
+import { useMemo } from 'react'
 import {
   CreateUserDialog,
-  UserSecurityActions,
+  UserRowActions,
 } from '@/components/settings/user-security-actions'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   Table,
@@ -43,11 +24,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { useUpdateUserRole, useUsers } from '@/hooks/use-user'
+import { useUsers } from '@/hooks/use-user'
 import { UserRole } from '@/types/auth'
 import type { ManagedUser } from '@/types/user'
 
-const roleOptions = [UserRole.VISITOR, UserRole.MEMBER, UserRole.ADMIN] as const
 const skeletonRows = [
   'user-skeleton-1',
   'user-skeleton-2',
@@ -160,108 +140,11 @@ function UserTableSkeleton() {
       <TableCell>
         <Skeleton className='h-5 w-16' />
       </TableCell>
-      <TableCell>
-        <Skeleton className='h-9 w-32' />
+      <TableCell className='pr-5'>
+        <Skeleton className='ml-auto size-8 rounded-md' />
       </TableCell>
     </TableRow>
   ))
-}
-
-function UserRoleAction({ user }: { user: ManagedUser }) {
-  const t = useTranslations('setting.user_management')
-  const [targetRole, setTargetRole] = useState<UserRole | null>(null)
-  const updateRole = useUpdateUserRole()
-
-  const handleConfirm = () => {
-    if (targetRole === null) return
-
-    updateRole.mutate(
-      { userId: user.id, role: targetRole },
-      {
-        onSuccess: () => {
-          toast.success(t('role_update_success'))
-          setTargetRole(null)
-        },
-        onError: (error) =>
-          toast.error(
-            error instanceof Error ? error.message : t('role_update_failed'),
-          ),
-      },
-    )
-  }
-
-  return (
-    <Dialog
-      open={targetRole !== null}
-      onOpenChange={(open) => {
-        if (!open && !updateRole.isPending) setTargetRole(null)
-      }}
-    >
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant='outline'
-            size='sm'
-            className='size-8 p-0'
-            disabled={updateRole.isPending}
-            aria-label={t('open_role_menu')}
-          >
-            {updateRole.isPending ? (
-              <Loader2Icon className='size-4 animate-spin' />
-            ) : (
-              <MoreHorizontalIcon className='size-4' />
-            )}
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align='end' className='w-40'>
-          <DropdownMenuLabel>{t('change_role')}</DropdownMenuLabel>
-          {roleOptions.map((role) => (
-            <DropdownMenuItem
-              key={role}
-              disabled={role === user.role}
-              onClick={() => setTargetRole(role)}
-            >
-              <span>{t(`role_${role}`)}</span>
-              {role === user.role && (
-                <span className='ml-auto text-muted-foreground text-xs'>
-                  {t('current')}
-                </span>
-              )}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{t('confirm_role_title')}</DialogTitle>
-          <DialogDescription>
-            {targetRole !== null &&
-              t('confirm_role_desc', {
-                username: user.username,
-                currentRole: t(`role_${user.role}`),
-                targetRole: t(`role_${targetRole}`),
-              })}
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button
-            variant='outline'
-            onClick={() => setTargetRole(null)}
-            disabled={updateRole.isPending}
-          >
-            {t('cancel')}
-          </Button>
-          <Button onClick={handleConfirm} disabled={updateRole.isPending}>
-            {updateRole.isPending && (
-              <Loader2Icon className='size-4 animate-spin' />
-            )}
-            {t('confirm')}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  )
 }
 
 export function UserManagement() {
@@ -341,7 +224,9 @@ export function UserManagement() {
               <TableHead className='w-28 pr-8 text-right'>
                 {t('col_runs')}
               </TableHead>
-              <TableHead className='w-40 pl-6'>{t('col_action')}</TableHead>
+              <TableHead className='w-20 pr-5 text-right'>
+                {t('col_action')}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -394,11 +279,8 @@ export function UserManagement() {
                   <TableCell className='pr-8 text-right tabular-nums text-muted-foreground'>
                     {user.run_count.toLocaleString()}
                   </TableCell>
-                  <TableCell className='pl-6'>
-                    <div className='flex gap-1'>
-                      <UserRoleAction user={user} />
-                      <UserSecurityActions user={user} />
-                    </div>
+                  <TableCell className='pr-5 text-right'>
+                    <UserRowActions user={user} />
                   </TableCell>
                 </TableRow>
               ))
