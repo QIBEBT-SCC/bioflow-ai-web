@@ -4,6 +4,7 @@ import { BookOpenIcon, Languages, Loader2Icon, LogInIcon } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import { setUserLocale } from '@/app/actions/locale'
 import { ParticleNetwork } from '@/components/home/particle-network'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -14,8 +15,50 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useAuth } from '@/hooks/use-auth-query'
+import { usePublicLibraryStats } from '@/hooks/use-node-library'
 import { type Locale, localeNames, locales } from '@/i18n/config'
+
+function AnimatedNumber({ value }: { value: number }) {
+  const [displayValue, setDisplayValue] = useState(0)
+  const currentRef = useRef(0)
+
+  useEffect(() => {
+    const startValue = currentRef.current
+    const reducedMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)',
+    ).matches
+
+    if (reducedMotion || startValue === value) {
+      const frame = window.requestAnimationFrame(() => {
+        currentRef.current = value
+        setDisplayValue(value)
+      })
+      return () => window.cancelAnimationFrame(frame)
+    }
+
+    const duration = 700
+    const startTime = performance.now()
+    let rafId = 0
+
+    const tick = (now: number) => {
+      const progress = Math.min((now - startTime) / duration, 1)
+      const eased = 1 - (1 - progress) ** 3
+      const next = Math.round(startValue + (value - startValue) * eased)
+      currentRef.current = next
+      setDisplayValue(next)
+      if (progress < 1) {
+        rafId = window.requestAnimationFrame(tick)
+      }
+    }
+
+    rafId = window.requestAnimationFrame(tick)
+    return () => window.cancelAnimationFrame(rafId)
+  }, [value])
+
+  return <>{displayValue.toLocaleString()}</>
+}
 
 function LangToggle() {
   const t = useTranslations('Home')
@@ -133,6 +176,11 @@ const highlight = (chunks: React.ReactNode) => (
 export default function HomePage() {
   const { user, loading } = useAuth()
   const t = useTranslations('Home')
+  const {
+    stats,
+    isLoading: statsLoading,
+    hasData: hasLibraryStats,
+  } = usePublicLibraryStats()
 
   const badges = [
     t('badge_workflow'),
@@ -140,6 +188,29 @@ export default function HomePage() {
     t('badge_omics'),
     t('badge_viz'),
     t('badge_ext'),
+  ]
+
+  const floatingMetrics = [
+    {
+      key: 'nodes',
+      label: t('stats_nodes'),
+      value: stats.executableNodesTotal,
+    },
+    {
+      key: 'images',
+      label: t('stats_images'),
+      value: stats.imagesTotal,
+    },
+    {
+      key: 'groups',
+      label: t('stats_groups'),
+      value: stats.groupsTotal,
+    },
+    {
+      key: 'resources',
+      label: t('stats_resources'),
+      value: stats.resourcesTotal,
+    },
   ]
 
   return (
@@ -190,17 +261,70 @@ export default function HomePage() {
             ))}
           </div>
 
+          {/* Airy floating node-library metrics over the particle canvas */}
+          {(statsLoading || hasLibraryStats) && (
+            <div className='flex flex-wrap items-center justify-center gap-x-8 gap-y-5 py-2 sm:gap-x-10'>
+              {floatingMetrics.map((metric, index) => {
+                const content = (
+                  <>
+                    <div className='h-9 flex items-center justify-center'>
+                      {statsLoading ? (
+                        <Skeleton className='h-8 w-16 rounded-full' />
+                      ) : (
+                        <span className='bg-gradient-to-b from-foreground via-foreground to-primary bg-clip-text text-3xl font-semibold tracking-tight text-transparent tabular-nums sm:text-4xl'>
+                          <AnimatedNumber value={metric.value} />
+                        </span>
+                      )}
+                    </div>
+                    <span className='mt-1.5 inline-flex items-center gap-1.5 text-xs tracking-wide text-muted-foreground transition-colors group-hover:text-foreground'>
+                      <span className='size-1.5 rounded-full bg-primary/70 shadow-[0_0_8px_var(--primary)]' />
+                      {metric.label}
+                    </span>
+                  </>
+                )
+
+                return (
+                  <Fragment key={metric.key}>
+                    {index > 0 && (
+                      <div
+                        aria-hidden='true'
+                        className='hidden h-9 w-px bg-gradient-to-b from-transparent via-border to-transparent sm:block'
+                      />
+                    )}
+                    {user ? (
+                      <Link
+                        href='/library'
+                        className='group flex flex-col items-center px-1 transition-transform duration-300 hover:-translate-y-0.5'
+                      >
+                        {content}
+                      </Link>
+                    ) : (
+                      <div className='group flex flex-col items-center px-1'>
+                        {content}
+                      </div>
+                    )}
+                  </Fragment>
+                )
+              })}
+            </div>
+          )}
+
           {/* CTA */}
-          <div className='flex items-center gap-4 pt-2'>
+          <div className='flex flex-wrap items-center justify-center gap-3 pt-2'>
             {loading ? (
               <Button size='lg' disabled>
                 <Loader2Icon className='size-4 animate-spin' />
                 {t('loading')}
               </Button>
             ) : user ? (
-              <Button size='lg' asChild>
-                <Link href='/project'>{t('cta_start')}</Link>
-              </Button>
+              <>
+                <Button size='lg' asChild>
+                  <Link href='/project'>{t('cta_start')}</Link>
+                </Button>
+                <Button size='lg' variant='outline' asChild>
+                  <Link href='/library'>{t('cta_library')}</Link>
+                </Button>
+              </>
             ) : (
               <Button size='lg' asChild>
                 <Link href='/login'>{t('cta_login')}</Link>

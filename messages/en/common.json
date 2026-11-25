@@ -55,6 +55,9 @@
     "other_sessions_revoked": "Other devices signed out"
   },
   "Sidebar": {
+    "group_knowledge": "Knowledge Base",
+    "group_workspace": "Workspace",
+    "node_library": "Node Library",
     "admin": "Admin",
     "chat": "Chat",
     "code_nodes": "Code",

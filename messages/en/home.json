@@ -11,8 +11,13 @@
     "badge_viz": "Visual Results",
     "badge_ext": "Open Extension",
     "loading": "Loading...",
-    "cta_start": "Get Started →",
+    "cta_start": "Open Workspace →",
+    "cta_library": "Explore Node Library",
     "cta_login": "Sign in to continue",
+    "stats_nodes": "Executable Nodes",
+    "stats_images": "Container Images",
+    "stats_groups": "Domain Groups",
+    "stats_resources": "Refs & Genomes",
     "footer": "© {year} BioFlow AI. Built for bioinformatics researchers."
   }
 }

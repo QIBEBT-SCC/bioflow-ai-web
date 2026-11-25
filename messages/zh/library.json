@@ -1,0 +1,84 @@
+{
+  "Library": {
+    "meta": {
+      "title": "节点知识库 · BioFlow AI",
+      "description": "BioFlow AI 的核心生信知识底座：工具节点、代码节点、工作流子图、容器镜像、工具记忆与参考资源。"
+    },
+    "breadcrumb": "节点库",
+    "hero": {
+      "statusLive": "节点库服务在线",
+      "refreshButton": "刷新统计",
+      "refreshing": "刷新中…",
+      "addToolCta": "新建工具节点",
+      "eyebrow": "CORE DATABASE · HARNESS FOUNDATION",
+      "title": "BioFlow 节点知识库",
+      "subtitle": "所有下游分析项目与 Agent 工作流的能力底座——集中呈现平台当前已入库的生信工具、代码节点、可复用子图、容器镜像、参考资源与 Tool Memory。",
+      "stats": {
+        "nodesLabel": "可执行节点总数",
+        "nodesSub": "工具 {tool} · 代码 {code} · 子图 {subgraph}",
+        "toolsLabel": "生信工具节点",
+        "toolsSub": "分布于 {groups} 个工具分组",
+        "imagesLabel": "容器镜像",
+        "imagesSub": "标准化可复现运行环境",
+        "memoriesLabel": "工具记忆 (Memory)",
+        "memoriesSub": "已沉淀的共享排错与使用经验",
+        "resourcesLabel": "参考库与基因组",
+        "resourcesSub": "{dbs} 个数据库 · {genomes} 个参考基因组"
+      }
+    },
+    "overview": {
+      "groupsTitle": "3D 工具知识拓扑星图",
+      "groupsDesc": "聚合展示工具领域分组与高频功能标签的 3D 共现结构；支持拖拽旋转、悬停聚光与切换列表。",
+      "groupsEmpty": "暂无工具分组数据",
+      "groupToolCount": "{count} 个工具",
+      "view3d": "3D 星图",
+      "viewList": "列表视图",
+      "tagsTitle": "高频工具标签 (Top Tags)",
+      "viewAllTools": "管理全部工具",
+      "resourcesTitle": "本地参考资源快捷入口",
+      "databasesLink": "生物信息数据库 ({count})",
+      "genomesLink": "参考基因组 ({count})",
+      "memoriesTitle": "最新工具记忆 (Tool Memory)",
+      "memoriesDesc": "最近沉淀并共享给所有用户的工具调用与排错经验。",
+      "memoriesEmpty": "暂无工具记忆记录",
+      "viewAllMemories": "管理全部记忆"
+    },
+    "atlas": {
+      "legendGroups": "{count} 个领域分组",
+      "legendTags": "{count} 个高频标签",
+      "legendSummary": "{tools} 工具 · {links} 条关联",
+      "pauseOrbit": "暂停自转",
+      "resumeOrbit": "恢复自转",
+      "zoomIn": "放大视图",
+      "resetView": "重置视角",
+      "kindGroup": "领域分组",
+      "kindTag": "功能标签",
+      "toolCount": "{count} 个工具",
+      "connectedTags": "关联标签：",
+      "connectedGroups": "所属分组：",
+      "openGroupTools": "前往查看该分组工具",
+      "hint": "拖拽旋转 3D 星图 · 悬停或点击节点查看分组与标签关联"
+    },
+    "browser": {
+      "sectionTitle": "节点库资产浏览器",
+      "sectionDesc": "按资产类别检索数据库中的真实节点、镜像、记忆与参考资源，并可直接进入详情页或管理页。",
+      "searchPlaceholder": "按名称检索当前标签页…",
+      "manageAll": "前往完整管理页",
+      "paperLink": "Paper",
+      "empty": "当前筛选条件下暂无记录。",
+      "loading": "加载中…",
+      "noDescription": "暂无描述",
+      "portsSummary": "{inputs} 输入 · {outputs} 输出",
+      "databasesHeading": "生物信息数据库",
+      "genomesHeading": "参考基因组",
+      "tabs": {
+        "tool": "工具节点",
+        "image": "容器镜像",
+        "code": "代码节点",
+        "subgraph": "工作流子图",
+        "memory": "工具记忆",
+        "resource": "参考库与基因组"
+      }
+    }
+  }
+}

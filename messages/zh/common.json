@@ -55,6 +55,9 @@
     "other_sessions_revoked": "其他设备已退出"
   },
   "Sidebar": {
+    "group_knowledge": "核心底座",
+    "group_workspace": "分析工作台",
+    "node_library": "节点库",
     "admin": "管理员",
     "chat": "对话",
     "code_nodes": "代码",
