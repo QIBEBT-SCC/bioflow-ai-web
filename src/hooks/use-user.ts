@@ -5,6 +5,7 @@ import {
   createUser,
   getUsers,
   resetUserPassword,
+  updateUserProfile,
   updateUserRole,
   updateUserStatus,
 } from '@/app/actions/user'
@@ -15,6 +16,19 @@ export function useUsers() {
     queryKey: ['users'],
     queryFn: getUsers,
     staleTime: 60 * 1000,
+  })
+}
+
+export function useUpdateUserProfile() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ userId, username }: { userId: number; username: string }) =>
+      updateUserProfile(userId, { username }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] })
+      queryClient.invalidateQueries({ queryKey: ['auth', 'me'] })
+    },
   })
 }
 

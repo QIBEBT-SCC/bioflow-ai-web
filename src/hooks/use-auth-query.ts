@@ -52,6 +52,22 @@ export function useRefreshUser() {
   })
 }
 
+export function useUpdateProfile() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ username }: { username: string }) =>
+      clientFetch<User>('/auth/me', {
+        method: 'PATCH',
+        body: JSON.stringify({ username }),
+      }),
+    onSuccess: (data) => {
+      queryClient.setQueryData(['auth', 'me'], data)
+      queryClient.invalidateQueries({ queryKey: ['users'] })
+    },
+  })
+}
+
 export function useRevokeOtherSessions() {
   return useMutation({
     mutationFn: () =>
