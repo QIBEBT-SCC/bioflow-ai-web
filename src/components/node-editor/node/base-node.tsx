@@ -20,7 +20,14 @@ import {
   XCircleIcon,
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import React, { type HTMLAttributes, memo, useCallback, useMemo } from 'react'
+import React, {
+  type HTMLAttributes,
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Sheet,
@@ -337,11 +344,15 @@ function formatTime(dateStr?: string | null) {
   }
 }
 
-function calcDuration(start?: string | null, end?: string | null) {
+function calcDuration(
+  start?: string | null,
+  end?: string | null,
+  now = Date.now(),
+) {
   if (!start) return null
   const s = new Date(start).getTime()
-  const e = end ? new Date(end).getTime() : Date.now()
-  const sec = Math.floor((e - s) / 1000)
+  const e = end ? new Date(end).getTime() : now
+  const sec = Math.max(0, Math.floor((e - s) / 1000))
   if (sec < 60) return `${sec}s`
   return `${Math.floor(sec / 60)}m ${sec % 60}s`
 }
@@ -352,11 +363,24 @@ const RunStatusBar = memo(function RunStatusBar({
   runData: NodeRunDataV2
 }) {
   const t = useTranslations('editor.node_status')
+  const isRunning =
+    runData.status === NodeRunStatusV2.RUNNING &&
+    Boolean(runData.start_time) &&
+    !runData.end_time
+  const [now, setNow] = useState(() => Date.now())
+
+  useEffect(() => {
+    if (!isRunning) return
+    setNow(Date.now())
+    const timer = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(timer)
+  }, [isRunning])
+
   if (runData.status === undefined) return null
   const cfg = statusConfig[runData.status]
   const Icon = cfg.icon
   const startStr = formatTime(runData.start_time)
-  const duration = calcDuration(runData.start_time, runData.end_time)
+  const duration = calcDuration(runData.start_time, runData.end_time, now)
 
   return (
     <div

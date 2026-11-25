@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import { useTranslations } from 'next-intl'
-import { useState } from 'react'
+import { memo, useCallback, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -45,7 +45,7 @@ interface CodeNodeDialogProps extends CodeValue {
   onSave: (value: CodeValue) => void
 }
 
-export function CodeNodeDialog({
+export const CodeNodeDialog = memo(function CodeNodeDialog({
   open,
   onOpenChange,
   title,
@@ -53,12 +53,14 @@ export function CodeNodeDialog({
   ...props
 }: CodeNodeDialogProps) {
   const t = useTranslations('editor.node')
+  const handleClose = useCallback(() => onOpenChange(false), [onOpenChange])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         // `nokey` keeps React Flow from treating keystrokes here as canvas shortcuts.
         className='nokey flex h-[85vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-6xl'
+        overlayClassName='backdrop-blur-none bg-black/25'
         onInteractOutside={(event) => {
           if (!readOnly) event.preventDefault()
         }}
@@ -73,13 +75,13 @@ export function CodeNodeDialog({
           <CodeNodeDialogBody
             {...props}
             readOnly={readOnly}
-            onClose={() => onOpenChange(false)}
+            onClose={handleClose}
           />
         )}
       </DialogContent>
     </Dialog>
   )
-}
+})
 
 function CodeNodeDialogBody({
   nodeType,
@@ -93,6 +95,14 @@ function CodeNodeDialogBody({
 }) {
   const t = useTranslations('editor.node')
   const [draft, setDraft] = useState<CodeValue>({ code, dependencies })
+  const handleCodeChange = useCallback(
+    (value: string) => setDraft((prev) => ({ ...prev, code: value })),
+    [],
+  )
+  const handleDependenciesChange = useCallback(
+    (value: string[]) => setDraft((prev) => ({ ...prev, dependencies: value })),
+    [],
+  )
 
   return (
     <>
@@ -101,12 +111,8 @@ function CodeNodeDialogBody({
           nodeType={nodeType}
           code={draft.code}
           dependencies={draft.dependencies}
-          onCodeChange={(value) =>
-            setDraft((prev) => ({ ...prev, code: value }))
-          }
-          onDependenciesChange={(value) =>
-            setDraft((prev) => ({ ...prev, dependencies: value }))
-          }
+          onCodeChange={handleCodeChange}
+          onDependenciesChange={handleDependenciesChange}
           readOnly={readOnly}
         />
       </div>

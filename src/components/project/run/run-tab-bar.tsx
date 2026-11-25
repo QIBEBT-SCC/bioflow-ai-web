@@ -1,6 +1,7 @@
 import { cn } from 'cn'
 import { Loader2, Workflow, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { memo } from 'react'
 import { RUN_FILE_ICONS } from '@/components/project/run/file-type'
 
 export const CANVAS_TAB_ID = '__canvas__'
@@ -47,7 +48,7 @@ interface RunTabBarProps {
   onTabClose: (id: string) => void
 }
 
-export function RunTabBar({
+export const RunTabBar = memo(function RunTabBar({
   activeTabId,
   openTabs,
   onTabSelect,
@@ -134,4 +135,4 @@ export function RunTabBar({
       })}
     </div>
   )
-}
+})

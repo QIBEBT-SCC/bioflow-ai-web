@@ -1,9 +1,11 @@
 import { ChevronDownIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { memo } from 'react'
 import { LogViewer } from '@/components/workflow/log-viewer'
+import { useNodeRunLogStream } from '@/hooks/use-node-run-v2'
 
 interface RunTerminalProps {
-  logContent: string
+  taskUid?: string
   isStreaming: boolean
   isOpen: boolean
   onToggle: () => void
@@ -11,8 +13,8 @@ interface RunTerminalProps {
   onResizeStart: (e: React.MouseEvent) => void
 }
 
-export function RunTerminal({
-  logContent,
+export const RunTerminal = memo(function RunTerminal({
+  taskUid,
   isStreaming,
   isOpen,
   onToggle,
@@ -20,6 +22,7 @@ export function RunTerminal({
   onResizeStart,
 }: RunTerminalProps) {
   const t = useTranslations('Project.runDetail.terminal')
+  const logContent = useNodeRunLogStream(taskUid ?? '', isStreaming, isOpen)
 
   return (
     <div className='dark shrink-0 border-t'>
@@ -47,19 +50,18 @@ export function RunTerminal({
           className={`size-3 text-muted-foreground transition-transform duration-200 ${isOpen ? '' : 'rotate-180'}`}
         />
       </button>
-      <div
-        className={`overflow-hidden ${isOpen ? '' : 'h-0'}`}
-        style={isOpen ? { height } : undefined}
-      >
-        <LogViewer
-          content={logContent}
-          streaming={isStreaming}
-          autoScroll
-          className='rounded-none border-0'
-          contentClassName='max-h-none flex-1'
-          style={{ height }}
-        />
-      </div>
+      {isOpen && (
+        <div className='overflow-hidden' style={{ height }}>
+          <LogViewer
+            content={logContent ?? ''}
+            streaming={isStreaming}
+            autoScroll
+            className='rounded-none border-0'
+            contentClassName='max-h-none flex-1'
+            style={{ height }}
+          />
+        </div>
+      )}
     </div>
   )
-}
+})

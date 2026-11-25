@@ -9,6 +9,7 @@ import {
   Position,
   useInternalNode,
 } from '@xyflow/react'
+import { memo } from 'react'
 import { type NodeRunDataV2, NodeRunStatusV2 } from '@/types/workflow-v2'
 
 const getHandleCoords = (
@@ -34,7 +35,7 @@ const getHandleCoords = (
   ] as const
 }
 
-export const StatusEdge = ({
+export const StatusEdge = memo(function StatusEdge({
   id,
   source,
   target,
@@ -42,7 +43,7 @@ export const StatusEdge = ({
   targetHandleId,
   markerEnd,
   data,
-}: EdgeProps) => {
+}: EdgeProps) {
   const sourceNode = useInternalNode(source)
   const targetNode = useInternalNode(target)
 
@@ -145,4 +146,4 @@ export const StatusEdge = ({
       style={{ strokeDasharray: '5,5', stroke: '#94a3b8', strokeWidth: 1.5 }}
     />
   )
-}
+})

@@ -4,7 +4,7 @@ import { cn } from 'cn'
 import { TerminalIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import type { ComponentProps, ReactNode } from 'react'
-import { useEffect, useMemo, useRef } from 'react'
+import { memo, useEffect, useMemo, useRef } from 'react'
 import {
   CodeBlock,
   CodeBlockActions,
@@ -45,7 +45,7 @@ export type LogViewerProps = Omit<
 }
 
 /** Read-only log output with ANSI colors, always on a dark surface. */
-export function LogViewer({
+export const LogViewer = memo(function LogViewer({
   content,
   title,
   streaming = false,
@@ -61,7 +61,7 @@ export function LogViewer({
     () => tailLines(content, maxLines),
     [content, maxLines],
   )
-  const lines = useHighlightedCode(text, 'ansi')
+  const lines = useHighlightedCode(text, 'ansi', omitted)
   const contentRef = useRef<HTMLPreElement>(null)
 
   useEffect(() => {
@@ -112,11 +112,16 @@ export function LogViewer({
               line
             )
           return (
-            // biome-ignore lint/suspicious/noArrayIndexKey: lines are positional and never reorder
-            <CodeBlockLine key={index}>{content}</CodeBlockLine> // react-doctor-disable-line react-doctor/no-array-index-as-key
+            <CodeBlockLine
+              // biome-ignore lint/suspicious/noArrayIndexKey: lines are positional and never reorder
+              key={omitted + index} // react-doctor-disable-line react-doctor/no-array-index-as-key
+              className='[content-visibility:auto] [contain-intrinsic-size:auto_1.25rem]'
+            >
+              {content}
+            </CodeBlockLine>
           )
         })}
       </CodeBlockContent>
     </CodeBlock>
   )
-}
+})

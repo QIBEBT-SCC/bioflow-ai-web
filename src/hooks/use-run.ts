@@ -5,7 +5,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import {
   getRun,
@@ -145,22 +145,30 @@ export const useRunStream = (uid: string) => {
     uid: string
     run: WorkflowRunV2
   } | null>(null)
+  const lastRawRef = useRef<string | null>(null)
+  const hasInitial = Boolean(initialRun)
+  const isSettled = Boolean(initialRun?.settled)
+  const initialGeneration = initialRun?.generation
 
   useEffect(() => {
-    if (!uid || !initialRun || initialRun.settled) return
+    if (!uid || !hasInitial || isSettled || initialGeneration === undefined)
+      return
+    lastRawRef.current = null
 
     const source = new EventSource(`${V2_API_URL}/runs/${uid}/stream`, {
       withCredentials: true,
     })
     source.onmessage = (event) => {
+      if (event.data === lastRawRef.current) return
       try {
         const run = JSON.parse(event.data) as WorkflowRunV2
+        lastRawRef.current = event.data
         setStreamed({ uid, run })
         if (run.settled) source.close()
       } catch {}
     }
     return () => source.close()
-  }, [uid, initialRun])
+  }, [uid, hasInitial, isSettled, initialGeneration])
 
   return streamed?.uid === uid ? streamed.run : (initialRun ?? null)
 }

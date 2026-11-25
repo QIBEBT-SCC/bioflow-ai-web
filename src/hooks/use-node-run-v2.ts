@@ -1,25 +1,33 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { getNodeRunLog } from '@/app/actions/node-run-v2'
 
-export function useNodeRunLogStream(uid: string, isRunning: boolean) {
+export function useNodeRunLogStream(
+  uid: string,
+  isRunning: boolean,
+  enabled = true,
+) {
   const { data: initial } = useQuery({
     queryKey: ['node-run-log', uid],
     queryFn: () => getNodeRunLog(uid),
-    enabled: !!uid,
+    enabled: enabled && !!uid,
     staleTime: 5_000,
+    refetchOnWindowFocus: !isRunning,
   })
   const [streamed, setStreamed] = useState<{
     uid: string
     content: string
   } | null>(null)
+  const initialContentRef = useRef('')
+  initialContentRef.current = initial?.content ?? ''
+  const initialOffset = initial?.offset
 
   useEffect(() => {
-    if (!uid || !isRunning || !initial) return
+    if (!enabled || !uid || !isRunning || initialOffset === undefined) return
     const source = new EventSource(
-      `/api/v2/node-runs/${uid}/log/stream?offset=${initial.offset}`,
+      `/api/v2/node-runs/${uid}/log/stream?offset=${initialOffset}`,
       { withCredentials: true },
     )
     source.onmessage = (event) => {
@@ -28,12 +36,15 @@ export function useNodeRunLogStream(uid: string, isRunning: boolean) {
         setStreamed((current) => ({
           uid,
           content:
-            (current?.uid === uid ? current.content : initial.content) + chunk,
+            (current?.uid === uid
+              ? current.content
+              : initialContentRef.current) + chunk,
         }))
       } catch {}
     }
     return () => source.close()
-  }, [uid, isRunning, initial])
+  }, [uid, isRunning, enabled, initialOffset])
 
+  if (!enabled) return null
   return streamed?.uid === uid ? streamed.content : (initial?.content ?? null)
 }

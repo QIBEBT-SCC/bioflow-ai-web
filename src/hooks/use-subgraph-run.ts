@@ -1,5 +1,5 @@
 'use client'
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import type { WorkflowDefinition } from '@/types/workflow'
 import type { WorkflowRunV2 } from '@/types/workflow-v2'
 
@@ -47,10 +47,23 @@ export function useSubgraphRun(run: WorkflowRunV2 | null | undefined) {
         : null,
     [run, resolved, path],
   )
-  const navigate = (depth: number) =>
-    setNavigation({ runUid: run?.uid, path: path.slice(0, depth) })
-  const enter = (id: string) =>
-    setNavigation({ runUid: run?.uid, path: [...path, id] })
+  const runUid = run?.uid
+  const navigate = useCallback(
+    (depth: number) =>
+      setNavigation((prev) => ({
+        runUid,
+        path: (prev.runUid === runUid ? prev.path : ROOT_PATH).slice(0, depth),
+      })),
+    [runUid],
+  )
+  const enter = useCallback(
+    (id: string) =>
+      setNavigation((prev) => ({
+        runUid,
+        path: [...(prev.runUid === runUid ? prev.path : ROOT_PATH), id],
+      })),
+    [runUid],
+  )
   return {
     visibleRun,
     path,

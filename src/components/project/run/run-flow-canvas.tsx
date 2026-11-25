@@ -1,4 +1,4 @@
-import type { Edge, Node as FlowNode, NodeChange } from '@xyflow/react'
+import type { Node as FlowNode } from '@xyflow/react'
 import {
   Background,
   BackgroundVariant,
@@ -7,7 +7,7 @@ import {
 } from '@xyflow/react'
 import { MessageSquarePlusIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { useState } from 'react'
+import { memo, useState } from 'react'
 import { nodeTypes } from '@/components/node-editor/node-registry'
 import { ReadOnlyProvider } from '@/components/node-editor/read-only-context'
 import { RunLinkProvider } from '@/components/node-editor/run-link-context'
@@ -20,38 +20,33 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { StatusEdge } from '@/components/workflow/status-edge'
-import type { WorkflowInterface } from '@/types/workflow'
+import { useRunFlow } from '@/hooks/use-run-flow'
+import type { WorkflowRunV2 } from '@/types/workflow-v2'
 
 const edgeTypes = { default: StatusEdge }
 
 interface RunFlowCanvasProps {
   viewKey?: string
   runLink: (runUid: string) => string
-  graphInterface?: WorkflowInterface | null
+  visibleRun: WorkflowRunV2 | null
   onEnterSubgraph: (id: string) => void
-  nodes: FlowNode[]
-  edges: Edge[]
-  onNodesChange: (changes: NodeChange<FlowNode>[]) => void
   onNodeClick: (event: React.MouseEvent, node: FlowNode) => void
   onPaneClick: () => void
-  onAddNodeToChat: (node: FlowNode) => void
-  canAttachNode: (node: FlowNode) => boolean
+  onAddNodeToChat: (node: FlowNode, resolvedName: string) => void
 }
 
-export function RunFlowCanvas({
+export const RunFlowCanvas = memo(function RunFlowCanvas({
   viewKey,
   runLink,
-  graphInterface,
+  visibleRun,
   onEnterSubgraph,
-  nodes,
-  edges,
-  onNodesChange,
   onNodeClick,
   onPaneClick,
   onAddNodeToChat,
-  canAttachNode,
 }: RunFlowCanvasProps) {
   const t = useTranslations('Chat.node')
+  const { flowNodes, edges, handleNodesChange, toolNames } =
+    useRunFlow(visibleRun)
   const [menu, setMenu] = useState<{
     x: number
     y: number
@@ -82,7 +77,14 @@ export function RunFlowCanvas({
         >
           <DropdownMenuItem
             onSelect={() => {
-              if (menu) onAddNodeToChat(menu.node)
+              if (menu) {
+                const resolvedName = String(
+                  menu.node.data.name ||
+                    toolNames.get(String(menu.node.data.tool_uid)) ||
+                    menu.node.id,
+                )
+                onAddNodeToChat(menu.node, resolvedName)
+              }
               setMenu(null)
             }}
           >
@@ -97,12 +99,13 @@ export function RunFlowCanvas({
             <SubgraphNavigation value={onEnterSubgraph}>
               <ReactFlow
                 key={viewKey}
-                nodes={nodes}
+                nodes={flowNodes}
                 edges={edges}
-                onNodesChange={onNodesChange}
+                onNodesChange={handleNodesChange}
                 onNodeClick={onNodeClick}
                 onNodeContextMenu={(event, node) => {
-                  if (!canAttachNode(node)) return
+                  if (!visibleRun?.nodes.some((saved) => saved.id === node.id))
+                    return
                   event.preventDefault()
                   setMenu({ x: event.clientX, y: event.clientY, node, viewKey })
                 }}
@@ -117,7 +120,7 @@ export function RunFlowCanvas({
                   variant={BackgroundVariant.Dots}
                   className='!bg-gray-100'
                 />
-                <SubgraphInterfaceSummary value={graphInterface} />
+                <SubgraphInterfaceSummary value={visibleRun?.interface} />
                 <Controls />
               </ReactFlow>
             </SubgraphNavigation>
@@ -126,4 +129,4 @@ export function RunFlowCanvas({
       </div>
     </div>
   )
-}
+})

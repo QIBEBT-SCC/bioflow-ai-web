@@ -1,4 +1,5 @@
 import { useTranslations } from 'next-intl'
+import { memo } from 'react'
 import { ChatSidebarToggle } from '@/components/chat/chat-sidebar-toggle'
 import { PageTopbar } from '@/components/layout/page-shell'
 import { withSubgraphCrumbs } from '@/lib/subgraph-crumbs'
@@ -13,7 +14,7 @@ interface RunPageHeaderProps {
   onNavigateSubgraph: (depth: number) => void
 }
 
-export function RunPageHeader({
+export const RunPageHeader = memo(function RunPageHeader({
   projectId,
   runUid,
   projectName,
@@ -46,4 +47,4 @@ export function RunPageHeader({
       actions={<ChatSidebarToggle />}
     />
   )
-}
+})

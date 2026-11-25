@@ -10,6 +10,7 @@ import CodeMirror, {
   keymap,
   Prec,
   type ReactCodeMirrorRef,
+  type ViewUpdate,
 } from '@uiw/react-codemirror'
 import { cn } from 'cn'
 import { PlusIcon, XIcon } from 'lucide-react'
@@ -17,6 +18,7 @@ import { useTranslations } from 'next-intl'
 import {
   type KeyboardEvent,
   type Ref,
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -71,6 +73,17 @@ export function replaceDocument(view: EditorView, text: string) {
   })
 }
 
+const EDITOR_BASIC_SETUP = {
+  lineNumbers: true,
+  highlightActiveLineGutter: true,
+  foldGutter: false,
+  bracketMatching: true,
+  closeBrackets: true,
+  autocompletion: true,
+  highlightActiveLine: true,
+  highlightSelectionMatches: true,
+}
+
 export function CodeSourceEditor({
   nodeType,
   code,
@@ -91,6 +104,26 @@ export function CodeSourceEditor({
   useEffect(() => {
     formatRef.current = onFormat
   }, [onFormat])
+  const onCodeChangeRef = useRef(onCodeChange)
+  useEffect(() => {
+    onCodeChangeRef.current = onCodeChange
+  }, [onCodeChange])
+  const handleCodeChange = useCallback(
+    (value: string) => onCodeChangeRef.current(value),
+    [],
+  )
+  const handleUpdate = useCallback((update: ViewUpdate) => {
+    if (!update.selectionSet && !update.docChanged) return
+    const head = update.state.selection.main.head
+    const line = update.state.doc.lineAt(head)
+    const lineNumber = line.number
+    const column = head - line.from + 1
+    setCursor((prev) =>
+      prev.line === lineNumber && prev.column === column
+        ? prev
+        : { line: lineNumber, column },
+    )
+  }, [])
   const languageExtensions = useMemo(
     () => [
       isPython ? python() : StreamLanguage.define(isR ? r : shell),
@@ -109,13 +142,14 @@ export function CodeSourceEditor({
     ],
     [isPython, isR],
   )
+  const reviewOriginal = review ? code : undefined
   const editorExtensions = useMemo(
     () =>
-      review
+      review && reviewOriginal !== undefined
         ? [
             ...languageExtensions,
             unifiedMergeView({
-              original: code,
+              original: reviewOriginal,
               highlightChanges: true,
               gutter: true,
               mergeControls: false,
@@ -124,7 +158,7 @@ export function CodeSourceEditor({
             }),
           ]
         : languageExtensions,
-    [code, languageExtensions, review],
+    [languageExtensions, review, reviewOriginal],
   )
   const displayedCode = review?.code ?? code
   const lineCount = Math.max(1, displayedCode.split('\n').length)
@@ -144,15 +178,10 @@ export function CodeSourceEditor({
           height='100%'
           theme='light'
           extensions={editorExtensions}
-          onChange={onCodeChange}
+          onChange={handleCodeChange}
           editable={!disabled && !readOnly && !review}
           readOnly={readOnly}
-          onUpdate={(update) => {
-            if (!update.selectionSet && !update.docChanged) return
-            const head = update.state.selection.main.head
-            const line = update.state.doc.lineAt(head)
-            setCursor({ line: line.number, column: head - line.from + 1 })
-          }}
+          onUpdate={handleUpdate}
           placeholder={
             isPython
               ? t('pythonPlaceholder')
@@ -161,16 +190,7 @@ export function CodeSourceEditor({
                 : t('bashPlaceholder')
           }
           autoFocus={!review && !readOnly}
-          basicSetup={{
-            lineNumbers: true,
-            highlightActiveLineGutter: true,
-            foldGutter: false,
-            bracketMatching: true,
-            closeBrackets: true,
-            autocompletion: true,
-            highlightActiveLine: true,
-            highlightSelectionMatches: true,
-          }}
+          basicSetup={EDITOR_BASIC_SETUP}
           className='min-h-0 flex-1 overflow-hidden text-[13px] [&_.cm-activeLine]:bg-muted/40 [&_.cm-activeLineGutter]:bg-muted/60 [&_.cm-content]:font-mono [&_.cm-editor]:h-full [&_.cm-gutters]:border-r [&_.cm-gutters]:border-border [&_.cm-gutters]:bg-muted/30 [&_.cm-scroller]:bg-background [&_.cm-scroller]:font-mono'
         />
 
