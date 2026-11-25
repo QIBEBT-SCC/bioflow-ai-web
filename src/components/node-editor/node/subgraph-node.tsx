@@ -1,13 +1,8 @@
 'use client'
 
-import {
-  type NodeProps,
-  useEdges,
-  useNodes,
-  useUpdateNodeInternals,
-} from '@xyflow/react'
+import { type NodeProps, useStore, useUpdateNodeInternals } from '@xyflow/react'
 import { useTranslations } from 'next-intl'
-import { useEffect } from 'react'
+import { memo, useCallback, useEffect, useMemo } from 'react'
 import { BaseNode } from '@/components/node-editor/node/base-node'
 import { BatchItems } from '@/components/node-editor/node/batch-items'
 import { colorSchemes } from '@/components/node-editor/node/color'
@@ -78,22 +73,28 @@ function SubgraphInterfaceDetails({
   )
 }
 
-export function SubgraphNode({ id, data }: NodeProps) {
+export const SubgraphNode = memo(function SubgraphNode({
+  id,
+  data,
+}: NodeProps) {
   const t = useTranslations('editor.subgraph')
   const graph = data.workflow as WorkflowDefinition
   const iface = graph.interface ?? emptyInterface()
   const enter = useSubgraphNavigation()
   const updateInternals = useUpdateNodeInternals()
-  const edges = useEdges()
-  const nodes = useNodes()
-  const batchEdge = edges.find(
-    (edge) =>
-      edge.target === id &&
-      edge.sourceHandle === `${edge.source}-out-collection` &&
-      nodes.some(
-        (node) =>
-          node.id === edge.source && node.type === 'collect_file_collection',
-      ),
+  const batchTargetHandle = useStore(
+    useCallback(
+      (s) => {
+        const batchEdge = s.edges.find(
+          (edge) =>
+            edge.target === id &&
+            edge.sourceHandle === `${edge.source}-out-collection` &&
+            s.nodeLookup.get(edge.source)?.type === 'collect_file_collection',
+        )
+        return batchEdge?.targetHandle ?? null
+      },
+      [id],
+    ),
   )
   const runData = data.run_data as
     | {
@@ -102,9 +103,9 @@ export function SubgraphNode({ id, data }: NodeProps) {
         item_statistics?: Record<string, number>
       }
     | undefined
-  const isBatch = !!batchEdge || !!runData?.uid
-  const itemPortId = batchEdge?.targetHandle?.startsWith(`${id}-in-`)
-    ? batchEdge.targetHandle.slice(`${id}-in-`.length)
+  const isBatch = batchTargetHandle !== null || !!runData?.uid
+  const itemPortId = batchTargetHandle?.startsWith(`${id}-in-`)
+    ? batchTargetHandle.slice(`${id}-in-`.length)
     : undefined
   const portKey = JSON.stringify([iface, isBatch])
 
@@ -113,60 +114,97 @@ export function SubgraphNode({ id, data }: NodeProps) {
     updateInternals(id)
   }, [id, portKey, updateInternals])
 
+  const detailsContent = useMemo(
+    () => (
+      <SubgraphInterfaceDetails
+        value={iface}
+        itemPortId={itemPortId}
+        batch={isBatch}
+      />
+    ),
+    [iface, itemPortId, isBatch],
+  )
+
+  const batchItemLabel = t('batch_item')
+  const batchSharedLabel = t('batch_shared')
+  const batchResultsLabel = t('batch_results')
+  const batchResultsDescription = t('batch_results_description')
+  const handles = useMemo(
+    () => ({
+      inputs: iface.inputs.map((port) => ({
+        name: port.id,
+        label: isBatch
+          ? `${port.name} · ${port.id === itemPortId ? batchItemLabel : batchSharedLabel}`
+          : port.name,
+        description: port.description,
+      })),
+      outputs: isBatch
+        ? [
+            {
+              name: 'results_folder',
+              label: batchResultsLabel,
+              description: batchResultsDescription,
+            },
+          ]
+        : iface.outputs.map((port) => ({
+            name: port.id,
+            label: port.name,
+            description: port.description,
+          })),
+    }),
+    [
+      iface.inputs,
+      iface.outputs,
+      isBatch,
+      itemPortId,
+      batchItemLabel,
+      batchSharedLabel,
+      batchResultsLabel,
+      batchResultsDescription,
+    ],
+  )
+
+  const nodeUid = runData?.uid
+  const runUid = runData?.run_uid
+  const itemStatistics = runData?.item_statistics
+  const enterLabel = t('enter')
+  const nodeComponent = useMemo(
+    () => (
+      <div className='nodrag nowheel space-y-2 px-3'>
+        {isBatch && nodeUid && runUid && (
+          <BatchItems
+            nodeUid={nodeUid}
+            runUid={runUid}
+            counts={itemStatistics}
+          />
+        )}
+        <Button variant='outline' className='w-full' onClick={() => enter(id)}>
+          {enterLabel} · {graph.nodes.length}
+        </Button>
+      </div>
+    ),
+    [
+      isBatch,
+      nodeUid,
+      runUid,
+      itemStatistics,
+      enter,
+      id,
+      enterLabel,
+      graph.nodes.length,
+    ],
+  )
+
   return (
     <BaseNode
       title={String(data.name || t('title'))}
       description={
         isBatch ? t('batch_description') : String(data.description || '')
       }
-      detailsContent={
-        <SubgraphInterfaceDetails
-          value={iface}
-          itemPortId={itemPortId}
-          batch={isBatch}
-        />
-      }
+      detailsContent={detailsContent}
       color={colorSchemes.blue}
-      handles={{
-        inputs: iface.inputs.map((port) => ({
-          name: port.id,
-          label: isBatch
-            ? `${port.name} · ${t(port.id === itemPortId ? 'batch_item' : 'batch_shared')}`
-            : port.name,
-          description: port.description,
-        })),
-        outputs: isBatch
-          ? [
-              {
-                name: 'results_folder',
-                label: t('batch_results'),
-                description: t('batch_results_description'),
-              },
-            ]
-          : iface.outputs.map((port) => ({
-              name: port.id,
-              label: port.name,
-              description: port.description,
-            })),
-      }}
-      nodeComponent={
-        <div className='nodrag nowheel space-y-2 px-3'>
-          {isBatch && runData?.uid && runData.run_uid && (
-            <BatchItems
-              nodeUid={runData.uid}
-              runUid={runData.run_uid}
-              counts={runData.item_statistics}
-            />
-          )}
-          <Button
-            variant='outline'
-            className='w-full'
-            onClick={() => enter(id)}
-          >
-            {t('enter')} · {graph.nodes.length}
-          </Button>
-        </div>
-      }
+      handles={handles}
+      nodeComponent={nodeComponent}
     />
   )
-}
+})

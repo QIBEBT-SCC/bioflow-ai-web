@@ -2,7 +2,11 @@ import * as React from 'react'
 
 import { loadHighlighter } from '@/lib/highlighter'
 
-export function useHighlightedCode(value: string, language: string) {
+export function useHighlightedCode(
+  value: string,
+  language: string,
+  lineOffset = 0,
+) {
   // A trailing newline would render as an extra empty line.
   const code = value.endsWith('\n') ? value.slice(0, -1) : value
   const [loaded, setLoaded] = React.useState<{
@@ -31,15 +35,50 @@ export function useHighlightedCode(value: string, language: string) {
   // lines are tokenized, starting from the grammar state of the last one.
   const [done, setDone] = React.useState<{
     highlighter: typeof highlighter
+    lineOffset: number
     text: string
     lines: React.ReactNode[]
     state?: Parameters<NonNullable<typeof highlighter>['highlight']>[1]
-  }>({ highlighter: null, text: '', lines: [] })
+  }>({ highlighter: null, lineOffset: 0, text: '', lines: [] })
 
   let next = done
 
-  if (next.highlighter !== highlighter || !code.startsWith(next.text)) {
-    next = { highlighter, text: '', lines: [] }
+  if (next.highlighter !== highlighter) {
+    next = { highlighter, lineOffset, text: '', lines: [] }
+  } else if (!code.startsWith(next.text)) {
+    let reused = false
+    if (language.toLowerCase() === 'ansi' && lineOffset > next.lineOffset) {
+      const dropped = lineOffset - next.lineOffset
+      if (dropped < next.lines.length) {
+        let cutPos = 0
+        for (let i = 0; i < dropped; i++) {
+          const idx = next.text.indexOf('\n', cutPos)
+          if (idx === -1) {
+            cutPos = -1
+            break
+          }
+          cutPos = idx + 1
+        }
+        if (cutPos !== -1) {
+          const trimmedText = next.text.slice(cutPos)
+          if (code.startsWith(trimmedText)) {
+            next = {
+              highlighter,
+              lineOffset,
+              text: trimmedText,
+              lines: next.lines.slice(dropped),
+              state: next.state,
+            }
+            reused = true
+          }
+        }
+      }
+    }
+    if (!reused) {
+      next = { highlighter, lineOffset, text: '', lines: [] }
+    }
+  } else if (next.lineOffset !== lineOffset) {
+    next = { ...next, lineOffset }
   }
 
   const end = code.lastIndexOf('\n') + 1
@@ -52,6 +91,7 @@ export function useHighlightedCode(value: string, language: string) {
 
     next = {
       highlighter,
+      lineOffset,
       text: code.slice(0, end),
       lines: [...next.lines, ...result.lines],
       state: result.state,

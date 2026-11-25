@@ -17,6 +17,37 @@ import {
   type WorkflowRunV2,
 } from '@/types/workflow-v2'
 
+function deepEqual(a: unknown, b: unknown): boolean {
+  if (Object.is(a, b)) return true
+  if (
+    a === null ||
+    b === null ||
+    typeof a !== 'object' ||
+    typeof b !== 'object'
+  ) {
+    return false
+  }
+  if (Array.isArray(a) || Array.isArray(b)) {
+    if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) {
+      return false
+    }
+    for (let i = 0; i < a.length; i++) {
+      if (!deepEqual(a[i], b[i])) return false
+    }
+    return true
+  }
+  const objA = a as Record<string, unknown>
+  const objB = b as Record<string, unknown>
+  const keysA = Object.keys(objA)
+  if (keysA.length !== Object.keys(objB).length) return false
+  for (const key of keysA) {
+    if (!Object.hasOwn(objB, key) || !deepEqual(objA[key], objB[key])) {
+      return false
+    }
+  }
+  return true
+}
+
 function getTopologyKey(run: WorkflowRunV2): string {
   return [
     run.uid,
@@ -34,20 +65,33 @@ function mergeRunNodes(
 ): FlowNode[] {
   const currentNodeMap = new Map(currentNodes.map((node) => [node.id, node]))
   const preparedIncomingNodes = prepareWorkflowNodes(incomingNodes).nodes
+  let changed = currentNodes.length !== preparedIncomingNodes.length
 
-  return preparedIncomingNodes.map((node) => {
+  const merged = preparedIncomingNodes.map((node) => {
     const currentNode = currentNodeMap.get(node.id)
     if (!currentNode) {
+      changed = true
       return node
     }
+    if (
+      currentNode.type === node.type &&
+      deepEqual(currentNode.data, node.data)
+    ) {
+      return currentNode
+    }
 
+    changed = true
     return {
+      ...currentNode,
       ...node,
       position: currentNode.position,
       measured: currentNode.measured,
       selected: currentNode.selected,
+      dragging: currentNode.dragging,
     }
   })
+
+  return changed ? merged : currentNodes
 }
 
 export function useRunFlow(run: WorkflowRunV2 | null) {
@@ -172,28 +216,50 @@ export function useRunFlow(run: WorkflowRunV2 | null) {
     setFlowNodes,
   ])
 
+  const prevEdgesRef = useRef<Edge[]>([])
   const edges = useMemo<Edge[]>(() => {
-    if (!displayRun?.edges || !displayRun?.nodes || !edgesReady) return []
+    if (!displayRun?.edges || !displayRun?.nodes || !edgesReady) {
+      prevEdgesRef.current = []
+      return []
+    }
     const nodeMap = new Map(displayRun.nodes.map((n) => [n.id, n]))
-    const withAnimate = [
-      NodeRunStatusV2.PENDING,
-      NodeRunStatusV2.READY,
-      NodeRunStatusV2.QUEUED,
-      NodeRunStatusV2.RUNNING,
-      undefined,
-    ]
-    return displayRun.edges.map((e) => {
+    const prevById = new Map(prevEdgesRef.current.map((e) => [e.id, e]))
+    let changed = prevEdgesRef.current.length !== displayRun.edges.length
+
+    const nextEdges = displayRun.edges.map((e, index) => {
       const sourceNode = nodeMap.get(e.source)
       const runData = (e.data?.run_data ?? sourceNode?.data?.run_data) as
         | NodeRunDataV2
         | undefined
-      const status = runData?.status
-      return { ...e, animated: withAnimate.includes(status) }
+      const animated = runData?.status === NodeRunStatusV2.RUNNING
+      const prev = prevById.get(e.id)
+      if (
+        prev &&
+        prev.source === e.source &&
+        prev.target === e.target &&
+        prev.sourceHandle === e.sourceHandle &&
+        prev.targetHandle === e.targetHandle &&
+        prev.animated === animated &&
+        deepEqual(prev.data, e.data)
+      ) {
+        if (prevEdgesRef.current[index] !== prev) changed = true
+        return prev
+      }
+      changed = true
+      return { ...e, animated }
     })
+
+    if (!changed) return prevEdgesRef.current
+    prevEdgesRef.current = nextEdges
+    return nextEdges
   }, [displayRun?.edges, displayRun?.nodes, edgesReady])
 
-  const toolNames = new Map(
-    toolUids.map((uid, index) => [uid, toolQueries[index]?.data?.name]),
+  const toolNames = useMemo(
+    () =>
+      new Map(
+        toolUids.map((uid, index) => [uid, toolQueries[index]?.data?.name]),
+      ),
+    [toolUids, toolQueries],
   )
 
   return { flowNodes, edges, handleNodesChange, toolNames }

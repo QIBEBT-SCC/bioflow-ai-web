@@ -13,7 +13,7 @@ import {
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import type React from 'react'
-import { useState } from 'react'
+import { memo, useCallback, useMemo, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import {
   Collapsible,
@@ -100,7 +100,9 @@ interface RunLeftPanelProps {
   onResizeStart: (e: React.MouseEvent) => void
 }
 
-export function RunLeftPanel({
+const DEFAULT_EXPANDED_PATHS = new Set(['results', 'logs', 'reports'])
+
+export const RunLeftPanel = memo(function RunLeftPanel({
   run,
   runFiles,
   selectedFile,
@@ -115,7 +117,17 @@ export function RunLeftPanel({
   const t = useTranslations('Project.runDetail.leftPanel')
   const tStatus = useTranslations('Project.workflow.status')
   const [statsOpen, setStatsOpen] = useState(true)
-  const filePaths = collectFilePaths(runFiles ?? [])
+  const filePaths = useMemo(() => collectFilePaths(runFiles ?? []), [runFiles])
+  const handleSelect = useCallback(
+    (path: string) => {
+      if (filePaths.has(path)) onSelectFile(path)
+    },
+    [filePaths, onSelectFile],
+  )
+  const treeNodes = useMemo(
+    () => (runFiles ?? []).map(renderOutputNode),
+    [runFiles],
+  )
 
   const Icon = statusConfig[run?.status ?? WorkflowRunStatusV2.PENDING].icon
 
@@ -205,13 +217,11 @@ export function RunLeftPanel({
           </div>
           <div className='p-2'>
             <FileTree
-              defaultExpanded={new Set(['results', 'logs', 'reports'])}
+              defaultExpanded={DEFAULT_EXPANDED_PATHS}
               selectedPath={selectedFile}
-              onSelect={(path) => {
-                if (filePaths.has(path)) onSelectFile(path)
-              }}
+              onSelect={handleSelect}
             >
-              {(runFiles ?? []).map(renderOutputNode)}
+              {treeNodes}
             </FileTree>
           </div>
         </div>
@@ -235,4 +245,4 @@ export function RunLeftPanel({
       </button>
     </div>
   )
-}
+})

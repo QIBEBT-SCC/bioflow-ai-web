@@ -30,10 +30,8 @@ import {
 import { RunTerminal } from '@/components/project/run/run-terminal'
 import { SidebarInset } from '@/components/ui/sidebar'
 import { useChatSidebarResize } from '@/hooks/use-chat-sidebar-resize'
-import { useNodeRunLogStream } from '@/hooks/use-node-run-v2'
 import { useProject } from '@/hooks/use-project'
 import { useRunFiles, useRunStream } from '@/hooks/use-run'
-import { useRunFlow } from '@/hooks/use-run-flow'
 import { useSubgraphRun } from '@/hooks/use-subgraph-run'
 import { useWorkflowNodeAttachment } from '@/hooks/use-workflow-node-attachment'
 import { useChatSidebarStore } from '@/stores/chat-sidebar-store'
@@ -145,8 +143,6 @@ function RunFlowContent({
     enter,
     navigate,
   } = useSubgraphRun(run)
-  const { flowNodes, edges, handleNodesChange, toolNames } =
-    useRunFlow(visibleRun)
   const [panel, dispatchPanel] = useReducer(panelReducer, {
     leftPanelOpen: true,
     leftPanelWidth: 288,
@@ -250,21 +246,24 @@ function RunFlowContent({
   const [selectedNodeId, setSelectedNodeId] = useState<string | undefined>()
 
   const activeTaskUid = useMemo<string | undefined>(() => {
+    const nodes = visibleRun?.nodes
+    if (!nodes) return undefined
     if (selectedNodeId) {
-      const selectedNode = flowNodes.find((node) => node.id === selectedNodeId)
+      const selectedNode = nodes.find((node) => node.id === selectedNodeId)
       return (selectedNode?.data?.run_data as NodeRunDataV2 | undefined)?.uid
     }
-    const runningNode = flowNodes.find(
+    const runningNode = nodes.find(
       (n) =>
         (n.data?.run_data as NodeRunDataV2 | undefined)?.status ===
         NodeRunStatusV2.RUNNING,
     )
     return (runningNode?.data?.run_data as NodeRunDataV2 | undefined)?.uid
-  }, [selectedNodeId, flowNodes])
+  }, [selectedNodeId, visibleRun?.nodes])
 
   const isActiveNodeRunning = useMemo(() => {
-    if (!activeTaskUid) return false
-    const node = flowNodes.find(
+    const nodes = visibleRun?.nodes
+    if (!activeTaskUid || !nodes) return false
+    const node = nodes.find(
       (candidate) =>
         (candidate.data?.run_data as NodeRunDataV2 | undefined)?.uid ===
         activeTaskUid,
@@ -273,12 +272,7 @@ function RunFlowContent({
       (node?.data?.run_data as NodeRunDataV2 | undefined)?.status ===
       NodeRunStatusV2.RUNNING
     )
-  }, [activeTaskUid, flowNodes])
-
-  const logContent = useNodeRunLogStream(
-    activeTaskUid ?? '',
-    isActiveNodeRunning,
-  )
+  }, [activeTaskUid, visibleRun?.nodes])
 
   const handleNodeClick = useCallback(
     (_event: React.MouseEvent, node: FlowNode) => {
@@ -291,6 +285,70 @@ function RunFlowContent({
   const handlePaneClick = useCallback(() => {
     setSelectedNodeId(undefined)
   }, [])
+
+  const handleNavigateSubgraph = useCallback(
+    (depth: number) => {
+      setSelectedNodeId(undefined)
+      navigate(depth)
+    },
+    [navigate],
+  )
+
+  const handleEnterSubgraph = useCallback(
+    (id: string) => {
+      setSelectedNodeId(undefined)
+      enter(id)
+    },
+    [enter],
+  )
+
+  const handleToggleTerminal = useCallback(
+    () => dispatchPanel({ type: 'TOGGLE_TERMINAL' }),
+    [],
+  )
+
+  const handleRefreshFiles = useCallback(() => {
+    void refreshFiles()
+  }, [refreshFiles])
+
+  const handleTabSelect = useCallback(
+    (id: string) => dispatchTabs({ type: 'SET_ACTIVE', id }),
+    [],
+  )
+
+  const chatContextRef = useRef({
+    run,
+    subgraphPath,
+    labels,
+    addNode: nodeAttachment.add,
+    openChat,
+  })
+  chatContextRef.current = {
+    run,
+    subgraphPath,
+    labels,
+    addNode: nodeAttachment.add,
+    openChat,
+  }
+
+  const handleAddNodeToChat = useCallback(
+    (node: FlowNode, resolvedName: string) => {
+      const current = chatContextRef.current
+      if (!current.run) return
+      current.addNode({
+        type: 'workflow_node',
+        run_uid: current.run.uid,
+        generation: current.run.generation,
+        subgraph_path: [...current.subgraphPath],
+        node_id: node.id,
+        name: resolvedName,
+        node_type: node.type ?? '',
+        subgraph_labels: [...current.labels],
+      })
+      current.openChat()
+    },
+    [],
+  )
 
   const handleSelectFile = useCallback(
     async (path: string) => {
@@ -370,10 +428,7 @@ function RunFlowContent({
         projectName={project?.name}
         run={run}
         subgraphLabels={labels}
-        onNavigateSubgraph={(depth) => {
-          setSelectedNodeId(undefined)
-          navigate(depth)
-        }}
+        onNavigateSubgraph={handleNavigateSubgraph}
       />
 
       {/* 主内容区：左侧面板 + 右侧选项卡区域 */}
@@ -383,7 +438,7 @@ function RunFlowContent({
           runFiles={runFiles}
           selectedFile={activeTabId !== CANVAS_TAB_ID ? activeTabId : undefined}
           onSelectFile={handleSelectFile}
-          onRefreshFiles={() => void refreshFiles()}
+          onRefreshFiles={handleRefreshFiles}
           filesRefreshing={filesRefreshing}
           isOpen={leftPanelOpen}
           width={leftPanelWidth}
@@ -396,7 +451,7 @@ function RunFlowContent({
           <RunTabBar
             activeTabId={activeTabId}
             openTabs={openTabs}
-            onTabSelect={(id) => dispatchTabs({ type: 'SET_ACTIVE', id })}
+            onTabSelect={handleTabSelect}
             onTabClose={handleCloseTab}
           />
 
@@ -410,44 +465,18 @@ function RunFlowContent({
             <RunFlowCanvas
               viewKey={`${visibleRun?.uid}:${run?.generation}`}
               runLink={runLink}
-              graphInterface={visibleRun?.interface}
-              onEnterSubgraph={(id) => {
-                setSelectedNodeId(undefined)
-                enter(id)
-              }}
-              nodes={flowNodes}
-              edges={edges}
-              onNodesChange={handleNodesChange}
+              visibleRun={visibleRun}
+              onEnterSubgraph={handleEnterSubgraph}
               onNodeClick={handleNodeClick}
               onPaneClick={handlePaneClick}
-              canAttachNode={(node) =>
-                Boolean(visibleRun?.nodes.some((saved) => saved.id === node.id))
-              }
-              onAddNodeToChat={(node) => {
-                if (!run) return
-                nodeAttachment.add({
-                  type: 'workflow_node',
-                  run_uid: run.uid,
-                  generation: run.generation,
-                  subgraph_path: [...subgraphPath],
-                  node_id: node.id,
-                  name: String(
-                    node.data.name ||
-                      toolNames.get(String(node.data.tool_uid)) ||
-                      node.id,
-                  ),
-                  node_type: node.type ?? '',
-                  subgraph_labels: [...labels],
-                })
-                openChat()
-              }}
+              onAddNodeToChat={handleAddNodeToChat}
             />
 
             <RunTerminal
-              logContent={logContent ?? ''}
+              taskUid={activeTaskUid}
               isStreaming={isActiveNodeRunning}
               isOpen={terminalOpen}
-              onToggle={() => dispatchPanel({ type: 'TOGGLE_TERMINAL' })}
+              onToggle={handleToggleTerminal}
               height={terminalHeight}
               onResizeStart={handleResizeStart}
             />
