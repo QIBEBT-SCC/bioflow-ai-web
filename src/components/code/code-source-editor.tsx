@@ -17,9 +17,11 @@ import { PlusIcon, XIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import {
   type KeyboardEvent,
+  memo,
   type Ref,
   useCallback,
   useEffect,
+  useImperativeHandle,
   useMemo,
   useRef,
   useState,
@@ -73,7 +75,9 @@ export function replaceDocument(view: EditorView, text: string) {
   })
 }
 
-const EDITOR_BASIC_SETUP = {
+const MemoCodeMirror = memo(CodeMirror)
+
+const EDIT_BASIC_SETUP = {
   lineNumbers: true,
   highlightActiveLineGutter: true,
   foldGutter: false,
@@ -81,8 +85,83 @@ const EDITOR_BASIC_SETUP = {
   closeBrackets: true,
   autocompletion: true,
   highlightActiveLine: true,
-  highlightSelectionMatches: true,
+  highlightSelectionMatches: false,
 }
+
+const READONLY_BASIC_SETUP = {
+  lineNumbers: true,
+  highlightActiveLineGutter: false,
+  highlightSpecialChars: true,
+  history: false,
+  foldGutter: false,
+  drawSelection: false,
+  dropCursor: false,
+  allowMultipleSelections: false,
+  indentOnInput: false,
+  bracketMatching: false,
+  closeBrackets: false,
+  autocompletion: false,
+  rectangularSelection: false,
+  highlightActiveLine: false,
+  highlightSelectionMatches: false,
+  closeBracketsKeymap: false,
+  historyKeymap: false,
+  foldKeymap: false,
+  completionKeymap: false,
+  lintKeymap: false,
+  searchKeymap: true,
+}
+
+interface CursorStatusHandle {
+  schedule: (line: number, column: number) => void
+}
+
+const CursorStatus = memo(function CursorStatus({
+  ref,
+}: {
+  ref: Ref<CursorStatusHandle>
+}) {
+  const t = useTranslations('code.Workspace')
+  const [cursor, setCursor] = useState({ line: 1, column: 1 })
+  const pendingRef = useRef<{ line: number; column: number } | null>(null)
+  const rafRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current)
+    }
+  }, [])
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      schedule(line: number, column: number) {
+        pendingRef.current = { line, column }
+        if (rafRef.current !== null) return
+        rafRef.current = requestAnimationFrame(() => {
+          rafRef.current = null
+          const next = pendingRef.current
+          if (!next) return
+          setCursor((prev) =>
+            prev.line === next.line && prev.column === next.column
+              ? prev
+              : next,
+          )
+        })
+      },
+    }),
+    [],
+  )
+
+  return (
+    <span>
+      {t('cursorPosition', {
+        line: cursor.line,
+        column: cursor.column,
+      })}
+    </span>
+  )
+})
 
 export function CodeSourceEditor({
   nodeType,
@@ -97,9 +176,10 @@ export function CodeSourceEditor({
   onFormat,
 }: CodeSourceEditorProps) {
   const t = useTranslations('code.Workspace')
-  const [cursor, setCursor] = useState({ line: 1, column: 1 })
+  const cursorStatusRef = useRef<CursorStatusHandle>(null)
   const isPython = nodeType === 'code_python'
   const isR = nodeType === 'code_R'
+  const isEditable = !disabled && !readOnly && !review
   const formatRef = useRef(onFormat)
   useEffect(() => {
     formatRef.current = onFormat
@@ -116,13 +196,7 @@ export function CodeSourceEditor({
     if (!update.selectionSet && !update.docChanged) return
     const head = update.state.selection.main.head
     const line = update.state.doc.lineAt(head)
-    const lineNumber = line.number
-    const column = head - line.from + 1
-    setCursor((prev) =>
-      prev.line === lineNumber && prev.column === column
-        ? prev
-        : { line: lineNumber, column },
-    )
+    cursorStatusRef.current?.schedule(line.number, head - line.from + 1)
   }, [])
   const languageExtensions = useMemo(
     () => [
@@ -161,7 +235,10 @@ export function CodeSourceEditor({
     [languageExtensions, review, reviewOriginal],
   )
   const displayedCode = review?.code ?? code
-  const lineCount = Math.max(1, displayedCode.split('\n').length)
+  const lineCount = useMemo(
+    () => Math.max(1, displayedCode.split('\n').length),
+    [displayedCode],
+  )
 
   return (
     <div
@@ -172,15 +249,16 @@ export function CodeSourceEditor({
       }
     >
       <section className='flex h-full min-h-0 min-w-0 flex-col bg-background'>
-        <CodeMirror
+        <MemoCodeMirror
           ref={editorRef}
           value={displayedCode}
           height='100%'
           theme='light'
           extensions={editorExtensions}
           onChange={handleCodeChange}
-          editable={!disabled && !readOnly && !review}
+          editable={isEditable}
           readOnly={readOnly}
+          indentWithTab={isEditable}
           onUpdate={handleUpdate}
           placeholder={
             isPython
@@ -190,7 +268,7 @@ export function CodeSourceEditor({
                 : t('bashPlaceholder')
           }
           autoFocus={!review && !readOnly}
-          basicSetup={EDITOR_BASIC_SETUP}
+          basicSetup={isEditable ? EDIT_BASIC_SETUP : READONLY_BASIC_SETUP}
           className='min-h-0 flex-1 overflow-hidden text-[13px] [&_.cm-activeLine]:bg-muted/40 [&_.cm-activeLineGutter]:bg-muted/60 [&_.cm-content]:font-mono [&_.cm-editor]:h-full [&_.cm-gutters]:border-r [&_.cm-gutters]:border-border [&_.cm-gutters]:bg-muted/30 [&_.cm-scroller]:bg-background [&_.cm-scroller]:font-mono'
         />
 
@@ -201,12 +279,7 @@ export function CodeSourceEditor({
                 {t('reviewingChanges')}
               </span>
             )}
-            <span>
-              {t('cursorPosition', {
-                line: cursor.line,
-                column: cursor.column,
-              })}
-            </span>
+            <CursorStatus ref={cursorStatusRef} />
             <span>{t('lineCount', { count: lineCount })}</span>
           </div>
           <div className='flex items-center gap-4'>
