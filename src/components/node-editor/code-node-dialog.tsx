@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic'
 import { useTranslations } from 'next-intl'
 import { memo, useCallback, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { CopyButton } from '@/components/ui/copy-button'
 import {
   Dialog,
   DialogContent,
@@ -117,6 +118,12 @@ function CodeNodeDialogBody({
         />
       </div>
       <DialogFooter className='shrink-0 border-t px-5 py-3'>
+        <CopyButton
+          code={draft.code}
+          variant='outline'
+          disabled={!draft.code}
+          className='sm:mr-auto'
+        />
         {readOnly ? (
           <Button variant='outline' onClick={onClose}>
             {t('close')}
