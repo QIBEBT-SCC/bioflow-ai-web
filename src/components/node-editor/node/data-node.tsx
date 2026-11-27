@@ -607,10 +607,16 @@ const JoinPathNode = memo(function JoinPathNode() {
 
 const BIND_PARAM_HANDLES = {
   inputs: [
-    { name: 'file', description: 'Input file to bind parameter to' },
+    {
+      name: 'file',
+      description: 'Input file, directory, or text value to bind parameter to',
+    },
   ] as HandleDefine[],
   outputs: [
-    { name: 'file_with_param', description: 'File with bound parameter' },
+    {
+      name: 'file_with_param',
+      description: 'Bound parameter for CODE node input_files or input_values',
+    },
   ] as HandleDefine[],
 }
 
@@ -654,7 +660,7 @@ const BindParamNode = memo(function BindParamNode() {
   return (
     <BaseNode
       title='Bind Parameter'
-      description='Bind a parameter to a file.'
+      description='Bind a CLI parameter to a file, directory, or text value.'
       handles={BIND_PARAM_HANDLES}
       color={colorSchemes.orange}
       nodeComponent={nodeComponent}
