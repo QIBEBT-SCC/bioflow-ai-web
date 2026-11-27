@@ -670,10 +670,10 @@
         "cancel": "取消",
         "adding": "添加中...",
         "addDialogTitle": "添加样本文件",
-        "addDialogDescription": "为样本添加新的数据文件，请输入文件路径和标签。文件大小、格式和 MD5 校验码将由后端自动计算。",
+        "addDialogDescription": "为样本添加新的数据文件，请输入文件路径和标签。文件大小和格式将由后端自动获取，MD5 校验码可在列表中手动计算。",
         "filePathRequiredLabel": "文件路径 *",
         "filePathPlaceholder": "例如: /data/samples/sample_R1.fq.gz",
-        "filePathDescription": "输入服务器上的文件完整路径，后端将自动计算文件大小、格式和 MD5 校验码",
+        "filePathDescription": "输入服务器上的文件完整路径，后端将自动获取文件大小和格式，如需校验可在列表中手动计算 MD5",
         "tagRequiredLabel": "文件标签 *",
         "tagPlaceholder": "例如: r1",
         "tagDescription": "用于在工作流中引用此文件，如 sample:r1_positive。同一样本内标签必须唯一。",
@@ -685,7 +685,12 @@
         "deleteSuccess": "文件删除成功",
         "deleteFailed": "文件删除失败",
         "deleteDialogTitle": "确认删除文件",
-        "deleteDialogDescription": "确定要删除这个文件吗？此操作无法撤销。"
+        "deleteDialogDescription": "确定要删除这个文件吗？此操作无法撤销。",
+        "calculateMd5": "计算 MD5",
+        "recalculateMd5": "重新计算 MD5",
+        "calculatingMd5": "计算中...",
+        "calculateMd5Success": "MD5 计算完成",
+        "calculateMd5Failed": "MD5 计算失败"
       }
     },
     "workflow": {

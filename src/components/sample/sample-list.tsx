@@ -9,6 +9,8 @@ import {
   EditIcon,
   Loader2,
   MoreHorizontal,
+  RefreshCwIcon,
+  ShieldCheckIcon,
   Trash2Icon,
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
@@ -41,6 +43,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
+  useCalculateSampleFileMd5,
   useDeleteSample,
   useDeleteSampleFile,
   useSample,
@@ -88,6 +91,32 @@ function SampleFilesSection({
   onDeleteFile,
 }: SampleFilesSectionProps) {
   const t = useTranslations('Project.sample.files')
+  const calculateMd5Mutation = useCalculateSampleFileMd5()
+  const [calculatingFileUids, setCalculatingFileUids] = useState<
+    Record<string, boolean>
+  >({})
+
+  const handleCalculateMd5 = async (fileUid: string) => {
+    setCalculatingFileUids((prev) => ({ ...prev, [fileUid]: true }))
+    try {
+      await calculateMd5Mutation.mutateAsync({
+        projectId,
+        sampleUid: sampleDetails.uid,
+        fileUid,
+      })
+      toast.success(t('calculateMd5Success'))
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : t('calculateMd5Failed'),
+      )
+    } finally {
+      setCalculatingFileUids((prev) => {
+        const next = { ...prev }
+        delete next[fileUid]
+        return next
+      })
+    }
+  }
 
   return (
     <div className='space-y-3 border-t bg-muted/20 p-4 sm:p-5'>
@@ -133,17 +162,54 @@ function SampleFilesSection({
                 <div className='flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground'>
                   <Badge variant='outline'>{file.file_format ?? '—'}</Badge>
                   <span>{formatFileSize(file.file_size)}</span>
-                  {file.md5_checksum ? (
-                    <span
-                      className='flex min-w-0 items-center'
-                      title={file.md5_checksum}
-                    >
-                      <CheckIcon className='mr-1 size-4 shrink-0 text-success' />
-                      <span className='truncate'>
-                        {file.md5_checksum.substring(0, 8)}...
+                  {file.file_format !== 'directory' &&
+                    (file.md5_checksum ? (
+                      <span className='flex min-w-0 items-center gap-1'>
+                        <span
+                          className='flex min-w-0 items-center'
+                          title={file.md5_checksum}
+                        >
+                          <CheckIcon className='mr-1 size-4 shrink-0 text-success' />
+                          <span className='truncate'>
+                            {file.md5_checksum.substring(0, 8)}...
+                          </span>
+                        </span>
+                        <Button
+                          type='button'
+                          variant='ghost'
+                          size='icon'
+                          className='size-6 shrink-0'
+                          title={t('recalculateMd5')}
+                          aria-label={t('recalculateMd5')}
+                          disabled={Boolean(calculatingFileUids[file.uid])}
+                          onClick={() => handleCalculateMd5(file.uid)}
+                        >
+                          {calculatingFileUids[file.uid] ? (
+                            <Loader2 className='size-3.5 animate-spin' />
+                          ) : (
+                            <RefreshCwIcon className='size-3.5' />
+                          )}
+                        </Button>
                       </span>
-                    </span>
-                  ) : null}
+                    ) : (
+                      <Button
+                        type='button'
+                        variant='outline'
+                        size='sm'
+                        className='h-6 gap-1 px-2 text-xs'
+                        disabled={Boolean(calculatingFileUids[file.uid])}
+                        onClick={() => handleCalculateMd5(file.uid)}
+                      >
+                        {calculatingFileUids[file.uid] ? (
+                          <Loader2 className='size-3 animate-spin' />
+                        ) : (
+                          <ShieldCheckIcon className='size-3' />
+                        )}
+                        {calculatingFileUids[file.uid]
+                          ? t('calculatingMd5')
+                          : t('calculateMd5')}
+                      </Button>
+                    ))}
                 </div>
               </div>
               <div className='min-w-0'>

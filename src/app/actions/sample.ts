@@ -137,6 +137,22 @@ export async function deleteSampleFile(
 }
 
 /**
+ * 计算样本文件 MD5 校验码
+ */
+export async function calculateSampleFileMd5(
+  projectId: string,
+  sampleUid: string,
+  fileUid: string,
+): Promise<SampleFile> {
+  return await clientFetch<SampleFile>(
+    `/projects/${projectId}/samples/${sampleUid}/files/${fileUid}/md5`,
+    {
+      method: 'POST',
+    },
+  )
+}
+
+/**
  * 获取项目的文件映射列表
  */
 export async function getProjectFileMappings(
