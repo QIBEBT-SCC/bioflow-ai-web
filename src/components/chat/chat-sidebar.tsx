@@ -543,6 +543,7 @@ function ChatSidebarInner({
   }
 
   const isLoading = isSessionLoading || isMessagesLoading || isRunsLoading
+  const showCommandHighlight = Boolean(!acceptsInput && parsedCommand)
   const inputLocked =
     inputDisabled || (isBusy && !acceptsInput) || isSubmitting || isSendingInput
   const attachmentLocked = inputLocked || isBusy
@@ -914,58 +915,67 @@ function ChatSidebarInner({
                   </output>
                 </InputGroupAddon>
               )}
-              <div className='relative w-full'>
-                {!acceptsInput && parsedCommand && (
+              <div className='max-h-60 w-full overflow-y-auto'>
+                <div className='grid min-h-16 w-full'>
                   <div
                     aria-hidden='true'
-                    className='pointer-events-none absolute inset-x-0 top-0 min-h-16 whitespace-pre-wrap wrap-break-word p-3 text-base md:text-sm'
+                    className={cn(
+                      'pointer-events-none col-start-1 row-start-1 min-h-16 min-w-0 whitespace-pre-wrap wrap-break-word p-3 text-base md:text-sm',
+                      !showCommandHighlight && 'invisible',
+                    )}
                   >
-                    <span className='rounded-sm bg-primary/10 text-primary'>
-                      /{parsedCommand.command.key}
-                    </span>
-                    <span className='text-foreground'>
-                      {text.slice(`/${parsedCommand.command.key}`.length)}
-                    </span>
+                    {showCommandHighlight && parsedCommand ? (
+                      <>
+                        <span className='rounded-sm bg-primary/10 text-primary'>
+                          /{parsedCommand.command.key}
+                        </span>
+                        <span className='text-foreground'>
+                          {text.slice(`/${parsedCommand.command.key}`.length)}
+                        </span>
+                      </>
+                    ) : (
+                      text
+                    )}
+                    {text.endsWith('\n') ? '\u200b' : null}
                   </div>
-                )}
-                <InputGroupTextarea
-                  ref={textareaRef}
-                  value={text}
-                  onChange={(event) =>
-                    acceptsInput
-                      ? setText(event.target.value)
-                      : slashCommand.onValueChange(event.target.value)
-                  }
-                  onPaste={(event) => {
-                    const files = Array.from(event.clipboardData.files)
-                    if (files.length === 0) return
-                    event.preventDefault()
-                    if (!attachmentLocked) attachments.addFiles(files)
-                  }}
-                  onKeyDown={(event) => {
-                    if (!acceptsInput) slashCommand.onKeyDown(event)
-                    if (event.defaultPrevented) return
-                    if (event.key === 'Enter' && !event.shiftKey) {
-                      if (event.nativeEvent.isComposing) return
-                      event.preventDefault()
-                      void submit()
+                  <InputGroupTextarea
+                    ref={textareaRef}
+                    value={text}
+                    onChange={(event) =>
+                      acceptsInput
+                        ? setText(event.target.value)
+                        : slashCommand.onValueChange(event.target.value)
                     }
-                  }}
-                  placeholder={
-                    inputDisabled
-                      ? t('input_unavailable')
-                      : acceptsInput
-                        ? t('input.placeholder')
-                        : t('command_placeholder')
-                  }
-                  disabled={inputLocked}
-                  className={cn(
-                    'relative max-h-60 min-h-16 p-3',
-                    !acceptsInput &&
-                      parsedCommand &&
-                      'text-transparent caret-foreground selection:bg-primary/20',
-                  )}
-                />
+                    onPaste={(event) => {
+                      const files = Array.from(event.clipboardData.files)
+                      if (files.length === 0) return
+                      event.preventDefault()
+                      if (!attachmentLocked) attachments.addFiles(files)
+                    }}
+                    onKeyDown={(event) => {
+                      if (!acceptsInput) slashCommand.onKeyDown(event)
+                      if (event.defaultPrevented) return
+                      if (event.key === 'Enter' && !event.shiftKey) {
+                        if (event.nativeEvent.isComposing) return
+                        event.preventDefault()
+                        void submit()
+                      }
+                    }}
+                    placeholder={
+                      inputDisabled
+                        ? t('input_unavailable')
+                        : acceptsInput
+                          ? t('input.placeholder')
+                          : t('command_placeholder')
+                    }
+                    disabled={inputLocked}
+                    className={cn(
+                      'col-start-1 row-start-1 min-h-16 min-w-0 overflow-hidden wrap-break-word p-3',
+                      showCommandHighlight &&
+                        'text-transparent caret-foreground selection:bg-primary/20',
+                    )}
+                  />
+                </div>
               </div>
               <InputGroupAddon align='block-end'>
                 <InputGroupButton
