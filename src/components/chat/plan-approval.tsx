@@ -42,6 +42,7 @@ export function ApprovalFeedback({
   onSendFeedback,
 }: ApprovalFeedbackProps) {
   const t = useTranslations('Chat')
+  const hasFeedback = feedback.trim().length > 0
 
   return (
     <InputGroup className='rounded-lg bg-background'>
@@ -55,19 +56,22 @@ export function ApprovalFeedback({
       <InputGroupAddon align='block-end' className='justify-end'>
         <InputGroupButton
           size='sm'
-          variant='outline'
+          variant={hasFeedback ? 'default' : 'outline'}
           onClick={onSendFeedback}
-          disabled={isPending || !feedback.trim()}
+          disabled={isPending || !hasFeedback}
         >
+          {isPending && hasFeedback && <Loader2Icon className='animate-spin' />}
           {t('send_feedback')}
         </InputGroupButton>
         <InputGroupButton
           size='sm'
-          variant='default'
+          variant={hasFeedback ? 'outline' : 'default'}
           onClick={onApprove}
-          disabled={isPending}
+          disabled={isPending || hasFeedback}
         >
-          {isPending && <Loader2Icon className='animate-spin' />}
+          {isPending && !hasFeedback && (
+            <Loader2Icon className='animate-spin' />
+          )}
           {t('approve')}
         </InputGroupButton>
       </InputGroupAddon>

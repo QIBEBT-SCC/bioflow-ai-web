@@ -508,13 +508,19 @@ function ChatSidebarInner({
 
   const resume = async (approved: boolean, response?: string) => {
     if (!run) return
+    const trimmedFeedback = (response ?? feedback).trim()
+    const requiresFeedback =
+      run.interrupt_payload?.kind === 'questions' ||
+      (typeof run.interrupt_payload?.question === 'string' &&
+        run.interrupt_payload.question.trim().length > 0)
+    if (approved && (trimmedFeedback || requiresFeedback)) return
     setLocalError(null)
     try {
       await resumeRun({
         runId: run.uid,
         approved,
         language,
-        feedback: approved ? undefined : (response ?? feedback).trim(),
+        feedback: approved ? undefined : trimmedFeedback,
       })
       setFeedback('')
     } catch (error) {
