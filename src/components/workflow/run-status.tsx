@@ -21,7 +21,8 @@ export function RunStatusIcon({
       className={cn(
         'size-3.5 shrink-0',
         statusToneClasses[appearance.tone].text,
-        status === 'running' && 'animate-spin motion-reduce:animate-none',
+        (status === 'running' || status === 'failing') &&
+          'animate-spin motion-reduce:animate-none',
         className,
       )}
     />

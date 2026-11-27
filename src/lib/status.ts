@@ -8,9 +8,14 @@ import {
   type LucideIcon,
   XCircleIcon,
 } from 'lucide-react'
-import type { NodeRunStatusV2, WorkflowRunStatusV2 } from '@/types/workflow-v2'
+import {
+  type NodeRunStatisticsV2,
+  type NodeRunStatusV2,
+  WorkflowRunStatusV2,
+} from '@/types/workflow-v2'
 
-export type RunStatus = `${NodeRunStatusV2}` | `${WorkflowRunStatusV2}`
+export type WorkflowRunDisplayStatus = `${WorkflowRunStatusV2}` | 'failing'
+export type RunStatus = `${NodeRunStatusV2}` | WorkflowRunDisplayStatus
 
 export type StatusTone = 'neutral' | 'warning' | 'info' | 'success' | 'danger'
 
@@ -60,7 +65,28 @@ export const RUN_STATUS_APPEARANCE: Record<
   ready: { labelKey: 'ready', icon: CircleDotIcon, tone: 'warning' },
   queued: { labelKey: 'queued', icon: ListOrderedIcon, tone: 'neutral' },
   running: { labelKey: 'running', icon: Loader2Icon, tone: 'info' },
+  failing: { labelKey: 'failing', icon: Loader2Icon, tone: 'warning' },
   succeeded: { labelKey: 'succeeded', icon: CheckCircle2Icon, tone: 'success' },
   failed: { labelKey: 'failed', icon: XCircleIcon, tone: 'danger' },
   blocked: { labelKey: 'blocked', icon: BanIcon, tone: 'neutral' },
+}
+
+/** Derive user-facing run status without marking unsettled runs as failed. */
+export function getWorkflowRunDisplayStatus(run: {
+  status: WorkflowRunStatusV2
+  settled: boolean
+  node_statistics?: Pick<NodeRunStatisticsV2, 'failed'> | null
+}): WorkflowRunDisplayStatus {
+  if (!run.settled) {
+    if (
+      run.status === WorkflowRunStatusV2.FAILED ||
+      (run.node_statistics?.failed ?? 0) > 0
+    ) {
+      return 'failing'
+    }
+    return run.status === WorkflowRunStatusV2.PENDING
+      ? WorkflowRunStatusV2.PENDING
+      : WorkflowRunStatusV2.RUNNING
+  }
+  return run.status
 }

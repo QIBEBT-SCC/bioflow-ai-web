@@ -1,20 +1,15 @@
 import {
   BarChart3Icon,
-  CheckCircle2Icon,
   ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  ClockIcon,
   FileJsonIcon,
   FileTextIcon,
-  Loader2Icon,
   RefreshCwIcon,
-  XCircleIcon,
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import type React from 'react'
 import { memo, useCallback, useMemo, useState } from 'react'
-import { Badge } from '@/components/ui/badge'
 import {
   Collapsible,
   CollapsibleContent,
@@ -25,31 +20,13 @@ import {
   FileTreeFile,
   FileTreeFolder,
 } from '@/components/ui/file-tree'
+import { RunStatusBadge } from '@/components/workflow/run-status'
+import {
+  getWorkflowRunDisplayStatus,
+  RUN_STATUS_APPEARANCE,
+} from '@/lib/status'
 import type { RunFileNode } from '@/types/run'
-import { WorkflowRunStatusV2, type WorkflowRunV2 } from '@/types/workflow-v2'
-
-const statusConfig = {
-  [WorkflowRunStatusV2.PENDING]: {
-    labelKey: 'waiting',
-    variant: 'secondary' as const,
-    icon: ClockIcon,
-  },
-  [WorkflowRunStatusV2.RUNNING]: {
-    labelKey: 'running',
-    variant: 'default' as const,
-    icon: Loader2Icon,
-  },
-  [WorkflowRunStatusV2.FAILED]: {
-    labelKey: 'failed',
-    variant: 'destructive' as const,
-    icon: XCircleIcon,
-  },
-  [WorkflowRunStatusV2.SUCCEEDED]: {
-    labelKey: 'success',
-    variant: 'outline' as const,
-    icon: CheckCircle2Icon,
-  },
-} as const
+import type { WorkflowRunV2 } from '@/types/workflow-v2'
 
 function collectFilePaths(
   nodes: RunFileNode[],
@@ -115,7 +92,7 @@ export const RunLeftPanel = memo(function RunLeftPanel({
   onResizeStart,
 }: RunLeftPanelProps) {
   const t = useTranslations('Project.runDetail.leftPanel')
-  const tStatus = useTranslations('Project.workflow.status')
+  const tRunStatus = useTranslations('workflowMonitor.status')
   const [statsOpen, setStatsOpen] = useState(true)
   const filePaths = useMemo(() => collectFilePaths(runFiles ?? []), [runFiles])
   const handleSelect = useCallback(
@@ -129,7 +106,7 @@ export const RunLeftPanel = memo(function RunLeftPanel({
     [runFiles],
   )
 
-  const Icon = statusConfig[run?.status ?? WorkflowRunStatusV2.PENDING].icon
+  const displayStatus = run ? getWorkflowRunDisplayStatus(run) : null
 
   return (
     <div className='flex shrink-0'>
@@ -153,13 +130,13 @@ export const RunLeftPanel = memo(function RunLeftPanel({
             <div className='px-4 py-3 space-y-2 border-b bg-muted/20'>
               <div className='flex justify-between text-sm'>
                 <span className='text-muted-foreground'>{t('status')}</span>
-                {run ? (
-                  <Badge variant={statusConfig[run.status].variant}>
-                    <Icon
-                      className={`size-3 ${run.status === WorkflowRunStatusV2.RUNNING ? 'animate-spin' : ''}`}
-                    />
-                    {tStatus(statusConfig[run.status].labelKey)}
-                  </Badge>
+                {displayStatus ? (
+                  <RunStatusBadge
+                    status={displayStatus}
+                    label={tRunStatus(
+                      RUN_STATUS_APPEARANCE[displayStatus].labelKey,
+                    )}
+                  />
                 ) : (
                   <span className='font-medium'>--</span>
                 )}
@@ -168,6 +145,10 @@ export const RunLeftPanel = memo(function RunLeftPanel({
                 {
                   label: t('totalTasks'),
                   value: run?.node_statistics.total ?? '--',
+                },
+                {
+                  label: t('runningTasks'),
+                  value: run?.node_statistics.running ?? '--',
                 },
                 {
                   label: t('successTasks'),

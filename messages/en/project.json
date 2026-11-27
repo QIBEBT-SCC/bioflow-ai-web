@@ -250,6 +250,7 @@
         "statistics": "Run Statistics",
         "status": "Run Status",
         "totalTasks": "Total Tasks",
+        "runningTasks": "Running Tasks",
         "successTasks": "Successful Tasks",
         "failedTasks": "Failed Tasks",
         "outputFiles": "Output Files",
@@ -789,7 +790,8 @@
         "actions": "Actions",
         "viewDetails": "View Details",
         "rerun": "Rerun",
-        "run": "Run"
+        "run": "Run",
+        "waitingActiveTasks": "Nodes are still active. Wait for all nodes to finish before rerunning."
       }
     }
   }

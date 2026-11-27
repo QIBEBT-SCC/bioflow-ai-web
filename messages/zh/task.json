@@ -103,6 +103,7 @@
     "status": {
       "pending": "等待中",
       "running": "运行中",
+      "failing": "运行中（有失败）",
       "succeeded": "成功",
       "failed": "失败"
     },

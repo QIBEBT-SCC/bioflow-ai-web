@@ -103,6 +103,7 @@
     "status": {
       "pending": "Pending",
       "running": "Running",
+      "failing": "Failing",
       "succeeded": "Succeeded",
       "failed": "Failed"
     },
