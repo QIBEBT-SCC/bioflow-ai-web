@@ -1,14 +1,6 @@
 'use client'
 
-import {
-  ActivityIcon,
-  CheckCircle2,
-  Clock,
-  ExternalLink,
-  Loader2,
-  PlayIcon,
-  XCircle,
-} from 'lucide-react'
+import { ActivityIcon, ExternalLink, Loader2, PlayIcon } from 'lucide-react'
 import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
 import { useMemo } from 'react'
@@ -25,47 +17,26 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { RunStatusBadge } from '@/components/workflow/run-status'
 import { useProjectRuns, useRunWorkflow } from '@/hooks/use-project-workflow'
 import { useSamples } from '@/hooks/use-sample'
 import { ClientApiError } from '@/lib/api-client'
-import { ExecutionScope } from '@/types/workflow'
 import {
-  type NodeRunStatisticsV2,
-  WorkflowRunStatusV2,
-  type WorkflowRunV2,
-} from '@/types/workflow-v2'
+  getWorkflowRunDisplayStatus,
+  RUN_STATUS_APPEARANCE,
+} from '@/lib/status'
+import { ExecutionScope } from '@/types/workflow'
+import type { NodeRunStatisticsV2, WorkflowRunV2 } from '@/types/workflow-v2'
 
 interface WorkflowRunInstancesProps {
   projectId: string
   workflowUid: string
   executionScope?: ExecutionScope
-}
-
-const statusConfig = {
-  [WorkflowRunStatusV2.PENDING]: {
-    labelKey: 'waiting',
-    variant: 'secondary' as const,
-    icon: Clock,
-    animate: false,
-  },
-  [WorkflowRunStatusV2.RUNNING]: {
-    labelKey: 'running',
-    variant: 'default' as const,
-    icon: Loader2,
-    animate: true,
-  },
-  [WorkflowRunStatusV2.FAILED]: {
-    labelKey: 'failed',
-    variant: 'destructive' as const,
-    icon: XCircle,
-    animate: false,
-  },
-  [WorkflowRunStatusV2.SUCCEEDED]: {
-    labelKey: 'success',
-    variant: 'outline' as const,
-    icon: CheckCircle2,
-    animate: false,
-  },
 }
 
 function formatDateTime(
@@ -105,6 +76,7 @@ export function WorkflowRunInstances({
   const locale = useLocale()
   const t = useTranslations('Project.workflow.runs')
   const tStatus = useTranslations('Project.workflow.status')
+  const tRunStatus = useTranslations('workflowMonitor.status')
   const dateFormatter = useMemo(
     () =>
       new Intl.DateTimeFormat(locale, {
@@ -205,7 +177,7 @@ export function WorkflowRunInstances({
             <TableHeader>
               <TableRow>
                 <TableHead className='w-[220px]'>{t('viewDetails')}</TableHead>
-                <TableHead className='w-[110px]'>{t('status')}</TableHead>
+                <TableHead className='w-[160px]'>{t('status')}</TableHead>
                 <TableHead className='w-[220px] pr-8'>
                   {t('progress')}
                 </TableHead>
@@ -222,8 +194,7 @@ export function WorkflowRunInstances({
             </TableHeader>
             <TableBody>
               {projectRuns.map((run) => {
-                const cfg = statusConfig[run.status]
-                const Icon = cfg.icon
+                const displayStatus = getWorkflowRunDisplayStatus(run)
                 const taskStats = run.node_statistics
                 const progress = calculateProgress(taskStats)
                 const isRunning =
@@ -243,12 +214,12 @@ export function WorkflowRunInstances({
                     </TableCell>
 
                     <TableCell>
-                      <Badge variant={cfg.variant} className='gap-1'>
-                        <Icon
-                          className={`size-3 ${cfg.animate ? 'animate-spin' : ''}`}
-                        />
-                        {tStatus(cfg.labelKey)}
-                      </Badge>
+                      <RunStatusBadge
+                        status={displayStatus}
+                        label={tRunStatus(
+                          RUN_STATUS_APPEARANCE[displayStatus].labelKey,
+                        )}
+                      />
                     </TableCell>
 
                     <TableCell className='pr-8'>
@@ -277,22 +248,43 @@ export function WorkflowRunInstances({
 
                     <TableCell className='text-right'>
                       <div className='flex items-center justify-end'>
-                        <Button
-                          variant='ghost'
-                          size='sm'
-                          className='h-7 text-xs'
-                          onClick={() => handleRerun()}
-                          disabled={isRunning || !run.settled}
-                        >
-                          {isRunning ? (
-                            <Loader2 className='size-3 animate-spin' />
-                          ) : (
-                            <>
-                              <PlayIcon className='size-3' />
-                              {t('rerun')}
-                            </>
-                          )}
-                        </Button>
+                        {!run.settled && !isRunning ? (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className='inline-flex'>
+                                <Button
+                                  variant='ghost'
+                                  size='sm'
+                                  className='h-7 text-xs'
+                                  disabled
+                                >
+                                  <PlayIcon className='size-3' />
+                                  {t('rerun')}
+                                </Button>
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {t('waitingActiveTasks')}
+                            </TooltipContent>
+                          </Tooltip>
+                        ) : (
+                          <Button
+                            variant='ghost'
+                            size='sm'
+                            className='h-7 text-xs'
+                            onClick={() => handleRerun()}
+                            disabled={isRunning}
+                          >
+                            {isRunning ? (
+                              <Loader2 className='size-3 animate-spin' />
+                            ) : (
+                              <>
+                                <PlayIcon className='size-3' />
+                                {t('rerun')}
+                              </>
+                            )}
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -330,7 +322,7 @@ export function WorkflowRunInstances({
           <TableHeader>
             <TableRow>
               <TableHead className='w-[220px]'>{t('sampleName')}</TableHead>
-              <TableHead className='w-[110px]'>{t('status')}</TableHead>
+              <TableHead className='w-[160px]'>{t('status')}</TableHead>
               <TableHead className='w-[220px] pr-8'>{t('progress')}</TableHead>
               <TableHead className='w-[140px] px-4'>{t('startTime')}</TableHead>
               <TableHead className='w-[100px] px-4'>{t('duration')}</TableHead>
@@ -342,8 +334,9 @@ export function WorkflowRunInstances({
           <TableBody>
             {samples.map((sample) => {
               const run = runMap.get(sample.uid)
-              const cfg = run ? statusConfig[run.status] : null
-              const Icon = cfg?.icon
+              const displayStatus = run
+                ? getWorkflowRunDisplayStatus(run)
+                : null
               const taskStats = run?.node_statistics
               const progress = calculateProgress(taskStats)
               const isRunning =
@@ -371,13 +364,13 @@ export function WorkflowRunInstances({
                   </TableCell>
 
                   <TableCell>
-                    {cfg && Icon ? (
-                      <Badge variant={cfg.variant} className='gap-1'>
-                        <Icon
-                          className={`size-3 ${cfg.animate ? 'animate-spin' : ''}`}
-                        />
-                        {tStatus(cfg.labelKey)}
-                      </Badge>
+                    {displayStatus ? (
+                      <RunStatusBadge
+                        status={displayStatus}
+                        label={tRunStatus(
+                          RUN_STATUS_APPEARANCE[displayStatus].labelKey,
+                        )}
+                      />
                     ) : (
                       <span className='text-xs text-muted-foreground'>
                         {tStatus('notRun')}
@@ -413,22 +406,43 @@ export function WorkflowRunInstances({
 
                   <TableCell className='text-right'>
                     <div className='flex items-center justify-end'>
-                      <Button
-                        variant='ghost'
-                        size='sm'
-                        className='h-7 text-xs'
-                        onClick={() => handleRerun(sample.uid)}
-                        disabled={isRunning || (run != null && !run.settled)}
-                      >
-                        {isRunning ? (
-                          <Loader2 className='size-3 animate-spin' />
-                        ) : (
-                          <>
-                            <PlayIcon className='size-3' />
-                            {run ? t('rerun') : t('run')}
-                          </>
-                        )}
-                      </Button>
+                      {run && !run.settled && !isRunning ? (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className='inline-flex'>
+                              <Button
+                                variant='ghost'
+                                size='sm'
+                                className='h-7 text-xs'
+                                disabled
+                              >
+                                <PlayIcon className='size-3' />
+                                {t('rerun')}
+                              </Button>
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {t('waitingActiveTasks')}
+                          </TooltipContent>
+                        </Tooltip>
+                      ) : (
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          className='h-7 text-xs'
+                          onClick={() => handleRerun(sample.uid)}
+                          disabled={isRunning}
+                        >
+                          {isRunning ? (
+                            <Loader2 className='size-3 animate-spin' />
+                          ) : (
+                            <>
+                              <PlayIcon className='size-3' />
+                              {run ? t('rerun') : t('run')}
+                            </>
+                          )}
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>

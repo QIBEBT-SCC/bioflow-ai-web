@@ -19,9 +19,11 @@ import { StatusEdge } from '@/components/workflow/status-edge'
 import { useRun } from '@/hooks/use-run'
 import { useRunFlow } from '@/hooks/use-run-flow'
 import { useSubgraphRun } from '@/hooks/use-subgraph-run'
-import { RUN_STATUS_APPEARANCE } from '@/lib/status'
+import {
+  getWorkflowRunDisplayStatus,
+  RUN_STATUS_APPEARANCE,
+} from '@/lib/status'
 import { withSubgraphCrumbs } from '@/lib/subgraph-crumbs'
-import { WorkflowRunStatusV2 } from '@/types/workflow-v2'
 
 const edgeTypes = { default: StatusEdge }
 
@@ -31,6 +33,7 @@ function RunFlowContent({ uid }: { uid: string }) {
   const { visibleRun, labels, enter, navigate } = useSubgraphRun(run)
   const { flowNodes, edges, handleNodesChange } = useRunFlow(visibleRun)
 
+  const displayStatus = run ? getWorkflowRunDisplayStatus(run) : null
   const taskStats = run?.node_statistics
   const progress =
     taskStats && taskStats.total > 0
@@ -59,15 +62,15 @@ function RunFlowContent({ uid }: { uid: string }) {
         )}
         actions={
           <>
-            {run && (
+            {displayStatus && (
               <div className='flex items-center gap-2'>
                 <RunStatusBadge
-                  status={run.status}
+                  status={displayStatus}
                   label={t(
-                    `status.${RUN_STATUS_APPEARANCE[run.status].labelKey}`,
+                    `status.${RUN_STATUS_APPEARANCE[displayStatus].labelKey}`,
                   )}
                 />
-                {run.status === WorkflowRunStatusV2.FAILED && !run.settled && (
+                {displayStatus === 'failing' && (
                   <span className='hidden text-xs text-muted-foreground lg:inline'>
                     {t('table.unsettled')}
                   </span>

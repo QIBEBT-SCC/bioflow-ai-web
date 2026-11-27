@@ -23,6 +23,7 @@ interface ChildPage {
     run_uid: string
     status: string
     started: boolean
+    settled?: boolean
   }[]
 }
 
@@ -75,22 +76,28 @@ export function BatchItems({
           </DialogHeader>
           {items.isPending && <p>{t('loading')}</p>}
           {items.error && <p role='alert'>{items.error.message}</p>}
-          {items.data?.data.map((item) => (
-            <Link
-              key={item.key}
-              href={runLink(item.run_uid)}
-              className='flex justify-between rounded border p-2 hover:bg-accent'
-            >
-              <span>{item.name}</span>
-              <span>
-                {item.started
-                  ? t(
-                      `status.${item.status as 'pending' | 'running' | 'succeeded' | 'failed'}`,
-                    )
-                  : t('waiting')}
-              </span>
-            </Link>
-          ))}
+          {items.data?.data.map((item) => {
+            const itemStatus =
+              item.settled === false && item.status === 'failed'
+                ? 'running'
+                : item.status
+            return (
+              <Link
+                key={item.key}
+                href={runLink(item.run_uid)}
+                className='flex justify-between rounded border p-2 hover:bg-accent'
+              >
+                <span>{item.name}</span>
+                <span>
+                  {item.started
+                    ? t(
+                        `status.${itemStatus as 'pending' | 'running' | 'succeeded' | 'failed'}`,
+                      )
+                    : t('waiting')}
+                </span>
+              </Link>
+            )
+          })}
           {items.data && (
             <div className='flex justify-between gap-2'>
               <Button

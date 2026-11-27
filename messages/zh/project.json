@@ -250,6 +250,7 @@
         "statistics": "运行统计",
         "status": "运行状态",
         "totalTasks": "总任务数",
+        "runningTasks": "运行中任务",
         "successTasks": "成功任务",
         "failedTasks": "失败任务",
         "outputFiles": "输出文件",
@@ -789,7 +790,8 @@
         "actions": "操作",
         "viewDetails": "查看详情",
         "rerun": "重新运行",
-        "run": "运行"
+        "run": "运行",
+        "waitingActiveTasks": "仍有节点运行中，请等待全部节点结束后再重新运行"
       }
     }
   }

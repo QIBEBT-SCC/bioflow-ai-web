@@ -31,7 +31,10 @@ import {
 import { RunStatusBadge } from '@/components/workflow/run-status'
 import { RunTaskList } from '@/components/workflow/run-task-list'
 import { useWorkflowMonitorRuns } from '@/hooks/use-workflow-monitor'
-import { RUN_STATUS_APPEARANCE } from '@/lib/status'
+import {
+  getWorkflowRunDisplayStatus,
+  RUN_STATUS_APPEARANCE,
+} from '@/lib/status'
 import { WorkflowRunStatusV2 } from '@/types/workflow-v2'
 
 export function RunTables({
@@ -117,7 +120,7 @@ export function RunTables({
             <TableRow className='bg-muted/50 hover:bg-muted/50'>
               <TableHead className='w-12' />
               <TableHead>{t('table.name')}</TableHead>
-              <TableHead className='w-32'>{t('table.status')}</TableHead>
+              <TableHead className='w-40'>{t('table.status')}</TableHead>
               <TableHead className='w-48'>{t('table.progress')}</TableHead>
               <TableHead className='hidden w-28 xl:table-cell'>
                 {t('table.owner')}
@@ -166,7 +169,8 @@ export function RunTables({
               </TableRow>
             ) : (
               runs.map((run) => {
-                const appearance = RUN_STATUS_APPEARANCE[run.status]
+                const displayStatus = getWorkflowRunDisplayStatus(run)
+                const appearance = RUN_STATUS_APPEARANCE[displayStatus]
                 const stats = run.node_statistics
                 const terminal = stats.succeeded + stats.failed + stats.blocked
                 const progress =
@@ -221,10 +225,10 @@ export function RunTables({
                       <TableCell>
                         <div className='space-y-1'>
                           <RunStatusBadge
-                            status={run.status}
+                            status={displayStatus}
                             label={t(`status.${appearance.labelKey}`)}
                           />
-                          {!run.settled ? (
+                          {displayStatus === 'failing' ? (
                             <p className='text-[11px] text-muted-foreground'>
                               {t('table.unsettled')}
                             </p>
