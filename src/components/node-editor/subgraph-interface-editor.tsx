@@ -19,9 +19,12 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import { cn } from 'cn'
 import {
+  ChevronDownIcon,
   FileInputIcon,
   FileOutputIcon,
   GripVerticalIcon,
+  InfoIcon,
+  PanelRightCloseIcon,
   PlusIcon,
   Trash2Icon,
 } from 'lucide-react'
@@ -40,8 +43,13 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { generateLetterId } from '@/lib/id-generator'
 import { emptyInterface } from '@/lib/subgraph'
 import { useNodeEditorStore } from '@/stores/nodeviewStore'
@@ -51,7 +59,15 @@ type InterfaceKind = 'inputs' | 'outputs'
 type InterfacePort = InterfaceInput | InterfaceOutput
 type EditablePortField = 'name' | 'description'
 
-function SortablePortEditor({
+function isPortConnected(kind: InterfaceKind, port: InterfacePort): boolean {
+  if (kind === 'inputs') {
+    return (port as InterfaceInput).targets.length > 0
+  }
+  const output = port as InterfaceOutput
+  return Boolean(output.source.node_id && output.source.handle)
+}
+
+function SortablePortRow({
   kind,
   port,
   onUpdate,
@@ -63,6 +79,7 @@ function SortablePortEditor({
   onRemove: () => void
 }) {
   const t = useTranslations('editor.subgraph')
+  const [expanded, setExpanded] = useState(false)
   const {
     attributes,
     listeners,
@@ -76,67 +93,110 @@ function SortablePortEditor({
     transition,
     opacity: isDragging ? 0.5 : 1,
   }
-  const nameId = `${kind}-${port.id}-name`
-  const descriptionId = `${kind}-${port.id}-description`
+  const connected = isPortConnected(kind, port)
+  const hasDescription = port.description.trim().length > 0
 
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className={cn(
-        'space-y-3 rounded-lg border border-l-4 bg-card p-3 shadow-xs',
-        kind === 'inputs' ? 'border-l-blue-500' : 'border-l-green-500',
-      )}
+      className='rounded-lg border bg-card transition-colors hover:border-foreground/20'
     >
-      <div className='flex items-center justify-between gap-2'>
+      <div className='flex items-center gap-1 px-1 py-1'>
         <button
           type='button'
           {...attributes}
           {...listeners}
-          className='touch-none cursor-grab rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground active:cursor-grabbing'
+          className='touch-none cursor-grab rounded p-1 text-muted-foreground/70 hover:bg-muted hover:text-foreground active:cursor-grabbing'
           aria-label={t('drag_to_reorder')}
         >
-          <GripVerticalIcon className='size-4' />
+          <GripVerticalIcon className='size-3.5' />
         </button>
-        <span className='min-w-0 flex-1 truncate text-sm font-medium'>
-          {port.name || t('unnamed_port')}
-        </span>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span
+              role='img'
+              className={cn(
+                'size-1.5 shrink-0 rounded-full',
+                connected ? 'bg-primary' : 'bg-muted-foreground/30',
+              )}
+              aria-label={t(connected ? 'connected' : 'unconnected')}
+            />
+          </TooltipTrigger>
+          <TooltipContent side='left'>
+            {t(connected ? 'connected' : 'unconnected')}
+          </TooltipContent>
+        </Tooltip>
+
+        <Input
+          value={port.name}
+          placeholder={t('port_name_placeholder')}
+          aria-label={t('port_name')}
+          className='h-7 min-w-0 flex-1 border-transparent bg-transparent px-1.5 text-xs font-medium shadow-none focus-visible:border-input focus-visible:bg-background'
+          onChange={(event) => onUpdate('name', event.target.value)}
+        />
+
         <Button
           type='button'
           variant='ghost'
           size='icon'
-          className='size-8 text-muted-foreground hover:text-destructive'
+          className={cn(
+            'size-6 shrink-0',
+            hasDescription
+              ? 'text-foreground'
+              : 'text-muted-foreground/70 hover:text-foreground',
+          )}
+          aria-label={t('edit_description')}
+          aria-expanded={expanded}
+          onClick={() => setExpanded((prev) => !prev)}
+        >
+          <ChevronDownIcon
+            className={cn(
+              'size-3.5 transition-transform',
+              expanded && 'rotate-180',
+            )}
+          />
+        </Button>
+
+        <Button
+          type='button'
+          variant='ghost'
+          size='icon'
+          className='size-6 shrink-0 text-muted-foreground/70 hover:text-destructive'
           aria-label={t('remove')}
           onClick={onRemove}
         >
-          <Trash2Icon className='size-4' />
+          <Trash2Icon className='size-3.5' />
         </Button>
       </div>
 
-      <div className='space-y-2'>
-        <Label htmlFor={nameId}>{t('port_name')}</Label>
-        <Input
-          id={nameId}
-          value={port.name}
-          placeholder={t('port_name_placeholder')}
-          onChange={(event) => onUpdate('name', event.target.value)}
-        />
-      </div>
-      <div className='space-y-2'>
-        <Label htmlFor={descriptionId}>{t('port_description')}</Label>
-        <Textarea
-          id={descriptionId}
-          className='min-h-20 resize-y'
-          value={port.description}
-          placeholder={t('port_description_placeholder')}
-          onChange={(event) => onUpdate('description', event.target.value)}
-        />
-      </div>
+      {!expanded && hasDescription && (
+        <button
+          type='button'
+          className='block w-full truncate px-7 pb-1.5 text-left text-[11px] text-muted-foreground hover:text-foreground'
+          onClick={() => setExpanded(true)}
+        >
+          {port.description}
+        </button>
+      )}
+
+      {expanded && (
+        <div className='border-t border-border/60 px-2 py-2'>
+          <Textarea
+            className='min-h-14 resize-y text-xs'
+            value={port.description}
+            placeholder={t('port_description_placeholder')}
+            aria-label={t('port_description')}
+            onChange={(event) => onUpdate('description', event.target.value)}
+          />
+        </div>
+      )}
     </div>
   )
 }
 
-export function SubgraphInterfaceEditor() {
+export function SubgraphInterfaceEditor({ onClose }: { onClose?: () => void }) {
   const t = useTranslations('editor.subgraph')
   const store = useNodeEditorStore()
   const [pendingDelete, setPendingDelete] = useState<{
@@ -236,96 +296,113 @@ export function SubgraphInterfaceEditor() {
   }
 
   return (
-    <>
+    <TooltipProvider>
       <aside
-        className='w-[30rem] shrink-0 space-y-6 overflow-y-auto border-l bg-background p-4 xl:w-[32rem]'
+        className='flex w-72 shrink-0 flex-col border-l bg-background xl:w-80'
         aria-label={t('interface')}
       >
-        <div className='space-y-1'>
-          <h2 className='font-semibold'>{t('interface')}</h2>
-          <p className='text-sm text-muted-foreground'>{t('interface_help')}</p>
-        </div>
-        {(['inputs', 'outputs'] as const).map((kind) => {
-          const portIds = iface[kind].map((port) => port.id)
-          const inputs = kind === 'inputs'
-          const KindIcon = inputs ? FileInputIcon : FileOutputIcon
-          return (
-            <section
-              key={kind}
-              className={cn(
-                'space-y-3',
-                !inputs && 'mt-2 border-t-2 border-border pt-6',
-              )}
+        <div className='flex items-center justify-between gap-2 border-b px-3.5 py-2.5'>
+          <div className='flex items-center gap-1.5'>
+            <h2 className='text-sm font-semibold'>{t('interface')}</h2>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type='button'
+                  className='inline-flex size-5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground'
+                  aria-label={t('interface')}
+                >
+                  <InfoIcon className='size-3.5' />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side='bottom' className='max-w-64'>
+                {t('interface_help')}
+              </TooltipContent>
+            </Tooltip>
+          </div>
+          {onClose && (
+            <Button
+              type='button'
+              variant='ghost'
+              size='icon'
+              className='size-7 text-muted-foreground hover:text-foreground'
+              aria-label={t('hide_interface')}
+              onClick={onClose}
             >
-              <div className='flex items-center justify-between'>
-                <h3
-                  className={cn(
-                    'flex items-center gap-2 text-lg font-semibold',
-                    inputs ? 'text-blue-700' : 'text-green-700',
-                  )}
-                >
-                  <KindIcon className='size-5' />
-                  {t(kind)}
-                </h3>
-                <span
-                  className={cn(
-                    'text-sm font-medium',
-                    inputs ? 'text-blue-700' : 'text-green-700',
-                  )}
-                >
-                  {iface[kind].length}
-                </span>
-              </div>
-              {iface[kind].length > 0 ? (
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={(event) => reorder(kind, event)}
-                >
-                  <SortableContext
-                    items={portIds}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    <div className='space-y-3'>
-                      {iface[kind].map((port) => (
-                        <SortablePortEditor
-                          key={port.id}
-                          kind={kind}
-                          port={port}
-                          onUpdate={(field, value) =>
-                            update(kind, port.id, field, value)
-                          }
-                          onRemove={() =>
-                            setPendingDelete({ kind, id: port.id })
-                          }
-                        />
-                      ))}
-                    </div>
-                  </SortableContext>
-                </DndContext>
-              ) : (
-                <div className='rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground'>
-                  {t('no_ports')}
-                </div>
-              )}
-              <Button
-                type='button'
-                variant='outline'
-                className={cn(
-                  'w-full bg-background',
-                  inputs
-                    ? 'border-blue-200 text-blue-700 hover:bg-blue-100/70 hover:text-blue-800'
-                    : 'border-green-200 text-green-700 hover:bg-green-100/70 hover:text-green-800',
-                )}
-                onClick={() => addPort(kind)}
+              <PanelRightCloseIcon className='size-4' />
+            </Button>
+          )}
+        </div>
+
+        <div className='flex-1 space-y-5 overflow-y-auto p-3'>
+          {(['inputs', 'outputs'] as const).map((kind) => {
+            const portIds = iface[kind].map((port) => port.id)
+            const inputs = kind === 'inputs'
+            const KindIcon = inputs ? FileInputIcon : FileOutputIcon
+            return (
+              <section
+                key={kind}
+                className={cn('space-y-2', !inputs && 'border-t pt-4')}
               >
-                <PlusIcon className='size-4' />
-                {t(kind === 'inputs' ? 'add_input' : 'add_output')}
-              </Button>
-            </section>
-          )
-        })}
+                <div className='flex items-center justify-between gap-2'>
+                  <div className='flex items-center gap-1.5'>
+                    <KindIcon className='size-3.5 text-muted-foreground' />
+                    <h3 className='text-xs font-medium uppercase tracking-wide text-muted-foreground'>
+                      {t(kind)}
+                    </h3>
+                    <span className='rounded-full bg-muted px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground tabular-nums'>
+                      {iface[kind].length}
+                    </span>
+                  </div>
+                  <Button
+                    type='button'
+                    variant='ghost'
+                    size='sm'
+                    className='h-6 gap-1 px-2 text-xs text-muted-foreground hover:text-foreground'
+                    onClick={() => addPort(kind)}
+                  >
+                    <PlusIcon className='size-3.5' />
+                    {t(inputs ? 'add_input' : 'add_output')}
+                  </Button>
+                </div>
+
+                {iface[kind].length > 0 ? (
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={(event) => reorder(kind, event)}
+                  >
+                    <SortableContext
+                      items={portIds}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <div className='space-y-1.5'>
+                        {iface[kind].map((port) => (
+                          <SortablePortRow
+                            key={port.id}
+                            kind={kind}
+                            port={port}
+                            onUpdate={(field, value) =>
+                              update(kind, port.id, field, value)
+                            }
+                            onRemove={() =>
+                              setPendingDelete({ kind, id: port.id })
+                            }
+                          />
+                        ))}
+                      </div>
+                    </SortableContext>
+                  </DndContext>
+                ) : (
+                  <div className='rounded-lg border border-dashed px-3 py-3 text-center text-xs text-muted-foreground'>
+                    {t('no_ports')}
+                  </div>
+                )}
+              </section>
+            )
+          })}
+        </div>
       </aside>
+
       <AlertDialog
         open={pendingDelete !== null}
         onOpenChange={(open) => {
@@ -342,6 +419,7 @@ export function SubgraphInterfaceEditor() {
           <AlertDialogFooter>
             <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
             <AlertDialogAction
+              className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
               onClick={() => {
                 if (pendingDelete) remove(pendingDelete.kind, pendingDelete.id)
               }}
@@ -351,6 +429,6 @@ export function SubgraphInterfaceEditor() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </TooltipProvider>
   )
 }

@@ -12,7 +12,6 @@ import { nodeTypes } from '@/components/node-editor/node-registry'
 import { ReadOnlyProvider } from '@/components/node-editor/read-only-context'
 import { RunLinkProvider } from '@/components/node-editor/run-link-context'
 import { SubgraphNavigation } from '@/components/node-editor/subgraph-context'
-import { SubgraphInterfaceSummary } from '@/components/node-editor/subgraph-interface-summary'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -120,7 +119,6 @@ export const RunFlowCanvas = memo(function RunFlowCanvas({
                   variant={BackgroundVariant.Dots}
                   className='!bg-gray-100'
                 />
-                <SubgraphInterfaceSummary value={visibleRun?.interface} />
                 <Controls />
               </ReactFlow>
             </SubgraphNavigation>

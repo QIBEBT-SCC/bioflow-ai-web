@@ -1,11 +1,12 @@
 'use client'
 
-import { useQueries } from '@tanstack/react-query'
+import { useQueries, useQuery } from '@tanstack/react-query'
 import type { Edge, Node as FlowNode, NodeChange } from '@xyflow/react'
 import { useNodesInitialized, useNodesState, useReactFlow } from '@xyflow/react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { getRun } from '@/app/actions/run'
 import { getToolArg } from '@/app/actions/tool'
-import { runInterfaceView } from '@/lib/run-interface'
+import { findParentSubgraphInputs, runInterfaceView } from '@/lib/run-interface'
 import {
   layoutWorkflowNodes,
   prepareWorkflowNodes,
@@ -95,9 +96,32 @@ function mergeRunNodes(
 }
 
 export function useRunFlow(run: WorkflowRunV2 | null) {
+  const needsParentInputs = Boolean(
+    run?.parent_run_uid &&
+      run.parent_node_uid &&
+      !run.interface?.inputs.length &&
+      run.nodes.some((node) => node.type === 'resource_frozen_path'),
+  )
+  const parentRunUid = run?.parent_run_uid ?? ''
+  const parentRunQuery = useQuery({
+    queryKey: ['run-parent', parentRunUid],
+    queryFn: () => getRun(parentRunUid),
+    enabled: needsParentInputs && Boolean(parentRunUid),
+    staleTime: Number.POSITIVE_INFINITY,
+  })
+  const fallbackInputs = useMemo(
+    () =>
+      parentRunQuery.data && run?.parent_node_uid
+        ? findParentSubgraphInputs(
+            parentRunQuery.data.nodes,
+            run.parent_node_uid,
+          )
+        : undefined,
+    [parentRunQuery.data, run?.parent_node_uid],
+  )
   const displayRun = useMemo(
-    () => (run ? { ...run, ...runInterfaceView(run) } : null),
-    [run],
+    () => (run ? { ...run, ...runInterfaceView(run, fallbackInputs) } : null),
+    [run, fallbackInputs],
   )
   const [flowNodes, setFlowNodes, onNodesChange] = useNodesState<FlowNode>([])
   const { fitView, getNodes } = useReactFlow()

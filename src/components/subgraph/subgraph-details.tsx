@@ -1,7 +1,9 @@
 'use client'
 
+import { PencilIcon } from 'lucide-react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -42,11 +44,17 @@ export function SubgraphDetails({
         {data?.wf_type === WorkflowType.SUBMODULE && (
           <>
             <div className='flex items-center justify-between gap-3'>
-              <span className='text-sm text-muted-foreground'>
-                {data.public ? t('public') : t('private')}
-              </span>
+              <div className='flex items-center gap-2'>
+                <Badge variant='secondary'>{t('preview_badge')}</Badge>
+                <span className='text-sm text-muted-foreground'>
+                  {data.public ? t('public') : t('private')}
+                </span>
+              </div>
               <Button asChild>
-                <Link href={`/editor?workflowUid=${encodeURIComponent(uid)}`}>
+                <Link
+                  href={`/editor?workflowUid=${encodeURIComponent(uid)}&from=subgraph`}
+                >
+                  <PencilIcon className='size-4' />
                   {t('edit')}
                 </Link>
               </Button>

@@ -55,6 +55,7 @@ interface WorkflowFileMenuProps {
   workflowName?: string
   /** Offer opening another workflow from the library (standalone editor only). */
   allowLoad?: boolean
+  onWorkflowLoaded?: (uid: string) => void
 }
 
 function getExportFilename(name?: string): string {
@@ -70,6 +71,7 @@ function getExportFilename(name?: string): string {
 export function WorkflowFileMenu({
   workflowName,
   allowLoad,
+  onWorkflowLoaded,
 }: WorkflowFileMenuProps) {
   const t = useTranslations('editor')
   const td = useTranslations('editor.workflow_json')
@@ -196,7 +198,12 @@ export function WorkflowFileMenu({
         onChange={handleFileChange}
       />
 
-      {allowLoad && <LoadWorkflowDialog {...dialogProps('load')} />}
+      {allowLoad && (
+        <LoadWorkflowDialog
+          {...dialogProps('load')}
+          onWorkflowLoaded={onWorkflowLoaded}
+        />
+      )}
       <SaveAsDialog
         currentWorkflowName={workflowName}
         {...dialogProps('save_as')}

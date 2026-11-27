@@ -128,9 +128,11 @@ function DeleteWorkflowConfirmation({
 export function LoadWorkflowDialog({
   open,
   onOpenChange,
+  onWorkflowLoaded,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
+  onWorkflowLoaded?: (uid: string) => void
 }) {
   const t = useTranslations('editor.load_workflow_dialog')
   const tSearch = useTranslations('WorkflowSearch')
@@ -154,6 +156,7 @@ export function LoadWorkflowDialog({
 
   const handleLoadWorkflow = (uid: string, name: string) => {
     setCurrentWorkflowUid(uid)
+    onWorkflowLoaded?.(uid)
     handleOpenChange(false)
     toast.success(t('workflow_loaded', { name }))
   }

@@ -13,7 +13,7 @@ import {
 import type { SetStateAction } from 'react'
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
-import { cleanGraph, graphNodes } from '@/lib/subgraph'
+import { cleanGraph, emptyInterface, graphNodes } from '@/lib/subgraph'
 import type { WorkflowDefinition, WorkflowInterface } from '@/types/workflow'
 
 interface ParentFrame {
@@ -28,7 +28,10 @@ export interface NodeEditorStore {
   getGraph: () => WorkflowDefinition
   /** Nest the current level (or a candidate replacing it) back into its parents. */
   getRootGraph: (current?: WorkflowDefinition) => WorkflowDefinition
-  loadGraph: (graph: WorkflowDefinition) => void
+  loadGraph: (
+    graph: WorkflowDefinition,
+    options?: { preservePath?: boolean },
+  ) => void
   enterSubgraph: (id: string) => void
   leaveSubgraph: () => void
 
@@ -69,16 +72,46 @@ export const useNodeEditorStore = create<NodeEditorStore>()(
         }
         return cleanGraph(graph)
       },
-      loadGraph: (graph) =>
+      loadGraph: (graph, options) => {
+        const previousPath = options?.preservePath
+          ? get().parents.map((frame) => frame.id)
+          : []
+        let current = graph
+        const rebuiltParents: ParentFrame[] = []
+        for (const id of previousPath) {
+          const container = current.nodes.find(
+            (node) =>
+              node.id === id &&
+              (node.type === 'subgraph' || node.type === 'foreach'),
+          )
+          if (!container) break
+          const preparedLevel: WorkflowDefinition = {
+            nodes: graphNodes(current),
+            edges: current.edges,
+            interface: current.interface ?? null,
+          }
+          rebuiltParents.push({
+            id,
+            name: String(container.data.name || id),
+            graph: preparedLevel,
+          })
+          current = container.data.workflow as WorkflowDefinition
+        }
         set({
-          nodes: graphNodes(graph),
-          edges: graph.edges,
-          graphInterface: graph.interface ?? null,
-          parents: [],
-        }),
+          nodes: graphNodes(current),
+          edges: current.edges,
+          graphInterface:
+            rebuiltParents.length > 0
+              ? (current.interface ?? emptyInterface())
+              : (current.interface ?? null),
+          parents: rebuiltParents,
+        })
+      },
       enterSubgraph: (id) => {
         const node = get().nodes.find(
-          (node) => node.id === id && node.type === 'subgraph',
+          (node) =>
+            node.id === id &&
+            (node.type === 'subgraph' || node.type === 'foreach'),
         )
         if (!node) return
         const graph = node.data.workflow as WorkflowDefinition
@@ -89,7 +122,7 @@ export const useNodeEditorStore = create<NodeEditorStore>()(
           ],
           nodes: graphNodes(graph),
           edges: graph.edges,
-          graphInterface: graph.interface ?? null,
+          graphInterface: graph.interface ?? emptyInterface(),
         })
       },
       leaveSubgraph: () => {
@@ -111,7 +144,10 @@ export const useNodeEditorStore = create<NodeEditorStore>()(
         })
       },
       currentWorkflowUid: '',
-      setCurrentWorkflowUid: (uid) => set({ currentWorkflowUid: uid }),
+      setCurrentWorkflowUid: (uid) => {
+        if (uid === get().currentWorkflowUid) return
+        set({ currentWorkflowUid: uid, parents: [] })
+      },
 
       nodes: [],
       edges: [],

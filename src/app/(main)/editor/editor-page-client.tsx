@@ -12,16 +12,23 @@ import {
   useReactFlow,
   type XYPosition,
 } from '@xyflow/react'
-import { LogOutIcon, PlayIcon, SaveIcon } from 'lucide-react'
+import {
+  ArrowLeftIcon,
+  LogOutIcon,
+  PanelRightIcon,
+  PlayIcon,
+  SaveIcon,
+} from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import type React from 'react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { useShallow } from 'zustand/react/shallow'
 import { getToolArg } from '@/app/actions/tool'
 import { ChatSidebar } from '@/components/chat/chat-sidebar'
 import { ChatSidebarToggle } from '@/components/chat/chat-sidebar-toggle'
+import type { PageCrumb } from '@/components/layout/page-shell'
 import { ArrangeMenu } from '@/components/node-editor/arrange-menu'
 import { EditorTopbar } from '@/components/node-editor/editor-topbar'
 import { PanelMenu } from '@/components/node-editor/menu/panel-menu'
@@ -35,12 +42,20 @@ import { WorkflowFileMenu } from '@/components/node-editor/workflow-file-menu'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset } from '@/components/ui/sidebar'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { useChatSidebarResize } from '@/hooks/use-chat-sidebar-resize'
 import { useInitialWorkflowLayout } from '@/hooks/use-initial-workflow-layout'
+import { useProject } from '@/hooks/use-project'
 import { useNewRunInstance } from '@/hooks/use-run'
 import { useSubgraphInterface } from '@/hooks/use-subgraph-interface'
 import { useUpdateWorkflow, useWorkflow } from '@/hooks/use-workflow'
 import { generateLetterId } from '@/lib/id-generator'
+import { emptyInterface } from '@/lib/subgraph'
 import { layoutSubgraph } from '@/lib/subgraph-interface'
 import {
   prepareWorkflowNodes,
@@ -49,10 +64,224 @@ import {
 import { useChatSidebarStore } from '@/stores/chat-sidebar-store'
 import { useNodeEditorStore } from '@/stores/nodeviewStore'
 import type { CodeInfo } from '@/types/code'
+import { WorkflowType } from '@/types/workflow'
+
+function buildEditorBaseCrumbs({
+  isProjectMode,
+  isSubgraphMode,
+  projectId,
+  projectName,
+  projectsLabel,
+  subgraphManagementLabel,
+  editorTitle,
+  workflowName,
+}: {
+  isProjectMode: boolean
+  isSubgraphMode: boolean
+  projectId: string | null
+  projectName?: string
+  projectsLabel: string
+  subgraphManagementLabel: string
+  editorTitle: string
+  workflowName?: string
+}): PageCrumb[] {
+  const tail = workflowName ? [{ label: workflowName }] : []
+  if (isProjectMode && projectId) {
+    return [
+      { label: projectsLabel, href: '/project' },
+      { label: projectName ?? projectId, href: `/project/${projectId}` },
+      ...tail,
+    ]
+  }
+  if (isSubgraphMode) {
+    return [{ label: subgraphManagementLabel, href: '/subgraph' }, ...tail]
+  }
+  return [{ label: editorTitle }, ...tail]
+}
+
+function SaveToolbarButton({
+  variant,
+  disabled,
+  isSaving,
+  inSubgraph,
+  onSave,
+}: {
+  variant: 'default' | 'outline'
+  disabled: boolean
+  isSaving: boolean
+  inSubgraph: boolean
+  onSave: () => void
+}) {
+  const t = useTranslations('editor')
+  const button = (
+    <Button variant={variant} size='sm' onClick={onSave} disabled={disabled}>
+      <SaveIcon className='size-4' />
+      {isSaving ? t('saving') : t('save')}
+    </Button>
+  )
+  if (!inSubgraph) return button
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{button}</TooltipTrigger>
+      <TooltipContent>{t('subgraph.save_workflow_hint')}</TooltipContent>
+    </Tooltip>
+  )
+}
+
+function EditorPrimaryAction({
+  showExit,
+  isSubmodule,
+  isRunning,
+  onExit,
+  onRun,
+}: {
+  showExit: boolean
+  isSubmodule: boolean
+  isRunning: boolean
+  onExit: () => void
+  onRun: () => void
+}) {
+  const t = useTranslations('editor')
+  if (showExit) {
+    return (
+      <Button variant='outline' size='sm' onClick={onExit}>
+        <LogOutIcon className='size-4' />
+        {t('exit')}
+      </Button>
+    )
+  }
+  if (isSubmodule) return null
+  return (
+    <Button size='sm' onClick={onRun} disabled={isRunning}>
+      <PlayIcon className='size-4' />
+      {isRunning ? t('running') : t('run')}
+    </Button>
+  )
+}
+
+function EditorToolbar({
+  workflowName,
+  hasLoadedWorkflow,
+  isSaving,
+  isRunning,
+  isProjectMode,
+  isSubgraphMode,
+  isSubmodule,
+  inSubgraph,
+  hasNodes,
+  hasEdges,
+  edgesReady,
+  hasInterface,
+  interfacePanelOpen,
+  onBackToParent,
+  onWorkflowLoaded,
+  onSave,
+  onLayout,
+  onCleanEdges,
+  onToggleInterface,
+  onExit,
+  onRun,
+}: {
+  workflowName?: string
+  hasLoadedWorkflow: boolean
+  isSaving: boolean
+  isRunning: boolean
+  isProjectMode: boolean
+  isSubgraphMode: boolean
+  isSubmodule: boolean
+  inSubgraph: boolean
+  hasNodes: boolean
+  hasEdges: boolean
+  edgesReady: boolean
+  hasInterface: boolean
+  interfacePanelOpen: boolean
+  onBackToParent: () => void
+  onWorkflowLoaded: () => void
+  onSave: () => void
+  onLayout: (mode: WorkflowLayoutMode) => void
+  onCleanEdges: () => void
+  onToggleInterface: () => void
+  onExit: () => void
+  onRun: () => void
+}) {
+  const t = useTranslations('editor')
+  const showExit = isProjectMode || isSubgraphMode
+  const saveVariant = showExit || isSubmodule ? 'default' : 'outline'
+  const interfaceToggleLabel = t(
+    interfacePanelOpen ? 'subgraph.hide_interface' : 'subgraph.show_interface',
+  )
+
+  return (
+    <TooltipProvider>
+      <div className='flex h-11 items-center gap-1 border-b bg-muted/30 px-3'>
+        {inSubgraph && (
+          <>
+            <Button variant='ghost' size='sm' onClick={onBackToParent}>
+              <ArrowLeftIcon className='size-4' />
+              {t('subgraph.back_to_parent')}
+            </Button>
+            <Separator orientation='vertical' className='mx-1 h-5!' />
+          </>
+        )}
+        <WorkflowFileMenu
+          workflowName={workflowName}
+          allowLoad={!showExit}
+          onWorkflowLoaded={onWorkflowLoaded}
+        />
+        <SaveToolbarButton
+          variant={saveVariant}
+          disabled={!hasLoadedWorkflow || isSaving}
+          isSaving={isSaving}
+          inSubgraph={inSubgraph}
+          onSave={onSave}
+        />
+
+        <Separator orientation='vertical' className='mx-1 h-5!' />
+
+        <ArrangeMenu
+          layoutDisabled={!hasNodes}
+          cleanEdgesDisabled={!hasEdges || !edgesReady}
+          onLayout={onLayout}
+          onCleanEdges={onCleanEdges}
+        />
+
+        <div className='ml-auto flex items-center gap-2'>
+          {!showExit && (
+            <span className='hidden text-xs text-muted-foreground xl:inline'>
+              {t('right_click_to_add')}
+            </span>
+          )}
+          {hasInterface && (
+            <Button
+              variant={interfacePanelOpen ? 'secondary' : 'ghost'}
+              size='sm'
+              onClick={onToggleInterface}
+              aria-label={interfaceToggleLabel}
+            >
+              <PanelRightIcon className='size-4' />
+              <span className='hidden sm:inline'>
+                {t('subgraph.interface')}
+              </span>
+            </Button>
+          )}
+          <EditorPrimaryAction
+            showExit={showExit}
+            isSubmodule={isSubmodule}
+            isRunning={isRunning}
+            onExit={onExit}
+            onRun={onRun}
+          />
+        </div>
+      </div>
+    </TooltipProvider>
+  )
+}
 
 function FlowContent() {
   const t = useTranslations('editor')
+  const tProject = useTranslations('Project.detail.breadcrumb')
   const graphInterface = useNodeEditorStore((state) => state.graphInterface)
+  const parents = useNodeEditorStore((state) => state.parents)
 
   const {
     currentWorkflowUid,
@@ -81,16 +310,24 @@ function FlowContent() {
   const searchParams = useSearchParams()
   const projectId = searchParams.get('projectId')
   const workflowUidParam = searchParams.get('workflowUid')
+  const fromParam = searchParams.get('from')
   const isProjectMode = !!projectId
+  const isSubgraphMode = !isProjectMode && fromParam === 'subgraph'
 
   const { fitView, getInternalNode, screenToFlowPosition } = useReactFlow()
+  const { data: projectData } = useProject(projectId ?? '')
   const { data: workflowData, dataUpdatedAt: workflowDataUpdatedAt } =
     useWorkflow(currentWorkflowUid)
   const updateWorkflowMutation = useUpdateWorkflow()
   const runMutation = useNewRunInstance()
+  const isSubmodule = workflowData?.wf_type === WorkflowType.SUBMODULE
 
   const [clickPosition, setClickPosition] = useState<XYPosition>({ x: 0, y: 0 })
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [interfacePanelOpen, setInterfacePanelOpen] = useState(true)
+  const prevWorkflowUidParamRef = useRef<string | null>(null)
+  const loadedWorkflowUidRef = useRef<string | null>(null)
+  const skipNextReloadUidRef = useRef<string | null>(null)
   const preparedWorkflow = useMemo(() => {
     if (!currentWorkflowUid || !workflowData?.workflow) {
       return null
@@ -149,23 +386,44 @@ function FlowContent() {
     setNodes,
   })
 
-  // 从项目页跳转时，将 URL 中指定的 workflow 加载到编辑器
+  // 从项目页或子图管理页跳转时，仅在 URL 参数变化时同步加载指定 workflow
   useEffect(() => {
-    if (workflowUidParam && workflowUidParam !== currentWorkflowUid) {
-      setCurrentWorkflowUid(workflowUidParam)
+    if (
+      workflowUidParam &&
+      workflowUidParam !== prevWorkflowUidParamRef.current
+    ) {
+      prevWorkflowUidParamRef.current = workflowUidParam
+      if (workflowUidParam !== currentWorkflowUid) {
+        setCurrentWorkflowUid(workflowUidParam)
+      }
+    } else if (!workflowUidParam) {
+      prevWorkflowUidParamRef.current = null
     }
   }, [workflowUidParam, currentWorkflowUid, setCurrentWorkflowUid])
 
-  // 加载workflow数据
+  // 加载workflow数据（同工作流刷新保留子图路径，并自动为子模块初始化接口）
   useEffect(() => {
-    if (preparedWorkflow) {
-      useNodeEditorStore.getState().loadGraph({
+    if (!preparedWorkflow || !workflowData) return
+    if (skipNextReloadUidRef.current === currentWorkflowUid) {
+      skipNextReloadUidRef.current = null
+      return
+    }
+    const preservePath = loadedWorkflowUidRef.current === currentWorkflowUid
+    loadedWorkflowUidRef.current = currentWorkflowUid
+    const effectiveInterface =
+      workflowData.workflow.interface ??
+      (workflowData.wf_type === WorkflowType.SUBMODULE
+        ? emptyInterface()
+        : null)
+    useNodeEditorStore.getState().loadGraph(
+      {
         nodes: preparedWorkflow.nodes,
         edges: preparedWorkflow.edges,
-        interface: workflowData?.workflow.interface,
-      })
-    }
-  }, [preparedWorkflow, workflowData?.workflow.interface])
+        interface: effectiveInterface,
+      },
+      { preservePath },
+    )
+  }, [currentWorkflowUid, preparedWorkflow, workflowData])
 
   // Tool 节点的 handles 依赖异步 tool args；等 handles commit 到 DOM 后再渲染 edges，避免 React Flow 008 警告。
   useEffect(() => {
@@ -260,18 +518,78 @@ function FlowContent() {
       return
     }
 
-    updateWorkflowMutation.mutate({
-      uid: currentWorkflowUid,
-      data: { workflow: useNodeEditorStore.getState().getRootGraph() },
-    })
+    const savingUid = currentWorkflowUid
+    updateWorkflowMutation.mutate(
+      {
+        uid: savingUid,
+        data: { workflow: useNodeEditorStore.getState().getRootGraph() },
+      },
+      {
+        onSuccess: () => {
+          skipNextReloadUidRef.current = savingUid
+        },
+      },
+    )
   }, [currentWorkflowUid, updateWorkflowMutation, workflowData, t])
 
-  // 退出项目内编辑模式，返回项目页
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 's') {
+        event.preventDefault()
+        if (
+          currentWorkflowUid &&
+          workflowData?.workflow &&
+          !updateWorkflowMutation.isPending
+        ) {
+          onSave()
+        }
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [
+    currentWorkflowUid,
+    workflowData?.workflow,
+    updateWorkflowMutation.isPending,
+    onSave,
+  ])
+
+  // 退出项目或子图管理编辑模式，返回来源页
   const onExit = useCallback(() => {
     if (projectId) {
       router.push(`/project/${projectId}`)
+    } else if (isSubgraphMode) {
+      router.push('/subgraph')
     }
-  }, [projectId, router])
+  }, [projectId, isSubgraphMode, router])
+
+  const onBackToParent = useCallback(() => {
+    useNodeEditorStore.getState().leaveSubgraph()
+    requestAnimationFrame(() => void fitView({ padding: 0.15 }))
+  }, [fitView])
+
+  const baseCrumbs = useMemo<PageCrumb[]>(
+    () =>
+      buildEditorBaseCrumbs({
+        isProjectMode,
+        isSubgraphMode,
+        projectId,
+        projectName: projectData?.name,
+        projectsLabel: tProject('projects'),
+        subgraphManagementLabel: t('subgraph.management.title'),
+        editorTitle: t('title'),
+        workflowName: workflowData?.name,
+      }),
+    [
+      isProjectMode,
+      isSubgraphMode,
+      projectId,
+      projectData?.name,
+      tProject,
+      t,
+      workflowData?.name,
+    ],
+  )
 
   // 运行workflow
   const onRun = useCallback(() => {
@@ -365,61 +683,38 @@ function FlowContent() {
           <EditorTopbar
             title={t('title')}
             workflowName={workflowData?.name}
+            baseCrumbs={baseCrumbs}
             actions={<ChatSidebarToggle />}
           />
 
-          {/* 工具栏：文档操作 | 画布整理 | 运行/退出 */}
-          <div className='flex h-11 items-center gap-1 border-b bg-muted/30 px-3'>
-            <WorkflowFileMenu
-              workflowName={workflowData?.name}
-              allowLoad={!isProjectMode}
-            />
-            <Button
-              variant='ghost'
-              size='sm'
-              onClick={onSave}
-              disabled={
-                !currentWorkflowUid ||
-                !workflowData?.workflow ||
-                updateWorkflowMutation.isPending
-              }
-            >
-              <SaveIcon className='size-4' />
-              {updateWorkflowMutation.isPending ? t('saving') : t('save')}
-            </Button>
-
-            <Separator orientation='vertical' className='mx-1 h-5!' />
-
-            <ArrangeMenu
-              layoutDisabled={nodes.length === 0}
-              cleanEdgesDisabled={edges.length === 0 || !edgesReady}
-              onLayout={onAutoLayout}
-              onCleanEdges={onCleanDirtyEdges}
-            />
-
-            <div className='ml-auto flex items-center gap-3'>
-              {!isProjectMode && (
-                <span className='hidden text-xs text-muted-foreground lg:inline'>
-                  {t('right_click_to_add')}
-                </span>
-              )}
-              {isProjectMode ? (
-                <Button variant='outline' size='sm' onClick={onExit}>
-                  <LogOutIcon className='size-4' />
-                  {t('exit')}
-                </Button>
-              ) : (
-                <Button
-                  size='sm'
-                  onClick={onRun}
-                  disabled={runMutation.isPending}
-                >
-                  <PlayIcon className='size-4' />
-                  {runMutation.isPending ? t('running') : t('run')}
-                </Button>
-              )}
-            </div>
-          </div>
+          {/* 工具栏：返回上级 | 文档操作 | 保存 | 画布整理 | 面板切换 | 运行/退出 */}
+          <EditorToolbar
+            workflowName={workflowData?.name}
+            hasLoadedWorkflow={Boolean(
+              currentWorkflowUid && workflowData?.workflow,
+            )}
+            isSaving={updateWorkflowMutation.isPending}
+            isRunning={runMutation.isPending}
+            isProjectMode={isProjectMode}
+            isSubgraphMode={isSubgraphMode}
+            isSubmodule={isSubmodule}
+            inSubgraph={parents.length > 0}
+            hasNodes={nodes.length > 0}
+            hasEdges={edges.length > 0}
+            edgesReady={edgesReady}
+            hasInterface={Boolean(graphInterface)}
+            interfacePanelOpen={interfacePanelOpen}
+            onBackToParent={onBackToParent}
+            onWorkflowLoaded={() => {
+              if (workflowUidParam || fromParam) router.replace('/editor')
+            }}
+            onSave={onSave}
+            onLayout={onAutoLayout}
+            onCleanEdges={onCleanDirtyEdges}
+            onToggleInterface={() => setInterfacePanelOpen((open) => !open)}
+            onExit={onExit}
+            onRun={onRun}
+          />
         </header>
 
         {/* React Flow 画布 */}
@@ -457,7 +752,11 @@ function FlowContent() {
               </ReactFlow>
             </SubgraphNavigation>
           </div>
-          {graphInterface && <SubgraphInterfaceEditor />}
+          {graphInterface && interfacePanelOpen && (
+            <SubgraphInterfaceEditor
+              onClose={() => setInterfacePanelOpen(false)}
+            />
+          )}
 
           {/* 右键菜单 */}
           <PanelMenu

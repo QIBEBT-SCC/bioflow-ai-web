@@ -3,11 +3,13 @@
 import { type NodeProps, useUpdateNodeInternals } from '@xyflow/react'
 import { useTranslations } from 'next-intl'
 import { useEffect } from 'react'
+import { useReadOnly } from '@/components/node-editor/read-only-context'
 import { BaseNode } from './base-node'
 import { colorSchemes } from './color'
 
 export function SubgraphInterfaceNode({ id, data }: NodeProps) {
   const t = useTranslations('editor.subgraph')
+  const readOnly = useReadOnly()
   const updateNodeInternals = useUpdateNodeInternals()
   const inputs = data.kind === 'inputs'
   const ports = data.ports as {
@@ -38,7 +40,7 @@ export function SubgraphInterfaceNode({ id, data }: NodeProps) {
       nodeComponent={
         !ports.length ? (
           <p className='px-4 text-xs text-muted-foreground'>
-            {t('add_handles_hint')}
+            {t(readOnly ? 'no_ports' : 'add_handles_hint')}
           </p>
         ) : null
       }
