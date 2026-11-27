@@ -216,6 +216,20 @@
             "complete": "Listed ForEach runs of {subject}"
           }
         },
+        "project_workflow_reader": {
+          "list": {
+            "active": "Listing project workflows",
+            "complete": "Listed project workflows"
+          },
+          "overview": {
+            "active": "Reading a project workflow overview",
+            "complete": "Read a project workflow overview"
+          },
+          "node": {
+            "active": "Inspecting project workflow node {subject}",
+            "complete": "Inspected project workflow node {subject}"
+          }
+        },
         "run_command": {
           "active": "Running command",
           "complete": "Ran command"

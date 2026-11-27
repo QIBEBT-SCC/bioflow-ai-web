@@ -257,6 +257,7 @@ const AGENT_TOOL_ICONS: Record<string, LucideIcon> = {
   load_skill: SparklesIcon,
   read_skill_resource: SparklesIcon,
   workflow_reader: BookOpenIcon,
+  project_workflow_reader: BookOpenIcon,
   run_command: TerminalIcon,
   apply_patch: FilePenLineIcon,
   view_image: ImageIcon,
@@ -841,6 +842,25 @@ function useProgressActivities(events: AgentEvent[]) {
               } else {
                 message = t('tool.workflow_reader.overview.active')
                 completeMessage = t('tool.workflow_reader.overview.complete')
+              }
+              break
+            case 'project_workflow_reader':
+              if (activity.action === 'list') {
+                message = t('tool.project_workflow_reader.list.active')
+                completeMessage = t(
+                  'tool.project_workflow_reader.list.complete',
+                )
+              } else if (activity.action === 'node') {
+                message = t('tool.project_workflow_reader.node.active', values)
+                completeMessage = t(
+                  'tool.project_workflow_reader.node.complete',
+                  values,
+                )
+              } else {
+                message = t('tool.project_workflow_reader.overview.active')
+                completeMessage = t(
+                  'tool.project_workflow_reader.overview.complete',
+                )
               }
               break
             case 'run_command':

@@ -216,6 +216,20 @@
             "complete": "已列出 {subject} 的 ForEach 子运行"
           }
         },
+        "project_workflow_reader": {
+          "list": {
+            "active": "正在列出项目工作流",
+            "complete": "已列出项目工作流"
+          },
+          "overview": {
+            "active": "正在查看项目工作流结构",
+            "complete": "已查看项目工作流结构"
+          },
+          "node": {
+            "active": "正在查看项目工作流节点 {subject}",
+            "complete": "已查看项目工作流节点 {subject}"
+          }
+        },
         "run_command": {
           "active": "正在运行命令",
           "complete": "已运行命令"
