@@ -196,7 +196,20 @@ export function SubgraphManagement() {
                       >
                         {item.name}
                       </button>
-                      <div className='relative z-10 -mt-1 -mr-2'>
+                      <div className='relative z-10 -mt-1 -mr-2 flex items-center gap-0.5'>
+                        <Button
+                          asChild
+                          variant='ghost'
+                          size='icon'
+                          className='size-8 text-muted-foreground hover:text-primary'
+                          aria-label={t('edit')}
+                        >
+                          <Link
+                            href={`/editor?workflowUid=${encodeURIComponent(item.uid)}&from=subgraph`}
+                          >
+                            <PencilIcon className='size-4' />
+                          </Link>
+                        </Button>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button
@@ -213,7 +226,7 @@ export function SubgraphManagement() {
                           <DropdownMenuContent align='end'>
                             <DropdownMenuItem asChild>
                               <Link
-                                href={`/editor?workflowUid=${encodeURIComponent(item.uid)}`}
+                                href={`/editor?workflowUid=${encodeURIComponent(item.uid)}&from=subgraph`}
                               >
                                 <PencilIcon className='size-4' />
                                 {t('edit')}

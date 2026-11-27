@@ -12,7 +12,6 @@ import { PageTopbar } from '@/components/layout/page-shell'
 import { nodeTypes } from '@/components/node-editor/node-registry'
 import { ReadOnlyProvider } from '@/components/node-editor/read-only-context'
 import { SubgraphNavigation } from '@/components/node-editor/subgraph-context'
-import { SubgraphInterfaceSummary } from '@/components/node-editor/subgraph-interface-summary'
 import { Progress } from '@/components/ui/progress'
 import { SidebarInset } from '@/components/ui/sidebar'
 import { RunStatusBadge } from '@/components/workflow/run-status'
@@ -105,7 +104,6 @@ function RunFlowContent({ uid }: { uid: string }) {
                 variant={BackgroundVariant.Dots}
                 className='bg-gray-100!'
               />
-              <SubgraphInterfaceSummary value={visibleRun?.interface} />
               <Controls />
             </ReactFlow>
           </SubgraphNavigation>

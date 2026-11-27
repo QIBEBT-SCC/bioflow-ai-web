@@ -1,7 +1,7 @@
 'use client'
 import { useReactFlow } from '@xyflow/react'
 import type { ReactNode } from 'react'
-import { PageTopbar } from '@/components/layout/page-shell'
+import { type PageCrumb, PageTopbar } from '@/components/layout/page-shell'
 import { withSubgraphCrumbs } from '@/lib/subgraph-crumbs'
 import { useNodeEditorStore } from '@/stores/nodeviewStore'
 
@@ -9,10 +9,12 @@ import { useNodeEditorStore } from '@/stores/nodeviewStore'
 export function EditorTopbar({
   title,
   workflowName,
+  baseCrumbs,
   actions,
 }: {
   title: string
   workflowName?: string
+  baseCrumbs?: PageCrumb[]
   actions?: ReactNode
 }) {
   const parents = useNodeEditorStore((state) => state.parents)
@@ -23,8 +25,11 @@ export function EditorTopbar({
       store.leaveSubgraph()
     requestAnimationFrame(() => void fitView({ padding: 0.15 }))
   }
-  const base = [{ label: title }]
-  if (workflowName) base.push({ label: workflowName })
+  const base =
+    baseCrumbs ??
+    (workflowName
+      ? [{ label: title }, { label: workflowName }]
+      : [{ label: title }])
   return (
     <PageTopbar
       breadcrumbs={withSubgraphCrumbs(

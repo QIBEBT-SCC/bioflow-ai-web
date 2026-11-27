@@ -10,7 +10,9 @@ function descend(
 ): { graph: WorkflowDefinition; labels: string[]; path: string[] } {
   if (!path.length) return { graph, labels: [], path: ROOT_PATH }
   const node = graph.nodes.find(
-    (node) => node.id === path[0] && node.type === 'subgraph',
+    (node) =>
+      node.id === path[0] &&
+      (node.type === 'subgraph' || node.type === 'foreach'),
   )
   if (!node) return { graph, labels: [], path: ROOT_PATH }
   const child = descend(node.data.workflow as WorkflowDefinition, path.slice(1))
