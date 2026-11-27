@@ -23,6 +23,18 @@ import type { ToolArgPublic } from '@/types/node'
 import { ToolType } from '@/types/tool'
 import type { WorkflowDefinition } from '@/types/workflow'
 
+const TEXT_VALUE_NODE_TYPES = new Set(['value_string', 'read_file_content'])
+const DEFERRED_CODE_SOURCE_TYPES = new Set(['subgraph', 'subgraph_interface'])
+
+function handleName(
+  handle: string | null | undefined,
+  nodeId: string,
+  direction: 'in' | 'out',
+) {
+  const prefix = `${nodeId}-${direction}-`
+  return handle?.startsWith(prefix) ? handle.slice(prefix.length) : ''
+}
+
 /** Whether a new edge at this level could break pass-through topology (subgraphs may hide pass-through Tools). */
 function mayAffectPassthrough(nodes: Node[], queryClient: QueryClient) {
   return nodes.some(
@@ -82,8 +94,48 @@ export function useSubgraphInterface() {
         }) !== null
       )
     const policy = inputConnectionPolicy(target?.type)
-    if (policy === 'parameter-bindings') return source?.type === 'bind_param'
+    if (policy === 'parameter-bindings') {
+      if (source?.type !== 'bind_param' || !target) return false
+      const targetHandle = handleName(connection.targetHandle, target.id, 'in')
+      for (const edge of store.edges) {
+        if (edge.target !== source.id) continue
+        const upNode = store.nodes.find((node) => node.id === edge.source)
+        if (!upNode) continue
+        const upType = upNode.type ?? ''
+        if (
+          targetHandle === 'input_values' &&
+          !TEXT_VALUE_NODE_TYPES.has(upType) &&
+          !DEFERRED_CODE_SOURCE_TYPES.has(upType)
+        )
+          return false
+        if (targetHandle === 'input_files' && TEXT_VALUE_NODE_TYPES.has(upType))
+          return false
+      }
+      return true
+    }
     if (policy === 'multiple') return true
+
+    if (target?.type === 'bind_param') {
+      const sourceType = source?.type ?? ''
+      for (const edge of store.edges) {
+        if (edge.source !== target.id) continue
+        const downTarget = store.nodes.find((node) => node.id === edge.target)
+        if (inputConnectionPolicy(downTarget?.type) !== 'parameter-bindings')
+          continue
+        const downHandle = handleName(edge.targetHandle, edge.target, 'in')
+        if (
+          downHandle === 'input_values' &&
+          !TEXT_VALUE_NODE_TYPES.has(sourceType) &&
+          !DEFERRED_CODE_SOURCE_TYPES.has(sourceType)
+        )
+          return false
+        if (
+          downHandle === 'input_files' &&
+          TEXT_VALUE_NODE_TYPES.has(sourceType)
+        )
+          return false
+      }
+    }
 
     const occupiesInput = (edge: Edge) =>
       edge.target === connection.target &&
