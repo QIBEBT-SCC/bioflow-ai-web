@@ -217,8 +217,8 @@
           }
         },
         "run_command": {
-          "active": "正在检查 {subject}",
-          "complete": "已检查 {subject}"
+          "active": "正在运行命令",
+          "complete": "已运行命令"
         },
         "apply_patch": {
           "active": "正在写入 {file}",
@@ -310,12 +310,12 @@
         },
         "container_command": {
           "plain": {
-            "active": "正在运行测试命令",
-            "complete": "已运行测试命令"
+            "active": "正在运行命令",
+            "complete": "已运行命令"
           },
           "subject": {
-            "active": "正在 {subject} 中运行测试命令",
-            "complete": "已在 {subject} 中运行测试命令"
+            "active": "正在运行命令",
+            "complete": "已运行命令"
           }
         },
         "search_local_image": {

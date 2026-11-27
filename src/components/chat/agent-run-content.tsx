@@ -13,6 +13,7 @@ import {
   CirclePauseIcon,
   CircleSlashIcon,
   ClipboardCheckIcon,
+  ContainerIcon,
   DatabaseIcon,
   FilePenLineIcon,
   FileTextIcon,
@@ -271,7 +272,7 @@ const AGENT_TOOL_ICONS: Record<string, LucideIcon> = {
   search_biodb: DatabaseIcon,
   search_tools_by_function: SearchIcon,
   read_tool_doc: BookOpenIcon,
-  select_image: ImageIcon,
+  select_image: ContainerIcon,
   select_tool: CircleCheckIcon,
   select_classification: ListIcon,
   set_file_mounts: FolderOpenIcon,
@@ -299,7 +300,7 @@ const TOOL_CREATION_TOOLS = new Set([
 ])
 
 const TOOL_GENERATOR_ICONS: Record<string, LucideIcon> = {
-  select_image: SearchIcon,
+  select_image: ContainerIcon,
   search_exist_tool: SearchIcon,
   get_report: TerminalIcon,
   choose_group: ListIcon,
@@ -843,8 +844,8 @@ function useProgressActivities(events: AgentEvent[]) {
               }
               break
             case 'run_command':
-              message = t('tool.run_command.active', values)
-              completeMessage = t('tool.run_command.complete', values)
+              message = t('tool.run_command.active')
+              completeMessage = t('tool.run_command.complete')
               break
             case 'apply_patch':
               message = t('tool.apply_patch.active', {

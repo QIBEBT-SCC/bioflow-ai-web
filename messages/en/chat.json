@@ -217,8 +217,8 @@
           }
         },
         "run_command": {
-          "active": "Inspecting {subject}",
-          "complete": "Inspected {subject}"
+          "active": "Running command",
+          "complete": "Ran command"
         },
         "apply_patch": {
           "active": "Writing {file}",
@@ -310,12 +310,12 @@
         },
         "container_command": {
           "plain": {
-            "active": "Running a test command",
-            "complete": "Ran a test command"
+            "active": "Running command",
+            "complete": "Ran command"
           },
           "subject": {
-            "active": "Running a test command in {subject}",
-            "complete": "Ran a test command in {subject}"
+            "active": "Running command",
+            "complete": "Ran command"
           }
         },
         "search_local_image": {
