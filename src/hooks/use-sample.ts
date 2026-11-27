@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   addSampleFile,
+  calculateSampleFileMd5,
   createProjectFileMapping,
   createSample,
   deleteProjectFileMapping,
@@ -212,6 +213,32 @@ export function useDeleteSampleFile() {
       sampleUid: string
       fileUid: string
     }) => deleteSampleFile(projectId, sampleUid, fileUid),
+    onSuccess: (_, { projectId, sampleUid }) => {
+      queryClient.invalidateQueries({
+        queryKey: ['samples', projectId, sampleUid],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['samples', projectId, sampleUid, 'files'],
+      })
+    },
+  })
+}
+
+/**
+ * 计算样本文件 MD5
+ */
+export function useCalculateSampleFileMd5() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      projectId,
+      sampleUid,
+      fileUid,
+    }: {
+      projectId: string
+      sampleUid: string
+      fileUid: string
+    }) => calculateSampleFileMd5(projectId, sampleUid, fileUid),
     onSuccess: (_, { projectId, sampleUid }) => {
       queryClient.invalidateQueries({
         queryKey: ['samples', projectId, sampleUid],

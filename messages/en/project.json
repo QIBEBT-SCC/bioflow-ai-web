@@ -670,10 +670,10 @@
         "cancel": "Cancel",
         "adding": "Adding...",
         "addDialogTitle": "Add Sample File",
-        "addDialogDescription": "Add a data file to the sample. Enter a file path and tag. Size, format, and MD5 checksum will be calculated by the backend.",
+        "addDialogDescription": "Add a data file to the sample. Enter a file path and tag. File size and format are detected automatically, and MD5 checksums can be calculated on demand.",
         "filePathRequiredLabel": "File Path *",
         "filePathPlaceholder": "e.g., /data/samples/sample_R1.fq.gz",
-        "filePathDescription": "Enter the full path on the server. The backend will calculate file size, format, and MD5 checksum.",
+        "filePathDescription": "Enter the full path on the server. Size and format are detected automatically; MD5 checksums can be calculated on demand in the list.",
         "tagRequiredLabel": "File Tag *",
         "tagPlaceholder": "e.g., r1",
         "tagDescription": "Used to reference this file in workflows, e.g., sample:r1_positive. Tags must be unique within the same sample.",
@@ -685,7 +685,12 @@
         "deleteSuccess": "File deleted successfully",
         "deleteFailed": "Failed to delete file",
         "deleteDialogTitle": "Confirm File Deletion",
-        "deleteDialogDescription": "Are you sure you want to delete this file? This action cannot be undone."
+        "deleteDialogDescription": "Are you sure you want to delete this file? This action cannot be undone.",
+        "calculateMd5": "Calculate MD5",
+        "recalculateMd5": "Recalculate MD5",
+        "calculatingMd5": "Calculating...",
+        "calculateMd5Success": "MD5 calculated successfully",
+        "calculateMd5Failed": "Failed to calculate MD5"
       }
     },
     "workflow": {
